@@ -16,7 +16,7 @@ export const queryKeys = {
       details: (productCode: number) => ['front', 'products', 'details', productCode] as const,
       search: (params: any) => ['front', 'products', 'search', params] as const,
     },
-    basket: {
+ basket: {
       current: ['front', 'basket', 'current'] as const,
     },
   },
