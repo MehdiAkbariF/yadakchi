@@ -1,0 +1,46 @@
+// src/domains/auth/validation/auth.validation.ts
+
+import { z } from 'zod';
+import { BaseValidator } from '@/core/validation/base.validator';
+import { constants } from '@/core/config/constants';
+
+export interface LoginRequest {
+  phoneNumber: string;
+}
+
+export interface ConfirmLoginRequest {
+  phoneNumber: string;
+  code: string;
+}
+
+export class LoginValidator extends BaseValidator<LoginRequest> {
+  protected getSchema(): z.ZodSchema<LoginRequest> {
+    return z.object({
+      phoneNumber: z.string()
+        .regex(constants.patterns.PHONE_NUMBER, 'شماره موبایل نامعتبر است')
+        .min(11, 'شماره موبایل باید ۱۱ رقم باشد')
+        .max(11, 'شماره موبایل باید ۱۱ رقم باشد'),
+    });
+  }
+}
+
+export class ConfirmLoginValidator extends BaseValidator<ConfirmLoginRequest> {
+  protected getSchema(): z.ZodSchema<ConfirmLoginRequest> {
+    return z.object({
+      phoneNumber: z.string()
+        .regex(constants.patterns.PHONE_NUMBER, 'شماره موبایل نامعتبر است')
+        .min(11, 'شماره موبایل باید ۱۱ رقم باشد')
+        .max(11, 'شماره موبایل باید ۱۱ رقم باشد'),
+      
+      code: z.string()
+        .length(6, 'کد تایید باید ۶ رقم باشد')
+        .regex(/^[0-9]{6}$/, 'کد تایید فقط شامل اعداد است'),
+    });
+  }
+}
+
+// Export instances
+export const authValidators = {
+  login: new LoginValidator(),
+  confirmLogin: new ConfirmLoginValidator(),
+} as const;
