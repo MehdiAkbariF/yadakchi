@@ -2,7 +2,8 @@
 
 export const typography = {
   fontFamily: {
-    sans: ['Vazirmatn', 'system-ui', 'sans-serif'],
+    sans: ['var(--font-iran-sans)', 'system-ui', 'sans-serif'],
+    yekan: ['var(--font-iran-yekan)', 'system-ui', 'sans-serif'],
     mono: ['ui-monospace', 'SFMono-Regular', 'monospace'],
   },
   

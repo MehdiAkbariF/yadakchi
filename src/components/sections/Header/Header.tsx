@@ -2,106 +2,93 @@
 
 'use client';
 
-import Link from 'next/link';
-import { Menu, ShoppingCart, User, LogOut, Heart } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/design-system/utils/cn';
-import { Button } from '@/components/primitives/Button';
-import { Typography } from '@/components/primitives/Typography';
-import { Badge } from '@/components/primitives/Badge';
-import { SearchBar } from '@/components/features/SearchBar';
-import { useAuth, useLogout } from '@/domains/auth/hooks/auth.hooks';
-import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { Logo } from './components/Logo/Logo';
+import { SearchBar } from './components/SearchBar/SearchBar';
+import { SellerButton } from './components/SellerButton/SellerButton';
+import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
+import { AuthButton } from './components/AuthButton/AuthButton';
+import { CartButton } from './components/CartButton/CartButton';
+import { DesktopNavigation } from './components/DesktopNavigation/DesktopNavigation';
+import { MobileHeader } from './components/MobileHeader/MobileHeader';
+import { MyCarButton } from './components/MyCarButton/MyCarButton';
+import { CitySelector } from './components/CitySelector/CitySelector';
+import { HEADER_CONSTANTS } from './constants/header.constants';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { useRouter } from 'next/navigation';
 
-export interface HeaderProps {
+interface HeaderProps {
   className?: string;
 }
 
 export function Header({ className }: HeaderProps) {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const logoutMutation = useLogout();
-  const { data: basket } = useGetBasket();
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  const handleLogout = () => {
-    logoutMutation.mutate(undefined);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > HEADER_CONSTANTS.SCROLL_THRESHOLD);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    }
   };
 
   return (
-    <header className={cn('border-b bg-background', className)}>
-      <div className="container flex h-16 items-center justify-between gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-white font-bold text-sm">Y</span>
+    <header className={cn('sticky top-0 z-50 w-full bg-background border-b', className)}>
+      {/* ===== دسکتاپ (lg و بالاتر) ===== */}
+      <div className="hidden lg:block">
+        <div className="w-full px-4 lg:px-8 py-3">
+          <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
+            <Logo className="pt-0" />
+            
+            {/* جستجو با حداکثر عرض ثابت */}
+            <div className="flex-1 max-w-2xl mx-4">
+              <SearchBar 
+                placeholder="جستجو در"
+                onSearch={handleSearch}
+                className="border border-input rounded-md px-3 py-1.5 bg-background"
+                isMobile={false}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2 shrink-0">
+              <SellerButton />
+              <ThemeToggle />
+              <AuthButton />
+              <CartButton />
+            </div>
           </div>
-          <Typography variant="h5" className="hidden sm:block">
-            یادکچی
-          </Typography>
-        </Link>
-
-        {/* Search Bar - وسط */}
-        <div className="flex-1 max-w-xl hidden md:block">
-          <SearchBar />
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          {/* Wishlist */}
-          <Link href="/wishlist">
-            <Button variant="ghost" size="icon" className="relative">
-              <Heart className="h-5 w-5" />
-              <span className="sr-only">علاقه‌مندی‌ها</span>
-            </Button>
-          </Link>
-
-          {/* Basket */}
-          <Link href="/basket">
-            <Button variant="ghost" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {basket && basket.summary.itemCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  size="sm" 
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                >
-                  {basket.summary.itemCount}
-                </Badge>
-              )}
-              <span className="sr-only">سبد خرید</span>
-            </Button>
-          </Link>
-
-          {/* User Menu */}
-          {isAuthenticated ? (
-            <div className="flex items-center gap-2">
-              <Link href="/profile">
-                <Button variant="ghost" size="icon">
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">پروفایل</span>
-                </Button>
-              </Link>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleLogout}
-                disabled={logoutMutation.isPending}
-              >
-                <LogOut className="h-5 w-5" />
-                <span className="sr-only">خروج</span>
-              </Button>
+        {/* ردیف پایین */}
+        <div className={cn(
+          'w-full border-t bg-muted/30',
+          isScrolled && 'hidden'
+        )}>
+          <div className="max-w-screen-2xl mx-auto px-4 lg:px-8">
+            <div className="flex items-center justify-between h-12">
+              <DesktopNavigation />
+              <div className="flex items-center gap-4">
+                <MyCarButton />
+                <CitySelector />
+              </div>
             </div>
-          ) : (
-            <Link href="/login">
-              <Button variant="primary" size="sm">
-                ورود / ثبت‌نام
-              </Button>
-            </Link>
-          )}
+          </div>
+        </div>
+      </div>
 
-          {/* Mobile Menu Button */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">منو</span>
-          </Button>
+      {/* ===== موبایل (تا lg) ===== */}
+      <div className="lg:hidden w-full px-4 py-2">
+        <div className="max-w-screen-2xl mx-auto">
+          <MobileHeader onSearch={handleSearch} />
         </div>
       </div>
     </header>

@@ -4,26 +4,45 @@ import type { ThemeTokens } from './types';
 
 export const lightTheme: ThemeTokens = {
   colors: {
-    background: '#ffffff',
-    foreground: '#0f172a',
-    card: '#ffffff',
-    'card-foreground': '#0f172a',
-    popover: '#ffffff',
-    'popover-foreground': '#0f172a',
-    primary: '#0ea5e9',
-    'primary-foreground': '#ffffff',
-    secondary: '#f1f5f9',
-    'secondary-foreground': '#0f172a',
-    muted: '#f1f5f9',
-    'muted-foreground': '#64748b',
-    accent: '#f1f5f9',
-    'accent-foreground': '#0f172a',
+    // Background
+    background: '#FFFFFF',
+    foreground: '#202021',
+    
+    // Cards
+    card: '#FFFFFF',
+    'card-foreground': '#202021',
+    
+    // Popover
+    popover: '#FFFFFF',
+    'popover-foreground': '#202021',
+    
+    // Primary - برند
+    primary: '#F56D3C',
+    'primary-foreground': '#FFFFFF',
+    
+    // Secondary - خاکستری روشن
+    secondary: '#F0F0F1',
+    'secondary-foreground': '#202021',
+    
+    // Muted
+    muted: '#F0F0F1',
+    'muted-foreground': '#808081',
+    
+    // Accent
+    accent: '#F0F0F1',
+    'accent-foreground': '#202021',
+    
+    // Destructive
     destructive: '#ef4444',
-    'destructive-foreground': '#ffffff',
-    border: '#e2e8f0',
-    input: '#e2e8f0',
-    ring: '#0ea5e9',
-    'chart-1': '#0ea5e9',
+    'destructive-foreground': '#FFFFFF',
+    
+    // Borders & Inputs
+    border: '#E0E0E1',
+    input: '#E0E0E1',
+    ring: '#F56D3C',
+    
+    // Charts
+    'chart-1': '#F56D3C',
     'chart-2': '#22c55e',
     'chart-3': '#f59e0b',
     'chart-4': '#ef4444',

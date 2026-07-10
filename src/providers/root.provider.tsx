@@ -3,6 +3,7 @@
 'use client';
 
 import { QueryProvider } from './query.provider';
+import { ThemeProvider } from './theme.provider';
 
 interface RootProviderProps {
   children: React.ReactNode;
@@ -11,7 +12,9 @@ interface RootProviderProps {
 export function RootProvider({ children }: RootProviderProps) {
   return (
     <QueryProvider>
-      {children}
+      <ThemeProvider>
+        {children}
+      </ThemeProvider>
     </QueryProvider>
   );
 }
