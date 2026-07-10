@@ -30,6 +30,21 @@ export interface ProductApiDto {
   isFavorite?: boolean;
 }
 
+// ساختار صحیح پاسخ API
+export interface SearchProductsResponseDto {
+  products: {
+    currentPage: number;
+    totalPages: number;
+    pageSize: number;
+    totalCount: number;
+    items: ProductApiDto[];
+    searchParams: any;
+  };
+  minPrice: number;
+  maxPrice: number;
+  partCategorySellers: any[];
+}
+
 export interface SearchProductsRequestDto {
   searchTitle?: string;
   isProductInStock?: boolean;

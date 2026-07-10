@@ -1,7 +1,7 @@
 // src/domains/front/product/endpoints/product.endpoints.ts
 
 export const PRODUCT_ENDPOINTS = {
-  // Product endpoints
+  // Product endpoints - مسیرهای نسبی
   GET_PRODUCT: '/api/Front/ProductPage',
   GET_RELATED_PRODUCTS: '/api/Front/ProductRelatedProducts',
   GET_PRICE_CHART: '/api/Front/ProductPriceChart',

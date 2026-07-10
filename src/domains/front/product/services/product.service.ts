@@ -6,7 +6,7 @@ import { logger } from '@/core/utils/logger';
 import { PRODUCT_ENDPOINTS } from '../endpoints/product.endpoints';
 import { ProductMapper } from '../mappers/product.mapper';
 import { SearchProductsRequest } from '../types/view.types';
-import { ProductApiDto, PaginatedResponseDto, ProductPriceChartApiDto } from '../types/dto.types';
+import { ProductApiDto, SearchProductsResponseDto, ProductPriceChartApiDto } from '../types/dto.types';
 import { ProductViewModel, ProductPriceChartViewModel } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 
@@ -17,27 +17,48 @@ export class ProductService {
     try {
       const dto = ProductMapper.toDomainSearchRequest(request);
       
-      const response = await this.httpClient.get<PaginatedResponseDto<ProductApiDto>>(
+      logger.debug('[ProductService] Searching products with params:', dto);
+      
+      const response = await this.httpClient.get<SearchProductsResponseDto>(
         PRODUCT_ENDPOINTS.SEARCH_PRODUCTS,
         { params: dto as Record<string, unknown> }
       );
 
-      const items = response.data.items.map(item => {
+      // دسترسی به items از داخل products
+      const productsData = response.data.products;
+      
+      if (!productsData || !productsData.items) {
+        logger.error('[ProductService] Invalid response structure:', response.data);
+        return {
+          items: [],
+          pageNumber: 1,
+          pageSize: 8,
+          totalCount: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          hasMore: false,
+          from: 1,
+          to: 0,
+        };
+      }
+
+      const items = productsData.items.map((item: ProductApiDto) => {
         const domain = ProductMapper.toDomain(item);
         return ProductMapper.toView(domain);
       });
 
       return {
         items,
-        pageNumber: response.data.pageNumber,
-        pageSize: response.data.pageSize,
-        totalCount: response.data.totalCount,
-        totalPages: response.data.totalPages,
-        hasNextPage: response.data.hasNextPage,
-        hasPreviousPage: response.data.hasPreviousPage,
-        hasMore: response.data.hasNextPage,
-        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
-        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+        pageNumber: productsData.currentPage,
+        pageSize: productsData.pageSize,
+        totalCount: productsData.totalCount,
+        totalPages: productsData.totalPages,
+        hasNextPage: productsData.currentPage < productsData.totalPages,
+        hasPreviousPage: productsData.currentPage > 1,
+        hasMore: productsData.currentPage < productsData.totalPages,
+        from: (productsData.currentPage - 1) * productsData.pageSize + 1,
+        to: Math.min(productsData.currentPage * productsData.pageSize, productsData.totalCount),
       };
     } catch (error) {
       logger.error('[ProductService] Search products failed:', error);

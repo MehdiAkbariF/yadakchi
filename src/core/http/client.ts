@@ -12,8 +12,11 @@ export class HttpClient {
   private abortControllers: Map<string, AbortController> = new Map();
 
   constructor() {
+    // آدرس پایه را خالی می‌گذاریم تا از مسیرهای نسبی استفاده شود
+    const baseURL = env.apiBaseUrl || '';
+    
     this.axiosInstance = axios.create({
-      baseURL: env.apiBaseUrl,
+      baseURL,
       timeout: env.apiTimeout,
       withCredentials: true,
       headers: {
@@ -30,12 +33,24 @@ export class HttpClient {
     // Request Interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
+        // اگر آدرس کامل است و با http شروع می‌شود، از آن استفاده کن
+        if (config.url?.startsWith('http')) {
+          // آدرس کامل است، تغییری نده
+        } else if (!config.url?.startsWith('/api/')) {
+          // اگر با /api/ شروع نشده، اضافه کن
+          config.url = `/api/${config.url}`;
+        }
+
         if (env.enableLogging) {
           logger.debug(`[HTTP] ${config.method?.toUpperCase()} ${config.url}`, {
             params: config.params,
             data: config.data,
           });
         }
+
+        // اضافه کردن headers برای جلوگیری از CORS
+        config.headers['Access-Control-Allow-Origin'] = '*';
+        config.headers['Access-Control-Allow-Credentials'] = 'true';
 
         const requestId = this.generateRequestId();
         config.headers['X-Request-ID'] = requestId;

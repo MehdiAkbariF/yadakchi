@@ -1,6 +1,6 @@
 // src/components/primitives/Typography/Typography.tsx
 
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import { cn } from '@/design-system/utils/cn';
 
 const typographyVariants = cva('', {

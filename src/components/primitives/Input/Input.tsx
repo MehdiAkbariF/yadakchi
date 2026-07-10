@@ -1,7 +1,7 @@
 // src/components/primitives/Input/Input.tsx
 
 import { forwardRef } from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import { cn } from '@/design-system/utils/cn';
 
 const inputVariants = cva(
@@ -35,7 +35,6 @@ const inputVariants = cva(
   }
 );
 
-// حذف extends VariantProps و استفاده از نوع جداگانه
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   variant?: 'default' | 'error' | 'success';
   size?: 'sm' | 'md' | 'lg';
