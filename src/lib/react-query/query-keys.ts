@@ -11,7 +11,7 @@ export const queryKeys = {
   // Front (Public)
   front: {
     // Will be expanded
-    products: {
+   products: {
       all: ['front', 'products'] as const,
       details: (productCode: number) => ['front', 'products', 'details', productCode] as const,
       search: (params: any) => ['front', 'products', 'search', params] as const,
