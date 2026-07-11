@@ -3,11 +3,19 @@
 import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/design-system/utils/cn';
-import { Loader2 } from 'lucide-react';
+
+// 🚨 کامپوننت سه نقطه پرشی (Bouncing Dots)
+const DotsLoader = () => (
+  <span className="inline-flex items-center gap-1">
+    <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]"></span>
+    <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]"></span>
+    <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce"></span>
+  </span>
+);
 
 export const buttonVariants = cva(
   [
-    'inline-flex items-center justify-center',
+    'inline-flex items-center justify-center gap-2', // اضافه شدن gap برای فاصله استاندارد
     'rounded-md text-sm font-medium transition-colors',
     'focus-visible:outline-none focus-visible:ring-2',
     'focus-visible:ring-ring focus-visible:ring-offset-2',
@@ -107,10 +115,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {!isLoading && leftIcon && <span className="ml-2">{leftIcon}</span>}
+        {/* 🚨 نمایش آیکون سمت راست فقط زمانی که در حال لود نیست */}
+        {!isLoading && leftIcon && <span className="ml-1">{leftIcon}</span>}
+        
+        {/* نمایش متن یا متن لودینگ */}
         {isLoading && loadingText ? loadingText : children}
-        {!isLoading && rightIcon && <span className="mr-2">{rightIcon}</span>}
+        
+        {/* 🚨 نمایش سه نقطه لودینگ به جای آیکون چرخان */}
+        {isLoading && !loadingText && <DotsLoader />}
+        {isLoading && loadingText && <DotsLoader />}
+        
+        {/* نمایش آیکون سمت چپ فقط زمانی که در حال لود نیست */}
+        {!isLoading && rightIcon && <span className="mr-1">{rightIcon}</span>}
       </button>
     );
   }

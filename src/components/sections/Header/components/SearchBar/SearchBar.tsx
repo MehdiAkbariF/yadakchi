@@ -326,11 +326,11 @@ export function SearchBar({
                 onClick={() => setQuery('')}
                 className="p-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
               >
-                <X className="h-3 w-3 text-muted-foreground" />
+                <X className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             )
           }
-          className="w-full font-iran-sans"
+          className="w-full font-iran-sans" // 🚨 فقط این کلاس کافیه
           dir="rtl"
         />
       </form>

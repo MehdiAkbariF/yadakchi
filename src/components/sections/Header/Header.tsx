@@ -23,7 +23,7 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
   const router = useRouter();
-  useAuth(); // فراخوانی هوک بدون دی‌استراکچر کردن فیلدهای غیر ضروری
+  useAuth(); 
   const [isHeaderMinimized, setIsHeaderMinimized] = useState(false);
 
   useEffect(() => {
@@ -82,12 +82,11 @@ export function Header({ className }: HeaderProps) {
           <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
             <Logo className="pt-0" />
             
-            {/* جستجو با حداکثر عرض ثابت */}
+            {/* 🚨 کلاس‌های border و bg حذف شدند */}
             <div className="flex-1 max-w-2xl mx-4">
               <SearchBar 
-                placeholder="جستجو در"
+                placeholder="جستجوی هوشمند قطعات..."
                 onSearch={handleSearch}
-                className="border border-input rounded-md px-3 py-1.5 bg-background"
                 isMobile={false}
               />
             </div>

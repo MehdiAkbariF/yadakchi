@@ -40,7 +40,7 @@ export function MobileHeader({ className, onSearch, isScrolled = false }: Mobile
             <SearchBar 
               placeholder="جستجو در"
               onSearch={onSearch}
-              className="border border-input rounded-md px-3 py-1.5 bg-background w-full"
+              className=" rounded-md px-3 py-1.5 bg-background w-full"
               isMobile={true}
             />
             
