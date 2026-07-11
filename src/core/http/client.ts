@@ -11,8 +11,10 @@ export class HttpClient {
   private readonly axiosInstance: AxiosInstance;
   private abortControllers: Map<string, AbortController> = new Map();
 
-  constructor() {
-    const baseURL = env.apiBaseUrl || '';
+    constructor() {
+    // اگر آدرس پایه در فایل env خالی بود، به عنوان پیش‌فرض از مسیر پروکسی اصلی یعنی /api/proxy استفاده کن
+    // تا مسیر فرستاده شده کوکی‌ها (Path=/api/proxy) با آدرس درخواست‌ها در لوکال کاملاً مطابقت داشته باشد.
+    const baseURL = env.apiBaseUrl || '/api/proxy';
     
     this.axiosInstance = axios.create({
       baseURL,
