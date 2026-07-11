@@ -5,9 +5,7 @@ import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { PRODUCT_ENDPOINTS } from '../endpoints/product.endpoints';
 import { ProductMapper } from '../mappers/product.mapper';
-import { SearchProductsRequest } from '../types/view.types';
-import { ProductApiDto, SearchProductsResponseDto, ProductPriceChartApiDto } from '../types/dto.types';
-import { ProductViewModel, ProductPriceChartViewModel } from '../types/view.types';
+import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 
 export class ProductService {
@@ -16,19 +14,16 @@ export class ProductService {
   async searchProducts(request: SearchProductsRequest): Promise<PaginatedResult<ProductViewModel>> {
     try {
       const dto = ProductMapper.toDomainSearchRequest(request);
-      
       logger.debug('[ProductService] Searching products with params:', dto);
       
-      const response = await this.httpClient.get<SearchProductsResponseDto>(
+      const response = await this.httpClient.get<any>(
         PRODUCT_ENDPOINTS.SEARCH_PRODUCTS,
         { params: dto as Record<string, unknown> }
       );
 
-      // دسترسی به items از داخل products
       const productsData = response.data.products;
       
       if (!productsData || !productsData.items) {
-        logger.error('[ProductService] Invalid response structure:', response.data);
         return {
           items: [],
           pageNumber: 1,
@@ -43,7 +38,7 @@ export class ProductService {
         };
       }
 
-      const items = productsData.items.map((item: ProductApiDto) => {
+      const items = productsData.items.map((item: any) => {
         const domain = ProductMapper.toDomain(item);
         return ProductMapper.toView(domain);
       });
@@ -68,7 +63,7 @@ export class ProductService {
 
   async getProductDetails(productCode: number): Promise<ProductViewModel> {
     try {
-      const response = await this.httpClient.get<ProductApiDto>(
+      const response = await this.httpClient.get<any>(
         PRODUCT_ENDPOINTS.GET_PRODUCT,
         { params: { ProductCode: productCode } }
       );
@@ -83,7 +78,7 @@ export class ProductService {
 
   async getRelatedProducts(productCode: number): Promise<ProductViewModel[]> {
     try {
-      const response = await this.httpClient.get<ProductApiDto[]>(
+      const response = await this.httpClient.get<any[]>(
         PRODUCT_ENDPOINTS.GET_RELATED_PRODUCTS,
         { params: { ProductCode: productCode } }
       );
@@ -100,7 +95,7 @@ export class ProductService {
 
   async getProductPriceChart(productId: string, shopProductType: 'New' | 'Stock' | 'TakeOff'): Promise<ProductPriceChartViewModel> {
     try {
-      const response = await this.httpClient.get<ProductPriceChartApiDto>(
+      const response = await this.httpClient.get<any>(
         PRODUCT_ENDPOINTS.GET_PRICE_CHART,
         { params: { ProductId: productId, ShopProductType: shopProductType } }
       );
@@ -112,42 +107,54 @@ export class ProductService {
     }
   }
 
-  async isUserFavorite(productCode: number): Promise<boolean> {
+  async getSearchSuggestions(searchTitle?: string): Promise<string[]> {
     try {
-      const response = await this.httpClient.get<{ isFavorite: boolean }>(
-        PRODUCT_ENDPOINTS.IS_FAVORITE,
-        { params: { productCode } }
-      );
-      return response.data.isFavorite;
-    } catch (error) {
-      logger.error('[ProductService] Check favorite failed:', error);
-      return false;
-    }
-  }
-
-  async getSearchSuggestions(searchTitle: string): Promise<string[]> {
-    try {
-      const response = await this.httpClient.get<{ suggestions: string[] }>(
+      const response = await this.httpClient.get<string[]>(
         PRODUCT_ENDPOINTS.SEARCH_SUGGESTIONS,
-        { params: { SearchTitle: searchTitle } }
+        { params: { SearchTitle: searchTitle || '' } }
       );
-      return response.data.suggestions || [];
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       logger.error('[ProductService] Get search suggestions failed:', error);
       return [];
     }
   }
 
-  async getSearchKeywords(searchTitle: string): Promise<string[]> {
+  async getSearchKeywords(searchTitle: string): Promise<any[]> {
     try {
-      const response = await this.httpClient.get<{ keywords: string[] }>(
+      const response = await this.httpClient.get<any>(
         PRODUCT_ENDPOINTS.SEARCH_KEYWORDS,
         { params: { SearchTitle: searchTitle } }
       );
-      return response.data.keywords || [];
+      const keywords = response.data?.searchProductKeywords || [];
+      return keywords.map((dto: any) => ProductMapper.toViewKeyword(dto));
     } catch (error) {
       logger.error('[ProductService] Get search keywords failed:', error);
       return [];
+    }
+  }
+
+  // اصلاح نوع بازگشتی به آرایه‌ای جنریک برای تطابق با مدل واقعی { id, value, timestamp }
+  async getSearchHistory(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        PRODUCT_ENDPOINTS.SEARCH_HISTORY
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      logger.error('[ProductService] Get search history failed:', error);
+      return [];
+    }
+  }
+
+  async removeSearchHistory(searchTitle?: string): Promise<void> {
+    try {
+      await this.httpClient.delete(
+        PRODUCT_ENDPOINTS.REMOVE_SEARCH_HISTORY,
+        { params: { SearchTitle: searchTitle || '' } }
+      );
+    } catch (error) {
+      logger.error('[ProductService] Remove search history failed:', error);
     }
   }
 }

@@ -12,24 +12,29 @@ export function DesktopNavigation() {
 
   return (
     <nav className="flex items-center gap-2 lg:gap-4 xl:gap-6">
-      {NAV_ITEMS.map((item) => (
-        <div
-          key={item.id}
-          className="relative group"
-          onMouseEnter={() => item.hasDropdown && setOpenCategoryId(item.id)}
-          onMouseLeave={() => item.hasDropdown && setOpenCategoryId(null)}
-        >
-          <NavItem
-            label={item.label}
-            icon={item.icon}
-            href={item.href}
-            hasDropdown={item.hasDropdown}
-            isOpen={openCategoryId === item.id}
-            className="text-xs lg:text-sm whitespace-nowrap"
-          />
-          {item.hasDropdown && <CategoryDropdown isOpen={openCategoryId === item.id} />}
-        </div>
-      ))}
+      {NAV_ITEMS.map((item) => {
+        const hasDropdown = item.hasDropdown;
+        const isOpen = openCategoryId === item.id;
+
+        return (
+          <div
+            key={item.id}
+            className="relative"
+            onMouseEnter={() => hasDropdown && setOpenCategoryId(item.id)}
+            onMouseLeave={() => hasDropdown && setOpenCategoryId(null)}
+          >
+            <NavItem
+              label={item.label}
+              icon={item.icon}
+              href={item.href}
+              hasDropdown={hasDropdown}
+              isOpen={isOpen}
+              className="text-xs lg:text-sm whitespace-nowrap"
+            />
+            {hasDropdown && <CategoryDropdown isOpen={isOpen} />}
+          </div>
+        );
+      })}
     </nav>
   );
 }

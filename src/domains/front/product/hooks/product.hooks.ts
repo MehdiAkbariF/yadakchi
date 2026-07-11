@@ -1,11 +1,10 @@
 // src/domains/front/product/hooks/product.hooks.ts
 
-import { useInfiniteQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useInfiniteQuery, UseQueryOptions, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/react-query/query-keys';
-import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getProductService } from '../services/product.service';
-import { SearchProductsRequest } from '../types/view.types';
-import { ProductViewModel, ProductPriceChartViewModel } from '../types/view.types';
+import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 
 const productService = getProductService();
@@ -91,24 +90,48 @@ export function useGetProductPriceChart(
   );
 }
 
-export function useSearchSuggestions(searchTitle: string) {
-  return useTypedQuery(
-    ['front', 'products', 'suggestions', searchTitle],
+export function useGetSearchSuggestions(searchTitle?: string) {
+  return useTypedQuery<string[]>(
+    ['front', 'products', 'suggestions', searchTitle || 'default'],
     () => productService.getSearchSuggestions(searchTitle),
     {
-      staleTime: 60 * 1000,
-      enabled: searchTitle.length >= 2,
+      staleTime: 5 * 60 * 1000,
     }
   );
 }
 
-export function useSearchKeywords(searchTitle: string) {
-  return useTypedQuery(
+export function useGetSearchKeywords(searchTitle: string) {
+  return useTypedQuery<any[]>(
     ['front', 'products', 'keywords', searchTitle],
     () => productService.getSearchKeywords(searchTitle),
     {
-      staleTime: 60 * 1000,
-      enabled: searchTitle.length >= 2,
+      staleTime: 20 * 1000,
+      enabled: searchTitle.trim().length >= 2,
+    }
+  );
+}
+
+// اصلاح نوع بازگشتی هوک تاریخچه به صورت آرایه جنریک
+export function useGetSearchHistory() {
+  return useTypedQuery<any[]>(
+    ['front', 'products', 'search-history'],
+    () => productService.getSearchHistory(),
+    {
+      staleTime: 10 * 1000,
+    }
+  );
+}
+
+export function useRemoveSearchHistory() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (searchTitle?: string) => productService.removeSearchHistory(searchTitle),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ['front', 'products', 'search-history'],
+        });
+      },
     }
   );
 }

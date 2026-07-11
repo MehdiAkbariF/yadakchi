@@ -1,84 +1,68 @@
 // src/domains/auth/mappers/auth.mapper.ts
 
-import { User, UserRole, Permission } from '../types/auth.types';
-import { AuthResponseDto } from '../types/dto.types';
+import { User } from '../types/auth.types';
 
 export class AuthMapper {
-  static toDomain(dto: AuthResponseDto): User {
+  static toDomain(dto: any): User {
     return {
       id: dto.id,
-      phoneNumber: dto.phoneNumber,
-      fullName: dto.fullName,
-      email: dto.email,
-      nationalCode: dto.nationalCode,
-      isPhoneVerified: dto.isPhoneVerified,
-      isEmailVerified: dto.isEmailVerified,
-      roles: this.mapRoles(dto.roles),
-      permissions: this.mapPermissions(dto.permissions),
-      createdAt: new Date(dto.createdAt),
-      updatedAt: new Date(dto.updatedAt),
-      lastLoginAt: dto.lastLoginAt ? new Date(dto.lastLoginAt) : undefined,
+      lastName: dto.lastName || '',
+      fullName: dto.fullName || '',
+      userName: dto.userName || '',
+      status: dto.status || '',
+      registerDate: dto.registerDate || '',
+      birthDate: dto.birthDate,
+      userChosenCity: dto.userChosenCity,
+      userChosenCityId: dto.userChosenCityId,
+      shopTitle: dto.shopTitle,
+      phoneNumber: dto.phoneNumber || '',
+      phoneNumberConfirmed: dto.phoneNumberConfirmed || false,
+      nationalCode: dto.nationalCode || null,
+      email: dto.email || null,
+      isEmailConfirmed: dto.isEmailConfirmed || false,
+      roles: (dto.roles || []).map((r: any) => ({
+        roleName: r.roleName,
+        claims: r.claims || [],
+      })),
+      bankAccounts: (dto.bankAccounts || []).map((b: any) => ({
+        id: b.id,
+        cardNumber: b.cardNumber || '',
+        shebaNumber: b.shebaNumber || '',
+        isDefault: b.isDefault || false,
+      })),
+      userLocations: (dto.userLocations || []).map((l: any) => ({
+        id: l.id,
+        address: l.address || '',
+        postalCode: l.postalCode || '',
+        city: l.city || '',
+        cityId: l.cityId || '',
+        province: l.province || '',
+        isDefault: l.isDefault || false,
+      })),
     };
   }
 
-  static toDto(domain: Partial<User>): Partial<AuthResponseDto> {
-    return {
-      id: domain.id,
-      phoneNumber: domain.phoneNumber,
-      fullName: domain.fullName,
-      email: domain.email,
-      nationalCode: domain.nationalCode,
-      isPhoneVerified: domain.isPhoneVerified,
-      isEmailVerified: domain.isEmailVerified,
-      roles: domain.roles?.map(r => r.toString()),
-      permissions: domain.permissions?.map(p => p.toString()),
-      createdAt: domain.createdAt?.toISOString(),
-      updatedAt: domain.updatedAt?.toISOString(),
-      lastLoginAt: domain.lastLoginAt?.toISOString(),
-    };
+  // متد بررسی وجود یک نقش خاص در آرایه نقش‌های کاربر
+  static hasRole(user: User, roleName: string): boolean {
+    return (user.roles || []).some(
+      r => r.roleName.toLowerCase() === roleName.toLowerCase()
+    );
   }
 
-  private static mapRoles(roles: string[]): UserRole[] {
-    return roles.map(role => {
-      const mappedRole = role.toUpperCase() as UserRole;
-      if (!['USER', 'SELLER', 'ADMIN', 'SUPER_ADMIN'].includes(mappedRole)) {
-        return 'USER';
-      }
-      return mappedRole;
-    });
-  }
-
-  private static mapPermissions(permissions: string[]): Permission[] {
-    const validPermissions: Permission[] = [
-      'view_products',
-      'create_products',
-      'edit_products',
-      'delete_products',
-      'view_orders',
-      'create_orders',
-      'edit_orders',
-      'delete_orders',
-      'view_users',
-      'edit_users',
-      'delete_users',
-      'view_reports',
-      'manage_roles',
-    ];
-
-    return permissions
-      .map(p => p as Permission)
-      .filter(p => validPermissions.includes(p));
-  }
-
+  // متد کمکی برای بررسی نقش ادمین
   static isAdmin(user: User): boolean {
-    return user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN');
+    return this.hasRole(user, 'Admin');
   }
 
+  // متد کمکی برای بررسی نقش فروشنده
   static isSeller(user: User): boolean {
-    return user.roles.includes('SELLER');
+    return this.hasRole(user, 'Seller');
   }
 
-  static hasPermission(user: User, permission: Permission): boolean {
-    return user.permissions.includes(permission);
+  // متد بررسی برخورداری کاربر از یک دسترسی صریح خاص (Claim)
+  static hasClaim(user: User, claim: string): boolean {
+    return (user.roles || []).some(
+      r => (r.claims || []).some(c => c.toLowerCase() === claim.toLowerCase())
+    );
   }
 }

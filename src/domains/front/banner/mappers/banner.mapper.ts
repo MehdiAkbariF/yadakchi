@@ -1,22 +1,19 @@
 // src/domains/front/banner/mappers/banner.mapper.ts
 
+import { env } from '@/core/config/env';
 import { 
   BannerApiDto, 
   ShopProductBannerApiDto,
-  MegaMenuItemApiDto,
+  MegaMenuCategoryApiDto,
   FrontFooterApiDto,
-
   BannerClickRequestDto,
   BannerViewRequestDto
 } from '../types/dto.types';
-import { 
-  Banner, 
-
-} from '../types/domain.types';
+import { Banner } from '../types/domain.types';
 import { 
   BannerViewModel, 
   ShopProductBannerViewModel,
-  MegaMenuItemViewModel,
+  MegaMenuCategoryViewModel,
   FrontFooterViewModel,
   BannerClickRequest,
   BannerViewRequest
@@ -70,7 +67,7 @@ export class BannerMapper {
   }
 
   static toViewShopProduct(dto: ShopProductBannerApiDto): ShopProductBannerViewModel {
-    const price = dto.price / 10; // Convert to Toman
+    const price = dto.price / 10;
     const discountPrice = dto.discountPrice ? dto.discountPrice / 10 : null;
     const discountPercent = dto.hasDiscount && dto.discountPrice 
       ? Math.round(((dto.price - dto.discountPrice) / dto.price) * 100)
@@ -101,14 +98,35 @@ export class BannerMapper {
     };
   }
 
-  static toViewMegaMenu(dto: MegaMenuItemApiDto): MegaMenuItemViewModel {
+  // متد مپ مگا منو با اضافه کردن هوشمندانه آدرس سرور اصلی برای تصاویر نسبی
+  static toViewMegaMenu(dto: MegaMenuCategoryApiDto): MegaMenuCategoryViewModel {
+    // اگر env.apiBaseUrl خالی باشد، از سرور اصلی شما به عنوان آدرس پایه استفاده می‌شود
+    const apiBase = env.apiBaseUrl || 'http://51.158.252.139:45064';
+    
+    const categoryIcon = dto.icon 
+      ? (dto.icon.startsWith('http') ? dto.icon : `${apiBase}${dto.icon}`)
+      : null;
+
     return {
       id: dto.id,
-      title: dto.title,
-      link: dto.link,
-      icon: dto.icon || null,
-      order: dto.order,
-      children: dto.children.map(child => this.toViewMegaMenu(child)),
+      name: dto.name,
+      englishTitle: dto.englishTitle,
+      icon: categoryIcon,
+      href: `/categories/${dto.englishTitle}`,
+      parts: (dto.parts || []).map(part => {
+        const partIcon = part.icon 
+          ? (part.icon.startsWith('http') ? part.icon : `${apiBase}${part.icon}`)
+          : null;
+
+        return {
+          id: part.id,
+          name: part.name,
+          englishTitle: part.englishTitle,
+          icon: partIcon,
+          iconAlt: part.iconAlt || null,
+          href: `/search?partEnglishTitle=${part.englishTitle}`,
+        };
+      }),
     };
   }
 

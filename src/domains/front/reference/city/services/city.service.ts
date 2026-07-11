@@ -6,8 +6,8 @@ import { logger } from '@/core/utils/logger';
 import { CITY_ENDPOINTS } from '../endpoints/city.endpoints';
 import { CityMapper } from '../mappers/city.mapper';
 import { CityFilters } from '../types/view.types';
-import { CityApiDto, ProvinceCityApiDto } from '../types/dto.types';
-import { CityViewModel, ProvinceCityViewModel } from '../types/view.types';
+import { CityApiDto, ProvinceCityApiDto, ProvinceCitiesTreeApiDto } from '../types/dto.types';
+import { CityViewModel, ProvinceCityViewModel, ProvinceCitiesTreeViewModel } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 
 export class CityService {
@@ -62,6 +62,31 @@ export class CityService {
       return response.data.map(dto => CityMapper.toViewProvinceCity(dto));
     } catch (error) {
       logger.error('[CityService] Get province cities failed:', error);
+      return [];
+    }
+  }
+
+  // متد جدید دریافت ساختار درختی کامل استان‌ها و شهرها بدون پارامتر ورودی
+  async getProvinceCitiesTree(): Promise<ProvinceCitiesTreeViewModel[]> {
+    try {
+      const response = await this.httpClient.get<ProvinceCitiesTreeApiDto[]>(
+        CITY_ENDPOINTS.GET_PROVINCE_CITIES
+      );
+      
+      if (!Array.isArray(response.data)) {
+        return [];
+      }
+
+      return response.data.map(province => ({
+        id: province.id,
+        name: province.name,
+        cities: (province.cities || []).map(city => ({
+          id: city.id,
+          name: city.name,
+        })),
+      }));
+    } catch (error) {
+      logger.error('[CityService] Get province cities tree failed:', error);
       return [];
     }
   }

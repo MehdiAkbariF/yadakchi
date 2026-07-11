@@ -14,7 +14,6 @@ import { DesktopNavigation } from './components/DesktopNavigation/DesktopNavigat
 import { MobileHeader } from './components/MobileHeader/MobileHeader';
 import { MyCarButton } from './components/MyCarButton/MyCarButton';
 import { CitySelector } from './components/CitySelector/CitySelector';
-import { HEADER_CONSTANTS } from './constants/header.constants';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useRouter } from 'next/navigation';
 
@@ -24,14 +23,48 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
+  useAuth(); // فراخوانی هوک بدون دی‌استراکچر کردن فیلدهای غیر ضروری
+  const [isHeaderMinimized, setIsHeaderMinimized] = useState(false);
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let accumulatedDelta = 0;
+    const SCROLL_THRESHOLD = 15;
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > HEADER_CONSTANTS.SCROLL_THRESHOLD);
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 100) {
+        setIsHeaderMinimized(false);
+        lastScrollY = currentScrollY;
+        accumulatedDelta = 0;
+        return;
+      }
+
+      const diff = currentScrollY - lastScrollY;
+      
+      if (diff > 0) {
+        if (accumulatedDelta < 0) accumulatedDelta = 0;
+        accumulatedDelta += diff;
+        
+        if (accumulatedDelta >= SCROLL_THRESHOLD) {
+          setIsHeaderMinimized(true);
+          accumulatedDelta = 0;
+        }
+      } else if (diff < 0) {
+        if (accumulatedDelta > 0) accumulatedDelta = 0;
+        accumulatedDelta += Math.abs(diff);
+        
+        if (accumulatedDelta >= SCROLL_THRESHOLD) {
+          setIsHeaderMinimized(false);
+          accumulatedDelta = 0;
+        }
+      }
+
+      lastScrollY = currentScrollY;
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -42,7 +75,7 @@ export function Header({ className }: HeaderProps) {
   };
 
   return (
-    <header className={cn('sticky top-0 z-50 w-full bg-background border-b', className)}>
+    <header className={cn('sticky top-0 z-50 w-full bg-background border-b transition-all duration-300', className)}>
       {/* ===== دسکتاپ (lg و بالاتر) ===== */}
       <div className="hidden lg:block">
         <div className="w-full px-4 lg:px-8 py-3">
@@ -68,10 +101,12 @@ export function Header({ className }: HeaderProps) {
           </div>
         </div>
 
-        {/* ردیف پایین */}
+        {/* ردیف پایین دسکتاپ */}
         <div className={cn(
-          'w-full border-t bg-muted/30',
-          isScrolled && 'hidden'
+          'w-full border-t bg-muted/30 transition-all duration-300 ease-in-out',
+          isHeaderMinimized 
+            ? 'max-h-0 opacity-0 border-t-transparent pointer-events-none overflow-hidden' 
+            : 'max-h-14 opacity-100 border-t-border overflow-visible'
         )}>
           <div className="max-w-screen-2xl mx-auto px-4 lg:px-8">
             <div className="flex items-center justify-between h-12">
@@ -88,7 +123,7 @@ export function Header({ className }: HeaderProps) {
       {/* ===== موبایل (تا lg) ===== */}
       <div className="lg:hidden w-full px-4 py-2">
         <div className="max-w-screen-2xl mx-auto">
-          <MobileHeader onSearch={handleSearch} />
+          <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
         </div>
       </div>
     </header>

@@ -32,14 +32,25 @@ export interface ShopProductBannerApiDto {
   isActive: boolean;
 }
 
-export interface MegaMenuItemApiDto {
+// ساختار مگا منو منطبق با خروجی واقعی API شما
+export interface MegaMenuPartApiDto {
   id: string;
-  title: string;
-  link: string;
-  icon?: string;
-  order: number;
-  children: MegaMenuItemApiDto[];
-  isActive: boolean;
+  name: string;
+  englishTitle: string;
+  icon: string | null;
+  iconAlt: string | null;
+}
+
+export interface MegaMenuCategoryApiDto {
+  id: string;
+  name: string;
+  englishTitle: string;
+  icon: string | null;
+  parts: MegaMenuPartApiDto[];
+}
+
+export interface MegaMenuResponseApiDto {
+  partCategories: MegaMenuCategoryApiDto[];
 }
 
 export interface FrontFooterApiDto {

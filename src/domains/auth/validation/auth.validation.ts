@@ -32,14 +32,14 @@ export class ConfirmLoginValidator extends BaseValidator<ConfirmLoginRequest> {
         .min(11, 'شماره موبایل باید ۱۱ رقم باشد')
         .max(11, 'شماره موبایل باید ۱۱ رقم باشد'),
       
+      // تغییر طول کد تایید به ۵ رقم زنده برای تایید OTP
       code: z.string()
-        .length(6, 'کد تایید باید ۶ رقم باشد')
-        .regex(/^[0-9]{6}$/, 'کد تایید فقط شامل اعداد است'),
+        .length(5, 'کد تایید باید ۵ رقم باشد')
+        .regex(/^[0-9]{5}$/, 'کد تایید فقط شامل اعداد است'),
     });
   }
 }
 
-// Export instances
 export const authValidators = {
   login: new LoginValidator(),
   confirmLogin: new ConfirmLoginValidator(),

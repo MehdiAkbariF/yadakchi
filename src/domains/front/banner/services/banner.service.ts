@@ -1,21 +1,20 @@
 // src/domains/front/banner/services/banner.service.ts
 
 import { getHttpClient } from '@/core/http/client';
-
 import { logger } from '@/core/utils/logger';
 import { BANNER_ENDPOINTS, BannerPageName } from '../endpoints/banner.endpoints';
 import { BannerMapper } from '../mappers/banner.mapper';
-import {BannerClickRequest, BannerViewRequest } from '../types/view.types';
+import { BannerClickRequest, BannerViewRequest } from '../types/view.types';
 import { 
   BannerApiDto, 
   ShopProductBannerApiDto,
-  MegaMenuItemApiDto,
+  MegaMenuResponseApiDto,
   FrontFooterApiDto
 } from '../types/dto.types';
 import { 
   BannerViewModel, 
   ShopProductBannerViewModel,
-  MegaMenuItemViewModel,
+  MegaMenuCategoryViewModel,
   FrontFooterViewModel
 } from '../types/view.types';
 
@@ -59,13 +58,18 @@ export class BannerService {
     }
   }
 
-  async getMegaMenu(): Promise<MegaMenuItemViewModel[]> {
+  // متد مگا منو منطبق با نوع داده‌های ورودی و بازگشتی جدید
+  async getMegaMenu(): Promise<MegaMenuCategoryViewModel[]> {
     try {
-      const response = await this.httpClient.get<MegaMenuItemApiDto[]>(
+      const response = await this.httpClient.get<MegaMenuResponseApiDto>(
         BANNER_ENDPOINTS.GET_MEGA_MENU
       );
 
-      return response.data.map(dto => BannerMapper.toViewMegaMenu(dto));
+      if (!response.data || !response.data.partCategories) {
+        return [];
+      }
+
+      return response.data.partCategories.map(dto => BannerMapper.toViewMegaMenu(dto));
     } catch (error) {
       logger.error('[BannerService] Get mega menu failed:', error);
       return [];
@@ -91,7 +95,6 @@ export class BannerService {
       await this.httpClient.post(BANNER_ENDPOINTS.POST_BANNER_CLICK, dto);
     } catch (error) {
       logger.error('[BannerService] Track banner click failed:', error);
-      // Don't throw - tracking failures shouldn't break the UI
     }
   }
 
@@ -101,7 +104,6 @@ export class BannerService {
       await this.httpClient.post(BANNER_ENDPOINTS.POST_BANNER_VIEW, dto);
     } catch (error) {
       logger.error('[BannerService] Track banner view failed:', error);
-      // Don't throw - tracking failures shouldn't break the UI
     }
   }
 }

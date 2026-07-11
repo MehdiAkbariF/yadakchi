@@ -17,9 +17,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { cn } from '@/design-system/utils';
 
-// دیتای جستجوها
 const recentSearches = [
   { id: 1, label: 'ترمز' },
   { id: 2, label: 'روغن موتور' },
@@ -41,17 +40,14 @@ const trendingSearches = [
 interface SearchResultsProps {
   isOpen: boolean;
   onClose: () => void;
-  searchQuery?: string;
   onRemoveRecent?: (id: number) => void;
 }
 
 export function SearchResults({ 
   isOpen, 
   onClose, 
-  searchQuery = '', 
   onRemoveRecent 
 }: SearchResultsProps) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'recent' | 'trending'>('recent');
   const [recentPage, setRecentPage] = useState(0);
   const [trendingPage, setTrendingPage] = useState(0);
@@ -62,7 +58,6 @@ export function SearchResults({
   const recentPages = Math.ceil(recentItems.length / itemsPerPage);
   const trendingPages = Math.ceil(trendingSearches.length / itemsPerPage);
 
-  // تشخیص موبایل
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -72,7 +67,6 @@ export function SearchResults({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // هندل دکمه بک در موبایل
   useEffect(() => {
     if (!isOpen) return;
 
@@ -80,7 +74,6 @@ export function SearchResults({
       onClose();
     };
 
-    // اضافه کردن state به تاریخچه برای تشخیص بک
     if (isMobile && isOpen) {
       window.history.pushState({ searchOpen: true }, '');
       window.addEventListener('popstate', handlePopState);
@@ -88,14 +81,12 @@ export function SearchResults({
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      // فقط در صورتی که خودمان state را اضافه کرده باشیم
       if (isMobile && isOpen) {
         window.history.back();
       }
     };
   }, [isOpen, onClose, isMobile]);
 
-  // قفل کردن اسکرول در موبایل
   useEffect(() => {
     if (isMobile && isOpen) {
       document.body.style.overflow = 'hidden';
@@ -142,7 +133,6 @@ export function SearchResults({
 
   if (!isOpen) return null;
 
-  // نسخه موبایل - تمام صفحه
   if (isMobile) {
     return (
       <AnimatePresence>
@@ -153,7 +143,6 @@ export function SearchResults({
           transition={{ duration: 0.3, ease: 'easeOut' }}
           className="fixed inset-0 z-[60] bg-background overflow-y-auto"
         >
-          {/* هدر موبایل */}
           <div className="sticky top-0 z-10 bg-background border-b px-4 py-3">
             <div className="flex items-center gap-3">
               <button
@@ -171,33 +160,33 @@ export function SearchResults({
           </div>
 
           <div className="p-4 space-y-4">
-            {/* تب‌ها */}
             <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
               <button
                 onClick={() => setActiveTab('recent')}
-                className={`flex-1 px-4 py-2 text-sm rounded-md transition-all ${
+                className={cn(
+                  "flex-1 px-4 py-2 text-sm rounded-md transition-all",
                   activeTab === 'recent'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                )}
               >
                 <Clock className="h-4 w-4 inline ml-1" />
                 آخرین
               </button>
               <button
                 onClick={() => setActiveTab('trending')}
-                className={`flex-1 px-4 py-2 text-sm rounded-md transition-all ${
+                className={cn(
+                  "flex-1 px-4 py-2 text-sm rounded-md transition-all",
                   activeTab === 'trending'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                )}
               >
                 <TrendingUp className="h-4 w-4 inline ml-1" />
                 پرطرفدار
               </button>
             </div>
 
-            {/* کارت‌ها - موبایل (۲ ستون) */}
             <div className="grid grid-cols-2 gap-2">
               {getCurrentItems().map((item, index) => (
                 <motion.div
@@ -237,7 +226,6 @@ export function SearchResults({
               ))}
             </div>
 
-            {/* دات‌های ناوبری */}
             {totalPages > 1 && (
               <div className="flex justify-center gap-2 py-2">
                 {Array.from({ length: totalPages }).map((_, index) => (
@@ -250,18 +238,18 @@ export function SearchResults({
                         setTrendingPage(index);
                       }
                     }}
-                    className={`h-2 rounded-full transition-all ${
+                    className={cn(
+                      "h-2 rounded-full transition-all",
                       currentPage === index
                         ? 'w-8 bg-primary'
                         : 'w-2 bg-muted-foreground/30'
-                    }`}
+                    )}
                     aria-label={`صفحه ${index + 1}`}
                   />
                 ))}
               </div>
             )}
 
-            {/* بنر موبایل */}
             <Link href="/special" className="block" onClick={onClose}>
               <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/20 to-primary/5 p-4">
                 <div className="flex items-center gap-3">
@@ -288,7 +276,6 @@ export function SearchResults({
     );
   }
 
-  // نسخه دسکتاپ (قبلی)
   return (
     <AnimatePresence>
       {isOpen && (
@@ -299,7 +286,6 @@ export function SearchResults({
           transition={{ duration: 0.25, ease: 'easeOut' }}
           className="w-full bg-background border rounded-xl shadow-2xl overflow-hidden"
         >
-          {/* هدر دسکتاپ */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -315,33 +301,33 @@ export function SearchResults({
           </div>
 
           <div className="p-4">
-            {/* تب‌ها */}
             <div className="flex gap-1 bg-muted/50 rounded-lg p-1 mb-4 w-full sm:w-auto">
               <button
                 onClick={() => setActiveTab('recent')}
-                className={`flex-1 sm:flex-none px-4 py-1.5 text-sm rounded-md transition-all ${
+                className={cn(
+                  "flex-1 sm:flex-none px-4 py-1.5 text-sm rounded-md transition-all",
                   activeTab === 'recent'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                )}
               >
                 <Clock className="h-3.5 w-3.5 inline ml-1" />
                 آخرین جستجوها
               </button>
               <button
                 onClick={() => setActiveTab('trending')}
-                className={`flex-1 sm:flex-none px-4 py-1.5 text-sm rounded-md transition-all ${
+                className={cn(
+                  "flex-1 sm:flex-none px-4 py-1.5 text-sm rounded-md transition-all",
                   activeTab === 'trending'
                     ? 'bg-background shadow-sm text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
-                }`}
+                )}
               >
                 <TrendingUp className="h-3.5 w-3.5 inline ml-1" />
                 بیشترین جستجوها
               </button>
             </div>
 
-            {/* کارت‌ها */}
             <div className="relative">
               <motion.div
                 key={activeTab + currentPage}
@@ -391,7 +377,6 @@ export function SearchResults({
                 ))}
               </motion.div>
 
-              {/* دکمه‌های ناوبری */}
               {totalPages > 1 && (
                 <>
                   <button
@@ -414,7 +399,6 @@ export function SearchResults({
               )}
             </div>
 
-            {/* دات‌های ناوبری */}
             {totalPages > 1 && (
               <div className="flex justify-center gap-1.5 mt-4">
                 {Array.from({ length: totalPages }).map((_, index) => (
@@ -427,18 +411,18 @@ export function SearchResults({
                         setTrendingPage(index);
                       }
                     }}
-                    className={`h-1.5 rounded-full transition-all ${
+                    className={cn(
+                      "h-1.5 rounded-full transition-all",
                       currentPage === index
                         ? 'w-6 bg-primary'
                         : 'w-3 bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                    }`}
+                    )}
                     aria-label={`صفحه ${index + 1}`}
                   />
                 ))}
               </div>
             )}
 
-            {/* بنر تبلیغاتی */}
             <div className="mt-4">
               <Link href="/special" className="block" onClick={onClose}>
                 <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/20 via-primary/10 to-transparent p-4 group hover:shadow-md transition-shadow">

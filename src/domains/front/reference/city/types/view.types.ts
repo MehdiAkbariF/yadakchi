@@ -29,34 +29,12 @@ export interface CityFilters {
   pageSize?: number;
 }
 
-// src/domains/front/reference/province/types/view.types.ts
-
-export interface ProvinceViewModel {
+// مدل ویو درخت‌واره استان‌ها و شهرها برای رندرینگ مگا لیست
+export interface ProvinceCitiesTreeViewModel {
   id: string;
   name: string;
-  cities: CityViewModel[];
-  isActive: boolean;
-}
-
-export interface ProvinceFilters {
-  name?: string;
-  ids?: string[];
-  isActive?: boolean;
-  isDeleted?: boolean;
-  pageNumber?: number;
-  pageSize?: number;
-}
-
-// src/domains/front/reference/country/types/view.types.ts
-
-export interface CountryViewModel {
-  id: string;
-  name: string;
-  abbreviation: string;
-}
-
-export interface CountryFilters {
-  id?: string;
-  name?: string;
-  abbreviation?: string;
+  cities: Array<{
+    id: string;
+    name: string;
+  }>;
 }

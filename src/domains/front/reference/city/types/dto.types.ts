@@ -29,31 +29,12 @@ export interface CityListRequestDto {
   pageSize?: number;
 }
 
-// src/domains/front/reference/province/types/dto.types.ts
-
-export interface ProvinceApiDto {
+// ساختار کامل درخت‌واره استان‌ها و شهرهای مربوطه مطابق ساختار واقعی API شما
+export interface ProvinceCitiesTreeApiDto {
   id: string;
   name: string;
-  isActive: boolean;
-  isDeleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProvinceListRequestDto {
-  name?: string;
-  ids?: string[];
-  isActive?: boolean;
-  isDeleted?: boolean;
-  pageNumber?: number;
-  pageSize?: number;
-}
-
-// src/domains/front/reference/country/types/dto.types.ts
-
-export interface CountryApiDto {
-  id: string;
-  name: string;
-  abbreviation: string;
-  isActive: boolean;
+  cities: Array<{
+    id: string;
+    name: string;
+  }>;
 }

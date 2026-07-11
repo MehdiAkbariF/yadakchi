@@ -1,11 +1,10 @@
 // src/domains/front/product/mappers/product.mapper.ts
 
-import { ProductApiDto, SearchProductsRequestDto, ProductPriceChartApiDto } from '../types/dto.types';
-import { Product, Money, Discount, Image } from '../types/domain.types';
-import { ProductViewModel, SearchProductsRequest, ProductPriceChartViewModel } from '../types/view.types';
+import { Product, Money, Discount, Image } from '@/domains/front/product/types/domain.types';
+import { ProductViewModel, SearchProductsRequest, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
 
 export class ProductMapper {
-  static toDomain(dto: ProductApiDto): Product {
+  static toDomain(dto: any): Product {
     const price: Money = {
       amount: dto.price,
       currency: 'IRR',
@@ -20,7 +19,7 @@ export class ProductMapper {
       };
     }
 
-    const images: Image[] = dto.images.map((url, index) => ({
+    const images: Image[] = (dto.images || []).map((url: string, index: number) => ({
       url,
       alt: dto.name,
       order: index,
@@ -147,7 +146,7 @@ export class ProductMapper {
     };
   }
 
-  static toDomainSearchRequest(request: SearchProductsRequest): SearchProductsRequestDto {
+  static toDomainSearchRequest(request: SearchProductsRequest): any {
     return {
       searchTitle: request.searchTitle,
       isProductInStock: request.isProductInStock,
@@ -175,13 +174,32 @@ export class ProductMapper {
     };
   }
 
-  static toViewPriceChart(dto: ProductPriceChartApiDto): ProductPriceChartViewModel {
+  static toViewPriceChart(dto: any): ProductPriceChartViewModel {
     return {
-      dates: dto.dates.map(d => new Date(d).toLocaleDateString('fa-IR')),
-      prices: dto.prices.map(p => p / 10),
+      dates: (dto.dates || []).map((d: string) => new Date(d).toLocaleDateString('fa-IR')),
+      prices: (dto.prices || []).map((p: number) => p / 10),
       averagePrice: dto.averagePrice / 10,
       minPrice: dto.minPrice / 10,
       maxPrice: dto.maxPrice / 10,
+    };
+  }
+
+  static toViewKeyword(dto: any): any {
+    return {
+      suggestion: dto.searchKeywordSuggestion,
+      productTitles: dto.productTitles || [],
+      part: {
+        id: dto.partId,
+        name: dto.partName,
+        englishTitle: dto.partEnglishTitle,
+        href: `/search?partEnglishTitle=${dto.partEnglishTitle}`,
+      },
+      category: {
+        id: dto.partCategoryId,
+        name: dto.partCategoryName,
+        englishTitle: dto.partCategoryEnglishTitle,
+        href: `/categories/${dto.partCategoryEnglishTitle}`,
+      },
     };
   }
 

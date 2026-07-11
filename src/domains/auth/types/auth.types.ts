@@ -1,50 +1,46 @@
 // src/domains/auth/types/auth.types.ts
 
+export interface UserRole {
+  roleName: string;
+  claims: string[];
+}
+
+export interface BankAccount {
+  id: string;
+  cardNumber: string;
+  shebaNumber: string;
+  isDefault: boolean;
+}
+
+export interface UserLocation {
+  id: string;
+  address: string;
+  postalCode: string;
+  city: string;
+  cityId: string;
+  province: string;
+  isDefault: boolean;
+}
+
 export interface User {
   id: string;
-  phoneNumber: string;
+  lastName: string;
   fullName: string;
-  email?: string;
-  nationalCode?: string;
-  isPhoneVerified: boolean;
-  isEmailVerified: boolean;
+  userName: string;
+  status: string;
+  registerDate: string;
+  birthDate?: string;
+  userChosenCity: string | null;
+  userChosenCityId: string | null;
+  shopTitle: string | null;
+  phoneNumber: string;
+  phoneNumberConfirmed: boolean;
+  nationalCode: string | null;
+  email: string | null;
+  isEmailConfirmed: boolean;
   roles: UserRole[];
-  permissions: Permission[];
-  createdAt: Date;
-  updatedAt: Date;
-  lastLoginAt?: Date;
-}
-
-export type UserRole = 'USER' | 'SELLER' | 'ADMIN' | 'SUPER_ADMIN';
-
-export type Permission = 
-  | 'view_products'
-  | 'create_products'
-  | 'edit_products'
-  | 'delete_products'
-  | 'view_orders'
-  | 'create_orders'
-  | 'edit_orders'
-  | 'delete_orders'
-  | 'view_users'
-  | 'edit_users'
-  | 'delete_users'
-  | 'view_reports'
-  | 'manage_roles';
-
-export interface AuthSession {
-  user: User;
-  isAuthenticated: boolean;
-  expiresAt: Date;
-}
-
-export interface LoginCredentials {
-  phoneNumber: string;
-}
-
-export interface ConfirmLoginCredentials {
-  phoneNumber: string;
-  code: string;
+  bankAccounts: BankAccount[];
+  userLocations: UserLocation[];
 }
 
 export interface AuthState {

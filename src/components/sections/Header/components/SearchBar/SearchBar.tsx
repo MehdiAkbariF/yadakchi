@@ -2,23 +2,20 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search } from 'lucide-react';
-import { SearchResults } from '../SearchResults/SearchResults';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-// لیست دسته‌بندی‌های متحرک
-const categories = [
-  'قطعات موتور',
-  'گیربکس',
-  'ترمز',
-  'سیستم تعلیق',
-  'سیستم برق',
-  'قطعات بدنه',
-  'روغن و مایعات',
-  'لوازم جانبی',
-];
+import { Search, X, Clock, Trash2, ArrowRight, Loader2, Sparkles, FolderKanban } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { Input } from '@/components/primitives/Input/Input';
+import { Modal } from '@/components/composites/Modal/Modal';
+import { 
+  useGetSearchHistory, 
+  useGetSearchSuggestions, 
+  useGetSearchKeywords, 
+  useRemoveSearchHistory 
+} from '@/domains/front/product/hooks/product.hooks';
+import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
+import Link from 'next/link';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -28,157 +25,319 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ 
-  placeholder = 'جستجو در', 
+  placeholder = 'جستجو در یادکچی...', 
   className = '', 
   onSearch,
   isMobile = false 
 }: SearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  const [isResultsOpen, setIsResultsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
+  
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [inputWidth, setInputWidth] = useState(0);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
 
-  // اندازه‌گیری عرض input
-  useEffect(() => {
-    if (inputRef.current) {
-      setInputWidth(inputRef.current.offsetWidth);
-    }
-  }, []);
+  const { data: history = [], refetch: refetchHistory } = useGetSearchHistory();
+  const { data: suggestions = [] } = useGetSearchSuggestions();
+  const { data: keywords = [], isLoading: isKeywordsLoading } = useGetSearchKeywords(query);
+  const { data: searchBanners = [] } = useGetBanners('SearchResult');
+  
+  const removeHistoryMutation = useRemoveSearchHistory();
 
-  // چرخش دسته‌بندی‌ها هر 3 ثانیه
-  useEffect(() => {
-    if (isFocused) return;
-    
-    const interval = setInterval(() => {
-      setCurrentCategoryIndex((prev) => (prev + 1) % categories.length);
-    }, 3000);
+  const desktopBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Desktop');
+  const mobileBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Mobile');
 
-    return () => clearInterval(interval);
-  }, [isFocused]);
-
-  // بستن نتایج با کلیک خارج
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsResultsOpen(false);
         setIsFocused(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleFocus = () => {
-    setIsFocused(true);
+  useEffect(() => {
+    if (!isMobileModalOpen) return;
+
+    const handlePopState = () => {
+      setIsMobileModalOpen(false);
+    };
+
+    window.history.pushState({ modalOpen: 'search-modal' }, '');
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isMobileModalOpen]);
+
+  const handleSearchSubmit = (searchWord: string) => {
+    if (!searchWord.trim()) return;
     
-    // در موبایل: هدایت به صفحه جستجو
-    if (isMobile) {
-      router.push('/search');
-      setIsFocused(false);
-      return;
+    if (onSearch) onSearch(searchWord);
+    router.push(`/search?q=${encodeURIComponent(searchWord)}`);
+    
+    setIsFocused(false);
+    setIsMobileModalOpen(false);
+    if (window.history.state?.modalOpen === 'search-modal') {
+      window.history.back();
     }
-    
-    // در دسکتاپ: نمایش نتایج
-    setIsResultsOpen(true);
+  };
+
+  const handleRemoveHistoryItem = (word: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeHistoryMutation.mutate(word);
+  };
+
+  const handleClearAllHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeHistoryMutation.mutate(undefined);
+  };
+
+  const handleOpenMobileSearch = () => {
+    setIsMobileModalOpen(true);
+    refetchHistory();
     setTimeout(() => {
-      if (inputRef.current) {
-        setInputWidth(inputRef.current.offsetWidth);
-      }
-    }, 50);
+      mobileInputRef.current?.focus();
+    }, 150);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) {
-      if (onSearch) {
-        onSearch(query);
-      }
-      router.push(`/search?q=${encodeURIComponent(query)}`);
-      setIsResultsOpen(false);
+  const handleCloseMobileSearch = () => {
+    setIsMobileModalOpen(false);
+    if (window.history.state?.modalOpen === 'search-modal') {
+      window.history.back();
     }
   };
 
-  // در موبایل، فقط نمایش یک input ساده
+  const renderSuggestionsPanel = () => {
+    const showKeywords = query.trim().length >= 2;
+
+    return (
+      <div className="flex flex-col flex-1 overflow-y-auto">
+        {showKeywords ? (
+          <div className="p-4 space-y-4">
+            <span className="text-xs text-muted-foreground font-iran-sans font-bold block pb-2 border-b">
+              عبارات پیشنهادی برای "{query}"
+            </span>
+            {isKeywordsLoading ? (
+              <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-xs font-iran-sans">در حال لود عبارات کلیدی...</span>
+              </div>
+            ) : keywords.length > 0 ? (
+              <div className="space-y-3">
+                {keywords.map((kw, index) => (
+                  <div key={index} className="flex flex-col p-2.5 rounded-lg border bg-muted/10 hover:border-primary/30 transition-all">
+                    <button
+                      onClick={() => handleSearchSubmit(kw.suggestion)}
+                      className="flex items-center justify-between w-full text-right text-sm font-bold text-foreground font-iran-sans"
+                    >
+                      <span className="hover:text-primary transition-colors">{kw.suggestion}</span>
+                      <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                    {kw.category && (
+                      <Link
+                        href={kw.category.href}
+                        onClick={() => setIsMobileModalOpen(false)}
+                        className="flex items-center gap-1 text-xs text-primary hover:underline mt-2 font-iran-sans font-medium"
+                      >
+                        <FolderKanban className="h-3 w-3 shrink-0" />
+                        هدایت مستقیم به گروه قطعات: {kw.category.name}
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground font-iran-sans py-4">
+                نتیجه مناسبی برای عبارت کلیدی یافت نشد.
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="p-4 space-y-5 flex-1 flex flex-col">
+            {/* اصلاح منطق رندر تاریخچه با بررسی ماهیت شیء یا رشته بودن آیتم */}
+            {history.length > 0 && (
+              <div className="space-y-2 shrink-0">
+                <div className="flex items-center justify-between pb-1 border-b">
+                  <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    جستجوهای اخیر شما
+                  </span>
+                  <button 
+                    onClick={handleClearAllHistory}
+                    className="text-xs text-destructive hover:underline font-iran-sans flex items-center gap-0.5"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    پاک کردن همه
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {history.map((item, idx) => {
+                    const isObject = typeof item === 'object' && item !== null;
+                    const wordValue = isObject ? (item as any).value : String(item);
+                    const itemId = isObject ? (item as any).id : String(idx);
+
+                    return (
+                      <div 
+                        key={itemId}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium font-iran-sans text-foreground border hover:border-primary/20 transition-all cursor-pointer"
+                        onClick={() => handleSearchSubmit(wordValue)}
+                      >
+                        <span>{wordValue}</span>
+                        <button 
+                          onClick={(e) => handleRemoveHistoryItem(wordValue, e)}
+                          className="p-0.5 hover:bg-muted-foreground/20 rounded-full flex items-center justify-center transition-colors"
+                          aria-label="حذف"
+                        >
+                          <X className="h-3 w-3 text-muted-foreground" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {suggestions.length > 0 && (
+              <div className="space-y-2 shrink-0">
+                <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1.5 pb-1 border-b">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                  جستجوهای پرطرفدار
+                </span>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {suggestions.map((suggest, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSearchSubmit(suggest)}
+                      className="px-3 py-1.5 rounded-lg border border-input hover:border-primary/40 hover:bg-primary/5 text-xs font-medium font-iran-sans text-foreground transition-all"
+                    >
+                      {suggest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-auto pt-4 shrink-0">
+              {isMobile ? (
+                mobileBanner && (
+                  <Link href={mobileBanner.link || '#'} onClick={handleCloseMobileSearch} className="block overflow-hidden rounded-xl">
+                    <img 
+                      src={mobileBanner.imageUrl} 
+                      alt={mobileBanner.title} 
+                      className="w-full object-cover h-24 hover:scale-[1.01] transition-transform duration-200" 
+                    />
+                  </Link>
+                )
+              ) : (
+                desktopBanner && (
+                  <Link href={desktopBanner.link || '#'} className="block overflow-hidden rounded-xl">
+                    <img 
+                      src={desktopBanner.imageUrl} 
+                      alt={desktopBanner.title} 
+                      className="w-full object-cover h-24 hover:scale-[1.01] transition-transform duration-200" 
+                    />
+                  </Link>
+                )
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (isMobile) {
     return (
-      <div className="relative w-full">
-        <div className={`flex items-center w-full ${className}`}>
-          <div className="flex items-center gap-2 text-muted-foreground shrink-0">
-            <Search className="h-4 w-4" />
-            <span className="text-sm font-medium whitespace-nowrap">{placeholder}</span>
-          </div>
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={handleFocus}
-            placeholder="..."
-            className="flex-1 min-w-[60px] h-8 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground focus:ring-0"
-            aria-label="جستجو"
-            dir="rtl"
-          />
+      <div className={cn("relative w-full", className)}>
+        <div 
+          onClick={handleOpenMobileSearch}
+          className="flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground"
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          <span className="text-sm font-iran-sans font-medium mr-2">{placeholder}</span>
         </div>
+
+        <Modal
+          isOpen={isMobileModalOpen}
+          onClose={handleCloseMobileSearch}
+          className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-50 bg-background"
+          overlayClassName="bg-black/40"
+        >
+          <div className="flex items-center gap-3 px-4 py-4 border-b shrink-0 bg-muted/20">
+            <button
+              onClick={handleCloseMobileSearch}
+              className="p-1 -mr-1 hover:bg-muted rounded-full"
+              aria-label="بازگشت"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <div className="flex-1">
+              <Input
+                ref={mobileInputRef}
+                type="text"
+                placeholder="چی لازم داری؟"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
+                rightIcon={
+                  query && (
+                    <button 
+                      onClick={() => setQuery('')}
+                      className="p-1 hover:bg-muted rounded-full flex items-center justify-center"
+                      type="button"
+                    >
+                      <X className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  )
+                }
+                className="w-full font-iran-sans"
+                dir="rtl"
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(query)}
+              />
+            </div>
+          </div>
+
+          {renderSuggestionsPanel()}
+        </Modal>
       </div>
     );
   }
 
-  // نسخه دسکتاپ (با نتایج جستجو)
   return (
-    <div ref={containerRef} className="relative w-full">
-      <div className={`flex items-center w-full ${className}`}>
-        <div className="flex items-center gap-2 text-muted-foreground shrink-0">
-          <Search className="h-4 w-4" />
-          <span className="text-sm font-medium whitespace-nowrap">{placeholder}</span>
-        </div>
-
-        <div className="relative mx-2 min-w-[100px] h-6 overflow-hidden shrink-0">
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={currentCategoryIndex}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              transition={{ duration: 0.5, ease: 'easeInOut' }}
-              className="absolute top-0 left-0 text-sm font-medium text-primary whitespace-nowrap"
-            >
-              {categories[currentCategoryIndex]}
-            </motion.span>
-          </AnimatePresence>
-        </div>
-
-        <input
-          ref={inputRef}
+    <div ref={containerRef} className={cn("relative w-full", className)}>
+      <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(query); }}>
+        <Input
+          ref={desktopInputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={handleFocus}
-          placeholder="..."
-          className="flex-1 min-w-[60px] h-8 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground focus:ring-0"
-          aria-label="جستجو"
+          onFocus={() => { setIsFocused(true); refetchHistory(); }}
+          placeholder={placeholder}
+          leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
+          rightIcon={
+            query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="p-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
+              >
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            )
+          }
+          className="w-full font-iran-sans"
           dir="rtl"
         />
-      </div>
+      </form>
 
-      {/* نتایج جستجو (فقط دسکتاپ) */}
-      {isResultsOpen && (
-        <div 
-          className="absolute top-full left-0 mt-1 z-50"
-          style={{ width: inputWidth > 0 ? inputWidth : '100%' }}
-        >
-          <SearchResults 
-            isOpen={isResultsOpen} 
-            onClose={() => {
-              setIsResultsOpen(false);
-              setIsFocused(false);
-            }}
-            searchQuery={query}
-          />
+      {isFocused && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-background border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[480px]">
+          {renderSuggestionsPanel()}
         </div>
       )}
     </div>

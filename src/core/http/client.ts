@@ -12,13 +12,12 @@ export class HttpClient {
   private abortControllers: Map<string, AbortController> = new Map();
 
   constructor() {
-    // آدرس پایه را خالی می‌گذاریم تا از مسیرهای نسبی استفاده شود
     const baseURL = env.apiBaseUrl || '';
     
     this.axiosInstance = axios.create({
       baseURL,
       timeout: env.apiTimeout,
-      withCredentials: true,
+      withCredentials: true, // پذیرش خودکار کوکی‌های HTTP-Only
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -33,11 +32,9 @@ export class HttpClient {
     // Request Interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        // اگر آدرس کامل است و با http شروع می‌شود، از آن استفاده کن
         if (config.url?.startsWith('http')) {
-          // آدرس کامل است، تغییری نده
+          // آدرس کامل است، تغییر ایجاد نکن
         } else if (!config.url?.startsWith('/api/')) {
-          // اگر با /api/ شروع نشده، اضافه کن
           config.url = `/api/${config.url}`;
         }
 
@@ -48,9 +45,8 @@ export class HttpClient {
           });
         }
 
-        // اضافه کردن headers برای جلوگیری از CORS
-        config.headers['Access-Control-Allow-Origin'] = '*';
-        config.headers['Access-Control-Allow-Credentials'] = 'true';
+        // توجه: هدرهای پاسخ CORS (مانند Access-Control-Allow-Origin) از هدر درخواست حذف شدند
+        // تا باعث مسدود شدن کوکی‌ها و خطای ۴۰۱ توسط فایروال بک‌اَند نشوند.
 
         const requestId = this.generateRequestId();
         config.headers['X-Request-ID'] = requestId;
@@ -121,6 +117,7 @@ export class HttpClient {
         headers: options?.headers,
         timeout: options?.timeout ?? env.apiTimeout,
         signal,
+        withCredentials: true, // تضمین و اجبار ارسال کوکی با این درخواست خاص کلاینت
       };
 
       const response = await this.axiosInstance.request<T>(config);
@@ -159,7 +156,6 @@ export class HttpClient {
     }
   }
 
-  // Public Methods
   async get<T = unknown>(url: string, options?: RequestOptions): Promise<HttpResponse<T>> {
     return this.makeRequest<T>('GET', url, undefined, options);
   }
@@ -192,7 +188,6 @@ export class HttpClient {
     return this.makeRequest<T>('PATCH', url, data, options);
   }
 
-  // Utility Methods
   cancelRequest(requestId: string): void {
     const controller = this.abortControllers.get(requestId);
     if (controller) {
@@ -215,7 +210,6 @@ export class HttpClient {
   }
 }
 
-// Singleton instance
 let httpClientInstance: HttpClient | null = null;
 
 export function getHttpClient(): HttpClient {

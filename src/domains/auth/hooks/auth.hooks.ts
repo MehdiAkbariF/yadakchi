@@ -21,10 +21,11 @@ export function useConfirmLogin() {
     (credentials: ConfirmLoginRequest) => authService.confirmLogin(credentials),
     {
       onSuccess: (user) => {
+        // تنظیم مستقیم و آنی پروفایل کاربر در سیستم مدیریت وضعیت (کش ری‌اکت کوئری)
         queryClient.setQueryData(queryKeys.auth.user, user);
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.auth.user,
-        });
+        
+        // توجه: از فراخوانی invalidateQueries در اینجا خودداری می‌کنیم تا از بروز باگ همگام‌سازی کوکی (Race Condition)
+        // و بازخوانی فوری اطلاعات از سرور که منجر به خطای ۴۰۱ ناخواسته می‌شد، جلوگیری کنیم.
       },
     }
   );
@@ -37,9 +38,10 @@ export function useLogout() {
     () => authService.logout(),
     {
       onSuccess: () => {
+        // پاک‌سازی کامل کش هویتی کاربر در هنگام خروج
         queryClient.setQueryData(queryKeys.auth.user, null);
         queryClient.removeQueries({
-          queryKey: ['user'],
+          queryKey: queryKeys.auth.user,
         });
         queryClient.clear();
       },
@@ -52,12 +54,13 @@ export function useCurrentUser() {
     queryKeys.auth.user,
     () => authService.getCurrentUser(),
     {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000, // ۵ دقیقه ماندگاری کش پروفایل کاربری
       retry: (failureCount, error) => {
+        // در صورت خطای ۴۰۱ از تکرار مجدد درخواست خودداری کن
         if (error instanceof Error && 'status' in error && (error as any).status === 401) {
           return false;
         }
-        return failureCount < 2;
+        return failureCount < 1;
       },
     }
   );

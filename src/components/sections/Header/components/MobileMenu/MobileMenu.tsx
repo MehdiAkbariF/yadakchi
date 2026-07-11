@@ -3,11 +3,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Car, MapPin, ShoppingCart, User, LogOut } from 'lucide-react';
+import { Car, MapPin, ShoppingCart, LogOut } from 'lucide-react';
 import { Button } from '@/components/primitives/Button';
 import { Badge } from '@/components/primitives/Badge';
 import { NAV_ITEMS } from '../../constants/header.constants';
-import { useAuth, useLogout } from '@/domains/auth/hooks/auth.hooks';
+import { useLogout } from '@/domains/auth/hooks/auth.hooks';
 import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
 
 interface MobileMenuProps {

@@ -1,15 +1,13 @@
 // src/app/(auth)/layout.tsx
 
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
-
-export default function AuthLayout({
-  children,
-}: {
+interface AuthLayoutProps {
   children: React.ReactNode;
-}) {
+}
+
+export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <MainLayout hideHeader hideFooter>
+    <div className="min-h-screen bg-background w-full flex flex-col" dir="rtl">
       {children}
-    </MainLayout>
+    </div>
   );
 }

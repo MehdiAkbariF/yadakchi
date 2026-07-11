@@ -40,13 +40,23 @@ export interface ShopProductBannerViewModel {
   position: number;
 }
 
-export interface MegaMenuItemViewModel {
+// ساختار نهایی ویو مگا منو مورد استفاده در کامپوننت هدر
+export interface MegaMenuPartViewModel {
   id: string;
-  title: string;
-  link: string;
+  name: string;
+  englishTitle: string;
   icon: string | null;
-  order: number;
-  children: MegaMenuItemViewModel[];
+  iconAlt: string | null;
+  href: string;
+}
+
+export interface MegaMenuCategoryViewModel {
+  id: string;
+  name: string;
+  englishTitle: string;
+  icon: string | null;
+  href: string;
+  parts: MegaMenuPartViewModel[];
 }
 
 export interface FrontFooterViewModel {

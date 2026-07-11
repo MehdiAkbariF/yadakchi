@@ -2,27 +2,173 @@
 
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { CATEGORY_DROPDOWN } from '../../constants/header.constants';
+import { useGetMegaMenu } from '@/domains/front/banner/hooks/banner.hooks';
+import { 
+  ChevronLeft, 
+  Loader2, 
+  AlertCircle, 
+  Fuel, 
+  Zap, 
+  Activity, 
+  Settings, 
+  Gauge, 
+  Wrench,
+  Sparkles
+} from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
 
 interface CategoryDropdownProps {
   isOpen: boolean;
 }
 
+// تابع هوشمند برای اختصاص آیکون جایگزین متناسب با نام دسته‌بندی
+function getFallbackIcon(categoryName: string) {
+  const name = categoryName || '';
+  if (name.includes('سوخت') || name.includes('بنزین')) return Fuel;
+  if (name.includes('برق') || name.includes('باتری') || name.includes('الکتریک')) return Zap;
+  if (name.includes('ترمز') || name.includes('لنت')) return Activity;
+  if (name.includes('موتور') || name.includes('سیلندر')) return Settings;
+  if (name.includes('گیربکس') || name.includes('جعبه دنده') || name.includes('کلاچ')) return Gauge;
+  if (name.includes('بدنه') || name.includes('چراغ')) return Sparkles;
+  return Wrench; // آیکون پیش‌فرض در صورت عدم مطابقت
+}
+
 export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
+  const { data: categories = [], isLoading, isError } = useGetMegaMenu();
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  
+  // ذخیره وضعیت خطای لود تصاویر برای هر دسته‌بندی به صورت داینامیک
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+
   if (!isOpen) return null;
 
+  // انتخاب دسته‌بندی فعال
+  const activeCategory = categories.find(c => c.id === (activeCategoryId || categories[0]?.id)) || categories[0];
+
+  const handleImageError = (id: string) => {
+    setFailedImages(prev => ({ ...prev, [id]: true }));
+  };
+
   return (
-    <div className="absolute top-full right-0 mt-1 w-56 bg-background border rounded-lg shadow-lg py-2 z-50">
-      {CATEGORY_DROPDOWN.map((item) => (
-        <Link
-          key={item.id}
-          href={item.href}
-          className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
-        >
-          {item.label}
-        </Link>
-      ))}
+    <div className="absolute top-full right-0 mt-1 w-[800px] bg-background border rounded-xl shadow-2xl overflow-hidden z-50 flex h-[450px]">
+      
+      {/* حالت بارگذاری (Loading Skeleton) */}
+      {isLoading && (
+        <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-sm font-medium font-iran-sans">در حال بارگذاری دسته‌بندی‌ها...</span>
+        </div>
+      )}
+
+      {/* حالت خطا (Error Handling) */}
+      {isError && (
+        <div className="flex flex-1 items-center justify-center gap-2 text-destructive p-4">
+          <AlertCircle className="h-5 w-5" />
+          <span className="text-sm font-medium font-iran-sans">خطا در بارگذاری اطلاعات. لطفاً دوباره تلاش کنید.</span>
+        </div>
+      )}
+
+      {/* نمایش مگا منو وقتی داده‌ها با موفقیت لود شدند */}
+      {!isLoading && !isError && categories.length > 0 && (
+        <>
+          {/* ستون سمت راست: لیست دسته‌بندی‌ها */}
+          <div className="w-[240px] bg-muted/20 border-l overflow-y-auto py-2 shrink-0">
+            {categories.map((category) => {
+              const isActive = activeCategory?.id === category.id;
+              const hasImageFailed = failedImages[category.id] || !category.icon;
+              const FallbackIconComponent = getFallbackIcon(category.name);
+
+              return (
+                <button
+                  key={category.id}
+                  className={cn(
+                    "flex items-center justify-between w-full px-4 py-3 text-right text-sm transition-colors font-iran-sans font-medium",
+                    isActive 
+                      ? "bg-background text-primary" 
+                      : "text-foreground hover:bg-muted/50"
+                  )}
+                  onMouseEnter={() => setActiveCategoryId(category.id)}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {/* اگر آیکون با خطا مواجه شد یا آدرس نداشت، به سرعت آیکون متناسب بومی لود می‌شود */}
+                    {hasImageFailed ? (
+                      <FallbackIconComponent className="h-5 w-5 shrink-0 text-muted-foreground/80" />
+                    ) : (
+                      <img 
+                        src={category.icon!} 
+                        alt={category.name} 
+                        className="h-5 w-5 object-contain shrink-0 filter dark:invert"
+                        onError={() => handleImageError(category.id)}
+                      />
+                    )}
+                    <span className="truncate">{category.name}</span>
+                  </div>
+                  <ChevronLeft className={cn("h-4 w-4 shrink-0 transition-transform", isActive ? "text-primary translate-x-1" : "text-muted-foreground")} />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ستون سمت چپ: لیست قطعات دسته‌بندی فعال */}
+          <div className="flex-1 overflow-y-auto p-6 bg-background">
+            {activeCategory ? (
+              <div className="space-y-4">
+                {/* سربرگ بخش فعال */}
+                <div className="flex items-center justify-between border-b pb-2">
+                  <span className="text-sm font-bold text-foreground font-iran-yekan flex items-center gap-2">
+                    {failedImages[activeCategory.id] || !activeCategory.icon ? (
+                      (() => {
+                        const FallbackIcon = getFallbackIcon(activeCategory.name);
+                        return <FallbackIcon className="h-5 w-5 text-primary shrink-0" />;
+                      })()
+                    ) : (
+                      <img 
+                        src={activeCategory.icon!} 
+                        alt={activeCategory.name} 
+                        className="h-5 w-5 object-contain filter dark:invert"
+                        onError={() => handleImageError(activeCategory.id)}
+                      />
+                    )}
+                    همه قطعات {activeCategory.name}
+                  </span>
+                  <Link 
+                    href={activeCategory.href}
+                    className="text-xs text-primary hover:underline font-iran-sans flex items-center gap-1"
+                  >
+                    مشاهده همه قطعات این گروه
+                    <ChevronLeft className="h-3 w-3" />
+                  </Link>
+                </div>
+
+                {/* گرید قطعات مربوطه */}
+                {activeCategory.parts && activeCategory.parts.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    {activeCategory.parts.map((part) => (
+                      <Link
+                        key={part.id}
+                        href={part.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors py-1 truncate font-iran-sans font-medium hover:translate-x-1 duration-150 inline-block"
+                      >
+                        {part.name}
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground font-iran-sans py-4">
+                    هیچ قطعه‌ای برای این دسته‌بندی یافت نشد.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm font-iran-sans">
+                یک دسته‌بندی را از سمت راست انتخاب کنید.
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
