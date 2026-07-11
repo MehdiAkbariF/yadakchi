@@ -21,12 +21,12 @@ export class AuthService {
       await this.httpClient.post(
         AUTH_ENDPOINTS.LOGIN,
         {
-          pattern: 'VerificationSms', // متد اجباری ارسال پیامک در بک‌اند
+          pattern: 'VerificationSms',
           phoneNumber: credentials.phoneNumber,
         },
         {
           headers: {
-            'X-Client': 'Web', // ارسال هدر الزامی x-client در لاگین
+            'X-Client-Type': 'web', // ارسال هدر الزامی
           }
         }
       );
@@ -37,8 +37,7 @@ export class AuthService {
   }
 
   /**
-   * تایید کد ارسالی و ورود به سیستم (ConfirmAuthentication) 
-   * استفاده مستقیم از داده‌های پاسخِ لود شده برای حل باگ Race Condition کوکی‌ها
+   * تایید کد ارسالی و ورود به سیستم (ConfirmAuthentication)
    */
   async confirmLogin(credentials: ConfirmLoginRequest): Promise<User> {
     try {
@@ -53,21 +52,19 @@ export class AuthService {
         },
         {
           headers: {
-            'X-Client': 'Web', // ارسال هدر الزامی x-client در تایید otp
+            'X-Client-Type': 'web', // ارسال هدر الزامی
           }
         }
       );
 
-      // استخراج آبجکت کاربر به صورت منعطف (مستقیماً از روت پاسخ یا داخل آبجکت data)
       const rawUser = response.data?.data || response.data;
       
       if (!rawUser || typeof rawUser !== 'object') {
         throw new Error('ساختار داده کاربر دریافتی از سرور معتبر نیست.');
       }
 
-      // نگاشت و تبدیل مستقیم داده‌های دریافتی لاگین بدون نیاز به ارسال درخواست ثانویه و مواجهه با خطای ۴۰۱
       const user = AuthMapper.toDomain(rawUser);
-      logger.info('[Auth] User logged in successfully via Confirm body:', user.id);
+      logger.info('[Auth] User logged in successfully:', user.id);
       return user;
     } catch (error) {
       logger.error('[Auth] Confirm login failed:', error);
@@ -76,7 +73,7 @@ export class AuthService {
   }
 
   /**
-   * خروج از سیستم و حذف کوکی‌های نشست در بک‌اند
+   * خروج از سیستم
    */
   async logout(): Promise<void> {
     try {
@@ -90,14 +87,19 @@ export class AuthService {
   }
 
   /**
-   * دریافت پروفایل و اطلاعات کاربری معتبر جاری
+   * دریافت پروفایل کاربری معتبر فعلی
+   * این متد قابلیت دریافت هدر (مثل کوکی) را دارد تا در سمت سرور (SSR) هم کار کند.
    */
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser(reqHeaders?: Record<string, string>): Promise<User | null> {
     try {
       logger.debug('[Auth] Getting current user profile');
       
       const response = await this.httpClient.get<any>(
-        AUTH_ENDPOINTS.GET_USER
+        AUTH_ENDPOINTS.GET_USER,
+        {
+          // اگر در سمت سرور هستیم، کوکی رو به بک‌اند پاس می‌دهیم
+          headers: reqHeaders ? { Cookie: reqHeaders.cookie } : undefined,
+        }
       );
 
       if (!response.data) {
@@ -106,13 +108,12 @@ export class AuthService {
 
       return AuthMapper.toDomain(response.data);
     } catch (error) {
-      // در صورت غیر معتبر بودن نشست یا ارور ۴۰۱، بدون پرتاب خطا مقدار null بازمی‌گردانیم
+      // در صورت 401 بودن، مقدار null برمی‌گردد
       return null;
     }
   }
 }
 
-// ایجاد و بازگردانی سینگلتون سرویس
 let authServiceInstance: AuthService | null = null;
 
 export function getAuthService(): AuthService {

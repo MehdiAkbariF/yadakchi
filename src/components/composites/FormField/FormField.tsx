@@ -36,7 +36,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
   ) => {
     const fieldId = id || `field-${Math.random().toString(36).substring(7)}`;
     const hasError = !!error;
-
+    
     return (
       <div className={cn('space-y-2', className)}>
         {label && (
@@ -48,12 +48,14 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
             {required && <span className="text-destructive ml-1">*</span>}
           </label>
         )}
+        
+        {/* استفاده از کامپوننت Input که خودش پسورد و ایکون رو مدیریت میکنه */}
         <Input
           ref={ref}
           id={fieldId}
           size={size}
           variant={hasError ? 'error' : variant}
-          error={error}
+          error={error} // پاس دادن ارور به Input
           leftIcon={leftIcon}
           rightIcon={rightIcon}
           aria-describedby={
@@ -61,16 +63,8 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
           }
           {...props}
         />
-        {error && (
-          <Typography
-            id={`${fieldId}-error`}
-            variant="small"
-            color="destructive"
-            className="mt-1"
-          >
-            {error}
-          </Typography>
-        )}
+        
+        {/* بخش توضیحات (فقط وقتی ارور نیست) */}
         {description && !error && (
           <Typography
             id={`${fieldId}-description`}

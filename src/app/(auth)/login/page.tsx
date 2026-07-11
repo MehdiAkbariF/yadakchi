@@ -2,56 +2,48 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { AuthLayout } from '@/components/shared/Layouts/AuthLayout';
-import { FormField } from '@/components/composites/FormField';
+import { Input } from '@/components/primitives/Input'; // 🚨 استفاده مستقیم از Input دیزاین سیستم
+import { OtpInput } from '@/components/primitives/OtpInput'; // 🚨 کامپوننت جدید OTP
 import { Button } from '@/components/primitives/Button';
 import { Typography } from '@/components/primitives/Typography';
 import { useRequestLogin, useConfirmLogin, useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { authValidators } from '@/domains/auth/validation/auth.validation';
 import { Loader2, Phone, RotateCcw, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { showToast } from '@/core/utils/toast';
 
 export default function LoginPage() {
-  const router = useRouter();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
 
-  // تعریف دقیق ورودی‌های ۵ رقمی
   const [otpArray, setOtpArray] = useState<string[]>(Array(5).fill(''));
-  const otpInputRefs = useRef<HTMLInputElement[]>([]);
 
-  // تایمر پیامک
   const [countdown, setCountdown] = useState(120);
   const [isTimerActive, setIsTimerActive] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const requestLogin = useRequestLogin();
   const confirmLogin = useConfirmLogin();
 
   useEffect(() => {
     if (isAuthenticated && !isAuthLoading) {
-      router.push('/');
+      window.location.href = '/';
     }
-  }, [isAuthenticated, isAuthLoading, router]);
+  }, [isAuthenticated, isAuthLoading]);
 
   useEffect(() => {
     if (isTimerActive && countdown > 0) {
-      timerRef.current = setTimeout(() => {
+      const timer = setTimeout(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
+      return () => clearTimeout(timer);
     } else if (countdown === 0) {
       setIsTimerActive(false);
-      if (timerRef.current) clearTimeout(timerRef.current);
     }
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
   }, [countdown, isTimerActive]);
 
   const startTimer = () => {
@@ -71,7 +63,9 @@ export default function LoginPage() {
 
     const validation = authValidators.login.safeParse({ phoneNumber });
     if (!validation.success) {
-      setError(validation.error.errors[0]?.message || 'شماره موبایل وارد شده معتبر نیست');
+      const errMsg = validation.error.errors[0]?.message || 'شماره موبایل وارد شده معتبر نیست';
+      setError(errMsg);
+      showToast.error(errMsg);
       return;
     }
 
@@ -80,33 +74,11 @@ export default function LoginPage() {
       setStep('otp');
       setOtpArray(Array(5).fill(''));
       startTimer();
-      // فوکوس اتوماتیک روی اولین مربع ورود کد
-      setTimeout(() => {
-        otpInputRefs.current[0]?.focus();
-      }, 150);
+      showToast.success('کد تایید با موفقیت ارسال شد');
     } catch (err: any) {
-      setError(err.userMessage || 'خطا در ارسال کد تایید. مجدداً تلاش کنید.');
-    }
-  };
-
-  // رفتار داینامیک باکس‌های ورود رمز یکبار مصرف
-  const handleOtpChange = (index: number, value: string) => {
-    if (!/^[0-9]?$/.test(value)) return;
-
-    const newOtp = [...otpArray];
-    newOtp[index] = value;
-    setOtpArray(newOtp);
-
-    // حرکت خودکار به فیلد بعدی
-    if (value && index < 4) {
-      otpInputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  // برگشت به فیلد قبلی با فشردن Backspace در صورت خالی بودن خانه جاری
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otpArray[index] && index > 0) {
-      otpInputRefs.current[index - 1]?.focus();
+      const errMsg = err.userMessage || 'خطا در ارسال کد تایید. مجدداً تلاش کنید.';
+      setError(errMsg);
+      showToast.error(errMsg);
     }
   };
 
@@ -118,15 +90,20 @@ export default function LoginPage() {
 
     const validation = authValidators.confirmLogin.safeParse({ phoneNumber, code });
     if (!validation.success) {
-      setError(validation.error.errors[0]?.message || 'کد تایید باید ۵ رقم کامل باشد');
+      const errMsg = validation.error.errors[0]?.message || 'کد تایید باید ۵ رقم کامل باشد';
+      setError(errMsg);
+      showToast.error(errMsg);
       return;
     }
 
     try {
       await confirmLogin.mutateAsync({ phoneNumber, code });
-      router.push('/');
+      showToast.success('خوش آمدید! در حال انتقال...');
+      window.location.href = '/';
     } catch (err: any) {
-      setError(err.userMessage || 'کد ورود معتبر نیست یا منقضی شده است');
+      const errMsg = err.userMessage || 'کد ورود معتبر نیست یا منقضی شده است';
+      setError(errMsg);
+      showToast.error(errMsg);
     }
   };
 
@@ -138,11 +115,11 @@ export default function LoginPage() {
       await requestLogin.mutateAsync({ phoneNumber });
       setOtpArray(Array(5).fill(''));
       startTimer();
-      setTimeout(() => {
-        otpInputRefs.current[0]?.focus();
-      }, 150);
+      showToast.success('کد تایید مجدداً ارسال شد');
     } catch (err: any) {
-      setError(err.userMessage || 'خطا در ارسال مجدد کد تایید');
+      const errMsg = err.userMessage || 'خطا در ارسال مجدد کد تایید';
+      setError(errMsg);
+      showToast.error(errMsg);
     }
   };
 
@@ -155,17 +132,12 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthLayout>
+    <AuthLayout title={step === 'phone' ? 'ورود | ثبت‌نام' : 'کد تایید را وارد کنید'}>
       {step === 'phone' ? (
         <div className="space-y-5" dir="rtl">
-          <div className="text-center">
-            <Typography variant="h3" className="font-iran-yekan font-bold text-foreground">
-              ورود | ثبت‌نام
-            </Typography>
-          </div>
-
           <form onSubmit={handleRequestOTP} className="space-y-4">
-            <FormField
+            {/* 🚨 استفاده مستقیم از Input دیزاین سیستم */}
+            <Input
               type="tel"
               placeholder="شماره موبایل خود را وارد کنید"
               value={phoneNumber}
@@ -186,7 +158,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* متن شرایط استفاده از سرویس */}
           <Typography variant="small" color="muted" className="text-center font-iran-sans text-[10px] leading-relaxed text-muted-foreground/80 px-2 block">
             ورود | ثبت نام شما به معنای پذیرش{' '}
             <Link href="/terms" className="text-primary hover:underline font-bold">قوانین و مقررات</Link>{' '}
@@ -198,7 +169,6 @@ export default function LoginPage() {
       ) : (
         <div className="space-y-5" dir="rtl">
           <div className="text-center">
-            {/* دکمه بازگشت به فاز وارد کردن شماره موبایل */}
             <button 
               onClick={() => setStep('phone')}
               className="flex items-center gap-1 text-xs font-bold text-primary hover:underline font-iran-sans mb-2"
@@ -206,33 +176,20 @@ export default function LoginPage() {
               <ArrowRight className="h-4 w-4" />
               <span>تغییر شماره موبایل ({phoneNumber})</span>
             </button>
-            <Typography variant="h3" className="font-iran-yekan font-bold text-foreground">
-              کد تایید را وارد کنید
-            </Typography>
           </div>
 
           <form onSubmit={handleConfirmOTP} className="space-y-5">
-            {/* گرید ۵ تایی مربع‌های متمایز کد تایید با سایه‌زنی غنی سه بعدی */}
-            <div className="flex items-center justify-center gap-3" dir="ltr">
-              {otpArray.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => { if (el) otpInputRefs.current[index] = el; }}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  className="w-12 h-12 md:w-14 md:h-14 text-center text-xl md:text-2xl font-bold rounded-xl border border-input bg-background text-foreground transition-all duration-150 focus:ring-2 focus:ring-primary focus:border-transparent outline-none shadow-sm focus:bg-primary/5 focus:scale-105"
-                />
-              ))}
-            </div>
+            {/* 🚨 استفاده از کامپوننت جدید OtpInput */}
+            <OtpInput 
+              length={5} 
+              value={otpArray} 
+              onChange={(val) => setOtpArray(val)} 
+            />
 
             {error && (
               <p className="text-xs text-center text-destructive font-iran-sans font-medium">{error}</p>
             )}
 
-            {/* شمارش معکوس پیامک */}
             <div className="flex items-center justify-center text-sm font-iran-sans">
               {isTimerActive ? (
                 <Typography variant="small" color="muted">

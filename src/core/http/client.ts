@@ -10,16 +10,17 @@ import { HttpResponse, RequestOptions, HttpMethod } from './types';
 export class HttpClient {
   private readonly axiosInstance: AxiosInstance;
   private abortControllers: Map<string, AbortController> = new Map();
+  
+  // برای نگهداری هدرهای سمت سرور (مثل کوکی)
+  private serverRequestConfig: Record<string, any> = {};
 
-    constructor() {
-    // اگر آدرس پایه در فایل env خالی بود، به عنوان پیش‌فرض از مسیر پروکسی اصلی یعنی /api/proxy استفاده کن
-    // تا مسیر فرستاده شده کوکی‌ها (Path=/api/proxy) با آدرس درخواست‌ها در لوکال کاملاً مطابقت داشته باشد.
-    const baseURL = env.apiBaseUrl || '/api/proxy';
+  constructor() {
+    const baseURL = '/proxy-api';
     
     this.axiosInstance = axios.create({
       baseURL,
       timeout: env.apiTimeout,
-      withCredentials: true, // پذیرش خودکار کوکی‌های HTTP-Only
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -30,25 +31,29 @@ export class HttpClient {
     this.setupInterceptors();
   }
 
+  // متدی برای تنظیم کانفیگ سرور از بیرون کلاس
+  setServerConfig(config: Record<string, any>) {
+    this.serverRequestConfig = config;
+  }
+
   private setupInterceptors(): void {
     // Request Interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        if (config.url?.startsWith('http')) {
-          // آدرس کامل است، تغییر ایجاد نکن
-        } else if (!config.url?.startsWith('/api/')) {
-          config.url = `/api/${config.url}`;
+        // اگر در سمت سرور هستیم و کانفیگی ست شده، هدرها را ترکیب می‌کنیم
+        if (typeof window === 'undefined' && this.serverRequestConfig?.headers) {
+          config.headers = {
+            ...config.headers,
+            ...this.serverRequestConfig.headers,
+          };
         }
 
         if (env.enableLogging) {
-          logger.debug(`[HTTP] ${config.method?.toUpperCase()} ${config.url}`, {
+          logger.debug(`[HTTP] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
             params: config.params,
             data: config.data,
           });
         }
-
-        // توجه: هدرهای پاسخ CORS (مانند Access-Control-Allow-Origin) از هدر درخواست حذف شدند
-        // تا باعث مسدود شدن کوکی‌ها و خطای ۴۰۱ توسط فایروال بک‌اَند نشوند.
 
         const requestId = this.generateRequestId();
         config.headers['X-Request-ID'] = requestId;
@@ -70,19 +75,16 @@ export class HttpClient {
             data: response.data,
           });
         }
-
         return response;
       },
       (error) => {
         const apiError = errorManager.normalize(error);
-        
         logger.error('[HTTP] Response error', {
           type: apiError.type,
           status: apiError.status,
           message: apiError.message,
           userMessage: apiError.userMessage,
         });
-
         return Promise.reject(apiError);
       }
     );
@@ -119,7 +121,7 @@ export class HttpClient {
         headers: options?.headers,
         timeout: options?.timeout ?? env.apiTimeout,
         signal,
-        withCredentials: true, // تضمین و اجبار ارسال کوکی با این درخواست خاص کلاینت
+        withCredentials: true, 
       };
 
       const response = await this.axiosInstance.request<T>(config);

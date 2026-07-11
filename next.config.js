@@ -1,11 +1,13 @@
-// next.config.js
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
 
   images: {
-    domains: ['api.yadakchi.com', 'cdn.yadakchi.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'api.yadakchi.com' },
+      { protocol: 'https', hostname: 'cdn.yadakchi.com' },
+      { protocol: 'http', hostname: '51.158.252.139' },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
 
@@ -25,45 +27,19 @@ const nextConfig = {
   },
 
   // Proxy برای جلوگیری از CORS
-  async rewrites() {
+   async rewrites() {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com';
     
     return [
       {
-        source: '/api/:path*',
-        destination: `${apiBaseUrl}/api/:path*`,
+        source: '/proxy-api/:path*',
+        destination: `${apiBaseUrl}/:path*`,
+        // این ویژگی باعث میشه هدرهای ورودی (مثل Cookie) به مقصد ارسال بشن
+        basePath: false, 
       },
     ];
   },
 
-  // Headers برای CORS
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization, X-Requested-With',
-          },
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true',
-          },
-        ],
-      },
-    ];
-  },
-
-  // Redirects
   async redirects() {
     return [
       {
@@ -75,11 +51,6 @@ const nextConfig = {
   },
 
   output: 'standalone',
-
-  i18n: {
-    locales: ['fa', 'en'],
-    defaultLocale: 'fa',
-  },
 
   logging: {
     fetches: {
