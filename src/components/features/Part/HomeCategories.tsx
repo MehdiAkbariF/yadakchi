@@ -53,7 +53,7 @@ export function HomeCategories() {
   return (
     <div className="w-full space-y-5 py-4">
       {/* عنوان بخش دسته‌بندی قطعات */}
-      <Typography variant="h3" className="font-iran-yekan font-bold text-center text-foreground/90">
+      <Typography variant="h5" className="font-iran-yekan font-bold text-center text-foreground/90">
         خرید بر اساس دسته‌بندی قطعات
       </Typography>
 
