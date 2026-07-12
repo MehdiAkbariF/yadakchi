@@ -9,6 +9,17 @@ import { PaginatedResult } from '@/shared/types/common.types';
 
 const carService = getCarService();
 
+// هوک جدید کلاینت جهت دریافت لیست تخت خودروها همراه با سیستم کشینگ ده دقیقه‌ای
+export function useGetCarListFlat(pageNumber: number = 1, pageSize: number = 200) {
+  return useTypedQuery<any[]>(
+    ['reference', 'cars', 'flat-list', pageNumber, pageSize],
+    () => carService.getCarListFlat(pageNumber, pageSize),
+    {
+      staleTime: 10 * 60 * 1000,
+    }
+  );
+}
+
 export function useGetCarList(
   filters: CarFilters,
   options?: Omit<UseQueryOptions<PaginatedResult<CarViewModel>>, 'queryKey' | 'queryFn'>

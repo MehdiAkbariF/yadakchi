@@ -29,24 +29,34 @@ export function Modal({
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // اثر اول: مدیریت قفل اسکرول بدنه و فوکوس اولیه مودال
+  // وابستگی فقط به isOpen است تا فوکوس فقط یکبار زمان باز شدن اجرا شود و باKeystrokeها تغییر نکند
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (closeOnEscape && e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      document.addEventListener('keydown', handleEscape);
       modalRef.current?.focus();
     }
 
     return () => {
       document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // اثر دوم: هندل کردن کلید بازگشت اسکیپ (Escape) به صورت مستقل و بدون تداخل با فوکوس اینپوت‌ها
+  useEffect(() => {
+    if (!isOpen || !closeOnEscape) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen, onClose, closeOnEscape]);
+  }, [isOpen, closeOnEscape, onClose]);
 
   if (!isOpen) return null;
 

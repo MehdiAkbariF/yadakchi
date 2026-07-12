@@ -6,6 +6,8 @@ import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { BannerSlider } from '@/components/features/Banner/BannerSlider';
 import { Banner, BannerGroup } from '@/components/features/Banner/Banner';
+import { ShopByCar } from '@/components/features/Car/ShopByCar';
+import { HomeCategories } from '@/components/features/Part/HomeCategories';
 import { Typography } from '@/components/primitives/Typography';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
@@ -24,7 +26,7 @@ export function HomeContent() {
   const hasLeftBanner = !!a1BannerGroup && a1BannerGroup.banners?.length > 0;
 
   return (
-    <div className="w-full space-y-8 py-0">
+    <div className="w-full space-y-4 md:space-y-8 py-0">
       
       {/* ۱. بخش بنرهای بالای صفحه اصلی */}
       <div className="w-full">
@@ -44,10 +46,7 @@ export function HomeContent() {
           </div>
         )}
 
-        {/* 
-          گرید بنرها با ارتفاع فشرده‌تر و بسیار خوش‌تناسب برای دسکتاپ و تبلت.
-          بدون تداخل با قد صفحه یا لرزش در لودینگ ابتدایی.
-        */}
+        {/* گرید بنرها با ارتفاع واکنش‌گرا و متقارن بدون لرزش یا تداخل ارتفاع */}
         {!isLoading && !isError && rawBanners.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-10 gap-4 md:gap-6 items-stretch w-full h-[180px] sm:h-[240px] md:h-[300px] lg:h-[350px] xl:h-[400px] 2xl:h-[440px] animate-in fade-in duration-300">
             
@@ -59,7 +58,7 @@ export function HomeContent() {
               <BannerSlider group={sliderGroup} aspectRatio="h-full" />
             </div>
 
-            {/* سمت چپ: بنر ثابت مکمل (۳۰ درصد صفحه - نمایش اختصاصی در دسکتاپ و تبلت با ارتفاع کوچک‌تر شده جدید) */}
+            {/* سمت چپ: بنر ثابت مکمل (۳۰ درصد صفحه - نمایش اختصاصی در دسکتاپ و تبلت به صورت کاملاً متقارن) */}
             {hasLeftBanner && (
               <div className="hidden md:block md:col-span-3 h-full w-full">
                 <Banner group={a1BannerGroup} aspectRatio="h-full" />
@@ -70,36 +69,46 @@ export function HomeContent() {
         )}
       </div>
 
-      {/* بخش خوش‌آمدگویی کاربر */}
-      <div className="flex flex-col items-center justify-center min-h-[30vh] space-y-4 pt-8">
-        <Typography variant="h1" className="font-iran-yekan">
-          به یدکچی خوش آمدید
-        </Typography>
+      {/* کانتینر فرعی صفحه با فواصل کاملاً کنترل شده و عریض هماهنگ با بنرها */}
+      <div className="w-full space-y-6 md:space-y-10 py-2 md:py-4">
         
-        <Typography variant="lead" color="muted" className="font-iran-sans text-center">
-          {user ? (
-            `سلام ${user.shopTitle || user.fullName || 'کاربر'} عزیز`
-          ) : (
-            'بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران'
-          )}
-        </Typography>
-        
-        <div className="mt-8 flex gap-4">
-          <div className="rounded-lg border p-4 text-center bg-card">
-            <Typography variant="h4" className="font-iran-yekan">
-              ایران‌یکان
-            </Typography>
-            <Typography variant="small" color="muted" className="font-iran-sans">
-              برای تیترها و عناوین
-            </Typography>
-          </div>
-          <div className="rounded-lg border p-4 text-center bg-card">
-            <Typography variant="h4" className="font-iran-sans">
-              ایران‌سنس
-            </Typography>
-            <Typography variant="small" color="muted" className="font-iran-sans">
-              برای متن اصلی
-            </Typography>
+        {/* ۲. بخش مینی‌مال خرید بر اساس خودرو */}
+        <ShopByCar />
+
+        {/* ۳. بخش هم‌عرض و اسلایدی خرید بر اساس دسته‌بندی قطعات */}
+        <HomeCategories />
+
+        {/* بخش خوش‌آمدگویی کاربر */}
+        <div className="flex flex-col items-center justify-center min-h-[25vh] space-y-4 pt-4">
+          <Typography variant="h1" className="font-iran-yekan">
+            به یدکچی خوش آمدید
+          </Typography>
+          
+          <Typography variant="lead" color="muted" className="font-iran-sans text-center">
+            {user ? (
+              `سلام ${user.shopTitle || user.fullName || 'کاربر'} عزیز`
+            ) : (
+              'بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران'
+            )}
+          </Typography>
+          
+          <div className="mt-8 flex gap-4">
+            <div className="rounded-lg border p-4 text-center bg-card">
+              <Typography variant="h4" className="font-iran-yekan">
+                ایران‌یکان
+              </Typography>
+              <Typography variant="small" color="muted" className="font-iran-sans">
+                برای تیترها و عناوین
+              </Typography>
+            </div>
+            <div className="rounded-lg border p-4 text-center bg-card">
+              <Typography variant="h4" className="font-iran-sans">
+                ایران‌سنس
+              </Typography>
+              <Typography variant="small" color="muted" className="font-iran-sans">
+                برای متن اصلی
+              </Typography>
+            </div>
           </div>
         </div>
       </div>

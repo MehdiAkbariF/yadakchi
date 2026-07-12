@@ -13,6 +13,20 @@ import { PaginatedResult } from '@/shared/types/common.types';
 export class CarService {
   private readonly httpClient = getHttpClient();
 
+  // متد جدید جهت دریافت مستقیم لیست تخت خودروها برای صفحه اصلی
+  async getCarListFlat(pageNumber: number = 1, pageSize: number = 200): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        CAR_ENDPOINTS.GET_CAR_LIST,
+        { params: { PageNumber: pageNumber, PageSize: pageSize } }
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      logger.error('[CarService] Get flat car list failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
   async getCarList(filters: CarFilters): Promise<PaginatedResult<CarViewModel>> {
     try {
       const dto = CarMapper.toDomainRequest(filters);

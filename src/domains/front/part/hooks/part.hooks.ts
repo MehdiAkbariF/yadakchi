@@ -6,8 +6,42 @@ import { getPartService } from '../services/part.service';
 import { PartFilters, PartCategoryFilters } from '../types/view.types';
 import { PartViewModel } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
+import { getHttpClient } from '@/core/http/client';
 
-const partService = getPartService();
+const carService = getPartService();
+
+// هوک جدید کلاینت جهت دریافت لیست کامل و تخت اطلاعات دسته‌بندی‌ها (شامل تصاویر واقعی و وضعیت تخفیف)
+export function useGetPartCategoriesFlat(carId?: string) {
+  return useTypedQuery<any[]>(
+    ['front', 'parts', 'categories-flat', carId || 'all'],
+    async () => {
+      const client = getHttpClient();
+      const response = await client.get<any[]>('/api/Front/PartCategories', {
+        params: { CarId: carId || '' }
+      });
+      return Array.isArray(response.data) ? response.data : [];
+    },
+    {
+      staleTime: 10 * 60 * 1000,
+    }
+  );
+}
+
+export function useGetPartCategoriesNameFlat() {
+  return useTypedQuery<any[]>(
+    ['front', 'parts', 'categories-name-flat'],
+    async () => {
+      const client = getHttpClient();
+      const response = await client.get<any[]>('/api/Front/PartCategoriesName', {
+        params: { PageNumber: 1, PageSize: 30 }
+      });
+      return Array.isArray(response.data) ? response.data : [];
+    },
+    {
+      staleTime: 15 * 60 * 1000,
+    }
+  );
+}
 
 export function useGetPartList(
   filters: PartFilters,
@@ -15,7 +49,7 @@ export function useGetPartList(
 ) {
   return useTypedQuery(
     ['front', 'parts', 'list', filters],
-    () => partService.getPartList(filters),
+    () => carService.getPartList(filters),
     {
       placeholderData: (previousData) => previousData,
       staleTime: 60 * 1000,
@@ -27,7 +61,7 @@ export function useGetPartList(
 export function useGetPartPage(partEnglishName: string, carModel?: string) {
   return useTypedQuery(
     ['front', 'parts', 'page', partEnglishName, carModel],
-    () => partService.getPartPage(partEnglishName, carModel),
+    () => carService.getPartPage(partEnglishName, carModel),
     {
       staleTime: 5 * 60 * 1000,
       enabled: !!partEnglishName,
@@ -38,7 +72,7 @@ export function useGetPartPage(partEnglishName: string, carModel?: string) {
 export function useGetPartProperties(partId: string) {
   return useTypedQuery(
     ['front', 'parts', 'properties', partId],
-    () => partService.getPartProperties(partId),
+    () => carService.getPartProperties(partId),
     {
       staleTime: 5 * 60 * 1000,
       enabled: !!partId,
@@ -49,7 +83,7 @@ export function useGetPartProperties(partId: string) {
 export function useGetPartsName(filters: PartFilters) {
   return useTypedQuery(
     ['front', 'parts', 'names', filters],
-    () => partService.getPartsName(filters),
+    () => carService.getPartsName(filters),
     {
       staleTime: 60 * 1000,
     }
@@ -59,7 +93,7 @@ export function useGetPartsName(filters: PartFilters) {
 export function useGetPartCategories(carId?: string) {
   return useTypedQuery(
     ['front', 'parts', 'categories', carId],
-    () => partService.getPartCategories(carId),
+    () => carService.getPartCategories(carId),
     {
       staleTime: 10 * 60 * 1000,
     }
@@ -69,7 +103,7 @@ export function useGetPartCategories(carId?: string) {
 export function useGetPartCategoryPage(englishTitle: string) {
   return useTypedQuery(
     ['front', 'parts', 'category-page', englishTitle],
-    () => partService.getPartCategoryPage(englishTitle),
+    () => carService.getPartCategoryPage(englishTitle),
     {
       staleTime: 5 * 60 * 1000,
       enabled: !!englishTitle,
@@ -80,7 +114,7 @@ export function useGetPartCategoryPage(englishTitle: string) {
 export function useGetPartCategoriesName(filters: PartCategoryFilters) {
   return useTypedQuery(
     ['front', 'parts', 'categories-name', filters],
-    () => partService.getPartCategoriesName(filters),
+    () => carService.getPartCategoriesName(filters),
     {
       staleTime: 60 * 1000,
     }
