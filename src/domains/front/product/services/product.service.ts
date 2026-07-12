@@ -120,20 +120,54 @@ export class ProductService {
     }
   }
 
-  async getSearchKeywords(searchTitle: string): Promise<any[]> {
+  async getSearchKeywords(searchTitle: string): Promise<{ keywords: any[], cars: any[] }> {
     try {
       const response = await this.httpClient.get<any>(
         PRODUCT_ENDPOINTS.SEARCH_KEYWORDS,
         { params: { SearchTitle: searchTitle } }
       );
-      const keywords = response.data?.searchProductKeywords || [];
-      return keywords.map((dto: any) => ProductMapper.toViewKeyword(dto));
+      
+      const rawKeywords = response.data?.searchProductKeywords || [];
+      const rawCars = response.data?.cars || [];
+      
+      // مپ کردن کلمات کلیدی
+      const keywords = rawKeywords.map((dto: any) => ({
+        suggestion: dto.searchKeywordSuggestion,
+        productTitles: dto.productTitles || [],
+        part: {
+          id: dto.partId,
+          name: dto.partName,
+          englishTitle: dto.partEnglishTitle,
+          href: `/search?partEnglishTitle=${dto.partEnglishTitle}`,
+        },
+        category: {
+          id: dto.partCategoryId,
+          name: dto.partCategoryName,
+          englishTitle: dto.partCategoryEnglishTitle,
+          href: `/categories/${dto.partCategoryEnglishTitle}`,
+        },
+        // اضافه کردن این فیلدها برای دسترسی در کامپوننت
+        partCategoryId: dto.partCategoryId,
+        partCategoryName: dto.partCategoryName,
+        partCategoryEnglishTitle: dto.partCategoryEnglishTitle,
+      }));
+
+      // مپ کردن خودروها
+      const cars = rawCars.map((dto: any) => ({
+        id: dto.id,
+        model: dto.model,
+        englishTitle: dto.englishTitle,
+        cover: dto.cover,
+        coverAlt: dto.coverAlt,
+      }));
+      
+      // بازگرداندن آبجکت شامل هر دو
+      return { keywords, cars };
     } catch (error) {
       logger.error('[ProductService] Get search keywords failed:', error);
-      return [];
+      return { keywords: [], cars: [] };
     }
   }
-
   // اصلاح نوع بازگشتی به آرایه‌ای جنریک برای تطابق با مدل واقعی { id, value, timestamp }
   async getSearchHistory(): Promise<any[]> {
     try {

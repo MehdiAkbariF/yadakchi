@@ -20,9 +20,12 @@ export function MainLayout({
   return (
     <div className="flex min-h-screen flex-col">
       {!hideHeader && <Header />}
-      <main className={cn('flex-1 container py-8', className)}>
+      
+   
+      <main className={cn('flex-1 w-full max-w-[1840px] mx-auto px-4 md:px-6 py-6', className)}>
         {children}
       </main>
+      
       {!hideFooter && <Footer />}
     </div>
   );

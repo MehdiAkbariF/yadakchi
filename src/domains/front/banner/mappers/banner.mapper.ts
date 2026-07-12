@@ -98,14 +98,18 @@ export class BannerMapper {
     };
   }
 
-  // متد مپ مگا منو با اضافه کردن هوشمندانه آدرس سرور اصلی برای تصاویر نسبی
   static toViewMegaMenu(dto: MegaMenuCategoryApiDto): MegaMenuCategoryViewModel {
-    // اگر env.apiBaseUrl خالی باشد، از سرور اصلی شما به عنوان آدرس پایه استفاده می‌شود
-    const apiBase = env.apiBaseUrl || 'http://51.158.252.139:45064';
+    // اصلاح مقدار ثابت به دامنه رسمی برای لود بدون نقص مگامنو
+    const apiBase = (env.apiBaseUrl || 'https://api.yadakchi.com').replace(/\/$/, '');
     
-    const categoryIcon = dto.icon 
-      ? (dto.icon.startsWith('http') ? dto.icon : `${apiBase}${dto.icon}`)
-      : null;
+    const getFullUrl = (path: string | null) => {
+      if (!path) return null;
+      if (path.startsWith('http')) return path;
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      return `${apiBase}${cleanPath}`;
+    };
+
+    const categoryIcon = getFullUrl(dto.icon);
 
     return {
       id: dto.id,
@@ -114,10 +118,7 @@ export class BannerMapper {
       icon: categoryIcon,
       href: `/categories/${dto.englishTitle}`,
       parts: (dto.parts || []).map(part => {
-        const partIcon = part.icon 
-          ? (part.icon.startsWith('http') ? part.icon : `${apiBase}${part.icon}`)
-          : null;
-
+        const partIcon = getFullUrl(part.icon);
         return {
           id: part.id,
           name: part.name,

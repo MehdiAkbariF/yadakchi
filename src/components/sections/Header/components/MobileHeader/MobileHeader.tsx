@@ -2,6 +2,7 @@
 
 'use client';
 
+import { motion, AnimatePresence } from 'framer-motion'; // 🚨 اضافه شد
 import { cn } from '@/design-system/utils/cn';
 import { Logo } from '../Logo/Logo';
 import { SellerButton } from '../SellerButton/SellerButton';
@@ -27,30 +28,31 @@ export function MobileHeader({ className, onSearch, isScrolled = false }: Mobile
         </div>
       </div>
 
-      {/* ردیف دوم و سوم: بخش جستجو و انتخاب شهر با ترنزیشن روان CSS Grid */}
-      <div className={cn(
-        "grid transition-all duration-300 ease-in-out",
-        isScrolled 
-          ? "grid-rows-[0fr] opacity-0 pointer-events-none" 
-          : "grid-rows-[1fr] opacity-100"
-      )}>
-        <div className="overflow-hidden">
-          <div className="pt-2 pb-1 flex flex-col">
-            {/* سرچ بار بومی موبایل */}
-            <SearchBar 
-              placeholder="جستجو در"
-              onSearch={onSearch}
-              className=" rounded-md px-3 py-1.5 bg-background w-full"
-              isMobile={true}
-            />
-            
-            {/* انتخاب شهر شیک، فلت، راست‌تراز و مجهز به ChevronLeft به صورت یک پاراگراف کاملاً هماهنگ */}
-            <div className="border-t pt-1.5 mt-2.5">
-              <CitySelector variant="mobile" />
+      {/* 🚨 ردیف دوم و سوم با Framer Motion */}
+      <AnimatePresence initial={false}>
+        {!isScrolled && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <div className="pt-2 pb-1 flex flex-col">
+              <SearchBar 
+                placeholder="جستجو در"
+                onSearch={onSearch}
+                className="rounded-md px-3 py-1.5 bg-background w-full"
+                isMobile={true}
+              />
+              
+              <div className="border-t pt-1.5 mt-2.5">
+                <CitySelector variant="mobile" />
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

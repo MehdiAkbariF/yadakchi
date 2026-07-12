@@ -15,7 +15,10 @@ export class HttpClient {
   private serverRequestConfig: Record<string, any> = {};
 
   constructor() {
-    const baseURL = '/proxy-api';
+    // اصلاح دامنه مطلق سمت سرور به دامنه معتبر تولیدی yadakchi.com
+    const baseURL = typeof window === 'undefined'
+      ? (env.apiBaseUrl || 'https://api.yadakchi.com')
+      : '/proxy-api';
     
     this.axiosInstance = axios.create({
       baseURL,

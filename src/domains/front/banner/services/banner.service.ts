@@ -12,7 +12,6 @@ import {
   FrontFooterApiDto
 } from '../types/dto.types';
 import { 
-  BannerViewModel, 
   ShopProductBannerViewModel,
   MegaMenuCategoryViewModel,
   FrontFooterViewModel
@@ -21,22 +20,18 @@ import {
 export class BannerService {
   private readonly httpClient = getHttpClient();
 
-  async getBanners(pageName: BannerPageName): Promise<BannerViewModel[]> {
+  async getBanners(pageName: BannerPageName): Promise<any[]> {
     try {
-      const response = await this.httpClient.get<BannerApiDto[]>(
+      const response = await this.httpClient.get<any[]>(
         BANNER_ENDPOINTS.GET_BANNERS,
         { params: { YadakchiPageName: pageName } }
       );
 
-      return response.data
-        .map(dto => {
-          const domain = BannerMapper.toDomain(dto);
-          return BannerMapper.toView(domain);
-        })
-        .filter(banner => banner.isActive);
+      return response.data;
     } catch (error) {
       logger.error('[BannerService] Get banners failed:', error);
-      return [];
+      // رفع باگ کلیدی: پرتاب خطا به جای بازگرداندن آرایه خالی برای ایجاد قابلیت فال‌بک روی کلاینت
+      throw error; 
     }
   }
 
@@ -54,11 +49,10 @@ export class BannerService {
       return response.data.map(dto => BannerMapper.toViewShopProduct(dto));
     } catch (error) {
       logger.error('[BannerService] Get shop product banners failed:', error);
-      return [];
+      throw error;
     }
   }
 
-  // متد مگا منو منطبق با نوع داده‌های ورودی و بازگشتی جدید
   async getMegaMenu(): Promise<MegaMenuCategoryViewModel[]> {
     try {
       const response = await this.httpClient.get<MegaMenuResponseApiDto>(
@@ -72,7 +66,7 @@ export class BannerService {
       return response.data.partCategories.map(dto => BannerMapper.toViewMegaMenu(dto));
     } catch (error) {
       logger.error('[BannerService] Get mega menu failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -85,7 +79,7 @@ export class BannerService {
       return BannerMapper.toViewFooter(response.data);
     } catch (error) {
       logger.error('[BannerService] Get front footer failed:', error);
-      return null;
+      throw error;
     }
   }
 
