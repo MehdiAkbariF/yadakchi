@@ -15,7 +15,7 @@ import {
   useRemoveSearchHistory 
 } from '@/domains/front/product/hooks/product.hooks';
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
-import { useDebounce } from '@/shared/hooks/useDebounce'; // 🚨 ایمپورت هوک Debounce
+import { useDebounce } from '@/shared/hooks/useDebounce';
 import Link from 'next/link';
 
 interface SearchBarProps {
@@ -40,15 +40,14 @@ export function SearchBar({
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
-  // 🚨 استفاده از Debounce با تاخیر 500 میلی‌ثانیه
+  // دیبانس کردن ورودی برای جلوگیری از ارسال کوئری‌های مکرر به سرور
   const debouncedQuery = useDebounce(query, 500);
 
   const { data: history = [], refetch: refetchHistory } = useGetSearchHistory();
   const { data: suggestions = [] } = useGetSearchSuggestions();
   
-  // 🚨 پاس دادن مقدار Debounce شده به هوک، به جای مقدار مستقیم
+  // فرستادن مقدار دیبانس شده به وب‌سرویس پیشنهاد کلمات کلیدی
   const { data: keywordsData, isLoading: isKeywordsLoading } = useGetSearchKeywords(debouncedQuery);
-  
   const { data: searchBanners = [] } = useGetBanners('SearchResult');
   
   const removeHistoryMutation = useRemoveSearchHistory();
@@ -81,9 +80,14 @@ export function SearchBar({
     };
   }, [isMobileModalOpen]);
 
+  // متد اصلاح شده جستجو: همزمان کلمه را در اینپوت ست کرده و سرچ می‌کند
   const handleSearchSubmit = (searchWord: string) => {
     if (!searchWord.trim()) return;
     
+    // ۱. قرار دادن عبارت کلیک شده در اینپوت
+    setQuery(searchWord);
+    
+    // ۲. اجرای لاجیک جستجو و ریدایرکت
     if (onSearch) onSearch(searchWord);
     router.push(`/search?q=${encodeURIComponent(searchWord)}`);
     
@@ -120,9 +124,7 @@ export function SearchBar({
   };
 
   const renderSuggestionsPanel = () => {
-    // 🚨 بررسی روی مقدار Debounce شده
     const showKeywords = debouncedQuery.trim().length >= 2;
-
     const keywordsList = (keywordsData as any)?.keywords || [];
     const carsList = (keywordsData as any)?.cars || [];
 
@@ -139,6 +141,7 @@ export function SearchBar({
         {showKeywords ? (
           <div className="p-4 space-y-4 flex flex-col h-full">
             
+            {/* لیست خودروهای یافت شده مرتبط با سرچ */}
             {carsList.length > 0 && (
               <div className="space-y-2 shrink-0">
                 <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b">
@@ -150,6 +153,8 @@ export function SearchBar({
                       key={car.id}
                       href={`/search?carId=${car.id}`}
                       onClick={() => {
+                        // قرار دادن نام خودرو در اینپوت با کلیک بر روی آن
+                        setQuery(car.model);
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
                         if (window.history.state?.modalOpen === 'search-modal') window.history.back();
@@ -157,13 +162,14 @@ export function SearchBar({
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-medium font-iran-sans hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                     >
                       <Car className="h-3.5 w-3.5" />
-                      همه کالاهای خودرو {car.model}
+                      همه کالا‌های خودرو {car.model}
                     </Link>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* لیست دسته‌بندی‌های یافت شده مرتبط با سرچ */}
             {uniqueCategories.length > 0 && (
               <div className="space-y-2 shrink-0">
                 <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b">
@@ -175,6 +181,8 @@ export function SearchBar({
                       key={cat.partCategoryId}
                       href={`/categories/${cat.partCategoryEnglishTitle}`}
                       onClick={() => {
+                        // قرار دادن نام دسته‌بندی در اینپوت با کلیک بر روی آن
+                        setQuery(cat.partCategoryName);
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
                         if (window.history.state?.modalOpen === 'search-modal') window.history.back();
@@ -182,13 +190,14 @@ export function SearchBar({
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium font-iran-sans hover:bg-primary/10 transition-colors"
                     >
                       <FolderKanban className="h-3.5 w-3.5" />
-                      همه کالاهای دسته {cat.partCategoryName}
+                      همه کالا‌های دسته {cat.partCategoryName}
                     </Link>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* کلمات کلیدی پیشنهادی */}
             <div className="space-y-2 shrink-0">
               <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b">
                 عبارات پیشنهادی
@@ -247,6 +256,7 @@ export function SearchBar({
           </div>
         ) : (
           <div className="p-4 space-y-5 flex-1 flex flex-col">
+            {/* تاریخچه جستجوهای اخیر */}
             {history.length > 0 && (
               <div className="space-y-2 shrink-0">
                 <div className="flex items-center justify-between pb-1 border-b">
@@ -278,6 +288,7 @@ export function SearchBar({
               </div>
             )}
 
+            {/* جستجوهای پرطرفدار */}
             {suggestions.length > 0 && (
               <div className="space-y-2 shrink-0">
                 <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1.5 pb-1 border-b">
@@ -354,7 +365,6 @@ export function SearchBar({
     );
   }
 
-  // دسکتاپ
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
       <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(query); }}>

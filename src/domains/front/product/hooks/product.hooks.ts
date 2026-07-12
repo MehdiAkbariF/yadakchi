@@ -6,8 +6,55 @@ import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.ho
 import { getProductService } from '../services/product.service';
 import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
+import { getHttpClient } from '@/core/http/client';
 
 const productService = getProductService();
+
+// هوک دریافت محصولات شگفت‌انگیز عمومی
+export function useGetNominatedProducts() {
+  return useTypedQuery<any>(
+    ['front', 'products', 'nominated-deals'],
+    async () => {
+      const client = getHttpClient();
+      const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
+        params: {
+          Types: 'Stock',
+          HasDiscount: true,
+          HasDiscountWithExpiration: true,
+          PageNumber: 1,
+          PageSize: 30
+        }
+      });
+      return response.data;
+    },
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+// هوک جدید و همه‌کاره دریافت محصولات شگفت‌انگیز یک دسته‌بندی خاص بر اساس پارامترهای ارسالی شما
+export function useGetNominatedProductsByCategory(categoryEnglishTitle: string) {
+  return useTypedQuery<any>(
+    ['front', 'products', 'nominated-category', categoryEnglishTitle],
+    async () => {
+      const client = getHttpClient();
+      const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
+        params: {
+          Types: 'Stock',
+          PartCategoryEnglishTitle: categoryEnglishTitle,
+          PageNumber: 1,
+          PageSize: 30
+        }
+      });
+      return response.data;
+    },
+    {
+      staleTime: 5 * 60 * 1000,
+      enabled: !!categoryEnglishTitle, // فقط در صورت وجود عنوان انگلیسی کوئری فعال شود
+    }
+  );
+}
 
 export function useSearchProducts(
   params: SearchProductsRequest,
@@ -101,7 +148,7 @@ export function useGetSearchSuggestions(searchTitle?: string) {
 }
 
 export function useGetSearchKeywords(searchTitle: string) {
-  return useTypedQuery<any[]>(
+  return useTypedQuery<{ keywords: any[]; cars: any[]; }>(
     ['front', 'products', 'keywords', searchTitle],
     () => productService.getSearchKeywords(searchTitle),
     {
@@ -111,7 +158,6 @@ export function useGetSearchKeywords(searchTitle: string) {
   );
 }
 
-// اصلاح نوع بازگشتی هوک تاریخچه به صورت آرایه جنریک
 export function useGetSearchHistory() {
   return useTypedQuery<any[]>(
     ['front', 'products', 'search-history'],

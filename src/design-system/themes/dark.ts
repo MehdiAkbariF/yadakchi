@@ -4,44 +4,37 @@ import type { ThemeTokens } from './types';
 
 export const darkTheme: ThemeTokens = {
   colors: {
-    // Background - خاکستری تیره
-    background: '#1A1A1B',
-    foreground: '#F0F0F1',
+    // اصلاح کلیدی پس‌زمینه و رنگ‌های جلو رونده تم دارک با استاندارد زینک عمیق
+    background: '#09090B',
+    foreground: '#FAFAFA',
     
-    // Cards
-    card: '#262627',
-    'card-foreground': '#F0F0F1',
+    // کارت‌ها تفکیک کامل با پله فرعی تراز شده
+    card: '#111113',
+    'card-foreground': '#FAFAFA',
     
-    // Popover
-    popover: '#262627',
-    'popover-foreground': '#F0F0F1',
+    popover: '#111113',
+    'popover-foreground': '#FAFAFA',
     
-    // Primary - برند (با روشنایی بیشتر)
     primary: '#F56D3C',
     'primary-foreground': '#FFFFFF',
     
-    // Secondary - خاکستری متوسط
-    secondary: '#333334',
-    'secondary-foreground': '#F0F0F1',
+    secondary: '#27272A',
+    'secondary-foreground': '#FAFAFA',
     
-    // Muted
-    muted: '#333334',
-    'muted-foreground': '#808081',
+    muted: '#27272A',
+    'muted-foreground': '#A1A1AA',
     
-    // Accent
-    accent: '#333334',
-    'accent-foreground': '#F0F0F1',
+    accent: '#27272A',
+    'accent-foreground': '#FAFAFA',
     
-    // Destructive
     destructive: '#ef4444',
     'destructive-foreground': '#FFFFFF',
     
-    // Borders & Inputs
-    border: '#333334',
-    input: '#333334',
+    border: '#27272A',
+    input: '#27272A',
     ring: '#F56D3C',
     
-    // Charts
+    // نمودارها
     'chart-1': '#F56D3C',
     'chart-2': '#4ade80',
     'chart-3': '#fbbf24',
@@ -59,11 +52,11 @@ export const darkTheme: ThemeTokens = {
     full: '9999px',
   },
   shadows: {
-    sm: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
-    md: '0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4)',
-    lg: '0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4)',
-    xl: '0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4)',
-    '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.5)',
+    sm: '0 1px 2px 0 rgb(0 0 0 / 0.5)',
+    md: '0 4px 6px -1px rgb(0 0 0 / 0.6), 0 2px 4px -2px rgb(0 0 0 / 0.6)',
+    lg: '0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6)',
+    xl: '0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.6)',
+    '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.7)',
   },
 };
 

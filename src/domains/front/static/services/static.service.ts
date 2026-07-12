@@ -6,7 +6,6 @@ import { logger } from '@/core/utils/logger';
 import { STATIC_ENDPOINTS } from '../endpoints/static.endpoints';
 import { StaticMapper } from '../mappers/static.mapper';
 import { 
-
   FAQFilters, 
   ContactUsRequest, 
   NewsletterRequest 
@@ -166,12 +165,13 @@ export class StaticService {
     }
   }
 
+  // اصلاح کلیدی متد لود ساعت سرور: از آنجا که سرور استرینگ خام برمی‌گرداند، مستقیم آن را پارس و به Date تبدیل می‌کنیم
   async getCurrentTime(): Promise<Date> {
     try {
-      const response = await this.httpClient.get<{ currentTime: string }>(
+      const response = await this.httpClient.get<string>(
         STATIC_ENDPOINTS.GET_CURRENT_TIME
       );
-      return new Date(response.data.currentTime);
+      return new Date(response.data);
     } catch (error) {
       logger.error('[StaticService] Get current time failed:', error);
       return new Date();

@@ -4,29 +4,42 @@
 
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { useGetNominatedProductsByCategory } from '@/domains/front/product/hooks/product.hooks'; // لود هوک دسته بندی
 import { BannerSlider } from '@/components/features/Banner/BannerSlider';
 import { Banner, BannerGroup } from '@/components/features/Banner/Banner';
 import { ShopByCar } from '@/components/features/Car/ShopByCar';
 import { HomeCategories } from '@/components/features/Part/HomeCategories';
-import { Typography } from '@/components/primitives/Typography';
+import { DealsSlider } from '@/components/features/ProductCard/DealsSlider';
+import { ProductSlider } from '@/components/features/ProductCard/ProductSlider'; // لود اسلایدر عمومی جدید
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 
 export function HomeContent() {
   const { user } = useAuth();
   
-  // دریافت داده‌ها از کش هیدراته‌شده سمت سرور
+  // دریافت بنرهای هیدراته شده از سرور
   const { data: rawBanners = [], isLoading, isError } = useGetBanners('Home');
+
+  // دریافت اطلاعات محصولات دسته بندی ابزارآلات خودرو (car-tools) به صورت کاملاً واقعی
+  const { 
+    data: toolsData, 
+    isLoading: isToolsLoading, 
+    isError: isToolsError 
+  } = useGetNominatedProductsByCategory('car-tools');
 
   // استخراج ساختار جدید بنرها از داده‌های واکشی شده
   const sliderGroup = rawBanners?.find((b: any) => b.name === 'Home-Top-Slider') as unknown as BannerGroup;
   const a1BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A1') as unknown as BannerGroup;
+  const a2BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A2') as unknown as BannerGroup;
 
   // بررسی پویا جهت فعال بودن بنر مکمل سمت چپ
   const hasLeftBanner = !!a1BannerGroup && a1BannerGroup.banners?.length > 0;
 
+  // لیست محصولات ابزارآلات دیتابیس واقعی
+  const toolsProducts = toolsData?.products?.items || [];
+
   return (
-    <div className="w-full space-y-4 md:space-y-8 py-0">
+    <div className="w-full space-y-4 md:space-y-6 py-0">
       
       {/* ۱. بخش بنرهای بالای صفحه اصلی */}
       <div className="w-full">
@@ -69,8 +82,8 @@ export function HomeContent() {
         )}
       </div>
 
-      {/* کانتینر فرعی صفحه با فواصل کاملاً کنترل شده و عریض هماهنگ با بنرها */}
-      <div className="w-full space-y-6 md:space-y-10 py-2 md:py-4">
+      {/* کانتینر فرعی صفحه اصلی با فواصل واکنش‌گرای فشرده‌تر و شیک */}
+      <div className="w-full space-y-4 md:space-y-6 py-2 md:py-3">
         
         {/* ۲. بخش مینی‌مال خرید بر اساس خودرو */}
         <ShopByCar />
@@ -78,39 +91,28 @@ export function HomeContent() {
         {/* ۳. بخش هم‌عرض و اسلایدی خرید بر اساس دسته‌بندی قطعات */}
         <HomeCategories />
 
-        {/* بخش خوش‌آمدگویی کاربر */}
-        <div className="flex flex-col items-center justify-center min-h-[25vh] space-y-4 pt-4">
-          <Typography variant="h1" className="font-iran-yekan">
-            به یدکچی خوش آمدید
-          </Typography>
-          
-          <Typography variant="lead" color="muted" className="font-iran-sans text-center">
-            {user ? (
-              `سلام ${user.shopTitle || user.fullName || 'کاربر'} عزیز`
-            ) : (
-              'بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران'
-            )}
-          </Typography>
-          
-          <div className="mt-8 flex gap-4">
-            <div className="rounded-lg border p-4 text-center bg-card">
-              <Typography variant="h4" className="font-iran-yekan">
-                ایران‌یکان
-              </Typography>
-              <Typography variant="small" color="muted" className="font-iran-sans">
-                برای تیترها و عناوین
-              </Typography>
-            </div>
-            <div className="rounded-lg border p-4 text-center bg-card">
-              <Typography variant="h4" className="font-iran-sans">
-                ایران‌سنس
-              </Typography>
-              <Typography variant="small" color="muted" className="font-iran-sans">
-                برای متن اصلی
-              </Typography>
-            </div>
+        {/* ۴. بخش اسلایدر تخفیف‌های شگفت‌انگیز با ثانیه‌شمار داینامیک و کارت‌های عریض جدید */}
+        <DealsSlider />
+
+        {/* ۵. بخش جدید بنر تمام‌عرض کشیده افقی Home-A2 */}
+        {!isLoading && !isError && a2BannerGroup && (
+          <div className="w-full animate-in fade-in duration-300">
+            <Banner 
+              group={a2BannerGroup} 
+              aspectRatio="aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6]" 
+            />
           </div>
-        </div>
+        )}
+
+        {/* ۶. اسلایدر عمومی جدید: رندر کاملاً داینامیک ابزارآلات خودرو (car-tools) بدون کادر کناری و با حاشیه مینی‌مال */}
+        <ProductSlider
+          title="ابزارآلات خودرو"
+          products={toolsProducts}
+          isLoading={isToolsLoading}
+          isError={isToolsError}
+          viewAllLink="/categories/car-tools"
+          showTimer={false} // غیرفعال کردن ثانیه‌شمار برای زیبایی و خلوت‌تر شدن کادر
+        />
       </div>
 
     </div>

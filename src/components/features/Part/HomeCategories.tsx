@@ -2,11 +2,12 @@
 
 'use client';
 
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
 import { Typography } from '@/components/primitives/Typography';
 import { Loader2, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 
 interface PartCategoryItem {
@@ -22,12 +23,39 @@ interface PartCategoryItem {
 }
 
 export function HomeCategories() {
-  // واکشی داده‌های دسته بندی مجهز به فیلدهای تصاویر و تخفیف
+  // واکشی داده‌های دسته بندی مجهز به فیلدهای تصاویر و تخفیف از وب‌سرویس دیتابیس شما
   const { data: categories = [], isLoading, isError } = useGetPartCategoriesFlat();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [dragWidth, setWidth] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+  const x = useMotionValue(0);
 
   // فیلتر داینامیک دسته‌بندی‌ها فقط بر اساس تاییدیه isInMain دیتابیس شما
   const activeCategories = categories.filter((cat: PartCategoryItem) => cat.isInMain === true);
+
+  // اطمینان از سوار شدن کامپوننت روی مرورگر جهت جلوگیری از تداخل هیدراتاسیون
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // محاسبه عرض درگ به‌صورت واکنش‌گرا و همگام با تغییر تعداد دسته‌ها
+  useEffect(() => {
+    if (carouselRef.current) {
+      setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+    }
+  }, [activeCategories]);
+
+  // انیمیشن شیک رفت و برگشت با دکمه‌های ناوبری چپ و راست دسکتاپ
+  const handleScroll = (direction: 'left' | 'right') => {
+    const step = 350; // میزان جابه‌جایی در هر کلیک
+    let newX = x.get() + (direction === 'right' ? -step : step);
+    
+    if (newX < 0) newX = 0;
+    if (newX > dragWidth) newX = dragWidth;
+
+    animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
+  };
 
   const getFullUrl = (path: string | null) => {
     if (!path) return '/placeholder.png';
@@ -35,19 +63,6 @@ export function HomeCategories() {
     const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     return `${base}${cleanPath}`;
-  };
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const { clientWidth } = scrollContainerRef.current;
-      const scrollOffset = clientWidth * 0.7;
-      const offset = direction === 'left' ? -scrollOffset : scrollOffset;
-      
-      scrollContainerRef.current.scrollBy({
-        left: offset,
-        behavior: 'smooth'
-      });
-    }
   };
 
   return (
@@ -72,7 +87,7 @@ export function HomeCategories() {
         </div>
       )}
 
-      {/* رندرسازی اسلایدی کاملاً داینامیک دسته‌بندی‌های واقعی */}
+      {/* رندرسازی اسلایدی کاملاً داینامیک دسته‌بندی‌های واقعی با درگ سخت‌افزاری فریمور موشن */}
       {!isLoading && !isError && activeCategories.length > 0 && (
         <div className="relative w-full group">
           
@@ -87,12 +102,18 @@ export function HomeCategories() {
             </button>
           )}
 
-          {/* کانتینر اسلایدی لمسی و شیک بدون اسکرول‌بار مرورگر */}
+          {/* کانتینر اسلایدی لمسی بدون سرریز اسکرول‌بار مرورگر */}
           <div 
-            ref={scrollContainerRef}
-            className="w-full overflow-x-auto scroll-smooth no-scrollbar"
+            ref={carouselRef}
+            className="w-full overflow-hidden relative z-10 select-none"
           >
-            <div className="flex flex-nowrap items-start gap-6 sm:gap-8 px-4 md:px-12 py-2">
+            <motion.div 
+              drag="x"
+              style={{ x }}
+              dragConstraints={{ left: 0, right: dragWidth }}
+              dragElastic={0.12} // کشسانی لبه‌ها مانند سیستم‌عامل iOS
+              className="flex gap-6 sm:gap-8 px-4 md:px-12 py-2 cursor-grab active:cursor-grabbing"
+            >
               {activeCategories.map((cat: PartCategoryItem) => {
                 const href = `/categories/${cat.englishTitle}`;
                 const imageSrc = cat.thumbnail || cat.icon;
@@ -102,6 +123,12 @@ export function HomeCategories() {
                     key={cat.id} 
                     href={href} 
                     className="flex flex-col items-center shrink-0 w-24 sm:w-28 group select-none text-center"
+                    // جلوگیری هوشمند از کلیک اتفاقی و هدایت آدرس در زمان کشیدن (درگ) با موس
+                    onClick={(e) => {
+                      if (x.getVelocity() !== 0) {
+                        e.preventDefault();
+                      }
+                    }}
                   >
                     {/* تصویر دایره‌ای واقعی دسته‌بندی از دیتابیس شما */}
                     <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full border border-border p-1 bg-background shadow-sm group-hover:border-primary/50 group-hover:scale-105 transition-all duration-300">
@@ -134,7 +161,7 @@ export function HomeCategories() {
                   </Link>
                 );
               })}
-            </div>
+            </motion.div>
           </div>
 
           {/* دکمه اسلاید چپ */}
