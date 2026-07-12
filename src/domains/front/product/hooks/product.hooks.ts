@@ -18,9 +18,9 @@ export function useGetNominatedProducts() {
       const client = getHttpClient();
       const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
         params: {
-          Types: 'Stock',
-          HasDiscount: true,
-          HasDiscountWithExpiration: true,
+          // Types: 'Stock',
+          // HasDiscount: true,
+          // HasDiscountWithExpiration: true,
           PageNumber: 1,
           PageSize: 30
         }
@@ -41,7 +41,7 @@ export function useGetNominatedProductsByCategory(categoryEnglishTitle: string) 
       const client = getHttpClient();
       const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
         params: {
-          Types: 'Stock',
+         
           PartCategoryEnglishTitle: categoryEnglishTitle,
           PageNumber: 1,
           PageSize: 30

@@ -29,11 +29,12 @@ export function DealsSlider() {
 
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 450;
-    // تغییر جهت اسکرول دکمه‌ها متناسب با راندمان کشیدن به چپ در دیسپلی
-    let newX = x.get() + (direction === 'left' ? -step : step);
+    // در حالت راست‌چین (RTL) فریمورک موشن:
+    // حرکت به چپ (بعدی) با مثبت شدن x و حرکت به راست (قبلی) با منفی شدن x انجام می‌شود.
+    let newX = x.get() + (direction === 'left' ? step : -step);
     
-    if (newX < -dragWidth) newX = -dragWidth;
-    if (newX > 0) newX = 0;
+    if (newX < 0) newX = 0;
+    if (newX > dragWidth) newX = dragWidth;
 
     animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
   };
@@ -94,23 +95,23 @@ export function DealsSlider() {
         {productItems.length > 3 && (
           <>
             <button
-              onClick={() => handleScroll('left')}
+              onClick={() => handleScroll('right')}
               className="hidden md:flex absolute right-[235px] top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="اسلاید بعدی"
+              aria-label="اسلاید قبلی"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
-              onClick={() => handleScroll('right')}
+              onClick={() => handleScroll('left')}
               className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="اسلاید قبلی"
+              aria-label="اسلاید بعدی"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
           </>
         )}
 
-        {/* لیست محصولات با درگ سخت‌افزاری تراز شده به بازه منفی جهت اسلاید فوق‌العاده روان سراسری */}
+        {/* لیست محصولات با درگ سخت‌افزاری تراز شده به بازه مثبت در محیط RTL */}
         <div 
           ref={carouselRef}
           className="w-full overflow-hidden relative z-10 select-none"
@@ -118,7 +119,7 @@ export function DealsSlider() {
           <motion.div 
             drag="x"
             style={{ x }}
-            dragConstraints={{ left: -dragWidth, right: 0 }}
+            dragConstraints={{ left: 0, right: dragWidth }}
             dragElastic={0.12}
             className="flex gap-4 py-1 cursor-grab active:cursor-grabbing"
           >

@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ProductDealCard } from './ProductDealCard';
+import { ProductStandardCard } from './ProductStandardCard';
 import { ChevronLeft, ChevronRight, Loader2, Wrench } from 'lucide-react';
 import { Typography } from '@/components/primitives/Typography';
 import { motion, useMotionValue, animate } from 'framer-motion';
@@ -41,7 +41,8 @@ export function ProductSlider({
 
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 450;
-    let newX = x.get() + (direction === 'right' ? -step : step);
+    // انطباق کامل جهت حرکت دکمه‌ها با منطق درگ راست‌چین (RTL) فریمورک موشن
+    let newX = x.get() + (direction === 'left' ? step : -step);
     
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
@@ -79,30 +80,30 @@ export function ProductSlider({
         </Link>
       </div>
 
-      {/* کانتینر اصلی اسلایدر با لغزش و درگ ۱۰۰٪ روان فریمور موشن */}
+      {/* کانتینر اصلی اسلایدر */}
       <div className="w-full bg-background rounded-xl border p-4 relative group overflow-hidden">
         
-        {/* دکمه‌های ناوبری دسکتاپ */}
+        {/* دکمه‌های ناوبری اسلایدر دسکتاپ با جهت اصلاح‌شده */}
         {products.length > 4 && (
           <>
             <button
               onClick={() => handleScroll('right')}
               className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="اسلاید بعدی"
+              aria-label="اسلاید قبلی"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
               onClick={() => handleScroll('left')}
               className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="اسلاید قبلی"
+              aria-label="اسلاید بعدی"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
           </>
         )}
 
-        {/* لیست محصولات با درگ سخت‌افزاری روان در دسکتاپ و موبایل */}
+        {/* لیست محصولات با درگ سخت‌افزاری روان تراز شده با ساختار RTL */}
         <div 
           ref={carouselRef}
           className="w-full overflow-hidden relative z-10 select-none"
@@ -116,7 +117,8 @@ export function ProductSlider({
           >
             {products.map((prod: any) => (
               <div key={prod.id} className="w-[190px] sm:w-[250px] shrink-0">
-                <ProductDealCard product={prod} showTimer={showTimer} />
+                {/* استفاده از کارت استاندارد به جای کارت شگفت‌انگیز قدیمی */}
+                <ProductStandardCard product={prod} />
               </div>
             ))}
           </motion.div>
