@@ -1,5 +1,3 @@
-// src/domains/front/reference/brand/mappers/brand.mapper.ts
-
 import { BrandApiDto, BrandNameApiDto, BrandListRequestDto, BrandNameRequestDto } from '../types/dto.types';
 import { BrandViewModel, BrandNameViewModel, BrandFilters, BrandNameFilters } from '../types/view.types';
 
@@ -9,7 +7,7 @@ export class BrandMapper {
       id: dto.id,
       name: dto.name,
       englishTitle: dto.englishTitle,
-      logo: dto.logo || null,
+      logo: (dto as any).image || dto.logo || null,
       partCount: dto.partIds?.length || 0,
       carModel: dto.carModel || null,
       metadata: {
