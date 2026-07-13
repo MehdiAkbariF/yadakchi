@@ -1,5 +1,6 @@
-﻿Folder PATH listing for volume New Volume
-Volume serial number is 000000A5 A0D7:0D31
+﻿
+Folder PATH listing for volume New Volume
+Volume serial number is 0000004F A0D7:0D31
 G:\YADAKCHI\YADAKCHI-FRONTEND\SRC
 │   index.ts
 │   
@@ -1996,37 +1997,70 @@ export function BannerSlider({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
 
-  // Ø§Ø·Ù…ÛŒÙ†Ø§Ù† Ø§Ø² Ø³ÙˆØ§Ø± Ø´Ø¯Ù† Ú©Ø§Ù…Ù¾ÙˆÙ†Ù†Øª Ø¨Ø± Ø±ÙˆÛŒ Ù…Ø±ÙˆØ±Ú¯Ø± Ø¬Ù‡Øª Ù‡Ù…Ø§Ù‡Ù†Ú¯ÛŒ Ú©Ø§Ù…Ù„ Ø§Ø³â€ŒØ§Ø³â€ŒØ¢Ø±
+  // Ù‡ÙˆÚ© Û±: Ø«Ø¨Øª ÙˆØ¶Ø¹ÛŒØª Ù…Ø§Ù†Øª Ø´Ø¯Ù† Ú©Ù„Ø§ÛŒÙ†Øª Ø¯Ø± Ø§ÙˆÙ„ÛŒÙ† Ø®Ø·ÙˆØ·
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  if (!group || !group.banners || group.banners.length === 0) return null;
+  const getFullUrl = (path: string) => {
+    if (!path) return '/placeholder.png';
+    if (path.startsWith('http')) return path;
+    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+  };
 
-  const desktopSlides = group.banners.filter((b) => b.size === 'Desktop');
-  const mobileSlides = group.banners.filter((b) => b.size === 'Mobile');
+  const desktopSlides = group?.banners ? group.banners.filter((b) => b.size === 'Desktop') : [];
+  const mobileSlides = group?.banners ? group.banners.filter((b) => b.size === 'Mobile') : [];
 
-  // ØªØµÙ…ÛŒÙ…â€ŒÚ¯ÛŒØ±ÛŒ Ù‡ÙˆØ´Ù…Ù†Ø¯ Ù¾Ø³ Ø§Ø² Ù…ÙˆÙ†Øª Ø´Ø¯Ù† Ø¬Ù‡Øª Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ø®Ø·Ø§ÛŒ Hydration Mismatch
+  // Ù…Ø­Ø§Ø³Ø¨Ù‡ Ø§Ø³Ù„Ø§ÛŒØ¯Ù‡Ø§ÛŒ ÙØ¹Ø§Ù„ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø¯Ø±Ú¯Ø§Ù‡ Ù…Ø±ÙˆØ±Ú¯Ø± Ø¨Ø§ ØªØ¶Ù…ÛŒÙ† Ù¾Ø§ÛŒØ¯Ø§Ø±ÛŒ Ø¯Ø± SSR
   const activeSlides = isMounted && typeof window !== 'undefined' && window.innerWidth < 768 
     ? (mobileSlides.length > 0 ? mobileSlides : desktopSlides)
     : (desktopSlides.length > 0 ? desktopSlides : mobileSlides);
 
   const totalSlides = activeSlides.length;
 
+  // Ù‡ÙˆÚ© Û²: Ø«Ø§Ù†ÛŒÙ‡â€ŒØ´Ù…Ø§Ø± ØªØºÛŒÛŒØ± Ø§Ø³Ù„Ø§ÛŒØ¯Ù‡Ø§ (unconditional - Ø¨Ø¯ÙˆÙ† Ø´Ø±Ø· Ø®Ø±ÙˆØ¬ Ø²ÙˆØ¯Ù‡Ù†Ú¯Ø§Ù… Ù‚Ø¨Ù„ Ø§Ø² Ù‡ÙˆÚ©)
   useEffect(() => {
-    if (totalSlides <= 1) return;
+    if (!isMounted || totalSlides <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % totalSlides);
     }, autoPlayInterval);
     return () => clearInterval(interval);
-  }, [totalSlides, autoPlayInterval]);
+  }, [totalSlides, autoPlayInterval, isMounted]);
 
-  // Ù…Ø­Ø§ÙØ¸Øª Ø§ÙˆÙ„: Ø§Ú¯Ø± Ù‡ÛŒÚ† Ø§Ø³Ù„Ø§ÛŒØ¯ÛŒ ÛŒØ§ÙØª Ù†Ø´Ø¯ØŒ Ø±Ù†Ø¯Ø± Ù…ØªÙˆÙ‚Ù Ø´ÙˆØ¯ ØªØ§ Ø®Ø·Ø§ÛŒÛŒ Ø±Ø® Ù†Ø¯Ù‡Ø¯
+  // Ú©Ù†ØªØ±Ù„ Ù…ÙˆØ§Ø±Ø¯ Ø§Ø³ØªØ«Ù†Ø§ÛŒ Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ÛŒ Ø®Ø§Ù„ÛŒ
+  if (!group || !group.banners || group.banners.length === 0) return null;
+
+  // Û². Ø±Ù†Ø¯Ø± Ø®Ø±ÙˆØ¬ÛŒ Ø§Ø³ØªØ§ØªÛŒÚ© Ø³Ø±ÙˆØ± (SSR) Ù¾Ø³ Ø§Ø² Ø§Ø¬Ø±Ø§ÛŒ ØªÙ…Ø§Ù…ÛŒ Ù‡ÙˆÚ©â€ŒÙ‡Ø§
+  if (!isMounted) {
+    const initialSlide = desktopSlides[0] || group.banners[0];
+    if (!initialSlide) return null;
+
+    const initialElement = (
+      <div className={cn("relative w-full overflow-hidden rounded-2xl shadow-sm", aspectRatio)}>
+        <img
+          src={getFullUrl(initialSlide.image)}
+          alt={initialSlide.imageAlt || initialSlide.title}
+          className="w-full h-full object-cover rounded-2xl absolute inset-0"
+        />
+      </div>
+    );
+
+    if (initialSlide.targetURL) {
+      const href = initialSlide.targetURL.startsWith('http') ? initialSlide.targetURL : `https://${initialSlide.targetURL}`;
+      return (
+        <Link href={href} target="_blank" rel="noopener noreferrer" className={cn("block w-full h-full", className)}>
+          {initialElement}
+        </Link>
+      );
+    }
+    return <div className={cn("w-full h-full", className)}>{initialElement}</div>;
+  }
+
+  // Û³. Ø±Ù†Ø¯Ø± Ø¯Ø§ÛŒÙ†Ø§Ù…ÛŒÚ© Ú©Ù„Ø§ÛŒÙ†Øª Ù…Ø¬Ù‡Ø² Ø¨Ù‡ Framer Motion
   if (totalSlides === 0) return null;
-
   const currentSlide = activeSlides[currentIndex];
-
-  // Ù…Ø­Ø§ÙØ¸Øª Ø¯ÙˆÙ…: Ø¯Ø± ØµÙˆØ±ØªÛŒ Ú©Ù‡ Ø§Ø³Ù„Ø§ÛŒØ¯ Ø¬Ø§Ø±ÛŒ Ø¨Ù‡ Ù‡Ø± Ø¯Ù„ÛŒÙ„ÛŒ Ù…Ù‚Ø¯Ø§Ø± Ù„ÙˆØ¯Ù†Ø´Ø¯Ù‡ ÛŒØ§ Ù†Ø§Ù…Ø¹ØªØ¨Ø± Ø¯Ø§Ø´ØªØŒ Ø§Ø² Ú©Ø±Ø§Ø´ ØµÙØ­Ù‡ Ù…Ù…Ø§Ù†Ø¹Øª Ù…ÛŒâ€ŒØ´ÙˆØ¯
   if (!currentSlide) return null;
 
   const handleNext = () => {
@@ -2035,16 +2069,6 @@ export function BannerSlider({
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
-  };
-
-  const getFullUrl = (path: string) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    
-    // ØªØµØ­ÛŒØ­ Ù‡ÙˆØ´Ù…Ù†Ø¯ Ø¯Ø§Ù…Ù†Ù‡â€ŒÙ‡Ø§ Ùˆ Ø­Ø°Ù Ø§Ø³Ù„Ø´â€ŒÙ‡Ø§ÛŒ ØªÚ©Ø±Ø§Ø±ÛŒ
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
   };
 
   const slideElement = (
@@ -2480,13 +2504,13 @@ export function ShopByCar() {
 
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
-import { useGetNominatedProductsByCategory } from '@/domains/front/product/hooks/product.hooks'; // Ù„ÙˆØ¯ Ù‡ÙˆÚ© Ø¯Ø³ØªÙ‡ Ø¨Ù†Ø¯ÛŒ
+import { useGetNominatedProductsByCategory } from '@/domains/front/product/hooks/product.hooks';
 import { BannerSlider } from '@/components/features/Banner/BannerSlider';
 import { Banner, BannerGroup } from '@/components/features/Banner/Banner';
 import { ShopByCar } from '@/components/features/Car/ShopByCar';
 import { HomeCategories } from '@/components/features/Part/HomeCategories';
 import { DealsSlider } from '@/components/features/ProductCard/DealsSlider';
-import { ProductSlider } from '@/components/features/ProductCard/ProductSlider'; // Ù„ÙˆØ¯ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¹Ù…ÙˆÙ…ÛŒ Ø¬Ø¯ÛŒØ¯
+import { ProductSlider } from '@/components/features/ProductCard/ProductSlider';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 
@@ -2496,30 +2520,32 @@ export function HomeContent() {
   // Ø¯Ø±ÛŒØ§ÙØª Ø¨Ù†Ø±Ù‡Ø§ÛŒ Ù‡ÛŒØ¯Ø±Ø§ØªÙ‡ Ø´Ø¯Ù‡ Ø§Ø² Ø³Ø±ÙˆØ±
   const { data: rawBanners = [], isLoading, isError } = useGetBanners('Home');
 
-  // Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ù…Ø­ØµÙˆÙ„Ø§Øª Ø¯Ø³ØªÙ‡ Ø¨Ù†Ø¯ÛŒ Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø®ÙˆØ¯Ø±Ùˆ (car-tools) Ø¨Ù‡ ØµÙˆØ±Øª Ú©Ø§Ù…Ù„Ø§Ù‹ ÙˆØ§Ù‚Ø¹ÛŒ
+  // Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ù…Ø­ØµÙˆÙ„Ø§Øª Ø´Ú¯ÙØªâ€ŒØ§Ù†Ú¯ÛŒØ² Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø®ÙˆØ¯Ø±Ùˆ
   const { 
     data: toolsData, 
     isLoading: isToolsLoading, 
     isError: isToolsError 
   } = useGetNominatedProductsByCategory('car-tools');
 
-  // Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ø³Ø§Ø®ØªØ§Ø± Ø¬Ø¯ÛŒØ¯ Ø¨Ù†Ø±Ù‡Ø§ Ø§Ø² Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ÛŒ ÙˆØ§Ú©Ø´ÛŒ Ø´Ø¯Ù‡
+  // Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ú¯Ø±ÙˆÙ‡â€ŒÙ‡Ø§ÛŒ Ù…Ø®ØªÙ„Ù Ø¨Ù†Ø±Ù‡Ø§ Ø§Ø² Ù¾Ø§Ø³Ø® Ø³Ø±ÙˆØ±
   const sliderGroup = rawBanners?.find((b: any) => b.name === 'Home-Top-Slider') as unknown as BannerGroup;
   const a1BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A1') as unknown as BannerGroup;
   const a2BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A2') as unknown as BannerGroup;
+  
+  // Ú†Ù‡Ø§Ø± Ø¨Ù†Ø± Ù…ØªÙˆØ§Ù„ÛŒ Ø²ÛŒØ± Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¢Ø®Ø±
+  const a3BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A3') as unknown as BannerGroup;
+  const a4BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A4') as unknown as BannerGroup;
+  const a5BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A5') as unknown as BannerGroup;
+  const a6BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A6') as unknown as BannerGroup;
 
-  // Ø¨Ø±Ø±Ø³ÛŒ Ù¾ÙˆÛŒØ§ Ø¬Ù‡Øª ÙØ¹Ø§Ù„ Ø¨ÙˆØ¯Ù† Ø¨Ù†Ø± Ù…Ú©Ù…Ù„ Ø³Ù…Øª Ú†Ù¾
   const hasLeftBanner = !!a1BannerGroup && a1BannerGroup.banners?.length > 0;
-
-  // Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø¯ÛŒØªØ§Ø¨ÛŒØ³ ÙˆØ§Ù‚Ø¹ÛŒ
   const toolsProducts = toolsData?.products?.items || [];
 
   return (
     <div className="w-full space-y-4 md:space-y-6 py-0">
       
-      {/* Û±. Ø¨Ø®Ø´ Ø¨Ù†Ø±Ù‡Ø§ÛŒ Ø¨Ø§Ù„Ø§ÛŒ ØµÙØ­Ù‡ Ø§ØµÙ„ÛŒ */}
+      {/* Û±. Ø¨Ø®Ø´ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ù‡Ø¯Ø± Ùˆ Ø¨Ù†Ø± Ú©Ù†Ø§Ø±ÛŒ Ù…Ú©Ù…Ù„ Ø¯Ø± Ø¨Ø§Ù„Ø§ÛŒ ØµÙØ­Ù‡ */}
       <div className="w-full">
-        {/* Ø­Ø§Ù„Øª Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø¨Ù†Ø±Ù‡Ø§ */}
         {isLoading && (
           <div className="w-full h-[180px] sm:h-[240px] md:h-[300px] lg:h-[350px] xl:h-[400px] 2xl:h-[440px] flex flex-col items-center justify-center gap-3 bg-muted/10 animate-pulse rounded-2xl">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -2527,19 +2553,17 @@ export function HomeContent() {
           </div>
         )}
 
-        {/* Ø­Ø§Ù„Øª Ø¨Ø±ÙˆØ² Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª */}
         {isError && (
           <div className="w-full h-[150px] flex flex-col items-center justify-center border border-dashed rounded-2xl bg-destructive/5 text-destructive p-6">
-            <span className="text-sm font-bold font-iran-sans">Ø®Ø·Ø§ Ø¯Ø± ÙˆØ§Ú©Ø´ÛŒ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø¨Ù†Ø±Ù‡Ø§ Ø§Ø² Ø³Ø±ÙˆØ± Ø§ØµÙ„ÛŒ.</span>
-            <span className="text-xs font-iran-sans text-muted-foreground mt-1">Ù„Ø·ÙØ§Ù‹ Ø§ØªØµØ§Ù„ Ø§ÛŒÙ†ØªØ±Ù†Øª Ø®ÙˆØ¯ ÛŒØ§ Ø®Ø·Ø§Ù‡Ø§ÛŒ ØªØ¨ Ú©Ù†Ø³ÙˆÙ„ Ù…Ø±ÙˆØ±Ú¯Ø± Ø±Ø§ Ø¨Ø±Ø±Ø³ÛŒ Ù†Ù…Ø§ÛŒÛŒØ¯.</span>
+            <span className="text-sm font-bold font-iran-sans">Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø¨Ù†Ø±Ù‡Ø§ Ø§Ø² Ø³Ø±ÙˆØ±.</span>
+            <span className="text-xs font-iran-sans text-muted-foreground mt-1">Ù„Ø·ÙØ§Ù‹ Ø§ØªØµØ§Ù„ Ø§ÛŒÙ†ØªØ±Ù†Øª Ø®ÙˆØ¯ Ø±Ø§ Ø¨Ø±Ø±Ø³ÛŒ Ù†Ù…Ø§ÛŒÛŒØ¯.</span>
           </div>
         )}
 
-        {/* Ú¯Ø±ÛŒØ¯ Ø¨Ù†Ø±Ù‡Ø§ Ø¨Ø§ Ø§Ø±ØªÙØ§Ø¹ ÙˆØ§Ú©Ù†Ø´â€ŒÚ¯Ø±Ø§ Ùˆ Ù…ØªÙ‚Ø§Ø±Ù† Ø¨Ø¯ÙˆÙ† Ù„Ø±Ø²Ø´ ÛŒØ§ ØªØ¯Ø§Ø®Ù„ Ø§Ø±ØªÙØ§Ø¹ */}
         {!isLoading && !isError && rawBanners.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-10 gap-4 md:gap-6 items-stretch w-full h-[180px] sm:h-[240px] md:h-[300px] lg:h-[350px] xl:h-[400px] 2xl:h-[440px] animate-in fade-in duration-300">
             
-            {/* Ø³Ù…Øª Ø±Ø§Ø³Øª: Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¨Ù†Ø±Ù‡Ø§ÛŒ Ù…ØªØ­Ø±Ú© (Û·Û° Ø¯Ø±ØµØ¯ ØµÙØ­Ù‡ Ø¯Ø± ØªØ¨Ù„Øª Ùˆ Ø¯Ø³Ú©ØªØ§Ù¾ØŒ Û±Û°Û° Ø¯Ø±ØµØ¯ Ø¯Ø± Ù…ÙˆØ¨Ø§ÛŒÙ„) */}
+            {/* Ø³Ù…Øª Ø±Ø§Ø³Øª: Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¨Ù†Ø±Ù‡Ø§ÛŒ Ù…ØªØ­Ø±Ú© (Û·Û°Ùª Ø¹Ø±Ø¶ Ø¯Ø± Ø¯Ø³Ú©ØªØ§Ù¾) */}
             <div className={cn(
               "w-full h-full",
               hasLeftBanner ? "md:col-span-7" : "md:col-span-10"
@@ -2547,7 +2571,7 @@ export function HomeContent() {
               <BannerSlider group={sliderGroup} aspectRatio="h-full" />
             </div>
 
-            {/* Ø³Ù…Øª Ú†Ù¾: Ø¨Ù†Ø± Ø«Ø§Ø¨Øª Ù…Ú©Ù…Ù„ (Û³Û° Ø¯Ø±ØµØ¯ ØµÙØ­Ù‡ - Ù†Ù…Ø§ÛŒØ´ Ø§Ø®ØªØµØ§ØµÛŒ Ø¯Ø± Ø¯Ø³Ú©ØªØ§Ù¾ Ùˆ ØªØ¨Ù„Øª Ø¨Ù‡ ØµÙˆØ±Øª Ú©Ø§Ù…Ù„Ø§Ù‹ Ù…ØªÙ‚Ø§Ø±Ù†) */}
+            {/* Ø³Ù…Øª Ú†Ù¾: Ø¨Ù†Ø± Ø«Ø§Ø¨Øª Ù…Ú©Ù…Ù„ Home-A1 (Û³Û°Ùª Ø¹Ø±Ø¶ Ø¯Ø± Ø¯Ø³Ú©ØªØ§Ù¾) */}
             {hasLeftBanner && (
               <div className="hidden md:block md:col-span-3 h-full w-full">
                 <Banner group={a1BannerGroup} aspectRatio="h-full" />
@@ -2558,19 +2582,19 @@ export function HomeContent() {
         )}
       </div>
 
-      {/* Ú©Ø§Ù†ØªÛŒÙ†Ø± ÙØ±Ø¹ÛŒ ØµÙØ­Ù‡ Ø§ØµÙ„ÛŒ Ø¨Ø§ ÙÙˆØ§ØµÙ„ ÙˆØ§Ú©Ù†Ø´â€ŒÚ¯Ø±Ø§ÛŒ ÙØ´Ø±Ø¯Ù‡â€ŒØªØ± Ùˆ Ø´ÛŒÚ© */}
+      {/* Ú©Ø§Ù†ØªÛŒÙ†Ø± Ø§ØµÙ„ÛŒ Ù…Ø­ØªÙˆØ§ÛŒ ØµÙØ­Ù‡ Ø¨Ø§ ÙÙˆØ§ØµÙ„ Ø§Ø³ØªØ§Ù†Ø¯Ø§Ø±Ø¯ ÙˆØ§Ú©Ù†Ø´ÛŒ */}
       <div className="w-full space-y-4 md:space-y-6 py-2 md:py-3">
         
-        {/* Û². Ø¨Ø®Ø´ Ù…ÛŒÙ†ÛŒâ€ŒÙ…Ø§Ù„ Ø®Ø±ÛŒØ¯ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø®ÙˆØ¯Ø±Ùˆ */}
+        {/* Û². Ø¨Ø®Ø´ Ø®Ø±ÛŒØ¯ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø®ÙˆØ¯Ø±Ùˆ */}
         <ShopByCar />
 
-        {/* Û³. Ø¨Ø®Ø´ Ù‡Ù…â€ŒØ¹Ø±Ø¶ Ùˆ Ø§Ø³Ù„Ø§ÛŒØ¯ÛŒ Ø®Ø±ÛŒØ¯ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ Ù‚Ø·Ø¹Ø§Øª */}
+        {/* Û³. Ø¨Ø®Ø´ Ø®Ø±ÛŒØ¯ Ø¨Ø± Ø§Ø³Ø§Ø³ Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ Ù‚Ø·Ø¹Ø§Øª */}
         <HomeCategories />
 
-        {/* Û´. Ø¨Ø®Ø´ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± ØªØ®ÙÛŒÙâ€ŒÙ‡Ø§ÛŒ Ø´Ú¯ÙØªâ€ŒØ§Ù†Ú¯ÛŒØ² Ø¨Ø§ Ø«Ø§Ù†ÛŒÙ‡â€ŒØ´Ù…Ø§Ø± Ø¯Ø§ÛŒÙ†Ø§Ù…ÛŒÚ© Ùˆ Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ÛŒ Ø¹Ø±ÛŒØ¶ Ø¬Ø¯ÛŒØ¯ */}
+        {/* Û´. Ø¨Ø®Ø´ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø´Ú¯ÙØªâ€ŒØ§Ù†Ú¯ÛŒØ² */}
         <DealsSlider />
 
-        {/* Ûµ. Ø¨Ø®Ø´ Ø¬Ø¯ÛŒØ¯ Ø¨Ù†Ø± ØªÙ…Ø§Ù…â€ŒØ¹Ø±Ø¶ Ú©Ø´ÛŒØ¯Ù‡ Ø§ÙÙ‚ÛŒ Home-A2 */}
+        {/* Ûµ. Ø¨Ù†Ø± ØªÙ…Ø§Ù…â€ŒØ¹Ø±Ø¶ Ø§ÙÙ‚ÛŒ Home-A2 */}
         {!isLoading && !isError && a2BannerGroup && (
           <div className="w-full animate-in fade-in duration-300">
             <Banner 
@@ -2580,15 +2604,49 @@ export function HomeContent() {
           </div>
         )}
 
-        {/* Û¶. Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¹Ù…ÙˆÙ…ÛŒ Ø¬Ø¯ÛŒØ¯: Ø±Ù†Ø¯Ø± Ú©Ø§Ù…Ù„Ø§Ù‹ Ø¯Ø§ÛŒÙ†Ø§Ù…ÛŒÚ© Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø®ÙˆØ¯Ø±Ùˆ (car-tools) Ø¨Ø¯ÙˆÙ† Ú©Ø§Ø¯Ø± Ú©Ù†Ø§Ø±ÛŒ Ùˆ Ø¨Ø§ Ø­Ø§Ø´ÛŒÙ‡ Ù…ÛŒÙ†ÛŒâ€ŒÙ…Ø§Ù„ */}
+        {/* Û¶. Ø¢Ø®Ø±ÛŒÙ† Ø§Ø³Ù„Ø§ÛŒØ¯Ø± ØµÙØ­Ù‡ Ø§ØµÙ„ÛŒ (Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¹Ù…ÙˆÙ…ÛŒ Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø®ÙˆØ¯Ø±Ùˆ) */}
         <ProductSlider
           title="Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø®ÙˆØ¯Ø±Ùˆ"
           products={toolsProducts}
           isLoading={isToolsLoading}
           isError={isToolsError}
           viewAllLink="/categories/car-tools"
-          showTimer={false} // ØºÛŒØ±ÙØ¹Ø§Ù„ Ú©Ø±Ø¯Ù† Ø«Ø§Ù†ÛŒÙ‡â€ŒØ´Ù…Ø§Ø± Ø¨Ø±Ø§ÛŒ Ø²ÛŒØ¨Ø§ÛŒÛŒ Ùˆ Ø®Ù„ÙˆØªâ€ŒØªØ± Ø´Ø¯Ù† Ú©Ø§Ø¯Ø±
+          showTimer={false}
         />
+
+        {/* Û·. Ø¨Ø®Ø´ Ú†Ù‡Ø§Ø± Ø¨Ù†Ø± Ù…Ú©Ù…Ù„ (Û´ ØªØ§ÛŒÛŒ Ø¯Ø± Ø¯Ø³Ú©ØªØ§Ù¾ Ùˆ Û²Ã—Û² Ø¯Ø± Ù…ÙˆØ¨Ø§ÛŒÙ„) - Ù‚Ø±Ø§Ø±Ú¯ÛŒØ±ÛŒ Ø²ÛŒØ± Ø¢Ø®Ø±ÛŒÙ† Ø§Ø³Ù„Ø§ÛŒØ¯Ø± */}
+        {!isLoading && !isError && (a3BannerGroup || a4BannerGroup || a5BannerGroup || a6BannerGroup) && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2 animate-in fade-in duration-300">
+            {a3BannerGroup && (
+              <Banner 
+                group={a3BannerGroup} 
+                aspectRatio="aspect-[16/10]" 
+                className="w-full" 
+              />
+            )}
+            {a4BannerGroup && (
+              <Banner 
+                group={a4BannerGroup} 
+                aspectRatio="aspect-[16/10]" 
+                className="w-full" 
+              />
+            )}
+            {a5BannerGroup && (
+              <Banner 
+                group={a5BannerGroup} 
+                aspectRatio="aspect-[16/10]" 
+                className="w-full" 
+              />
+            )}
+            {a6BannerGroup && (
+              <Banner 
+                group={a6BannerGroup} 
+                aspectRatio="aspect-[16/10]" 
+                className="w-full" 
+              />
+            )}
+          </div>
+        )}
       </div>
 
     </div>
@@ -2811,11 +2869,12 @@ export function DealsSlider() {
 
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 450;
-    // ØªØºÛŒÛŒØ± Ø¬Ù‡Øª Ø§Ø³Ú©Ø±ÙˆÙ„ Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ Ù…ØªÙ†Ø§Ø³Ø¨ Ø¨Ø§ Ø±Ø§Ù†Ø¯Ù…Ø§Ù† Ú©Ø´ÛŒØ¯Ù† Ø¨Ù‡ Ú†Ù¾ Ø¯Ø± Ø¯ÛŒØ³Ù¾Ù„ÛŒ
-    let newX = x.get() + (direction === 'left' ? -step : step);
+    // Ø¯Ø± Ø­Ø§Ù„Øª Ø±Ø§Ø³Øªâ€ŒÚ†ÛŒÙ† (RTL) ÙØ±ÛŒÙ…ÙˆØ±Ú© Ù…ÙˆØ´Ù†:
+    // Ø­Ø±Ú©Øª Ø¨Ù‡ Ú†Ù¾ (Ø¨Ø¹Ø¯ÛŒ) Ø¨Ø§ Ù…Ø«Ø¨Øª Ø´Ø¯Ù† x Ùˆ Ø­Ø±Ú©Øª Ø¨Ù‡ Ø±Ø§Ø³Øª (Ù‚Ø¨Ù„ÛŒ) Ø¨Ø§ Ù…Ù†ÙÛŒ Ø´Ø¯Ù† x Ø§Ù†Ø¬Ø§Ù… Ù…ÛŒâ€ŒØ´ÙˆØ¯.
+    let newX = x.get() + (direction === 'left' ? step : -step);
     
-    if (newX < -dragWidth) newX = -dragWidth;
-    if (newX > 0) newX = 0;
+    if (newX < 0) newX = 0;
+    if (newX > dragWidth) newX = dragWidth;
 
     animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
   };
@@ -2876,23 +2935,23 @@ export function DealsSlider() {
         {productItems.length > 3 && (
           <>
             <button
-              onClick={() => handleScroll('left')}
+              onClick={() => handleScroll('right')}
               className="hidden md:flex absolute right-[235px] top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ø¨Ø¹Ø¯ÛŒ"
+              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ù‚Ø¨Ù„ÛŒ"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
-              onClick={() => handleScroll('right')}
+              onClick={() => handleScroll('left')}
               className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ù‚Ø¨Ù„ÛŒ"
+              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ø¨Ø¹Ø¯ÛŒ"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
           </>
         )}
 
-        {/* Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª Ø¨Ø§ Ø¯Ø±Ú¯ Ø³Ø®Øªâ€ŒØ§ÙØ²Ø§Ø±ÛŒ ØªØ±Ø§Ø² Ø´Ø¯Ù‡ Ø¨Ù‡ Ø¨Ø§Ø²Ù‡ Ù…Ù†ÙÛŒ Ø¬Ù‡Øª Ø§Ø³Ù„Ø§ÛŒØ¯ ÙÙˆÙ‚â€ŒØ§Ù„Ø¹Ø§Ø¯Ù‡ Ø±ÙˆØ§Ù† Ø³Ø±Ø§Ø³Ø±ÛŒ */}
+        {/* Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª Ø¨Ø§ Ø¯Ø±Ú¯ Ø³Ø®Øªâ€ŒØ§ÙØ²Ø§Ø±ÛŒ ØªØ±Ø§Ø² Ø´Ø¯Ù‡ Ø¨Ù‡ Ø¨Ø§Ø²Ù‡ Ù…Ø«Ø¨Øª Ø¯Ø± Ù…Ø­ÛŒØ· RTL */}
         <div 
           ref={carouselRef}
           className="w-full overflow-hidden relative z-10 select-none"
@@ -2900,7 +2959,7 @@ export function DealsSlider() {
           <motion.div 
             drag="x"
             style={{ x }}
-            dragConstraints={{ left: -dragWidth, right: 0 }}
+            dragConstraints={{ left: 0, right: dragWidth }}
             dragElastic={0.12}
             className="flex gap-4 py-1 cursor-grab active:cursor-grabbing"
           >
@@ -3116,7 +3175,7 @@ export function ProductCard({
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Star, Hourglass } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
@@ -3136,30 +3195,35 @@ export function ProductDealCard({
   showRating = true,
   className
 }: ProductDealCardProps) {
-  const [timeLeft, setTimeLeft] = useState({ hours: 14, minutes: 22, seconds: 13 });
-
-  // Ø§Ø³ØªØ®Ø±Ø§Ø¬ ÙÛŒÙ„Ø¯Ù‡Ø§ÛŒ Ù‚ÛŒÙ…Øª Ø±ÛŒØ§Ù„ÛŒ Ùˆ ØªØ¨Ø¯ÛŒÙ„ Ø¨Ù‡ ØªÙˆÙ…Ø§Ù† Ø¨Ø§ ÙØ§Ù„â€ŒØ¨Ú©â€ŒÙ‡Ø§ÛŒ Ù‡ÙˆØ´Ù…Ù†Ø¯ Ø¹Ø¯Ø¯ÛŒ
   const nominated = product?.nominatedShopProduct || {};
-  const serverOriginalPrice = nominated.rialRetailPrice || product.price || nominated.price || 0;
-  const serverFinalPrice = nominated.rialFinalPrice || product.discountPrice || nominated.discountPrice || 0;
-
-  const originalPriceRaw = serverOriginalPrice > 0 ? serverOriginalPrice : 1200000;
-  const finalPriceRaw = serverFinalPrice > 0 ? serverFinalPrice : 756000;
+  
+  const originalPriceRaw = nominated.rialRetailPrice || product.price || nominated.price || 0;
+  const finalPriceRaw = nominated.rialFinalPrice || product.discountPrice || nominated.discountPrice || 0;
 
   const originalPriceToman = Math.round(originalPriceRaw / 10);
   const finalPriceToman = Math.round(finalPriceRaw / 10);
 
-  // Ù…Ø­Ø§Ø³Ø¨Ù‡ Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ Ø´Ú¯ÙØªâ€ŒØ§Ù†Ú¯ÛŒØ²
-  const discountPercent = originalPriceRaw > finalPriceRaw 
-    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100) 
-    : nominated.discountPercentage || 37;
+  // Ø¨Ø±Ø±Ø³ÛŒ ÙˆØ§Ù‚Ø¹ÛŒ ÙˆØ¬ÙˆØ¯ ØªØ®ÙÛŒÙ (Ù‚ÛŒÙ…Øª Ø®Ø· Ø®ÙˆØ±Ø¯Ù‡ Ø¨Ø²Ø±Ú¯ØªØ± Ø§Ø² Ù‚ÛŒÙ…Øª Ù†Ù‡Ø§ÛŒÛŒ Ø¨Ø§Ø´Ø¯)
+  const hasDiscount = originalPriceRaw > finalPriceRaw;
 
-  const hasDiscount = originalPriceRaw > finalPriceRaw || discountPercent > 0;
+  // Ù…Ø­Ø§Ø³Ø¨Ù‡ Ø¯Ø§ÛŒÙ†Ø§Ù…ÛŒÚ© Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ Ø¨Ø± Ø§Ø³Ø§Ø³ Ù…Ø¨Ø§Ù„Øº Ø±ÛŒØ§Ù„ÛŒ ÙˆØ§Ù‚Ø¹ÛŒ Ø³Ø±ÙˆØ±
+  const discountPercent = hasDiscount
+    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+    : (nominated.discountPercentage || 0);
 
-  // Ø²Ù…Ø§Ù† Ø§Ù†Ù‚Ø¶Ø§ÛŒ Ø¯Ø±ÛŒØ§ÙØªÛŒ Ø§Ø² Ø³Ø±ÙˆØ±
-  const expirationStr = nominated.discountUntil || nominated.discountExpiration || product.discountExpiration || new Date(Date.now() + 14.5 * 60 * 60 * 1000).toISOString();
+  // Ø¯Ø±ÛŒØ§ÙØª Ø²Ù…Ø§Ù† Ø§Ù†Ù‚Ø¶Ø§ÛŒ ÙˆØ§Ù‚Ø¹ÛŒ ØªØ®ÙÛŒÙ Ø§Ø² Ø³Ø±ÙˆØ±
+  const expirationStr = nominated.discountUntil || nominated.discountExpiration || product.discountExpiration;
+  const hasExpiration = !!expirationStr;
+
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  // Ù…ØªØºÛŒØ±Ù‡Ø§ÛŒ ÙˆØ¶Ø¹ÛŒØª Ø¨Ø±Ø§ÛŒ ØªØ´Ø®ÛŒØµ Ø§Ø³Ù„Ø§ÛŒØ¯/Ø¯Ø±Ú¯ Ø§Ø² Ú©Ù„ÛŒÚ© ÙˆØ§Ù‚Ø¹ÛŒ
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    if (!hasExpiration) return;
+
     const calculateTime = () => {
       const serverDate = serverTime ? new Date(serverTime) : new Date();
       const clientDate = new Date();
@@ -3182,9 +3246,8 @@ export function ProductDealCard({
     calculateTime();
     const interval = setInterval(calculateTime, 1000);
     return () => clearInterval(interval);
-  }, [expirationStr, serverTime]);
+  }, [expirationStr, serverTime, hasExpiration]);
 
-  // Ø­Ù„â€ŒÚ©Ù†Ù†Ø¯Ù‡ Ø§Ø¹Ø¯Ø§Ø¯ ÙØ§Ø±Ø³ÛŒ
   const toPersianDigits = (num: number) => {
     return new Intl.NumberFormat('fa-IR', { useGrouping: false })
       .format(num)
@@ -3203,18 +3266,71 @@ export function ProductDealCard({
     return new Intl.NumberFormat('fa-IR').format(value);
   };
 
+  // Ù‡Ù†Ø¯Ù„Ø± ØªØ´Ø®ÛŒØµ Ø´Ø±ÙˆØ¹ Ø­Ø±Ú©Øª Ù…ÙˆØ³
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(false);
+  };
+
+  // Ù‡Ù†Ø¯Ù„Ø± ØªØ´Ø®ÛŒØµ Ú©Ø´ÛŒØ¯Ù† Ù…ÙˆØ³ (Ø§Ú¯Ø± Ø¬Ø§Ø¨Ù‡â€ŒØ¬Ø§ÛŒÛŒ Ø¨ÛŒØ´ Ø§Ø² Û¶ Ù¾ÛŒÚ©Ø³Ù„ Ø¨Ø§Ø´Ø¯ØŒ Ø¯Ø±Ú¯ ØªØ§ÛŒÛŒØ¯ Ù…ÛŒâ€ŒØ´ÙˆØ¯)
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const dx = Math.abs(e.clientX - dragStart.current.x);
+    const dy = Math.abs(e.clientY - dragStart.current.y);
+    if (dx > 6 || dy > 6) {
+      setIsDragging(true);
+    }
+  };
+
+  // Ù‡Ù†Ø¯Ù„Ø± Ù„Ù…Ø³ÛŒ Ù…ÙˆØ¨Ø§ÛŒÙ„ Ø¨Ø±Ø§ÛŒ Ø´Ø±ÙˆØ¹ Ø§Ø³Ù„Ø§ÛŒØ¯
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      dragStart.current = { x: touch.clientX, y: touch.clientY };
+      setIsDragging(false);
+    }
+  };
+
+  // Ù‡Ù†Ø¯Ù„Ø± Ù„Ù…Ø³ÛŒ Ù…ÙˆØ¨Ø§ÛŒÙ„ Ø¯Ø± Ø­ÛŒÙ† Ø­Ø±Ú©Øª Ø¯Ø³Øª
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      const dx = Math.abs(touch.clientX - dragStart.current.x);
+      const dy = Math.abs(touch.clientY - dragStart.current.y);
+      if (dx > 6 || dy > 6) {
+        setIsDragging(true);
+      }
+    }
+  };
+
+  // Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ø±ÛŒØ¯Ø§ÛŒØ±Ú©Øª Ù†Ø§Ø®ÙˆØ§Ø³ØªÙ‡ Ø¯Ø± ØµÙˆØ±Øª ÙØ¹Ø§Ù„ Ø¨ÙˆØ¯Ù† ÙˆØ¶Ø¹ÛŒØª Ø¯Ø±Ú¯
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   const renderStars = () => {
     const rating = product.averageRate || 5;
     return (
       <div className="flex items-center gap-1 select-none">
-        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-        <span className="text-[10px] sm:text-xs font-iran-sans text-muted-foreground">Ø§Ù…ØªÛŒØ§Ø² {rating} Ø§Ø² Ú©Ø§Ø±Ø¨Ø±Ø§Ù†</span>
+        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
+        <span className="text-[10px] sm:text-xs font-iran-sans text-muted-foreground font-medium">Ø§Ù…ØªÛŒØ§Ø² {rating}</span>
       </div>
     );
   };
 
   return (
-    <Link href={`/products/${product.productCode}`} className="block w-full h-full select-none" draggable={false}>
+    <Link 
+      href={`/products/${product.productCode}`} 
+      className="block w-full h-full select-none" 
+      draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onClick={handleClick}
+    >
       <div className={cn(
         "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
         className
@@ -3230,20 +3346,24 @@ export function ProductDealCard({
           />
         </div>
 
-        {/* Ø¹Ù†ÙˆØ§Ù† Ú©Ø§Ù„Ø§ (ÙÙˆÙ†Øª Ø³Ø§ÛŒØ² ÛŒÚ© Ù¾Ø±Ø¯Ù‡ Ø¨Ø²Ø±Ú¯ØªØ± Ø¯Ø± Ù…ÙˆØ¨Ø§ÛŒÙ„) */}
-        <div className="w-full h-9 mb-1">
-          <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed">
+        {/* Ø¹Ù†ÙˆØ§Ù† Ú©Ø§Ù„Ø§ (Ø§ØµÙ„Ø§Ø­ Ø§Ø±ØªÙØ§Ø¹ Ø¨Ø§ Ø­Ø¯Ø§Ù‚Ù„ ÙØ¶Ø§ Ø¬Ù‡Øª Ù‚Ø±Ø§Ø±Ú¯ÛŒØ±ÛŒ Ø¨ÛŒâ€ŒÙ†Ù‚Øµ Ø­Ø§Ù„Øª Ø¯ÙˆØ®Ø·ÛŒ) */}
+        <div className="w-full min-h-[2.6rem] mb-1 flex items-start justify-end select-none">
+          <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed w-full">
             {product.title}
           </h4>
         </div>
 
-        {/* Ø¨Ø®Ø´ Ø§Ù…ØªÛŒØ§Ø² */}
-        {showRating && <div className="w-full flex justify-start mb-2">{renderStars()}</div>}
+        {/* Ø¨Ø®Ø´ Ø§Ù…ØªÛŒØ§Ø² (Ù…ÙˆÙ‚Ø¹ÛŒØª Ø§ØµÙ„ÛŒ Ø¨Ø§ Ø§Ø¹Ù…Ø§Ù„ ÙØ§ØµÙ„Ù‡ Ø§Ø³ØªØ§Ù†Ø¯Ø§Ø±Ø¯ Ø¬Ø¯ÛŒØ¯ Ø¬Ù‡Øª Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² ØªØ¯Ø§Ø®Ù„) */}
+        {showRating && (
+          <div className="w-full flex justify-start mb-3 mt-1.5 select-none">
+            {renderStars()}
+          </div>
+        )}
 
-        {/* Ø¨Ø®Ø´ Ù‚ÛŒÙ…Øªâ€ŒÙ‡Ø§ Ùˆ Ø¨Ø¬ ØªØ®ÙÛŒÙ Ø´ÛŒÚ© */}
+        {/* Ø¨Ø®Ø´ Ù‚ÛŒÙ…Øªâ€ŒÙ‡Ø§ Ùˆ Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ Ø´ÛŒÚ© */}
         <div className="w-full mt-auto pt-2 flex items-center justify-between">
           
-          {/* Ø³Ù…Øª Ø±Ø§Ø³Øª: Ù†Ø´Ø§Ù† Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ (Ù†Ù…Ø§ÛŒØ´ Ù‡ÙˆØ´Ù…Ù†Ø¯) */}
+          {/* Ù†Ø´Ø§Ù† Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ ÙˆØ§Ù‚Ø¹ÛŒ */}
           <div className={cn(
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -3251,7 +3371,7 @@ export function ProductDealCard({
             %{discountPercent}
           </div>
 
-          {/* Ø³Ù…Øª Ú†Ù¾: Ø¨Ø§Ú©Ø³ Ù…Ø¨Ø§Ù„Øº (ØªØºÛŒÛŒØ± Ø±Ù†Ú¯ Ù‚ÛŒÙ…Øª Ø®Ø·â€ŒØ®ÙˆØ±Ø¯Ù‡ Ø¨Ù‡ Ø²ÛŒÙ†Ú© ÛµÛ°Û° Ø¨Ø±Ø§ÛŒ Ù¾Ø±Ø±Ù†Ú¯â€ŒØªØ± Ø´Ø¯Ù†) */}
+          {/* Ø¨Ø§Ú©Ø³ Ù…Ø¨Ø§Ù„Øº ØªÙˆÙ…Ø§Ù†ÛŒ */}
           <div className="flex flex-col items-end min-w-0">
             {hasDiscount && originalPriceToman > 0 && (
               <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
@@ -3268,11 +3388,10 @@ export function ProductDealCard({
 
         </div>
 
-        {/* Ø¨Ø®Ø´ Ø´Ù…Ø§Ø±Ù†Ø¯Ù‡ Ù…Ø¹Ú©ÙˆØ³ Ø´Ú¯ÙØªâ€ŒØ§Ù†Ú¯ÛŒØ² */}
-        {showTimer && nominated.discountUntil && (
-          <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-sans">
+        {/* Ø¨Ø®Ø´ Ø´Ù…Ø§Ø±Ù†Ø¯Ù‡ Ù…Ø¹Ú©ÙˆØ³ ØªØ®ÙÛŒÙ Ø´Ú¯ÙØªâ€ŒØ§Ù†Ú¯ÛŒØ² (ØªÙ†Ù‡Ø§ Ø¯Ø± ØµÙˆØ±Øª ÙˆØ¬ÙˆØ¯ Ø§Ù†Ù‚Ø¶Ø§ÛŒ ÙˆØ§Ù‚Ø¹ÛŒ) */}
+        {showTimer && hasExpiration && (
+          <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-sans border-t border-dashed">
             
-            {/* Ø²Ù…Ø§Ù† Ø¯ÛŒØ¬ÛŒØªØ§Ù„ Ù„Ø§ÛŒÙˆØª Ú†Ù¾â€ŒØ¨Ù‡â€ŒØ±Ø§Ø³Øª */}
             <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
               <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{toPersianDigits(timeLeft.hours)}</span>
               <span className="text-muted-foreground">:</span>
@@ -3281,7 +3400,6 @@ export function ProductDealCard({
               <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{toPersianDigits(timeLeft.seconds)}</span>
             </div>
 
-            {/* Ø³Ø§Ø¹Øª Ø´Ù†ÛŒ Ù…ØªØ­Ø±Ú© Ù„Ø§ÛŒØª */}
             <Hourglass className="h-3.5 w-3.5 text-primary shrink-0 animate-spin [animation-duration:4s]" />
 
           </div>
@@ -3299,7 +3417,7 @@ export function ProductDealCard({
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ProductDealCard } from './ProductDealCard';
+import { ProductStandardCard } from './ProductStandardCard';
 import { ChevronLeft, ChevronRight, Loader2, Wrench } from 'lucide-react';
 import { Typography } from '@/components/primitives/Typography';
 import { motion, useMotionValue, animate } from 'framer-motion';
@@ -3336,7 +3454,8 @@ export function ProductSlider({
 
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 450;
-    let newX = x.get() + (direction === 'right' ? -step : step);
+    // Ø§Ù†Ø·Ø¨Ø§Ù‚ Ú©Ø§Ù…Ù„ Ø¬Ù‡Øª Ø­Ø±Ú©Øª Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ Ø¨Ø§ Ù…Ù†Ø·Ù‚ Ø¯Ø±Ú¯ Ø±Ø§Ø³Øªâ€ŒÚ†ÛŒÙ† (RTL) ÙØ±ÛŒÙ…ÙˆØ±Ú© Ù…ÙˆØ´Ù†
+    let newX = x.get() + (direction === 'left' ? step : -step);
     
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
@@ -3374,30 +3493,30 @@ export function ProductSlider({
         </Link>
       </div>
 
-      {/* Ú©Ø§Ù†ØªÛŒÙ†Ø± Ø§ØµÙ„ÛŒ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¨Ø§ Ù„ØºØ²Ø´ Ùˆ Ø¯Ø±Ú¯ Û±Û°Û°Ùª Ø±ÙˆØ§Ù† ÙØ±ÛŒÙ…ÙˆØ± Ù…ÙˆØ´Ù† */}
+      {/* Ú©Ø§Ù†ØªÛŒÙ†Ø± Ø§ØµÙ„ÛŒ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± */}
       <div className="w-full bg-background rounded-xl border p-4 relative group overflow-hidden">
         
-        {/* Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ÛŒ Ù†Ø§ÙˆØ¨Ø±ÛŒ Ø¯Ø³Ú©ØªØ§Ù¾ */}
+        {/* Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ÛŒ Ù†Ø§ÙˆØ¨Ø±ÛŒ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ø¯Ø³Ú©ØªØ§Ù¾ Ø¨Ø§ Ø¬Ù‡Øª Ø§ØµÙ„Ø§Ø­â€ŒØ´Ø¯Ù‡ */}
         {products.length > 4 && (
           <>
             <button
               onClick={() => handleScroll('right')}
               className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ø¨Ø¹Ø¯ÛŒ"
+              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ù‚Ø¨Ù„ÛŒ"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
               onClick={() => handleScroll('left')}
               className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ù‚Ø¨Ù„ÛŒ"
+              aria-label="Ø§Ø³Ù„Ø§ÛŒØ¯ Ø¨Ø¹Ø¯ÛŒ"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
           </>
         )}
 
-        {/* Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª Ø¨Ø§ Ø¯Ø±Ú¯ Ø³Ø®Øªâ€ŒØ§ÙØ²Ø§Ø±ÛŒ Ø±ÙˆØ§Ù† Ø¯Ø± Ø¯Ø³Ú©ØªØ§Ù¾ Ùˆ Ù…ÙˆØ¨Ø§ÛŒÙ„ */}
+        {/* Ù„ÛŒØ³Øª Ù…Ø­ØµÙˆÙ„Ø§Øª Ø¨Ø§ Ø¯Ø±Ú¯ Ø³Ø®Øªâ€ŒØ§ÙØ²Ø§Ø±ÛŒ Ø±ÙˆØ§Ù† ØªØ±Ø§Ø² Ø´Ø¯Ù‡ Ø¨Ø§ Ø³Ø§Ø®ØªØ§Ø± RTL */}
         <div 
           ref={carouselRef}
           className="w-full overflow-hidden relative z-10 select-none"
@@ -3411,7 +3530,8 @@ export function ProductSlider({
           >
             {products.map((prod: any) => (
               <div key={prod.id} className="w-[190px] sm:w-[250px] shrink-0">
-                <ProductDealCard product={prod} showTimer={showTimer} />
+                {/* Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² Ú©Ø§Ø±Øª Ø§Ø³ØªØ§Ù†Ø¯Ø§Ø±Ø¯ Ø¨Ù‡ Ø¬Ø§ÛŒ Ú©Ø§Ø±Øª Ø´Ú¯ÙØªâ€ŒØ§Ù†Ú¯ÛŒØ² Ù‚Ø¯ÛŒÙ…ÛŒ */}
+                <ProductStandardCard product={prod} />
               </div>
             ))}
           </motion.div>
@@ -3427,7 +3547,7 @@ export function ProductSlider({
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Star, Store, BadgeCheck, Truck, Eye } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
@@ -3445,31 +3565,36 @@ export function ProductStandardCard({
   className
 }: ProductStandardCardProps) {
   const [tickerIndex, setTickerIndex] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // Ù…ØªØºÛŒØ±Ù‡Ø§ÛŒ ÙˆØ¶Ø¹ÛŒØª Ø¨Ø±Ø§ÛŒ ØªØ´Ø®ÛŒØµ Ø§Ø³Ù„Ø§ÛŒØ¯/Ø¯Ø±Ú¯ Ø§Ø² Ú©Ù„ÛŒÚ© ÙˆØ§Ù‚Ø¹ÛŒ
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
 
-  // Ø§Ø³ØªØ®Ø±Ø§Ø¬ ÙÛŒÙ„Ø¯Ù‡Ø§ÛŒ Ù‚ÛŒÙ…Øª Ø±ÛŒØ§Ù„ÛŒ Ùˆ ØªØ¨Ø¯ÛŒÙ„ Ø¨Ù‡ ØªÙˆÙ…Ø§Ù† Ø¨Ø§ ÙØ§Ù„â€ŒØ¨Ú©â€ŒÙ‡Ø§ÛŒ Ù‡ÙˆØ´Ù…Ù†Ø¯ Ø¹Ø¯Ø¯ÛŒ
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Ø§Ø³ØªØ®Ø±Ø§Ø¬ ÙÛŒÙ„Ø¯Ù‡Ø§ÛŒ Ù‚ÛŒÙ…Øª Ø±ÛŒØ§Ù„ÛŒ ÙˆØ§Ù‚Ø¹ÛŒ Ø§Ø² Ù¾Ø§Ø³Ø® Ø³Ø±ÙˆØ±
   const nominated = product?.nominatedShopProduct || {};
-  const serverOriginalPrice = nominated.rialRetailPrice || product.price || nominated.price || 0;
-  const serverFinalPrice = nominated.rialFinalPrice || product.discountPrice || nominated.discountPrice || 0;
-
-  const originalPriceRaw = serverOriginalPrice > 0 ? serverOriginalPrice : 500000;
-  const finalPriceRaw = serverFinalPrice > 0 ? serverFinalPrice : 500000;
+  const originalPriceRaw = nominated.rialRetailPrice || product.price || nominated.price || 0;
+  const finalPriceRaw = nominated.rialFinalPrice || product.discountPrice || nominated.discountPrice || 0;
 
   const originalPriceToman = Math.round(originalPriceRaw / 10);
   const finalPriceToman = Math.round(finalPriceRaw / 10);
 
-  const discountPercent = originalPriceRaw > finalPriceRaw 
-    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100) 
-    : nominated.discountPercentage || 0;
+  // Ø¨Ø±Ø±Ø³ÛŒ ÙˆØ§Ù‚Ø¹ÛŒ ÙˆØ¬ÙˆØ¯ ØªØ®ÙÛŒÙ
+  const hasDiscount = originalPriceRaw > finalPriceRaw;
 
-  const hasDiscount = originalPriceRaw > finalPriceRaw || discountPercent > 0;
+  // Ù…Ø­Ø§Ø³Ø¨Ù‡ Ø¯Ø§ÛŒÙ†Ø§Ù…ÛŒÚ© Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ ÙˆØ§Ù‚Ø¹ÛŒ
+  const discountPercent = hasDiscount
+    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+    : (nominated.discountPercentage || 0);
 
-  // Ø¬Ù…Ø¹â€ŒØ¢ÙˆØ±ÛŒ Ù‡ÙˆØ´Ù…Ù†Ø¯ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ù…ØªØºÛŒØ± Ø¯ÛŒØªØ§Ø¨ÛŒØ³ Ø¨Ø§ Ø§Ø³ØªÙØ§Ø¯Ù‡ Ø§Ø² useMemo Ø¬Ù‡Øª Ø­ÙØ¸ Ø«Ø¨Ø§Øª Ø±Ù†Ø¯Ø±Ø³Ø§Ø²ÛŒ Ù„ÙˆØ¯ Ø§Ø¨ØªØ¯Ø§ÛŒÛŒ
+  // Ø¬Ù…Ø¹â€ŒØ¢ÙˆØ±ÛŒ Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø¯Ø§ÛŒÙ†Ø§Ù…ÛŒÚ© Ø¯ÛŒØªØ§Ø¨ÛŒØ³
   const tickerItems = useMemo(() => {
     const items: { text: string; icon: any }[] = [];
     
-    if (nominated.shopTitle) {
-      items.push({ text: `ÙØ±ÙˆØ´Ú¯Ø§Ù‡: ${nominated.shopTitle}`, icon: Store });
-    }
     if (product.totalSalesCount > 0) {
       items.push({ text: `${product.totalSalesCount} ÙØ±ÙˆØ´ Ù…ÙˆÙÙ‚ Ø¯Ø± ÛŒØ§Ø¯Ú©Ú†ÛŒ`, icon: BadgeCheck });
     }
@@ -3488,14 +3613,14 @@ export function ProductStandardCard({
 
   const tickerLength = tickerItems.length;
 
-  // Ø±Ø§Ù‡ Ø§Ù†Ø¯Ø§Ø²ÛŒ Ú†Ø±Ø®Ù‡ Ø­Ø±Ú©Øª Ø¨Ø§Ù„Ø§ Ø¨Ù‡ Ù¾Ø§ÛŒÛŒÙ† Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ù…ÛŒÙ†ÛŒâ€ŒÙ…Ø§Ù„ Ø¨Ø§ Ù¾Ø§ÛŒØ¯Ø§Ø±ÛŒ Ú©Ø§Ù…Ù„ Ø¯Ø± Ù„ÙˆØ¯ÛŒÙ†Ú¯
+  // Ù…Ø¯ÛŒØ±ÛŒØª Ú†Ø±Ø®Ù‡ Ø­Ø±Ú©Øª Ø¨Ø§Ù„Ø§ Ø¨Ù‡ Ù¾Ø§ÛŒÛŒÙ† Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ù…ÛŒÙ†ÛŒâ€ŒÙ…Ø§Ù„ Ø´ÙØ§Ù
   useEffect(() => {
-    if (tickerLength <= 1) return;
+    if (!isMounted || tickerLength <= 1) return;
     const interval = setInterval(() => {
       setTickerIndex((prev) => (prev + 1) % tickerLength);
     }, 3000);
     return () => clearInterval(interval);
-  }, [tickerLength]);
+  }, [tickerLength, isMounted]);
 
   const getFullUrl = (path: string | null) => {
     if (!path) return '/placeholder.png';
@@ -3509,12 +3634,58 @@ export function ProductStandardCard({
     return new Intl.NumberFormat('fa-IR').format(value);
   };
 
+  // Ù‡Ù†Ø¯Ù„Ø± ØªØ´Ø®ÛŒØµ Ø´Ø±ÙˆØ¹ Ø­Ø±Ú©Øª Ù…ÙˆØ³
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(false);
+  };
+
+  // Ù‡Ù†Ø¯Ù„Ø± ØªØ´Ø®ÛŒØµ Ú©Ø´ÛŒØ¯Ù† Ù…ÙˆØ³ (Ø§Ú¯Ø± Ø¬Ø§Ø¨Ù‡â€ŒØ¬Ø§ÛŒÛŒ Ø¨ÛŒØ´ Ø§Ø² Û¶ Ù¾ÛŒÚ©Ø³Ù„ Ø¨Ø§Ø´Ø¯ØŒ Ø¯Ø±Ú¯ ØªØ§ÛŒÛŒØ¯ Ù…ÛŒâ€ŒØ´ÙˆØ¯)
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const dx = Math.abs(e.clientX - dragStart.current.x);
+    const dy = Math.abs(e.clientY - dragStart.current.y);
+    if (dx > 6 || dy > 6) {
+      setIsDragging(true);
+    }
+  };
+
+  // Ù‡Ù†Ø¯Ù„Ø± Ù„Ù…Ø³ÛŒ Ù…ÙˆØ¨Ø§ÛŒÙ„ Ø¨Ø±Ø§ÛŒ Ø´Ø±ÙˆØ¹ Ø§Ø³Ù„Ø§ÛŒØ¯
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      dragStart.current = { x: touch.clientX, y: touch.clientY };
+      setIsDragging(false);
+    }
+  };
+
+  // Ù‡Ù†Ø¯Ù„Ø± Ù„Ù…Ø³ÛŒ Ù…ÙˆØ¨Ø§ÛŒÙ„ Ø¯Ø± Ø­ÛŒÙ† Ø­Ø±Ú©Øª Ø¯Ø³Øª
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      const dx = Math.abs(touch.clientX - dragStart.current.x);
+      const dy = Math.abs(touch.clientY - dragStart.current.y);
+      if (dx > 6 || dy > 6) {
+        setIsDragging(true);
+      }
+    }
+  };
+
+  // Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ø±ÛŒØ¯Ø§ÛŒØ±Ú©Øª Ù†Ø§Ø®ÙˆØ§Ø³ØªÙ‡ Ø¯Ø± ØµÙˆØ±Øª ÙØ¹Ø§Ù„ Ø¨ÙˆØ¯Ù† ÙˆØ¶Ø¹ÛŒØª Ø¯Ø±Ú¯
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   const renderStars = () => {
     const rating = product.averageRate || 5;
     return (
       <div className="flex items-center gap-1 select-none">
-        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-        <span className="text-[10px] sm:text-xs font-iran-sans text-muted-foreground">Ø§Ù…ØªÛŒØ§Ø² {rating}</span>
+        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
+        <span className="text-[10px] sm:text-[11px] font-iran-sans font-bold text-foreground">
+          {formatPrice(rating)}
+        </span>
       </div>
     );
   };
@@ -3522,7 +3693,16 @@ export function ProductStandardCard({
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
 
   return (
-    <Link href={`/products/${product.productCode}`} className="block w-full h-full select-none" draggable={false}>
+    <Link 
+      href={`/products/${product.productCode}`} 
+      className="block w-full h-full select-none" 
+      draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onClick={handleClick}
+    >
       <div className={cn(
         "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
         className
@@ -3536,43 +3716,64 @@ export function ProductStandardCard({
             draggable={false}
             className="w-full h-full object-contain rounded-lg hover:scale-[1.01] transition-transform duration-500 absolute inset-0 select-none"
           />
+          
+          {/* Ø³ØªØ§Ø±Ù‡ Ùˆ Ø§Ù…ØªÛŒØ§Ø² ÙÙ„ÙˆØªÛŒÙ†Ú¯ Ø±ÙˆÛŒ Ø¹Ú©Ø³ (Ú¯ÙˆØ´Ù‡ Ø¨Ø§Ù„Ø§ Ø±Ø§Ø³Øª) */}
+          {showRating && (
+            <div className="absolute top-2 left-2 
+             dark:bg-zinc-900/85 backdrop-blur-sm 
+             px-2 py-0.5 rounded-lg shadow-sm border 
+             border-border/20 z-10 flex items-center justify-center">
+              {renderStars()}
+            </div>
+          )}
         </div>
 
-        {/* Ø¹Ù†ÙˆØ§Ù† Ú©Ø§Ù„Ø§ (ÙÙˆÙ†Øª Ø³Ø§ÛŒØ² Ø¨Ø²Ø±Ú¯ØªØ± Ø¯Ø± Ù…ÙˆØ¨Ø§ÛŒÙ„) */}
-        <div className="w-full h-9 mb-1">
+        {/* Ù†Ø§Ù… ÙØ±ÙˆØ´Ú¯Ø§Ù‡ Ø«Ø§Ø¨Øª (Ø¨Ø§Ù„Ø§ÛŒ Ø§Ø³Ù„Ø§ÛŒØ¯ Ù…ØªØ­Ø±Ú©) */}
+  
+        
+        {/* Ø¹Ù†ÙˆØ§Ù† Ú©Ø§Ù„Ø§ */}
+        <div className="w-full h-9 mb-1 mt-2">
           <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed">
             {product.title}
           </h4>
         </div>
-
-        {/* Ø¨Ø®Ø´ Ø§Ù…ØªÛŒØ§Ø² Ùˆ Ø¨Ø§Ú©Ø³ Ù…ØªØ­Ø±Ú© Ø¹Ù…ÙˆØ¯ÛŒ Ø§Ø·Ù„Ø§Ø¹Ø§Øª ÙØ±ÙˆØ´Ú¯Ø§Ù‡ */}
-        <div className="w-full flex flex-col items-stretch gap-1 mb-2">
-          {showRating && <div className="w-full flex justify-start">{renderStars()}</div>}
+      {nominated.shopTitle && (
+          <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs 
+          text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1">
+            <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
+            <span className="font-iran-sans font-medium truncate">ÙØ±ÙˆØ´Ú¯Ø§Ù‡: {nominated.shopTitle}</span>
+          </div>
+        )}
+        {/* Ø¨Ø®Ø´ Ø§Ø·Ù„Ø§Ø¹Ø§Øª ÙØ±ÙˆØ´Ú¯Ø§Ù‡ Ùˆ Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ù…ØªÙ†ÛŒ Ù…ÛŒÙ†ÛŒâ€ŒÙ…Ø§Ù„ */}
+        <div className="w-full flex flex-col items-stretch select-none">
           
-          {/* Ø¨Ø§Ú©Ø³ Ù…ØªØ­Ø±Ú© Ø¹Ù…ÙˆØ¯ÛŒ Ø¨Ø§ Ø§ÙÚ©Øª ÙÙ†Ø±ÛŒ ÙÙˆÙ‚â€ŒØ§Ù„Ø¹Ø§Ø¯Ù‡ Ø¨Ø§Ú©ÛŒÙÛŒØª Ùˆ Ø²Ù†Ø¯Ù‡ */}
-          {tickerLength > 0 && (
-            <div className="h-7 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground bg-muted/40 dark:bg-zinc-800/40 rounded-lg px-2.5 mt-1">
+          {/* Ø§Ø³Ù„Ø§ÛŒØ¯Ø± Ù…ØªÙ†ÛŒ Ù…ØªØ­Ø±Ú© Ø¨Ø¯ÙˆÙ† Ù¾Ø³â€ŒØ²Ù…ÛŒÙ†Ù‡ (Ø´ÙØ§Ù) Ù…Ø§Ø¨ÛŒÙ† Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ÛŒ ÙˆØ§Ù‚Ø¹ÛŒ */}
+          {isMounted && tickerLength > 0 ? (
+            <div className="h-6 overflow-hidden relative w-full flex items-center justify-start 
+            text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={tickerIndex}
-                  initial={{ y: '100%', opacity: 0 }}
+                  initial={{ y: 15, opacity: 0 }} // Ø§Ù†ÛŒÙ…ÛŒØ´Ù† Ù¾ÛŒÚ©Ø³Ù„ÛŒ Ø¹Ù…ÙˆØ¯ÛŒ
                   animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: '-100%', opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-                  className="absolute right-2.5 flex items-center gap-1.5 font-iran-sans truncate w-[calc(100%-20px)] h-full py-1.5"
+                  exit={{ y: -15, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1"
                 >
                   <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate font-medium">{tickerItems[tickerIndex]?.text}</span>
                 </motion.span>
               </AnimatePresence>
             </div>
+          ) : (
+            isMounted && tickerLength > 0 && <div className="h-6 mt-0.5 w-full shrink-0" />
           )}
         </div>
 
         {/* Ø¨Ø®Ø´ Ù‚ÛŒÙ…Øªâ€ŒÙ‡Ø§ Ùˆ Ù†Ø´Ø§Ù† Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ */}
-        <div className="w-full mt-auto pt-2 border-t flex items-center justify-between">
+        <div className="w-full mt-auto pt-2  flex items-center justify-between">
           
-          {/* Ø³Ù…Øª Ø±Ø§Ø³Øª: Ù†Ø´Ø§Ù† Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ */}
+          {/* Ù†Ø´Ø§Ù† Ø¯Ø±ØµØ¯ ØªØ®ÙÛŒÙ ÙˆØ§Ù‚Ø¹ÛŒ */}
           <div className={cn(
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -3580,7 +3781,7 @@ export function ProductStandardCard({
             %{discountPercent}
           </div>
 
-          {/* Ø³Ù…Øª Ú†Ù¾: Ø¨Ø§Ú©Ø³ Ù…Ø¨Ø§Ù„Øº Ø¹Ù…ÙˆØ¯ÛŒ ØªØ±Ø§Ø²Ø´Ø¯Ù‡ */}
+          {/* Ø¨Ø§Ú©Ø³ Ù…Ø¨Ø§Ù„Øº ØªÙˆÙ…Ø§Ù†ÛŒ */}
           <div className="flex flex-col items-end min-w-0">
             {hasDiscount && originalPriceToman > 0 && (
               <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
@@ -5482,7 +5683,8 @@ export function Logo({ hideTitle = false, className }: LogoProps) {
 
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion'; // ðŸš¨ Ø§Ø¶Ø§ÙÙ‡ Ø´Ø¯
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Logo } from '../Logo/Logo';
 import { SellerButton } from '../SellerButton/SellerButton';
@@ -5497,9 +5699,15 @@ export interface MobileHeaderProps {
 }
 
 export function MobileHeader({ className, onSearch, isScrolled = false }: MobileHeaderProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <div className={cn("w-full flex flex-col", className)}>
-      {/* Ø±Ø¯ÛŒÙ Ø§ÙˆÙ„: Ù„ÙˆÚ¯Ùˆ + Ú©Ù†ØªØ±Ù„â€ŒÙ‡Ø§ */}
+      {/* Ø±Ø¯ÛŒÙ Ø§ÙˆÙ„: Ù„ÙˆÚ¯Ùˆ + Ø¯Ú©Ù…Ù‡â€ŒÙ‡Ø§ */}
       <div className="flex items-center justify-between w-full h-10">
         <Logo hideTitle className="shrink-0" />
         <div className="flex items-center gap-2 shrink-0">
@@ -5508,31 +5716,39 @@ export function MobileHeader({ className, onSearch, isScrolled = false }: Mobile
         </div>
       </div>
 
-      {/* ðŸš¨ Ø±Ø¯ÛŒÙ Ø¯ÙˆÙ… Ùˆ Ø³ÙˆÙ… Ø¨Ø§ Framer Motion */}
-      <AnimatePresence initial={false}>
-        {!isScrolled && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <div className="pt-2 pb-1 flex flex-col">
-              <SearchBar 
-                placeholder="Ø¬Ø³ØªØ¬Ùˆ Ø¯Ø±"
-                onSearch={onSearch}
-                className="rounded-md px-3 py-1.5 bg-background w-full"
-                isMobile={true}
-              />
-              
-              <div className="border-t pt-1.5 mt-2.5">
-                <CitySelector variant="mobile" />
+      {/* Ø±Ø¯ÛŒÙ Ø¯ÙˆÙ… Ùˆ Ø³ÙˆÙ…: Ù„ÙˆØ¯ Ø§Ù†ÛŒÙ…ÛŒØ´Ù†ÛŒ ÙÛŒÙ„Ø¯ Ø¬Ø³ØªØ¬Ùˆ ØµØ±ÙØ§Ù‹ Ù¾Ø³ Ø§Ø² Ø§ØªÙ…Ø§Ù… Ù‡ÛŒØ¯Ø±Ø§Ø³ÛŒÙˆÙ† Ø¬Ù‡Øª Ù…Ù…Ø§Ù†Ø¹Øª Ø§Ø² Ú©Ø±Ø´ useContext */}
+      {isMounted ? (
+        <AnimatePresence initial={false}>
+          {!isScrolled && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="pt-2 pb-1 flex flex-col">
+                <SearchBar 
+                  placeholder="Ø¬Ø³ØªØ¬Ùˆ Ø¯Ø± ÛŒØ¯Ú©Ú†ÛŒ..."
+                  onSearch={onSearch}
+                  className="rounded-md px-3 py-1.5 bg-background w-full"
+                  isMobile={true}
+                />
+                
+                <div className="border-t pt-1.5 mt-2.5">
+                  <CitySelector variant="mobile" />
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      ) : (
+        // Ú†ÛŒØ¯Ù…Ø§Ù† Ø«Ø§Ø¨Øª Ù…ÙˆÙ‚Øª ØªØ§ Ù¾ÛŒØ´ Ø§Ø² Ù„ÙˆØ¯ Ú©Ù„Ø§ÛŒÙ†Øª Ø¬Ù‡Øª Ù…Ù…Ø§Ù†Ø¹Øª Ø§Ø² Ù¾Ø±Ø´ ØµÙØ­Ù‡
+        <div className="pt-2 pb-1 flex flex-col">
+          <div className="h-9 w-full bg-muted/20 rounded-md animate-pulse" />
+          <div className="h-6 mt-2.5 w-full bg-muted/15 rounded-md animate-pulse" />
+        </div>
+      )}
     </div>
   );
 }
@@ -12697,9 +12913,9 @@ export function useGetNominatedProducts() {
       const client = getHttpClient();
       const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
         params: {
-          Types: 'Stock',
-          HasDiscount: true,
-          HasDiscountWithExpiration: true,
+          // Types: 'Stock',
+          // HasDiscount: true,
+          // HasDiscountWithExpiration: true,
           PageNumber: 1,
           PageSize: 30
         }
@@ -12720,7 +12936,7 @@ export function useGetNominatedProductsByCategory(categoryEnglishTitle: string) 
       const client = getHttpClient();
       const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
         params: {
-          Types: 'Stock',
+         
           PartCategoryEnglishTitle: categoryEnglishTitle,
           PageNumber: 1,
           PageSize: 30

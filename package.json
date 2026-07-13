@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@fontsource/vazirmatn": "^5.2.8",
+    "@hookform/resolvers": "^5.4.0",
     "@next/font": "^14.2.15",
     "@tanstack/react-query": "^5.0.0",
     "@tanstack/react-query-devtools": "^5.0.0",
@@ -28,10 +29,11 @@
     "nextjs-toploader": "^3.9.17",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hook-form": "^7.48.0",
+    "react-hook-form": "^7.81.0",
     "react-hot-toast": "^2.6.0",
     "tailwind-merge": "^2.6.1",
-    "zod": "^3.22.0"
+    "zod": "^3.22.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

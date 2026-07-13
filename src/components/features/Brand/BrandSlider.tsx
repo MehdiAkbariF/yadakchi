@@ -2,32 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ProductStandardCard } from './ProductStandardCard';
-import { ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
+import { useGetMainBrands } from '@/domains/front/reference/brand/hooks/brand.hooks';
 import { Typography } from '@/components/primitives/Typography';
+import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
-import { SliderSkeleton } from './SliderSkeleton';
+import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 
-interface ProductSliderProps {
-  title: string;
-  products: any[];
-  isLoading: boolean;
-  isError: boolean;
-  viewAllLink?: string;
-  className?: string;
-  showTimer?: boolean;
-}
-
-export function ProductSlider({
-  title,
-  products = [],
-  isLoading,
-  isError,
-  viewAllLink = '#',
-  className,
-  showTimer = false,
-}: ProductSliderProps) {
+export function BrandSlider() {
+  const { data: brands = [], isLoading, isError } = useGetMainBrands();
   const carouselRef = useRef<HTMLDivElement>(null);
   const [dragWidth, setWidth] = useState(0);
   const x = useMotionValue(0);
@@ -36,15 +19,13 @@ export function ProductSlider({
     if (carouselRef.current) {
       setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
     }
-  }, [products]);
+  }, [brands]);
 
   const handleScroll = (direction: 'left' | 'right') => {
-    const step = 450;
-    let newX = x.get() + (direction === 'left' ? step : -step);
-    
+    const step = 350;
+    let newX = x.get() + (direction === 'right' ? -step : step);
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
-
     animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
   };
 
@@ -55,33 +36,45 @@ export function ProductSlider({
     }
   };
 
+  const getFullUrl = (path: string | null) => {
+    if (!path) return '/placeholder.png';
+    if (path.startsWith('http')) return path;
+    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+  };
+
   if (isLoading) {
-    return <SliderSkeleton title={title} />;
+    return (
+      <div className="w-full space-y-4 py-4">
+        <div className="flex items-center gap-2 px-1">
+          <Skeleton className="w-5 h-5" variant="circle" />
+          <Skeleton className="w-32 h-5" />
+        </div>
+        <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
+          {[...Array(8)].map((_, index) => (
+            <Skeleton key={index} className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
   }
 
-  if (isError || products.length === 0) return null;
+  if (isError || brands.length === 0) return null;
 
   return (
-    <div className={cn("w-full flex flex-col space-y-3.5 py-4 animate-in fade-in duration-300", className)}>
+    <div className="w-full flex flex-col space-y-3.5 py-4 animate-in fade-in duration-300">
       <div className="flex items-center justify-between w-full px-1">
         <div className="flex items-center gap-2">
-          <Wrench className="h-5 w-5 text-primary shrink-0" />
+          <Award className="h-5 w-5 text-primary shrink-0" />
           <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">
-            {title}
+            برندهای محبوب
           </Typography>
         </div>
-        
-        <Link 
-          href={viewAllLink} 
-          className="text-xs sm:text-sm font-bold font-iran-sans text-primary hover:underline transition-colors shrink-0"
-        >
-          مشاهده همه &lt;
-        </Link>
       </div>
 
-      <div className="w-full bg-background rounded-xl border p-4 relative group overflow-hidden">
-        
-        {products.length > 4 && (
+      <div className="w-full bg-background rounded-xl  p-4 relative group overflow-hidden">
+        {brands.length > 6 && (
           <>
             <button
               onClick={() => handleScroll('right')}
@@ -112,14 +105,22 @@ export function ProductSlider({
             onClickCapture={handleDragClickCapture}
             className="flex gap-4 py-1 cursor-grab active:cursor-grabbing"
           >
-            {products.map((prod: any) => (
-              <div key={prod.id} className="w-[190px] sm:w-[250px] shrink-0">
-                <ProductStandardCard product={prod} />
-              </div>
+            {brands.map((brand: any) => (
+              <Link
+                key={brand.id}
+                href={`/search?brandIds=${brand.id}`}
+                className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl border bg-background hover:border-primary/40 p-2 flex items-center justify-center transition-all select-none hover:scale-[1.02]"
+              >
+                <img
+                  src={getFullUrl(brand.image)}
+                  alt={brand.imageAlt || brand.name}
+                  draggable={false}
+                  className="w-full h-full object-contain rounded-lg select-none"
+                />
+              </Link>
             ))}
           </motion.div>
         </div>
-
       </div>
     </div>
   );

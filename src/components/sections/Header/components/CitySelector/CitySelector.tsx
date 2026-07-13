@@ -1,5 +1,3 @@
-// src/components/sections/Header/components/CitySelector/CitySelector.tsx
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -8,9 +6,7 @@ import { cn } from '@/design-system/utils/cn';
 import { Modal } from '@/components/composites/Modal/Modal';
 import { Input } from '@/components/primitives/Input/Input';
 import { useGetProvinceCitiesTree } from '@/domains/front/reference/city/hooks/city.hooks';
-
-const LOCAL_STORAGE_KEY = 'yadakchi_selected_city';
-const CITY_EVENT_NAME = 'yadakchi_city_changed';
+import { useAppStore } from '@/shared/store/useAppStore';
 
 export interface CitySelectorProps {
   variant?: 'default' | 'mobile';
@@ -18,36 +14,20 @@ export interface CitySelectorProps {
 
 export function CitySelector({ variant = 'default' }: CitySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedCity, setSelectedCity] = useState<{ id: string; name: string } | null>(null);
-  
-  // لود درخت‌واره استان‌ها و شهرها از هوک دامین
+  const [mounted, setMounted] = useState(false);
+  const storeCity = useAppStore((state) => state.selectedCity);
+  const setStoreCity = useAppStore((state) => state.setSelectedCity);
+
   const { data: provincesTree = [], isLoading } = useGetProvinceCitiesTree();
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [activeProvinceId, setActiveProvinceId] = useState<string | null>(null);
 
-  // لود اطلاعات شهر انتخاب شده در بارگذاری اولیه
   useEffect(() => {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (saved) {
-      try {
-        setSelectedCity(JSON.parse(saved));
-      } catch {
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-      }
-    }
-
-    // شنونده رویداد اختصاصی برای سینک سراسری
-    const handleCitySync = () => {
-      const updated = localStorage.getItem(LOCAL_STORAGE_KEY);
-      setSelectedCity(updated ? JSON.parse(updated) : null);
-    };
-
-    window.addEventListener(CITY_EVENT_NAME, handleCitySync);
-    return () => window.removeEventListener(CITY_EVENT_NAME, handleCitySync);
+    setMounted(true);
   }, []);
 
-  // کنترل تغییرات تاریخچه و دکمه بازگشت در موبایل برای بستن مودال با دکمه Back گوشی
+  const selectedCity = mounted ? storeCity : null;
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -76,26 +56,16 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
     }
   };
 
-  // ذخیره شهر انتخاب شده
   const handleSelectCity = (id: string, name: string) => {
-    const cityData = { id, name };
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cityData));
-    setSelectedCity(cityData);
-    
-    // ارسال سیگنال سینک به تمام هدرها و سایدبارهای موازی در صفحه
-    window.dispatchEvent(new Event(CITY_EVENT_NAME));
+    setStoreCity({ id, name });
     handleCloseModal();
   };
 
-  // حذف انتخاب شهر جاری
   const handleClearCity = (e: React.MouseEvent) => {
     e.stopPropagation();
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    setSelectedCity(null);
-    window.dispatchEvent(new Event(CITY_EVENT_NAME));
+    setStoreCity(null);
   };
 
-  // فیلتر کردن هوشمند و سریع شهرها در تمام استان‌ها بر اساس تایپ کاربر
   const filteredCities = useMemo(() => {
     if (!searchQuery.trim()) return [];
     
@@ -114,12 +84,9 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
     return results;
   }, [searchQuery, provincesTree]);
 
-  // دسته‌بندی استان فعال
   const activeProvince = provincesTree.find(p => p.id === (activeProvinceId || provincesTree[0]?.id)) || provincesTree[0];
-
   const isMobileVariant = variant === 'mobile';
 
-  // محتوای اصلی مودال (مشترک بین دسکتاپ و موبایل)
   const renderModalContent = () => (
     <Modal
       isOpen={isOpen}
@@ -127,13 +94,12 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
       className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-50 bg-background md:relative md:max-w-2xl md:h-[550px] md:max-h-[90vh] md:rounded-xl md:p-0 md:overflow-hidden"
       overlayClassName="bg-black/40 backdrop-blur-md"
     >
-      {/* سربرگ مودال */}
       <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
         <div className="flex items-center gap-2">
           <button 
             onClick={handleCloseModal}
             className="md:hidden p-1 -mr-1 hover:bg-muted rounded-full"
-            aria-label="بازگشت"
+            aria-label="Back"
           >
             <ArrowRight className="h-5 w-5" />
           </button>
@@ -145,13 +111,12 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
         <button 
           onClick={handleCloseModal}
           className="hidden md:flex p-1.5 hover:bg-muted rounded-full transition-colors"
-          aria-label="بستن"
+          aria-label="Close"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      {/* بخش نوار جستجو */}
       <div className="p-4 border-b shrink-0 bg-background">
         <Input
           type="text"
@@ -175,7 +140,6 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
         />
       </div>
 
-      {/* بدنه لیست‌ها */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-2">
@@ -183,7 +147,6 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
             <span className="text-xs text-muted-foreground font-iran-sans">در حال دریافت لیست شهرها...</span>
           </div>
         ) : searchQuery.trim() ? (
-          /* نتایج جستجو */
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {filteredCities.length > 0 ? (
               filteredCities.map(city => (
@@ -204,9 +167,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
             )}
           </div>
         ) : (
-          /* دو ستونه استان و شهر */
           <div className="flex-1 flex overflow-hidden">
-            {/* ستون استان‌ها */}
             <div className="w-[140px] md:w-[220px] bg-muted/20 border-l overflow-y-auto py-1 shrink-0">
               {provincesTree.map(province => {
                 const isActive = activeProvince?.id === province.id;
@@ -227,7 +188,6 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
               })}
             </div>
 
-            {/* ستون شهرها */}
             <div className="flex-1 overflow-y-auto p-4 bg-background">
               {activeProvince ? (
                 <div className="space-y-1">
@@ -263,7 +223,6 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
     </Modal>
   );
 
-  // حالت موبایل فلت (کلیک‌خور ردیفی و بدون کادر دکمه‌ای)
   if (isMobileVariant) {
     return (
       <>
@@ -271,7 +230,6 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
           onClick={handleOpenModal}
           className="flex items-center justify-between w-full py-2.5 px-1 cursor-pointer hover:text-primary transition-colors text-xs text-muted-foreground font-iran-sans font-medium"
         >
-          {/* سمت راست: آیکون لوکیشن + لیبل وضعیت شهر */}
           <div className="flex items-center gap-2">
             <MapPin className="h-4.5 w-4.5 text-primary shrink-0" />
             <span className="text-foreground font-bold text-sm">
@@ -279,13 +237,12 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
             </span>
           </div>
           
-          {/* سمت چپ: دکمه حذف موقعیت (در صورت انتخاب بودن) + نماد راهنمای < */}
           <div className="flex items-center gap-2" onClick={(e) => selectedCity && e.stopPropagation()}>
             {selectedCity && (
               <button
                 onClick={handleClearCity}
                 className="p-1 hover:text-destructive text-muted-foreground/80 transition-colors"
-                aria-label="حذف انتخاب شهر"
+                aria-label="Remove Location"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -299,13 +256,12 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
     );
   }
 
-  // حالت دسکتاپ پیش‌فرض (کادر دکمه‌ای حاشیه‌دار)
   return (
     <>
       <button
         className="flex items-center gap-1.5 text-xs xl:text-sm hover:text-primary transition-colors whitespace-nowrap bg-muted/40 hover:bg-muted/70 px-2.5 py-1.5 rounded-lg border"
         onClick={handleOpenModal}
-        aria-label="انتخاب شهر"
+        aria-label="Select Location"
       >
         <MapPin className="h-3.5 w-3.5 xl:h-4 xl:w-4 text-primary" />
         <span className="font-iran-sans font-medium text-foreground">

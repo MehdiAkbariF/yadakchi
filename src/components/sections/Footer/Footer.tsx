@@ -24,7 +24,7 @@ export function Footer({ className }: FooterProps) {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           {/* About */}
           <div className="space-y-4">
-            <Typography variant="h5">درباره یادکچی</Typography>
+            <Typography variant="h5">درباره یدکچی</Typography>
             <Typography variant="small" color="muted">
               بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران
             </Typography>
@@ -106,7 +106,7 @@ export function Footer({ className }: FooterProps) {
         {/* Bottom Bar */}
         <div className="mt-8 border-t pt-8 text-center">
           <Typography variant="small" color="muted">
-            &copy; {new Date().getFullYear()} یادکچی. تمامی حقوق محفوظ است.
+            &copy; {new Date().getFullYear()} یدکچی. تمامی حقوق محفوظ است.
           </Typography>
         </div>
       </div>

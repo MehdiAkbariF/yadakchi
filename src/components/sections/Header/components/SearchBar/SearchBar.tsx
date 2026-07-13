@@ -26,7 +26,7 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ 
-  placeholder = 'جستجو در یادکچی...', 
+  placeholder = 'جستجو در یدکچی...', 
   className = '', 
   onSearch,
   isMobile = false 

@@ -1,36 +1,38 @@
-// src/app/(auth)/login/page.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthLayout } from '@/components/shared/Layouts/AuthLayout';
 import { Input } from '@/components/primitives/Input';
 import { OtpInput } from '@/components/primitives/OtpInput';
 import { Button } from '@/components/primitives/Button';
 import { Typography } from '@/components/primitives/Typography';
 import { useRequestLogin, useConfirmLogin, useAuth } from '@/domains/auth/hooks/auth.hooks';
-import { authValidators } from '@/domains/auth/validation/auth.validation';
+import { authValidators, LoginRequest } from '@/domains/auth/validation/auth.validation';
 import { Phone, RotateCcw, PencilLine } from 'lucide-react';
 import Link from 'next/link';
 import { showToast } from '@/core/utils/toast';
 
 export default function LoginPage() {
   const { isAuthenticated } = useAuth();
-
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [error, setError] = useState('');
-
   const [otpArray, setOtpArray] = useState<string[]>(Array(5).fill(''));
-
   const [countdown, setCountdown] = useState(120);
   const [isTimerActive, setIsTimerActive] = useState(false);
 
   const requestLogin = useRequestLogin();
   const confirmLogin = useConfirmLogin();
 
+  const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginRequest>({
+    resolver: zodResolver(authValidators.login.getSchema() as any),
+    defaultValues: {
+      phoneNumber: ''
+    }
+  });
+
   useEffect(() => {
-    // اگر کاربر قبلاً لاگین کرده بود، بدون نمایش اسپینر، مستقیم به صفحه اصلی منتقل میشه
     if (isAuthenticated) {
       window.location.href = '/';
     }
@@ -58,42 +60,28 @@ export default function LoginPage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleRequestOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    const validation = authValidators.login.safeParse({ phoneNumber });
-    if (!validation.success) {
-      const errMsg = validation.error.errors[0]?.message || 'شماره موبایل وارد شده معتبر نیست';
-      setError(errMsg);
-      showToast.error(errMsg);
-      return;
-    }
-
+  const handleRequestOTP = async (data: LoginRequest) => {
     try {
-      await requestLogin.mutateAsync({ phoneNumber });
+      await requestLogin.mutateAsync({ phoneNumber: data.phoneNumber });
+      setPhoneNumber(data.phoneNumber);
       setStep('otp');
       setOtpArray(Array(5).fill(''));
       startTimer();
       showToast.success('کد تایید با موفقیت ارسال شد');
     } catch (err: any) {
       const errMsg = err.userMessage || 'خطا در ارسال کد تایید. مجدداً تلاش کنید.';
-      setError(errMsg);
+      setError('phoneNumber', { message: errMsg });
       showToast.error(errMsg);
     }
   };
 
   const handleConfirmOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
     const code = otpArray.join('');
 
     const validation = authValidators.confirmLogin.safeParse({ phoneNumber, code });
     if (!validation.success) {
-      const errMsg = validation.error.errors[0]?.message || 'کد تایید باید ۵ رقم کامل باشد';
-      setError(errMsg);
-      showToast.error(errMsg);
+      showToast.error('کد تایید باید ۵ رقم کامل باشد');
       return;
     }
 
@@ -103,14 +91,12 @@ export default function LoginPage() {
       window.location.href = '/';
     } catch (err: any) {
       const errMsg = err.userMessage || 'کد ورود معتبر نیست یا منقضی شده است';
-      setError(errMsg);
       showToast.error(errMsg);
     }
   };
 
   const handleResendOTP = async () => {
     if (isTimerActive) return;
-    setError('');
 
     try {
       await requestLogin.mutateAsync({ phoneNumber });
@@ -119,27 +105,23 @@ export default function LoginPage() {
       showToast.success('کد تایید مجدداً ارسال شد');
     } catch (err: any) {
       const errMsg = err.userMessage || 'خطا در ارسال مجدد کد تایید';
-      setError(errMsg);
       showToast.error(errMsg);
     }
   };
-
-  // 🚨 شرط isAuthLoading حذف شد تا صفحه مستقیم لود بشه
 
   return (
     <AuthLayout title={step === 'phone' ? 'ورود | ثبت‌نام' : 'کد تایید را وارد کنید'}>
       {step === 'phone' ? (
         <div className="space-y-5" dir="rtl">
-          <form onSubmit={handleRequestOTP} className="space-y-4">
+          <form onSubmit={handleSubmit(handleRequestOTP)} className="space-y-4">
             <Input
               type="tel"
               placeholder="شماره موبایل خود را وارد کنید"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              error={error}
+              error={errors.phoneNumber?.message}
               leftIcon={<Phone className="h-4 w-4 text-muted-foreground" />}
               required
               autoFocus
+              {...register('phoneNumber')}
             />
             <Button
               type="submit"
@@ -157,30 +139,22 @@ export default function LoginPage() {
             <Link href="/terms" className="text-primary hover:underline font-bold">قوانین و مقررات</Link>{' '}
             و{' '}
             <Link href="/privacy" className="text-primary hover:underline font-bold">حریم خصوصی</Link>{' '}
-            کاربران یدکچی است.
+            کاربران یدک‌چی است.
           </Typography>
         </div>
       ) : (
         <div className="space-y-6" dir="rtl">
-          
-          {/* متن راهنمای شماره موبایل */}
           <Typography variant="small" color="muted" className="text-center block">
             کد ارسال شده به شماره <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{phoneNumber}</span> را وارد کنید
           </Typography>
 
           <form onSubmit={handleConfirmOTP} className="space-y-6">
-            {/* ورودی کد تایید */}
             <OtpInput 
               length={5} 
               value={otpArray} 
               onChange={(val) => setOtpArray(val)} 
             />
 
-            {error && (
-              <p className="text-xs text-center text-destructive font-iran-sans font-medium">{error}</p>
-            )}
-
-            {/* دکمه تایید و ورود */}
             <Button
               type="submit"
               variant="primary"
@@ -192,7 +166,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* بخش دریافت مجدد کد و تایمر */}
           <div className="flex flex-col items-center gap-3 pt-2">
             {isTimerActive ? (
               <Typography variant="small" color="muted" className="flex items-center gap-2 font-iran-sans">
@@ -213,7 +186,6 @@ export default function LoginPage() {
             )}
           </div>
 
-          {/* دکمه ویرایش شماره */}
           <div className="flex justify-center border-t border-border pt-4">
             <button 
               onClick={() => setStep('phone')}

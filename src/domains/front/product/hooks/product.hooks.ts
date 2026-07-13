@@ -1,4 +1,4 @@
-// src/domains/front/product/hooks/product.hooks.ts
+'use client';
 
 import { useInfiniteQuery, UseQueryOptions, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/react-query/query-keys';
@@ -6,52 +6,31 @@ import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.ho
 import { getProductService } from '../services/product.service';
 import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
-import { getHttpClient } from '@/core/http/client';
+import { useAppStore } from '@/shared/store/useAppStore';
 
 const productService = getProductService();
 
-// هوک دریافت محصولات شگفت‌انگیز عمومی
 export function useGetNominatedProducts() {
+  const cityId = useAppStore((state) => state.selectedCity?.id);
+
   return useTypedQuery<any>(
-    ['front', 'products', 'nominated-deals'],
-    async () => {
-      const client = getHttpClient();
-      const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
-        params: {
-          // Types: 'Stock',
-          // HasDiscount: true,
-          // HasDiscountWithExpiration: true,
-          PageNumber: 1,
-          PageSize: 30
-        }
-      });
-      return response.data;
-    },
+    ['front', 'products', 'nominated-deals', cityId || null],
+    () => productService.getNominatedProducts(cityId || undefined),
     {
       staleTime: 5 * 60 * 1000,
     }
   );
 }
 
-// هوک جدید و همه‌کاره دریافت محصولات شگفت‌انگیز یک دسته‌بندی خاص بر اساس پارامترهای ارسالی شما
 export function useGetNominatedProductsByCategory(categoryEnglishTitle: string) {
+  const cityId = useAppStore((state) => state.selectedCity?.id);
+
   return useTypedQuery<any>(
-    ['front', 'products', 'nominated-category', categoryEnglishTitle],
-    async () => {
-      const client = getHttpClient();
-      const response = await client.get<any>('/api/Front/SearchNominatedProducts', {
-        params: {
-         
-          PartCategoryEnglishTitle: categoryEnglishTitle,
-          PageNumber: 1,
-          PageSize: 30
-        }
-      });
-      return response.data;
-    },
+    ['front', 'products', 'nominated-category', categoryEnglishTitle, cityId || null],
+    () => productService.getNominatedProductsByCategory(categoryEnglishTitle, cityId || undefined),
     {
       staleTime: 5 * 60 * 1000,
-      enabled: !!categoryEnglishTitle, // فقط در صورت وجود عنوان انگلیسی کوئری فعال شود
+      enabled: !!categoryEnglishTitle,
     }
   );
 }
@@ -60,9 +39,12 @@ export function useSearchProducts(
   params: SearchProductsRequest,
   options?: Omit<UseQueryOptions<PaginatedResult<ProductViewModel>>, 'queryKey' | 'queryFn'>
 ) {
+  const cityId = useAppStore((state) => state.selectedCity?.id);
+  const updatedParams = { ...params, cityId: params.cityId || cityId || undefined };
+
   return useTypedQuery(
-    queryKeys.front.products.search(params),
-    () => productService.searchProducts(params),
+    queryKeys.front.products.search(updatedParams),
+    () => productService.searchProducts(updatedParams),
     {
       placeholderData: (previousData) => previousData,
       staleTime: 60 * 1000,
@@ -74,11 +56,14 @@ export function useSearchProducts(
 export function useInfiniteSearchProducts(
   params: Omit<SearchProductsRequest, 'pageNumber' | 'pageSize'>
 ) {
+  const cityId = useAppStore((state) => state.selectedCity?.id);
+  const updatedParams = { ...params, cityId: params.cityId || cityId || undefined };
+
   return useInfiniteQuery({
-    queryKey: queryKeys.front.products.search({ ...params, pageNumber: 1, pageSize: 30 }),
+    queryKey: queryKeys.front.products.search({ ...updatedParams, pageNumber: 1, pageSize: 30 }),
     queryFn: ({ pageParam = 1 }) =>
       productService.searchProducts({
-        ...params,
+        ...updatedParams,
         pageNumber: pageParam,
         pageSize: 30,
       }),

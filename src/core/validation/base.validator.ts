@@ -1,9 +1,7 @@
-// src/core/validation/base.validator.ts
-
 import { z } from 'zod';
 
 export abstract class BaseValidator<T> {
-  protected abstract getSchema(): z.ZodSchema<T>;
+  public abstract getSchema(): z.ZodSchema<T>;
 
   validate(data: unknown): { success: true; data: T } | { success: false; error: z.ZodError } {
     try {
@@ -25,7 +23,6 @@ export abstract class BaseValidator<T> {
     return this.getSchema().safeParse(data);
   }
 
-  // Helper methods for common validations
   protected required(message?: string): z.ZodString {
     return z.string().min(1, message || 'این فیلد الزامی است');
   }

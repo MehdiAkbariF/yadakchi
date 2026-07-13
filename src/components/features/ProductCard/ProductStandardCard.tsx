@@ -1,5 +1,3 @@
-// src/components/features/ProductCard/ProductStandardCard.tsx
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -21,8 +19,6 @@ export function ProductStandardCard({
 }: ProductStandardCardProps) {
   const [tickerIndex, setTickerIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
-  
-  // متغیرهای وضعیت برای تشخیص اسلاید/درگ از کلیک واقعی
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
@@ -30,45 +26,48 @@ export function ProductStandardCard({
     setIsMounted(true);
   }, []);
 
-  // استخراج فیلدهای قیمت ریالی واقعی از پاسخ سرور
   const nominated = product?.nominatedShopProduct || {};
-  const originalPriceRaw = nominated.rialRetailPrice || product.price || nominated.price || 0;
-  const finalPriceRaw = nominated.rialFinalPrice || product.discountPrice || nominated.discountPrice || 0;
+  
+  const shopName = nominated?.shopTitle || product?.shop?.name || product?.shopTitle || null;
+  const isTipax = nominated?.isTipaxShipping || product?.isTipaxShipping || false;
+  const isDirect = nominated?.isDirectShipping || product?.isDirectShipping || false;
+  const salesCount = product?.totalSalesCount || product?.salesCount || 0;
+  const views = product?.viewsAndClicks || product?.views || 0;
+
+  const originalPriceRaw = nominated.rialRetailPrice || product?.price?.raw || product?.price || nominated.price || 0;
+  const finalPriceRaw = nominated.rialFinalPrice || product?.discount?.discountedPriceRaw || product?.discountPrice || nominated.discountPrice || 0;
 
   const originalPriceToman = Math.round(originalPriceRaw / 10);
   const finalPriceToman = Math.round(finalPriceRaw / 10);
+  
+  const isOutOfStock = finalPriceRaw === 0;
+  const hasDiscount = originalPriceRaw > finalPriceRaw && !isOutOfStock;
 
-  // بررسی واقعی وجود تخفیف
-  const hasDiscount = originalPriceRaw > finalPriceRaw;
-
-  // محاسبه داینامیک درصد تخفیف واقعی
   const discountPercent = hasDiscount
     ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
-    : (nominated.discountPercentage || 0);
+    : (nominated.discountPercentage || product?.discount?.percent || 0);
 
-  // جمع‌آوری اطلاعات داینامیک دیتابیس
   const tickerItems = useMemo(() => {
     const items: { text: string; icon: any }[] = [];
     
-    if (product.totalSalesCount > 0) {
-      items.push({ text: `${product.totalSalesCount} فروش موفق در یادکچی`, icon: BadgeCheck });
+    if (salesCount > 0) {
+      items.push({ text: `${salesCount} فروش موفق در یدکچی`, icon: BadgeCheck });
     }
-    if (nominated.isTipaxShipping) {
+    if (isTipax) {
       items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
     }
-    if (nominated.isDirectShipping) {
+    if (isDirect) {
       items.push({ text: 'ارسال مستقیم فروشگاه', icon: Truck });
     }
-    if (product.viewsAndClicks > 0) {
-      items.push({ text: `${product.viewsAndClicks} بازدید اخیر`, icon: Eye });
+    if (views > 0) {
+      items.push({ text: `${views} بازدید اخیر`, icon: Eye });
     }
     
     return items;
-  }, [nominated, product]);
+  }, [isTipax, isDirect, salesCount, views]);
 
   const tickerLength = tickerItems.length;
 
-  // مدیریت چرخه حرکت بالا به پایین اسلایدر مینی‌مال شفاف
   useEffect(() => {
     if (!isMounted || tickerLength <= 1) return;
     const interval = setInterval(() => {
@@ -89,13 +88,11 @@ export function ProductStandardCard({
     return new Intl.NumberFormat('fa-IR').format(value);
   };
 
-  // هندلر تشخیص شروع حرکت موس
   const handleMouseDown = (e: React.MouseEvent) => {
     dragStart.current = { x: e.clientX, y: e.clientY };
     setIsDragging(false);
   };
 
-  // هندلر تشخیص کشیدن موس (اگر جابه‌جایی بیش از ۶ پیکسل باشد، درگ تایید می‌شود)
   const handleMouseMove = (e: React.MouseEvent) => {
     const dx = Math.abs(e.clientX - dragStart.current.x);
     const dy = Math.abs(e.clientY - dragStart.current.y);
@@ -104,7 +101,6 @@ export function ProductStandardCard({
     }
   };
 
-  // هندلر لمسی موبایل برای شروع اسلاید
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     if (touch) {
@@ -113,7 +109,6 @@ export function ProductStandardCard({
     }
   };
 
-  // هندلر لمسی موبایل در حین حرکت دست
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     if (touch) {
@@ -125,7 +120,6 @@ export function ProductStandardCard({
     }
   };
 
-  // جلوگیری از ریدایرکت ناخواسته در صورت فعال بودن وضعیت درگ
   const handleClick = (e: React.MouseEvent) => {
     if (isDragging) {
       e.preventDefault();
@@ -134,7 +128,7 @@ export function ProductStandardCard({
   };
 
   const renderStars = () => {
-    const rating = product.averageRate || 5;
+    const rating = product?.averageRate || product?.rating?.average || 5;
     return (
       <div className="flex items-center gap-1 select-none">
         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
@@ -149,7 +143,7 @@ export function ProductStandardCard({
 
   return (
     <Link 
-      href={`/products/${product.productCode}`} 
+      href={`/products/${product?.productCode || product?.code}`} 
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}
@@ -163,53 +157,41 @@ export function ProductStandardCard({
         className
       )}>
         
-        {/* تصویر کالا */}
         <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
           <img
-            src={getFullUrl(product.image)}
-            alt={product.imageAlt || product.title}
+            src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
+            alt={product?.imageAlt || product?.title || product?.name}
             draggable={false}
             className="w-full h-full object-contain rounded-lg hover:scale-[1.01] transition-transform duration-500 absolute inset-0 select-none"
           />
           
-          {/* ستاره و امتیاز فلوتینگ روی عکس (گوشه بالا راست) */}
           {showRating && (
-            <div className="absolute top-2 left-2 
-             dark:bg-zinc-900/85 backdrop-blur-sm 
-             px-2 py-0.5 rounded-lg shadow-sm border 
-             border-border/20 z-10 flex items-center justify-center">
+            <div className="absolute top-2 left-2 dark:bg-zinc-900/85 backdrop-blur-sm px-2 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
               {renderStars()}
             </div>
           )}
         </div>
 
-        {/* نام فروشگاه ثابت (بالای اسلاید متحرک) */}
-  
-        
-        {/* عنوان کالا */}
         <div className="w-full h-9 mb-1 mt-2">
           <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed">
-            {product.title}
+            {product?.title || product?.name}
           </h4>
         </div>
-      {nominated.shopTitle && (
-          <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs 
-          text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1">
+
+        {shopName && (
+          <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1">
             <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
-            <span className="font-iran-sans font-medium truncate">فروشگاه: {nominated.shopTitle}</span>
+            <span className="font-iran-sans font-medium truncate">فروشگاه: {shopName}</span>
           </div>
         )}
-        {/* بخش اطلاعات فروشگاه و اسلایدر متنی مینی‌مال */}
+
         <div className="w-full flex flex-col items-stretch select-none">
-          
-          {/* اسلایدر متنی متحرک بدون پس‌زمینه (شفاف) مابین داده‌های واقعی */}
           {isMounted && tickerLength > 0 ? (
-            <div className="h-6 overflow-hidden relative w-full flex items-center justify-start 
-            text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
+            <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
               <AnimatePresence mode="wait">
                 <motion.span
                   key={tickerIndex}
-                  initial={{ y: 15, opacity: 0 }} // انیمیشن پیکسلی عمودی
+                  initial={{ y: 15, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -15, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 22 }}
@@ -225,10 +207,7 @@ export function ProductStandardCard({
           )}
         </div>
 
-        {/* بخش قیمت‌ها و نشان درصد تخفیف */}
-        <div className="w-full mt-auto pt-2  flex items-center justify-between">
-          
-          {/* نشان درصد تخفیف واقعی */}
+        <div className="w-full mt-auto pt-2 flex items-center justify-between">
           <div className={cn(
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -236,7 +215,6 @@ export function ProductStandardCard({
             %{discountPercent}
           </div>
 
-          {/* باکس مبالغ تومانی */}
           <div className="flex flex-col items-end min-w-0">
             {hasDiscount && originalPriceToman > 0 && (
               <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
@@ -244,13 +222,20 @@ export function ProductStandardCard({
               </span>
             )}
             <div className="flex items-center gap-0.5 mt-0.5">
-              <span className="text-base sm:text-lg font-black font-iran-sans text-foreground">
-                {formatPrice(finalPriceToman)}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-iran-sans">تومان</span>
+              {isOutOfStock ? (
+                <span className="text-sm sm:text-base font-bold font-iran-sans text-destructive">
+                  ناموجود
+                </span>
+              ) : (
+                <>
+                  <span className="text-base sm:text-lg font-black font-iran-sans text-foreground">
+                    {formatPrice(finalPriceToman)}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-iran-sans">تومان</span>
+                </>
+              )}
             </div>
           </div>
-
         </div>
 
       </div>

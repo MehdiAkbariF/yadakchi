@@ -1,5 +1,3 @@
-// src/core/http/client.ts
-
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
@@ -10,12 +8,11 @@ import { HttpResponse, RequestOptions, HttpMethod } from './types';
 export class HttpClient {
   private readonly axiosInstance: AxiosInstance;
   private abortControllers: Map<string, AbortController> = new Map();
-  
-  // برای نگهداری هدرهای سمت سرور (مثل کوکی)
   private serverRequestConfig: Record<string, any> = {};
+  private isRefreshing = false;
+  private failedQueue: { resolve: (value: any) => void; reject: (reason: any) => void }[] = [];
 
   constructor() {
-    // اصلاح دامنه مطلق سمت سرور به دامنه معتبر تولیدی yadakchi.com
     const baseURL = typeof window === 'undefined'
       ? (env.apiBaseUrl || 'https://api.yadakchi.com')
       : '/proxy-api';
@@ -34,16 +31,13 @@ export class HttpClient {
     this.setupInterceptors();
   }
 
-  // متدی برای تنظیم کانفیگ سرور از بیرون کلاس
   setServerConfig(config: Record<string, any>) {
     this.serverRequestConfig = config;
   }
 
   private setupInterceptors(): void {
-    // Request Interceptor
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        // اگر در سمت سرور هستیم و کانفیگی ست شده، هدرها را ترکیب می‌کنیم
         if (typeof window === 'undefined' && this.serverRequestConfig?.headers) {
           config.headers = {
             ...config.headers,
@@ -69,7 +63,6 @@ export class HttpClient {
       }
     );
 
-    // Response Interceptor
     this.axiosInstance.interceptors.response.use(
       (response) => {
         if (env.enableLogging) {
@@ -80,7 +73,39 @@ export class HttpClient {
         }
         return response;
       },
-      (error) => {
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry && typeof window !== 'undefined') {
+          if (this.isRefreshing) {
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then(() => this.axiosInstance(originalRequest))
+              .catch((err) => Promise.reject(err));
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          return new Promise((resolve, reject) => {
+            this.axiosInstance.post('/api/Login/Refresh')
+              .then(() => {
+                this.failedQueue.forEach((prom) => prom.resolve(null));
+                this.failedQueue = [];
+                resolve(this.axiosInstance(originalRequest));
+              })
+              .catch((refreshError) => {
+                this.failedQueue.forEach((prom) => prom.reject(refreshError));
+                this.failedQueue = [];
+                reject(refreshError);
+              })
+              .finally(() => {
+                this.isRefreshing = false;
+              });
+          });
+        }
+
         const apiError = errorManager.normalize(error);
         logger.error('[HTTP] Response error', {
           type: apiError.type,

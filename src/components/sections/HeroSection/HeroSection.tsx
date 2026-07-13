@@ -17,7 +17,7 @@ export function HeroSection({ className }: HeroSectionProps) {
     )}>
       <div className="relative z-10 flex flex-col items-start gap-4 md:max-w-2xl">
         <Typography variant="h1" className="text-white">
-          به یادکچی خوش آمدید
+          به یدکچی خوش آمدید
         </Typography>
         <Typography variant="lead" className="text-white/90">
           بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران

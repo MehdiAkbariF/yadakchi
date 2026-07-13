@@ -1,5 +1,3 @@
-// src/domains/auth/validation/auth.validation.ts
-
 import { z } from 'zod';
 import { BaseValidator } from '@/core/validation/base.validator';
 import { constants } from '@/core/config/constants';
@@ -14,7 +12,7 @@ export interface ConfirmLoginRequest {
 }
 
 export class LoginValidator extends BaseValidator<LoginRequest> {
-  protected getSchema(): z.ZodSchema<LoginRequest> {
+  public getSchema(): z.ZodSchema<LoginRequest> {
     return z.object({
       phoneNumber: z.string()
         .regex(constants.patterns.PHONE_NUMBER, 'شماره موبایل نامعتبر است')
@@ -25,14 +23,13 @@ export class LoginValidator extends BaseValidator<LoginRequest> {
 }
 
 export class ConfirmLoginValidator extends BaseValidator<ConfirmLoginRequest> {
-  protected getSchema(): z.ZodSchema<ConfirmLoginRequest> {
+  public getSchema(): z.ZodSchema<ConfirmLoginRequest> {
     return z.object({
       phoneNumber: z.string()
         .regex(constants.patterns.PHONE_NUMBER, 'شماره موبایل نامعتبر است')
         .min(11, 'شماره موبایل باید ۱۱ رقم باشد')
         .max(11, 'شماره موبایل باید ۱۱ رقم باشد'),
       
-      // تغییر طول کد تایید به ۵ رقم زنده برای تایید OTP
       code: z.string()
         .length(5, 'کد تایید باید ۵ رقم باشد')
         .regex(/^[0-9]{5}$/, 'کد تایید فقط شامل اعداد است'),

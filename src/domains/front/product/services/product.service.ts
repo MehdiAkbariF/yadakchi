@@ -1,5 +1,3 @@
-// src/domains/front/product/services/product.service.ts
-
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
@@ -11,10 +9,46 @@ import { PaginatedResult } from '@/shared/types/common.types';
 export class ProductService {
   private readonly httpClient = getHttpClient();
 
+  async getNominatedProducts(cityId?: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        '/api/Front/SearchNominatedProducts',
+        {
+          params: {
+            CityId: cityId || '',
+            PageNumber: 1,
+            PageSize: 30
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getNominatedProductsByCategory(categoryEnglishTitle: string, cityId?: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        '/api/Front/SearchNominatedProducts',
+        {
+          params: {
+            PartCategoryEnglishTitle: categoryEnglishTitle,
+            CityId: cityId || '',
+            PageNumber: 1,
+            PageSize: 30
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
   async searchProducts(request: SearchProductsRequest): Promise<PaginatedResult<ProductViewModel>> {
     try {
       const dto = ProductMapper.toDomainSearchRequest(request);
-      logger.debug('[ProductService] Searching products with params:', dto);
       
       const response = await this.httpClient.get<any>(
         PRODUCT_ENDPOINTS.SEARCH_PRODUCTS,
@@ -130,7 +164,6 @@ export class ProductService {
       const rawKeywords = response.data?.searchProductKeywords || [];
       const rawCars = response.data?.cars || [];
       
-      // مپ کردن کلمات کلیدی
       const keywords = rawKeywords.map((dto: any) => ({
         suggestion: dto.searchKeywordSuggestion,
         productTitles: dto.productTitles || [],
@@ -146,13 +179,11 @@ export class ProductService {
           englishTitle: dto.partCategoryEnglishTitle,
           href: `/categories/${dto.partCategoryEnglishTitle}`,
         },
-        // اضافه کردن این فیلدها برای دسترسی در کامپوننت
         partCategoryId: dto.partCategoryId,
         partCategoryName: dto.partCategoryName,
         partCategoryEnglishTitle: dto.partCategoryEnglishTitle,
       }));
 
-      // مپ کردن خودروها
       const cars = rawCars.map((dto: any) => ({
         id: dto.id,
         model: dto.model,
@@ -161,14 +192,13 @@ export class ProductService {
         coverAlt: dto.coverAlt,
       }));
       
-      // بازگرداندن آبجکت شامل هر دو
       return { keywords, cars };
     } catch (error) {
       logger.error('[ProductService] Get search keywords failed:', error);
       return { keywords: [], cars: [] };
     }
   }
-  // اصلاح نوع بازگشتی به آرایه‌ای جنریک برای تطابق با مدل واقعی { id, value, timestamp }
+
   async getSearchHistory(): Promise<any[]> {
     try {
       const response = await this.httpClient.get<any[]>(

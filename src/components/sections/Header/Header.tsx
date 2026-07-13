@@ -1,5 +1,3 @@
-// src/components/sections/Header/Header.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -26,13 +24,13 @@ export function Header({ className }: HeaderProps) {
   const router = useRouter();
   useAuth(); 
   const [isHeaderMinimized, setIsHeaderMinimized] = useState(false);
-
-  // هوک اسکرول فریمور موشن
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
-    // زمانی که کاربر بیش از ۱۲۰ پیکسل اسکرول کند، ظاهر هدر جمع می‌شود
-    if (latest > 120) {
+    const prev = scrollY.getPrevious() || 0;
+    if (latest < 120) {
+      setIsHeaderMinimized(false);
+    } else if (latest > prev) {
       setIsHeaderMinimized(true);
     } else {
       setIsHeaderMinimized(false);
@@ -46,11 +44,8 @@ export function Header({ className }: HeaderProps) {
   };
 
   return (
-    // در دسکتاپ پس‌زمینه شفاف است تا فضای خالی اشغال‌شده هدر تداخلی با محتوای زیرین نداشته باشد
-    <header className={cn('sticky top-0 z-50 w-full bg-background border-b lg:bg-transparent lg:border-b-0 transition-colors duration-300', className)}>
+    <header className={cn('lg:sticky lg:top-0 z-50 w-full lg:bg-transparent transition-colors duration-300', className)}>
       
-      {/* ===== دسکتاپ (lg و بالاتر) ===== */}
-      {/* این بخش ارتفاع ثابت ۱۱۶ پیکسلی دارد تا هیچ تغییر ارتفاعی به بدنه صفحه منتقل نشود */}
       <div className="hidden lg:block h-[116px] w-full pointer-events-none relative">
         <motion.div 
           className="w-full bg-background border-b pointer-events-auto flex flex-col shadow-sm"
@@ -59,7 +54,7 @@ export function Header({ className }: HeaderProps) {
           variants={{
             expanded: { 
               height: '116px',
-              transition: { duration: 0.2, ease: 'easeInOut' }
+              transition: { duration: 0.18, ease: 'easeInOut' }
             },
             collapsed: { 
               height: '68px',
@@ -67,7 +62,6 @@ export function Header({ className }: HeaderProps) {
             }
           }}
         >
-          {/* ردیف اول هدر دسکتاپ */}
           <div className="w-full px-4 lg:px-8 py-3 h-[68px] flex items-center">
             <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto">
               <Logo className="pt-0" />
@@ -89,7 +83,6 @@ export function Header({ className }: HeaderProps) {
             </div>
           </div>
 
-          {/* ردیف دوم هدر دسکتاپ همراه با انیمیشن روان ارتفاع */}
           <motion.div
             initial={false}
             animate={isHeaderMinimized ? "collapsed" : "expanded"}
@@ -97,7 +90,7 @@ export function Header({ className }: HeaderProps) {
               expanded: { 
                 height: '48px', 
                 opacity: 1,
-                transition: { duration: 0.2, ease: 'easeInOut' }
+                transition: { duration: 0.18, ease: 'easeInOut' }
               },
               collapsed: { 
                 height: 0, 
@@ -105,7 +98,6 @@ export function Header({ className }: HeaderProps) {
                 transition: { duration: 0.15, ease: 'easeInOut' }
               }
             }}
-            // مدیریت سرریز منو برای باز شدن مگامنو بدون مشکل قیچی شدن
             className={cn(
               "w-full border-t bg-muted/30",
               isHeaderMinimized ? "overflow-hidden pointer-events-none" : "overflow-visible"
@@ -124,8 +116,8 @@ export function Header({ className }: HeaderProps) {
         </motion.div>
       </div>
 
-      {/* ===== موبایل (تا lg) ===== */}
-      <div className="lg:hidden w-full px-4 py-2 bg-background">
+      <div className="lg:hidden h-[165px] w-full bg-background" />
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-2 w-full shadow-sm">
         <div className="max-w-screen-2xl mx-auto">
           <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
         </div>
