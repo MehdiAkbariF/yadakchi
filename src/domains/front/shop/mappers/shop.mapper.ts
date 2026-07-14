@@ -1,5 +1,3 @@
-// src/domains/front/shop/mappers/shop.mapper.ts
-
 import { 
   ShopApiDto, 
   ShopCardApiDto, 
@@ -120,19 +118,24 @@ export class ShopMapper {
   }
 
   static toViewCard(dto: ShopCardApiDto): ShopCardViewModel {
+    const rawDto = dto as any;
+    const name = rawDto.shopTitle || dto.name || '';
+    const rating = rawDto.averageRate || dto.rating || 0;
+    const rank = rawDto.ranking !== undefined ? rawDto.ranking : (dto.rank || 0);
+
     return {
       id: dto.id,
-      name: dto.name,
+      name,
       logo: dto.logo,
-      rating: dto.rating,
-      reviewCount: dto.reviewCount,
-      reviewCountFormatted: this.formatNumber(dto.reviewCount),
-      productCount: dto.productCount,
-      productCountFormatted: this.formatNumber(dto.productCount),
-      isVerified: dto.isVerified,
-      cityName: dto.cityName,
-      rank: dto.rank,
-      rankLabel: `رتبه ${dto.rank}`,
+      rating,
+      reviewCount: dto.reviewCount || 0,
+      reviewCountFormatted: this.formatNumber(dto.reviewCount || 0),
+      productCount: dto.productCount || 0,
+      productCountFormatted: this.formatNumber(dto.productCount || 0),
+      isVerified: dto.isVerified || false,
+      cityName: dto.cityName || '',
+      rank,
+      rankLabel: `رتبه ${rank}`,
     };
   }
 
@@ -142,7 +145,7 @@ export class ShopMapper {
         label: 'فروش کل',
         value: this.formatNumber(dto.totalSales) + ' تومان',
         change: dto.salesGrowth,
-        icon: '💰',
+        icon: '💵',
       },
       {
         label: 'تعداد سفارشات',

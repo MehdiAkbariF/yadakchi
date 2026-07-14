@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useGetNominatedProductsByCategory } from '@/domains/front/product/hooks/product.hooks';
+import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
+import { getHttpClient } from '@/core/http/client';
 import { BannerSlider } from '@/components/features/Banner/BannerSlider';
 import { Banner, BannerGroup } from '@/components/features/Banner/Banner';
 import { ShopByCar } from '@/components/features/Car/ShopByCar';
@@ -9,12 +12,34 @@ import { HomeCategories } from '@/components/features/Part/HomeCategories';
 import { DealsSlider } from '@/components/features/ProductCard/DealsSlider';
 import { ProductSlider } from '@/components/features/ProductCard/ProductSlider';
 import { BrandSlider } from '@/components/features/Brand/BrandSlider';
+import { ShopSlider } from '@/components/features/Shop/ShopSlider';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { cn } from '@/design-system/utils';
 
 export function HomeContent() {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const { data: rawBanners = [], isLoading: isBannersLoading } = useGetBanners('Home');
   const { data: toolsData, isLoading: isToolsLoading, isError: isToolsError } = useGetNominatedProductsByCategory('car-tools');
   const { data: audioData, isLoading: isAudioLoading, isError: isAudioError } = useGetNominatedProductsByCategory('audio-video-multimedia-system');
+  const { data: exhaustData, isLoading: isExhaustLoading, isError: isExhaustError } = useGetNominatedProductsByCategory('Exhaust');
+  
+  const { data: heaterData, isLoading: isHeaterLoading, isError: isHeaterError } = useGetNominatedProductsByCategory('heater');
+  const { data: doorData, isLoading: isDoorLoading, isError: isDoorError } = useGetNominatedProductsByCategory('door-handles-locks-and-safety');
+  const { data: bodyData, isLoading: isBodyLoading, isError: isBodyError } = useGetNominatedProductsByCategory('body-and-weatherstrips');
+
+  const { data: homePageData } = useTypedQuery<any>(
+    ['front', 'get-home-page'],
+    async () => {
+      const client = getHttpClient();
+      const response = await client.get<any>('/api/Front/GetHomePage');
+      return response.data;
+    },
+    {
+      staleTime: 30 * 60 * 1000,
+    }
+  );
 
   const sliderGroup = rawBanners?.find((b: any) => b.name === 'Home-Top-Slider') as unknown as BannerGroup;
   const a1BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A1') as unknown as BannerGroup;
@@ -28,9 +53,20 @@ export function HomeContent() {
   const a7BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A7') as unknown as BannerGroup;
   const a8BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A8') as unknown as BannerGroup;
 
+  const a9BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A9') as unknown as BannerGroup;
+  const a10BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A10') as unknown as BannerGroup;
+  const a11BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A11') as unknown as BannerGroup;
+
+  const a12BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A12') as unknown as BannerGroup;
+  const a13BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A13') as unknown as BannerGroup;
+
   const hasLeftBanner = !!a1BannerGroup && a1BannerGroup.banners?.length > 0;
   const toolsProducts = toolsData?.products?.items || [];
   const audioProducts = audioData?.products?.items || [];
+  const exhaustProducts = exhaustData?.products?.items || [];
+  const heaterProducts = heaterData?.products?.items || [];
+  const doorProducts = doorData?.products?.items || [];
+  const bodyProducts = bodyData?.products?.items || [];
 
   if (isBannersLoading) {
     return (
@@ -77,6 +113,41 @@ export function HomeContent() {
                 <Skeleton key={index} className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl" />
               ))}
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
+            <Skeleton className="col-span-1 aspect-[1:1] md:aspect-[16/11] rounded-2xl" />
+            <Skeleton className="col-span-1 aspect-[1:1] md:aspect-[16/11] rounded-2xl" />
+            <Skeleton className="col-span-2 aspect-[16/7.5] md:aspect-[16/5.5] rounded-2xl" />
+          </div>
+
+          <ProductSlider title="اگزوز" products={[]} isLoading={true} isError={false} />
+
+          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
+
+          <div className="w-full space-y-4 py-4">
+            <div className="flex items-center gap-2 px-1">
+              <Skeleton className="w-5 h-5" variant="circle" />
+              <Skeleton className="w-32 h-5" />
+            </div>
+            <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
+              {[...Array(8)].map((_, index) => (
+                <Skeleton key={index} className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 rounded-xl" />
+              ))}
+            </div>
+          </div>
+
+          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
+
+          <ProductSlider title="بخاری" products={[]} isLoading={true} isError={false} />
+          <ProductSlider title="دستگیره و قفل درب" products={[]} isLoading={true} isError={false} />
+          <ProductSlider title="تجهیزات بدنه" products={[]} isLoading={true} isError={false} />
+
+          <div className="w-full bg-background border rounded-xl p-6 mt-6 space-y-3">
+            <Skeleton className="w-1/3 h-5 rounded" />
+            <Skeleton className="w-full h-4 rounded" />
+            <Skeleton className="w-full h-4 rounded" />
+            <Skeleton className="w-1/2 h-4 rounded" />
           </div>
         </div>
       </div>
@@ -166,6 +237,117 @@ export function HomeContent() {
         )}
 
         <BrandSlider />
+
+        {(a9BannerGroup || a10BannerGroup || a11BannerGroup) && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
+            {a9BannerGroup && (
+              <div className="col-span-1">
+                <Banner group={a9BannerGroup} aspectRatio="aspect-[1:1] md:aspect-[16/11]" />
+              </div>
+            )}
+            {a10BannerGroup && (
+              <div className="col-span-1">
+                <Banner group={a10BannerGroup} aspectRatio="aspect-[1:1] md:aspect-[16/11]" />
+              </div>
+            )}
+            {a11BannerGroup && (
+              <div className="col-span-2">
+                <Banner group={a11BannerGroup} aspectRatio="aspect-[16/7.5] md:aspect-[16/5.5]" />
+              </div>
+            )}
+          </div>
+        )}
+
+        <ProductSlider
+          title="اگزوز"
+          products={exhaustProducts}
+          isLoading={isExhaustLoading}
+          isError={isExhaustError}
+          viewAllLink="/categories/Exhaust"
+          showTimer={false}
+        />
+
+        {a12BannerGroup && (
+          <div className="w-full">
+            <Banner 
+              group={a12BannerGroup} 
+              aspectRatio="aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6]" 
+            />
+          </div>
+        )}
+
+        <ShopSlider />
+
+        {a13BannerGroup && (
+          <div className="w-full">
+            <Banner 
+              group={a13BannerGroup} 
+              aspectRatio="aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6]" 
+            />
+          </div>
+        )}
+
+        <ProductSlider
+          title="بخاری"
+          products={heaterProducts}
+          isLoading={isHeaterLoading}
+          isError={isHeaterError}
+          viewAllLink="/categories/heater"
+          showTimer={false}
+        />
+
+        <ProductSlider
+          title="دستگیره و قفل درب"
+          products={doorProducts}
+          isLoading={isDoorLoading}
+          isError={isDoorError}
+          viewAllLink="/categories/door-handles-locks-and-safety"
+          showTimer={false}
+        />
+
+        <ProductSlider
+          title="تجهیزات بدنه"
+          products={bodyProducts}
+          isLoading={isBodyLoading}
+          isError={isBodyError}
+          viewAllLink="/categories/body-and-weatherstrips"
+          showTimer={false}
+        />
+
+        {homePageData?.description && (
+          <div className="w-full bg-background border rounded-xl p-4 md:p-6 mt-6 relative overflow-hidden">
+            <div 
+              className={cn(
+                "max-w-none text-justify text-sm leading-relaxed transition-all duration-300 prose dark:prose-invert",
+                isExpanded ? "max-h-none" : "max-h-[160px] overflow-hidden"
+              )}
+              dangerouslySetInnerHTML={{ __html: homePageData.description }}
+            />
+            
+            {!isExpanded && (
+              <div className="absolute bottom-12 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+            )}
+
+            <div className="flex justify-center mt-4">
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+              >
+                {isExpanded ? (
+                  <>
+                    <span>نمایش کمتر</span>
+                    <ChevronUp className="h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    <span>نمایش بیشتر</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
     </div>

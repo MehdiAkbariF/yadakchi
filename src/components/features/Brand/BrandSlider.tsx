@@ -6,7 +6,7 @@ import { useGetMainBrands } from '@/domains/front/reference/brand/hooks/brand.ho
 import { Typography } from '@/components/primitives/Typography';
 import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
-
+import { cn } from '@/design-system/utils/cn';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 
 export function BrandSlider() {
@@ -14,6 +14,7 @@ export function BrandSlider() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [dragWidth, setWidth] = useState(0);
   const x = useMotionValue(0);
+  const isDraggingRef = useRef(false);
 
   useEffect(() => {
     if (carouselRef.current) {
@@ -29,8 +30,18 @@ export function BrandSlider() {
     animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
   };
 
+  const handleDragStart = () => {
+    isDraggingRef.current = true;
+  };
+
+  const handleDragEnd = () => {
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 50);
+  };
+
   const handleDragClickCapture = (e: React.MouseEvent) => {
-    if (Math.abs(x.getVelocity()) > 15) {
+    if (isDraggingRef.current) {
       e.preventDefault();
       e.stopPropagation();
     }
@@ -51,8 +62,7 @@ export function BrandSlider() {
           <Skeleton className="w-5 h-5" variant="circle" />
           <Skeleton className="w-32 h-5" />
         </div>
-        <div className="w-full bg-background rounded-xl border p-4 flex gap-4
-         overflow-hidden justify-center">
+        <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
           {[...Array(8)].map((_, index) => (
             <Skeleton key={index} className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl" />
           ))}
@@ -102,7 +112,11 @@ export function BrandSlider() {
             drag="x"
             style={{ x }}
             dragConstraints={{ left: 0, right: dragWidth }}
-            dragElastic={0.12}
+            dragElastic={0.15}
+            dragMomentum={true}
+            dragTransition={{ power: 0.2, bounceStiffness: 200, bounceDamping: 25 }}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
             onClickCapture={handleDragClickCapture}
             className="flex gap-4 py-1 cursor-grab active:cursor-grabbing"
           >
@@ -110,13 +124,15 @@ export function BrandSlider() {
               <Link
                 key={brand.id}
                 href={`/search?brandIds=${brand.id}`}
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
                 className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl border bg-background hover:border-primary/40 p-2 flex items-center justify-center transition-all select-none hover:scale-[1.02]"
               >
                 <img
                   src={getFullUrl(brand.logo)}
                   alt={brand.imageAlt || brand.name}
                   draggable={false}
-                  className="w-full h-full object-contain rounded-lg select-none"
+                  className="w-full h-full object-contain rounded-lg select-none pointer-events-none"
                 />
               </Link>
             ))}
