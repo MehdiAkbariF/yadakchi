@@ -1,24 +1,10 @@
-// src/domains/front/part/services/part.service.ts
-
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { PART_ENDPOINTS } from '../endpoints/part.endpoints';
 import { PartMapper } from '../mappers/part.mapper';
-import { PartFilters, PartCategoryFilters } from '../types/view.types';
-import { 
-  PartApiDto, 
-  PartPropertiesApiDto,
-  PartCategoryApiDto,
-  PartCategoryPageApiDto,
-  PartNameApiDto
-} from '../types/dto.types';
-import { 
-  PartViewModel, 
-  PartCategoryViewModel, 
-  PartCategoryPageViewModel,
-  PartNameViewModel
-} from '../types/view.types';
+import { PartApiDto, PartPropertiesApiDto, PartCategoryApiDto, PartCategoryPageApiDto, PartNameApiDto } from '../types/dto.types';
+import { PartViewModel, PartCategoryViewModel, PartCategoryPageViewModel, PartNameViewModel, PartFilters, PartCategoryFilters } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 
 export class PartService {
@@ -96,7 +82,7 @@ export class PartService {
     }
   }
 
-  async getPartsName(filters: PartFilters): Promise<PartNameViewModel[]> {
+  async getPartsName(filters: PartFilters): Promise<PaginatedResult<PartNameViewModel>> {
     try {
       const params: Record<string, unknown> = {
         Name: filters.name,
@@ -109,17 +95,32 @@ export class PartService {
         PageSize: filters.pageSize || 30,
       };
 
-      const response = await this.httpClient.get<{
-        items: PartNameApiDto[];
-        pageNumber: number;
-        pageSize: number;
-        totalCount: number;
-      }>(PART_ENDPOINTS.GET_PARTS_NAME, { params });
+      const response = await this.httpClient.get<any>(
+        PART_ENDPOINTS.GET_PARTS_NAME, 
+        { params }
+      );
 
-      return response.data.items.map(dto => PartMapper.toViewName(dto));
+      const items = response.data.items.map((dto: any) => PartMapper.toViewName(dto));
+      const totalCount = response.data.totalCount || 0;
+      const pageSize = response.data.pageSize || filters.pageSize || 30;
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const currentPage = response.data.currentPage || filters.pageNumber || 1;
+
+      return {
+        items,
+        pageNumber: currentPage,
+        pageSize,
+        totalCount,
+        totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+        hasMore: currentPage < totalPages,
+        from: (currentPage - 1) * pageSize + 1,
+        to: Math.min(currentPage * pageSize, totalCount),
+      };
     } catch (error) {
       logger.error('[PartService] Get parts name failed:', error);
-      return [];
+      throw errorManager.normalize(error);
     }
   }
 
@@ -175,13 +176,30 @@ export class PartService {
         totalCount: number;
       }>(PART_ENDPOINTS.GET_PART_CATEGORIES_NAME, { params });
 
-      return response.data.items.map(dto => PartMapper.toViewCategory(dto));
+      return response.data.items.map(dto => AppPartCategoryMapper.toViewCategory(dto));
     } catch (error) {
       logger.error('[PartService] Get part categories name failed:', error);
       return [];
     }
   }
 }
+
+const AppPartCategoryMapper = {
+  toViewCategory(dto: PartCategoryApiDto): PartCategoryViewModel {
+    return {
+      id: dto.id,
+      name: dto.name,
+      englishTitle: dto.englishTitle,
+      description: dto.description,
+      parentId: dto.parentId || null,
+      hasSeo: dto.hasSeo,
+      hasDescription: dto.hasDescription,
+      children: dto.children ? dto.children.map(c => this.toViewCategory(c)) : [],
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+    };
+  }
+};
 
 let partServiceInstance: PartService | null = null;
 

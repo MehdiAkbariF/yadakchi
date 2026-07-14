@@ -30,6 +30,8 @@ export function useSearchFilters() {
       brandIds: searchParams.getAll('brandIds').length ? searchParams.getAll('brandIds') : undefined,
       carIds: searchParams.getAll('carIds').length ? searchParams.getAll('carIds') : undefined,
       partCategoryIds: searchParams.getAll('partCategoryIds').length ? searchParams.getAll('partCategoryIds') : undefined,
+      partIds: searchParams.getAll('partIds').length ? searchParams.getAll('partIds') : undefined,
+      types: searchParams.getAll('types').length ? (searchParams.getAll('types') as any) : undefined,
     };
   }, [searchParams]);
 

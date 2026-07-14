@@ -1,5 +1,3 @@
-// src/domains/front/reference/car/mappers/car.mapper.ts
-
 import { 
   CarApiDto, 
   CarManufacturerApiDto,
@@ -9,7 +7,6 @@ import {
 } from '../types/dto.types';
 import { 
   Car, 
-
 } from '../types/domain.types';
 import { 
   CarViewModel, 
@@ -17,7 +14,6 @@ import {
   CarNameViewModel,
   CarFilters,
   CarNameFilters,
-
 } from '../types/view.types';
 
 export class CarMapper {
@@ -83,8 +79,8 @@ export class CarMapper {
       id: dto.id,
       model: dto.model,
       englishTitle: dto.englishTitle,
-      manufacturerName: dto.carManufacturerName,
-      displayName: `${dto.carManufacturerName} ${dto.model}`,
+      manufacturerName: dto.carManufacturerName || '',
+      displayName: dto.carManufacturerName ? `${dto.carManufacturerName} ${dto.model}` : dto.model,
     };
   }
 

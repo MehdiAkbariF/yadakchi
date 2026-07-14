@@ -32,16 +32,6 @@ export function SearchContent() {
   const totalCount = data?.totalCount || 0;
   const totalPages = data?.totalPages || 1;
 
-  const handleRemoveFilter = (name: string, value?: any) => {
-    if (value !== undefined) {
-      const currentList = (filters[name as keyof typeof filters] as string[]) || [];
-      const updatedList = currentList.filter(item => item !== value);
-      setFilter(name, updatedList.length ? updatedList : undefined);
-    } else {
-      setFilter(name, undefined);
-    }
-  };
-
   const handleMobileSortSelect = (value: string) => {
     setFilter('sort', value);
     setIsMobileSortOpen(false);
@@ -55,8 +45,6 @@ export function SearchContent() {
         currentSort={filters.orderType || 'Selected'}
         onSortChange={(sort) => setFilter('sort', sort)}
         filters={filters}
-        onRemoveFilter={handleRemoveFilter}
-        onClearAll={clearFilters}
         onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
         onOpenMobileSort={() => setIsMobileSortOpen(true)}
         searchTitle={filters.searchTitle}
@@ -68,6 +56,7 @@ export function SearchContent() {
         <SearchSidebar
           filters={filters}
           onFilterChange={(name, val) => setFilter(name, val)}
+          onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}
           onClose={() => setIsMobileFiltersOpen(false)}
         />
@@ -80,8 +69,6 @@ export function SearchContent() {
               currentSort={filters.orderType || 'Selected'}
               onSortChange={(sort) => setFilter('sort', sort)}
               filters={filters}
-              onRemoveFilter={handleRemoveFilter}
-              onClearAll={clearFilters}
               searchTitle={filters.searchTitle}
               isMobileSticky={false}
             />
@@ -89,7 +76,7 @@ export function SearchContent() {
 
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[...Array(9)].map((_, i) => (
+              {[...Array(10)].map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>

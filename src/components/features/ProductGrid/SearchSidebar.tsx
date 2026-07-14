@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
 import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
-import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
+import { useGetPartsName } from '@/domains/front/part/hooks/part.hooks';
 import { Accordion } from '@/components/composites/Accordion/Accordion';
 import { Switch } from '@/components/primitives/Switch/Switch';
 import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
 import { PriceSlider } from '@/components/composites/PriceSlider/PriceSlider';
+import { FilterList } from '@/components/composites/FilterList/FilterList';
+import { Button } from '@/components/primitives/Button/Button';
 import { Typography } from '@/components/primitives/Typography';
-import { X, Filter, ArrowRight } from 'lucide-react';
+import { X, Filter, } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 import { Modal } from '@/components/composites/Modal/Modal';
@@ -17,6 +19,7 @@ import { Modal } from '@/components/composites/Modal/Modal';
 interface SearchSidebarProps {
   filters: SearchProductsRequest;
   onFilterChange: (name: string, value: any) => void;
+  onClearAll: () => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -24,14 +27,45 @@ interface SearchSidebarProps {
 export function SearchSidebar({
   filters,
   onFilterChange,
+  onClearAll,
   isOpen,
   onClose,
 }: SearchSidebarProps) {
-  const { data: brands = [] } = useGetBrandsName();
-  const { data: carsData } = useGetCarsName({ pageNumber: 1, pageSize: 50 });
-  const { data: categories = [] } = useGetPartCategoriesFlat();
+  const [brandSearch, setBrandSearch] = useState('');
+  const [carSearch, setCarSearch] = useState('');
+  const [partSearch, setPartSearch] = useState('');
 
-  const cars = carsData?.items || [];
+  const [partPage, setPartPage] = useState(1);
+  const [accumulatedParts, setAccumulatedParts] = useState<any[]>([]);
+
+  const { data: brandsList = [] } = useGetBrandsName({
+    searchTerm: brandSearch || undefined,
+  });
+
+  const { data: carsList = [] } = useGetCarsName({
+    model: carSearch || undefined,
+  });
+
+  const { data: partsData, isLoading: isPartsLoading } = useGetPartsName({
+    name: partSearch || undefined,
+    pageNumber: partPage,
+    pageSize: 30,
+  });
+
+  const hasMoreParts = partsData ? partPage < partsData.totalPages : false;
+
+  useEffect(() => {
+    setPartPage(1);
+    setAccumulatedParts([]);
+  }, [partSearch]);
+
+  useEffect(() => {
+    if (partPage === 1) {
+      setAccumulatedParts(partsData?.items || []);
+    } else if (partsData?.items) {
+      setAccumulatedParts((prev) => [...prev, ...partsData.items]);
+    }
+  }, [partsData, partPage]);
 
   const [priceRange, setPriceRange] = useState<[number, number]>([500000, 100000000]);
 
@@ -72,8 +106,36 @@ export function SearchSidebar({
     onFilterChange('types', updatedTypes.length ? updatedTypes : undefined);
   };
 
-  const renderFilterContent = () => (
-    <div className="w-full flex flex-col gap-5 text-right">
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      filters.isProductInStock ||
+      filters.isSellerInUserCity ||
+      filters.hasDiscount ||
+      filters.fromPrice ||
+      filters.toPrice ||
+      filters.brandIds?.length ||
+      filters.carIds?.length ||
+      filters.partIds?.length ||
+      filters.types?.length
+    );
+  }, [filters]);
+
+  const formattedBrands = brandsList.map((b: any) => ({ id: b.id, name: b.name }));
+  const formattedCars = carsList.map((c: any) => ({ id: c.id, name: c.displayName || c.model }));
+  const formattedParts = accumulatedParts.map((p: any) => ({ id: p.id, name: p.name }));
+
+  const activeTypesCount = filters.types?.length || 0;
+  const activePartsCount = filters.partIds?.length || 0;
+  const activeBrandsCount = filters.brandIds?.length || 0;
+  const activeCarsCount = filters.carIds?.length || 0;
+  const isPriceFilterActive = !!(filters.fromPrice || filters.toPrice);
+
+  const formatCount = (count: number) => {
+    return count > 0 ? ` (${new Intl.NumberFormat('fa-IR').format(count)})` : '';
+  };
+
+  const renderFilterContent = (isMobile: boolean) => (
+    <div className={cn("w-full flex flex-col gap-5 text-right", isMobile && "pb-24")}>
       <div className="flex flex-col gap-4 border-b pb-4">
         <div className="flex items-center justify-between w-full select-none">
           <span className="text-xs font-bold font-iran-sans text-foreground">فقط کالاهای موجود</span>
@@ -100,7 +162,7 @@ export function SearchSidebar({
         </div>
       </div>
 
-      <Accordion title="نوع قطعه">
+      <Accordion title={`نوع قطعه${formatCount(activeTypesCount)}`} defaultOpen={activeTypesCount > 0}>
         <div className="flex flex-col gap-2 pt-1 pr-1">
           <Checkbox
             label="همه قطعات"
@@ -125,52 +187,46 @@ export function SearchSidebar({
         </div>
       </Accordion>
 
-      {categories.length > 0 && (
-        <Accordion title="قطعه">
-          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto no-scrollbar pt-1 pr-1">
-            {categories.map((cat: any) => (
-              <Checkbox
-                key={cat.id}
-                label={cat.name}
-                checked={((filters.partCategoryIds as string[]) || []).includes(cat.id)}
-                onChange={(checked) => handleCheckboxChange('partCategoryIds', cat.id, checked)}
-              />
-            ))}
-          </div>
-        </Accordion>
-      )}
+      <Accordion title={`قطعه${formatCount(activePartsCount)}`} defaultOpen={activePartsCount > 0}>
+        <FilterList
+          items={formattedParts}
+          selectedIds={(filters.partIds as string[]) || []}
+          onChange={(id, checked) => handleCheckboxChange('partIds', id, checked)}
+          searchPlaceholder="جستجوی نام قطعه..."
+          onSearchChange={(query) => {
+            setPartSearch(query);
+          }}
+          onLoadMore={() => setPartPage(prev => prev + 1)}
+          hasMore={hasMoreParts}
+          isLoadingMore={isPartsLoading}
+        />
+      </Accordion>
 
-      {brands.length > 0 && (
-        <Accordion title="برند قطعه">
-          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto no-scrollbar pt-1 pr-1">
-            {brands.map((brand: any) => (
-              <Checkbox
-                key={brand.id}
-                label={brand.name}
-                checked={((filters.brandIds as string[]) || []).includes(brand.id)}
-                onChange={(checked) => handleCheckboxChange('brandIds', brand.id, checked)}
-              />
-            ))}
-          </div>
-        </Accordion>
-      )}
+      <Accordion title={`برند قطعه${formatCount(activeBrandsCount)}`} defaultOpen={activeBrandsCount > 0}>
+        <FilterList
+          items={formattedBrands}
+          selectedIds={(filters.brandIds as string[]) || []}
+          onChange={(id, checked) => handleCheckboxChange('brandIds', id, checked)}
+          searchPlaceholder="جستجوی برند..."
+          onSearchChange={(query) => {
+            setBrandSearch(query);
+          }}
+        />
+      </Accordion>
 
-      {cars.length > 0 && (
-        <Accordion title="مدل خودرو">
-          <div className="flex flex-col gap-2 max-h-48 overflow-y-auto no-scrollbar pt-1 pr-1">
-            {cars.map((car: any) => (
-              <Checkbox
-                key={car.id}
-                label={car.displayName || car.model}
-                checked={((filters.carIds as string[]) || []).includes(car.id)}
-                onChange={(checked) => handleCheckboxChange('carIds', car.id, checked)}
-              />
-            ))}
-          </div>
-        </Accordion>
-      )}
+      <Accordion title={`مدل خودرو${formatCount(activeCarsCount)}`} defaultOpen={activeCarsCount > 0}>
+        <FilterList
+          items={formattedCars}
+          selectedIds={(filters.carIds as string[]) || []}
+          onChange={(id, checked) => handleCheckboxChange('carIds', id, checked)}
+          searchPlaceholder="جستجوی مدل خودرو..."
+          onSearchChange={(query) => {
+            setCarSearch(query);
+          }}
+        />
+      </Accordion>
 
-      <Accordion title="محدوده قیمت">
+      <Accordion title={isPriceFilterActive ? "محدوده قیمت (فعال)" : "محدوده قیمت"} defaultOpen={isPriceFilterActive}>
         <PriceSlider
           min={500000}
           max={100000000}
@@ -188,11 +244,21 @@ export function SearchSidebar({
   return (
     <>
       <div className="hidden lg:flex flex-col w-[280px] shrink-0 border rounded-xl p-5 bg-background shadow-sm h-fit">
-        <div className="flex items-center gap-2 border-b pb-3 mb-4 select-none text-right">
-          <Filter className="h-4.5 w-4.5 text-primary" />
-          <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">فیلترها</Typography>
+        <div className="flex items-center justify-between border-b pb-3 mb-4 select-none w-full">
+          <div className="flex items-center gap-2 text-right">
+            <Filter className="h-4.5 w-4.5 text-primary" />
+            <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">فیلترها</Typography>
+          </div>
+          {hasActiveFilters && (
+            <button
+              onClick={onClearAll}
+              className="text-xs font-bold font-iran-sans text-destructive hover:underline"
+            >
+              حذف فیلترها
+            </button>
+          )}
         </div>
-        {renderFilterContent()}
+        {renderFilterContent(false)}
       </div>
 
       <Modal
@@ -223,10 +289,52 @@ export function SearchSidebar({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-5">
-          {renderFilterContent()}
+        
+        <div className="flex-1 overflow-y-auto p-5 relative">
+          {renderFilterContent(true)}
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-4 flex gap-3 shrink-0 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onClearAll();
+                onClose();
+              }}
+              className="flex-1 rounded-xl text-xs font-bold font-iran-sans text-destructive border-destructive/20 hover:bg-destructive/5 h-10"
+            >
+              حذف فیلترها
+            </Button>
+          )}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onClose}
+            className="flex-1 rounded-xl text-xs font-bold font-iran-sans h-10"
+          >
+            مشاهده نتایج
+          </Button>
         </div>
       </Modal>
     </>
+  );
+}
+
+interface ArrowRightProps extends React.SVGProps<SVGSVGElement> {}
+
+function ArrowRight({ className, ...props }: ArrowRightProps) {
+  return (
+    <svg
+      className={cn("h-5 w-5 text-muted-foreground", className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="2"
+      {...props}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
   );
 }

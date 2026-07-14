@@ -234,7 +234,7 @@ export function ProductSearchCard({
 
       <Link
         href={`/products/${product?.productCode || product?.code}`}
-        className="md:hidden flex flex-col w-full bg-background rounded-xl border p-3 relative select-none hover:shadow-sm"
+        className="md:hidden flex flex-col w-full bg-background border-b border-zinc-100 dark:border-zinc-800/80 py-4 px-0 relative select-none"
         draggable={false}
       >
         <div className="flex w-full items-stretch gap-3">
@@ -265,6 +265,18 @@ export function ProductSearchCard({
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1.5 justify-start">
                   <Store className="h-3 w-3 shrink-0 text-muted-foreground/70" />
                   <span className="truncate">فروشگاه: {shopName}</span>
+                </div>
+              )}
+
+              {isMounted && tickerLength > 0 && (
+                <div className="h-5 overflow-hidden relative w-full flex items-center justify-start text-[9px] sm:text-[10px] text-muted-foreground mt-1 select-none shrink-0">
+                  <div className={cn(
+                    "flex items-center gap-1 transition-opacity duration-300",
+                    fade ? "opacity-100" : "opacity-0"
+                  )}>
+                    <CurrentTickerIcon className="h-3 w-3 text-primary shrink-0" />
+                    <span className="truncate font-medium">{tickerItems[tickerIndex]?.text}</span>
+                  </div>
                 </div>
               )}
             </div>

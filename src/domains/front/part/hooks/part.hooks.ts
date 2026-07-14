@@ -1,16 +1,12 @@
-// src/domains/front/part/hooks/part.hooks.ts
-
 import { UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
 import { getPartService } from '../services/part.service';
-import { PartFilters, PartCategoryFilters } from '../types/view.types';
-import { PartViewModel } from '../types/view.types';
+import { PartFilters, PartCategoryFilters, PartViewModel, PartCategoryViewModel, PartCategoryPageViewModel, PartNameViewModel } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 import { getHttpClient } from '@/core/http/client';
 
 const carService = getPartService();
 
-// هوک جدید کلاینت جهت دریافت لیست کامل و تخت اطلاعات دسته‌بندی‌ها (شامل تصاویر واقعی و وضعیت تخفیف)
 export function useGetPartCategoriesFlat(carId?: string) {
   return useTypedQuery<any[]>(
     ['front', 'parts', 'categories-flat', carId || 'all'],
@@ -81,7 +77,7 @@ export function useGetPartProperties(partId: string) {
 }
 
 export function useGetPartsName(filters: PartFilters) {
-  return useTypedQuery(
+  return useTypedQuery<PaginatedResult<PartNameViewModel>>(
     ['front', 'parts', 'names', filters],
     () => carService.getPartsName(filters),
     {

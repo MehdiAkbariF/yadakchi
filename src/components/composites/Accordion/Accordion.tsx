@@ -9,10 +9,16 @@ interface AccordionProps {
   title: string;
   children: React.ReactNode;
   className?: string;
+  defaultOpen?: boolean;
 }
 
-export function Accordion({ title, children, className }: AccordionProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function Accordion({ 
+  title, 
+  children, 
+  className,
+  defaultOpen = false,
+}: AccordionProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <div className={cn("w-full border-b pb-2", className)}>

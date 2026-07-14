@@ -2,7 +2,7 @@
 
 import { cn } from '@/design-system/utils/cn';
 import { Typography } from '@/components/primitives/Typography';
-import { X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 import { useAppStore } from '@/shared/store/useAppStore';
 import { motion } from 'framer-motion';
@@ -12,8 +12,6 @@ interface SearchHeaderProps {
   currentSort: string;
   onSortChange: (sort: string) => void;
   filters: SearchProductsRequest;
-  onRemoveFilter: (name: string, value?: any) => void;
-  onClearAll: () => void;
   onOpenMobileFilters?: () => void;
   onOpenMobileSort?: () => void;
   searchTitle?: string;
@@ -33,49 +31,12 @@ export function SearchHeader({
   totalCount,
   currentSort,
   onSortChange,
-  filters,
-  onRemoveFilter,
-  onClearAll,
   onOpenMobileFilters,
   onOpenMobileSort,
   searchTitle,
   isMobileSticky = false,
 }: SearchHeaderProps) {
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
-
-  const activeChips = () => {
-    const chips: { name: string; label: string; value?: any }[] = [];
-
-    if (filters.isProductInStock) {
-      chips.push({ name: 'inStock', label: 'فقط کالاهای موجود' });
-    }
-    if (filters.isSellerInUserCity) {
-      chips.push({ name: 'userCity', label: 'فروشنده‌های شهر من' });
-    }
-    if (filters.hasDiscount) {
-      chips.push({ name: 'discount', label: 'دارای تخفیف' });
-    }
-    if (filters.fromPrice) {
-      chips.push({ name: 'fromPrice', label: `از ${new Intl.NumberFormat('fa-IR').format(filters.fromPrice / 10)} تومان` });
-    }
-    if (filters.toPrice) {
-      chips.push({ name: 'toPrice', label: `تا ${new Intl.NumberFormat('fa-IR').format(filters.toPrice / 10)} تومان` });
-    }
-    if (filters.brandIds) {
-      filters.brandIds.forEach(id => {
-        chips.push({ name: 'brandIds', label: 'برند خاص', value: id });
-      });
-    }
-    if (filters.carIds) {
-      filters.carIds.forEach(id => {
-        chips.push({ name: 'carIds', label: 'خودرو خاص', value: id });
-      });
-    }
-
-    return chips;
-  };
-
-  const chipsList = activeChips();
   const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
   const activeSortLabel = SORT_OPTIONS.find(o => o.value === currentSort)?.label || 'منتخب';
 
@@ -83,28 +44,29 @@ export function SearchHeader({
     return (
       <div 
         style={{
-          top: isHeaderMinimized ? '56px' : '174px'
+          top: isHeaderMinimized ? '56px' : '122px'
         }}
-        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 -mx-4 w-[calc(100%+2rem)] flex items-center justify-between shadow-sm select-none gap-3 transition-all duration-300"
+        className="
+        
+        md:hidden sticky z-40 bg-background border-b py-2.5 px-4 
+        w-full flex items-center justify-between  select-none gap-3
+        mt-3 transition-all duration-300"
       >
         <button
           onClick={onOpenMobileFilters}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm select-none outline-none"
         >
-          <SlidersHorizontal className="h-4 w-4 text-primary" />
-          <span>فیلترها</span>
+          <SlidersHorizontal className="h-4 w-4 text-primary shrink-0" />
+          <span className="truncate whitespace-nowrap">فیلترها</span>
         </button>
         <button
           onClick={onOpenMobileSort}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3
-           bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground 
-           flex-1 shadow-sm"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm select-none outline-none min-w-0"
         >
-          <ArrowUpDown className="h-4 w-4 text-primary" />
-          <span>مرتب‌سازی: {activeSortLabel}</span>
+          <ArrowUpDown className="h-4 w-4 text-primary shrink-0" />
+          <span className="truncate whitespace-nowrap">{activeSortLabel}</span>
         </button>
-        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground 
-        bg-muted px-2.5 py-2 rounded-xl shrink-0">
+        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 select-none">
           {formatNumber(totalCount)} کالا
         </span>
       </div>
@@ -151,32 +113,6 @@ export function SearchHeader({
           })}
         </div>
       </div>
-
-      {chipsList.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
-          {chipsList.map((chip, idx) => (
-            <div
-              key={`${chip.name}-${idx}`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 text-[10px] font-bold font-iran-sans text-foreground border hover:border-primary/20 transition-all select-none"
-            >
-              <span>{chip.label}</span>
-              <button
-                onClick={() => onRemoveFilter(chip.name, chip.value)}
-                className="p-0.5 hover:bg-muted-foreground/20 rounded-full flex items-center justify-center transition-colors"
-                aria-label="Remove Filter"
-              >
-                <X className="h-3 w-3 text-muted-foreground" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={onClearAll}
-            className="text-xs font-bold font-iran-sans text-destructive hover:underline ml-2"
-          >
-            حذف فیلترها
-          </button>
-        </div>
-      )}
     </div>
   );
 }

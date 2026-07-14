@@ -1,9 +1,7 @@
-// src/components/sections/Header/components/SearchBar/SearchBar.tsx
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Search, X, Clock, Trash2, ArrowRight, Loader2, Sparkles, FolderKanban, Car } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { Input } from '@/components/primitives/Input/Input';
@@ -15,6 +13,9 @@ import {
   useRemoveSearchHistory 
 } from '@/domains/front/product/hooks/product.hooks';
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
+import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
+import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
+import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import Link from 'next/link';
 
@@ -32,7 +33,27 @@ export function SearchBar({
   isMobile = false 
 }: SearchBarProps) {
   const router = useRouter();
-  const [query, setQuery] = useState('');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const urlQuery = searchParams.get('q') || '';
+  const urlCarId = searchParams.get('carIds') || searchParams.get('carId') || '';
+  const urlBrandId = searchParams.get('brandIds') || searchParams.get('brandId') || '';
+
+  const { data: cars = [] } = useGetCarsName();
+  const { data: brands = [] } = useGetBrandsName();
+  const { data: categories = [] } = useGetPartCategoriesFlat();
+
+  const activeCar = cars.find((c: any) => c.id === urlCarId)?.model || '';
+  const activeBrand = brands.find((b: any) => b.id === urlBrandId)?.name || '';
+  
+  const isCategoryPage = pathname.startsWith('/categories/');
+  const catSlug = isCategoryPage ? pathname.split('/').pop() : '';
+  const activeCategory = categories.find((c: any) => c.englishTitle === catSlug)?.name || '';
+
+  const resolvedText = urlQuery || activeCar || activeBrand || activeCategory || '';
+
+  const [query, setQuery] = useState(resolvedText);
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   
@@ -40,20 +61,20 @@ export function SearchBar({
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
 
-  // دیبانس کردن ورودی برای جلوگیری از ارسال کوئری‌های مکرر به سرور
   const debouncedQuery = useDebounce(query, 500);
 
   const { data: history = [], refetch: refetchHistory } = useGetSearchHistory();
   const { data: suggestions = [] } = useGetSearchSuggestions();
-  
-  // فرستادن مقدار دیبانس شده به وب‌سرویس پیشنهاد کلمات کلیدی
   const { data: keywordsData, isLoading: isKeywordsLoading } = useGetSearchKeywords(debouncedQuery);
   const { data: searchBanners = [] } = useGetBanners('SearchResult');
-  
   const removeHistoryMutation = useRemoveSearchHistory();
 
   const desktopBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Desktop');
   const mobileBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Mobile');
+
+  useEffect(() => {
+    setQuery(resolvedText);
+  }, [resolvedText]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -80,22 +101,17 @@ export function SearchBar({
     };
   }, [isMobileModalOpen]);
 
-  // متد اصلاح شده جستجو: همزمان کلمه را در اینپوت ست کرده و سرچ می‌کند
   const handleSearchSubmit = (searchWord: string) => {
     if (!searchWord.trim()) return;
     
-    // ۱. قرار دادن عبارت کلیک شده در اینپوت
     setQuery(searchWord);
     
-    // ۲. اجرای لاجیک جستجو و ریدایرکت
     if (onSearch) onSearch(searchWord);
-    router.push(`/search?q=${encodeURIComponent(searchWord)}`);
     
     setIsFocused(false);
     setIsMobileModalOpen(false);
-    if (window.history.state?.modalOpen === 'search-modal') {
-      window.history.back();
-    }
+    
+    router.push(`/search?q=${encodeURIComponent(searchWord)}`);
   };
 
   const handleRemoveHistoryItem = (word: string, e: React.MouseEvent) => {
@@ -139,25 +155,22 @@ export function SearchBar({
     return (
       <div className="flex flex-col flex-1 overflow-y-auto">
         {showKeywords ? (
-          <div className="p-4 space-y-4 flex flex-col h-full">
+          <div className="p-4 space-y-4 flex flex-col h-full text-right">
             
-            {/* لیست خودروهای یافت شده مرتبط با سرچ */}
             {carsList.length > 0 && (
               <div className="space-y-2 shrink-0">
-                <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b">
+                <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b text-right">
                   خودروها
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 justify-start">
                   {carsList.map((car: any) => (
                     <Link
                       key={car.id}
                       href={`/search?carId=${car.id}`}
                       onClick={() => {
-                        // قرار دادن نام خودرو در اینپوت با کلیک بر روی آن
                         setQuery(car.model);
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
-                        if (window.history.state?.modalOpen === 'search-modal') window.history.back();
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-medium font-iran-sans hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                     >
@@ -169,23 +182,20 @@ export function SearchBar({
               </div>
             )}
 
-            {/* لیست دسته‌بندی‌های یافت شده مرتبط با سرچ */}
             {uniqueCategories.length > 0 && (
               <div className="space-y-2 shrink-0">
-                <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b">
+                <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b text-right">
                   دسته‌بندی‌های مرتبط
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 justify-start">
                   {uniqueCategories.map((cat: any) => (
                     <Link
                       key={cat.partCategoryId}
                       href={`/categories/${cat.partCategoryEnglishTitle}`}
                       onClick={() => {
-                        // قرار دادن نام دسته‌بندی در اینپوت با کلیک بر روی آن
                         setQuery(cat.partCategoryName);
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
-                        if (window.history.state?.modalOpen === 'search-modal') window.history.back();
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium font-iran-sans hover:bg-primary/10 transition-colors"
                     >
@@ -197,9 +207,8 @@ export function SearchBar({
               </div>
             )}
 
-            {/* کلمات کلیدی پیشنهادی */}
             <div className="space-y-2 shrink-0">
-              <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b">
+              <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b text-right">
                 عبارات پیشنهادی
               </span>
               
@@ -216,7 +225,7 @@ export function SearchBar({
                       onClick={() => handleSearchSubmit(kw.suggestion)}
                       className="flex items-center justify-between w-full text-right p-2 rounded-md hover:bg-muted/50 transition-colors font-iran-sans"
                     >
-                      <div className="flex flex-col min-w-0">
+                      <div className="flex flex-col min-w-0 text-right">
                         <span className="text-sm text-foreground truncate">
                           {kw.suggestion}
                         </span>
@@ -255,21 +264,20 @@ export function SearchBar({
 
           </div>
         ) : (
-          <div className="p-4 space-y-5 flex-1 flex flex-col">
-            {/* تاریخچه جستجوهای اخیر */}
+          <div className="p-4 space-y-5 flex-1 flex flex-col text-right">
             {history.length > 0 && (
               <div className="space-y-2 shrink-0">
                 <div className="flex items-center justify-between pb-1 border-b">
                   <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    جستجوهای اخیر شما
+                    جستجو‌های اخیر شما
                   </span>
                   <button onClick={handleClearAllHistory} className="text-xs text-destructive hover:underline font-iran-sans flex items-center gap-0.5">
                     <Trash2 className="h-3 w-3" />
                     پاک کردن همه
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1 justify-start">
                   {history.map((item: any, idx: number) => {
                     const isObject = typeof item === 'object' && item !== null;
                     const wordValue = isObject ? (item as any).value : String(item);
@@ -278,7 +286,7 @@ export function SearchBar({
                     return (
                       <div key={itemId} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium font-iran-sans text-foreground border hover:border-primary/20 transition-all cursor-pointer" onClick={() => handleSearchSubmit(wordValue)}>
                         <span>{wordValue}</span>
-                        <button onClick={(e) => handleRemoveHistoryItem(wordValue, e)} className="p-0.5 hover:bg-muted-foreground/20 rounded-full flex items-center justify-center transition-colors" aria-label="حذف">
+                        <button onClick={(e) => handleRemoveHistoryItem(wordValue, e)} className="p-0.5 hover:bg-muted-foreground/20 rounded-full flex items-center justify-center transition-colors" aria-label="Remove">
                           <X className="h-3 w-3 text-muted-foreground" />
                         </button>
                       </div>
@@ -288,14 +296,13 @@ export function SearchBar({
               </div>
             )}
 
-            {/* جستجوهای پرطرفدار */}
             {suggestions.length > 0 && (
               <div className="space-y-2 shrink-0">
-                <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1.5 pb-1 border-b">
+                <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1.5 pb-1 border-b justify-start">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  جستجوهای پرطرفدار
+                  جستجو‌های پرطرفدار
                 </span>
-                <div className="flex flex-wrap gap-2 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1 justify-start">
                   {suggestions.map((suggest: any, idx: number) => (
                     <button key={idx} onClick={() => handleSearchSubmit(suggest)} className="px-3 py-1.5 rounded-lg border border-input hover:border-primary/40 hover:bg-primary/5 text-xs font-medium font-iran-sans text-foreground transition-all">
                       {suggest}
@@ -329,14 +336,16 @@ export function SearchBar({
   if (isMobile) {
     return (
       <div className={cn("relative w-full", className)}>
-        <div onClick={handleOpenMobileSearch} className="flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground">
+        <div onClick={handleOpenMobileSearch} className="flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground min-w-0">
           <Search className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-iran-sans font-medium mr-2">{placeholder}</span>
+          <span className="text-sm font-iran-sans font-medium mr-2 truncate whitespace-nowrap flex-1 text-right">
+            {query || placeholder}
+          </span>
         </div>
 
         <Modal isOpen={isMobileModalOpen} onClose={handleCloseMobileSearch} className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-50 bg-background" overlayClassName="bg-black/40">
           <div className="flex items-center gap-3 px-4 py-4 border-b shrink-0 bg-muted/20">
-            <button onClick={handleCloseMobileSearch} className="p-1 -mr-1 hover:bg-muted rounded-full" aria-label="بازگشت">
+            <button onClick={handleCloseMobileSearch} className="p-1 -mr-1 hover:bg-muted rounded-full" aria-label="Back">
               <ArrowRight className="h-5 w-5" />
             </button>
             <div className="flex-1">

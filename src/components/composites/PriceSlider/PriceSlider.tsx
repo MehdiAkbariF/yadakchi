@@ -42,21 +42,22 @@ export function PriceSlider({ min, max, value, onChange, onApply }: PriceSliderP
 
   return (
     <div className="w-full flex flex-col gap-5 pt-3 select-none">
-      <div className="relative w-full h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full">
+      <div className="relative w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center" dir="ltr">
         <div
           style={{
             left: `${minPercent}%`,
-            right: `${100 - maxPercent}%`,
+            width: `${maxPercent - minPercent}%`,
           }}
           className="absolute h-full bg-primary rounded-full"
         />
+        
         <input
           type="range"
           min={min}
           max={max}
           value={minVal}
           onChange={handleMinChange}
-          className="absolute pointer-events-none appearance-none z-20 h-1 w-full opacity-0 cursor-pointer"
+          className="absolute pointer-events-none appearance-none z-20 h-1.5 w-full opacity-0 cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5"
         />
         <input
           type="range"
@@ -64,15 +65,16 @@ export function PriceSlider({ min, max, value, onChange, onApply }: PriceSliderP
           max={max}
           value={maxVal}
           onChange={handleMaxChange}
-          className="absolute pointer-events-none appearance-none z-20 h-1 w-full opacity-0 cursor-pointer"
+          className="absolute pointer-events-none appearance-none z-20 h-1.5 w-full opacity-0 cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5"
         />
+        
         <div
           style={{ left: `${minPercent}%` }}
-          className="absolute w-4 h-4 rounded-full bg-white border-2 border-primary -translate-x-1/2 -translate-y-1/3 z-30 pointer-events-none shadow-sm"
+          className="absolute w-4.5 h-4.5 rounded-full bg-white border-2 border-primary -translate-x-1/2 z-30 pointer-events-none shadow-md hover:scale-110 transition-transform"
         />
         <div
           style={{ left: `${maxPercent}%` }}
-          className="absolute w-4 h-4 rounded-full bg-white border-2 border-primary -translate-x-1/2 -translate-y-1/3 z-30 pointer-events-none shadow-sm"
+          className="absolute w-4.5 h-4.5 rounded-full bg-white border-2 border-primary -translate-x-1/2 z-30 pointer-events-none shadow-md hover:scale-110 transition-transform"
         />
       </div>
 

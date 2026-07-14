@@ -14,16 +14,17 @@ export function Switch({ checked, onChange, className }: SwitchProps) {
       type="button"
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none select-none",
+        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full p-1 transition-colors duration-200 ease-in-out focus:outline-none select-none border border-transparent shadow-inner",
         checked ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-800",
         className
       )}
+      dir="ltr"
     >
       <span
-        className={cn(
-          "pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-          checked ? "translate-x-4.5" : "translate-x-0"
-        )}
+        style={{
+          transform: checked ? 'translateX(20px)' : 'translateX(0px)'
+        }}
+        className="pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out"
       />
     </button>
   );
