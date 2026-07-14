@@ -11,6 +11,8 @@ interface SelectedCity {
 interface AppState {
   selectedCity: SelectedCity | null;
   setSelectedCity: (city: SelectedCity | null) => void;
+  isHeaderMinimized: boolean;
+  setIsHeaderMinimized: (val: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -18,6 +20,8 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       selectedCity: null,
       setSelectedCity: (city) => set({ selectedCity: city }),
+      isHeaderMinimized: false,
+      setIsHeaderMinimized: (val) => set({ isHeaderMinimized: val }),
     }),
     {
       name: 'yadakchi-app-state',

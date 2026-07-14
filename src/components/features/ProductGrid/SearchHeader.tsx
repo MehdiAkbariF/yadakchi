@@ -2,8 +2,9 @@
 
 import { cn } from '@/design-system/utils/cn';
 import { Typography } from '@/components/primitives/Typography';
-import { X, SlidersHorizontal } from 'lucide-react';
+import { X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { useAppStore } from '@/shared/store/useAppStore';
 import { motion } from 'framer-motion';
 
 interface SearchHeaderProps {
@@ -14,7 +15,9 @@ interface SearchHeaderProps {
   onRemoveFilter: (name: string, value?: any) => void;
   onClearAll: () => void;
   onOpenMobileFilters?: () => void;
+  onOpenMobileSort?: () => void;
   searchTitle?: string;
+  isMobileSticky?: boolean;
 }
 
 const SORT_OPTIONS = [
@@ -34,8 +37,12 @@ export function SearchHeader({
   onRemoveFilter,
   onClearAll,
   onOpenMobileFilters,
+  onOpenMobileSort,
   searchTitle,
+  isMobileSticky = false,
 }: SearchHeaderProps) {
+  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
+
   const activeChips = () => {
     const chips: { name: string; label: string; value?: any }[] = [];
 
@@ -70,32 +77,52 @@ export function SearchHeader({
 
   const chipsList = activeChips();
   const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
+  const activeSortLabel = SORT_OPTIONS.find(o => o.value === currentSort)?.label || 'منتخب';
+
+  if (isMobileSticky) {
+    return (
+      <div 
+        style={{
+          top: isHeaderMinimized ? '56px' : '174px'
+        }}
+        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 -mx-4 w-[calc(100%+2rem)] flex items-center justify-between shadow-sm select-none gap-3 transition-all duration-300"
+      >
+        <button
+          onClick={onOpenMobileFilters}
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm"
+        >
+          <SlidersHorizontal className="h-4 w-4 text-primary" />
+          <span>فیلترها</span>
+        </button>
+        <button
+          onClick={onOpenMobileSort}
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3
+           bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground 
+           flex-1 shadow-sm"
+        >
+          <ArrowUpDown className="h-4 w-4 text-primary" />
+          <span>مرتب‌سازی: {activeSortLabel}</span>
+        </button>
+        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground 
+        bg-muted px-2.5 py-2 rounded-xl shrink-0">
+          {formatNumber(totalCount)} کالا
+        </span>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full flex flex-col gap-4 border-b pb-4 select-none">
-      
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center justify-between md:justify-start gap-4">
-          <Typography variant="h3" className="font-iran-yekan font-extrabold text-foreground">
-            {searchTitle ? `نتایج جستجو برای «${searchTitle}»` : 'لیست قطعات یدکی'}
-          </Typography>
-          <span className="text-xs font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
-            {formatNumber(totalCount)} کالا
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 md:hidden">
-          <button
-            onClick={onOpenMobileFilters}
-            className="flex items-center justify-center gap-1.5 border rounded-xl px-4 py-2 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground shadow-sm flex-1"
-          >
-            <SlidersHorizontal className="h-4 w-4 text-primary" />
-            <span>فیلترها</span>
-          </button>
-        </div>
+    <div className="w-full flex flex-col gap-4 pb-2 select-none">
+      <div className="flex items-center justify-between w-full md:border-b md:pb-3">
+        <Typography variant="h3" className="font-iran-yekan font-extrabold text-foreground">
+          {searchTitle ? `نتایج جستجو برای «${searchTitle}»` : 'لیست قطعات یدکی'}
+        </Typography>
+        <span className="hidden md:inline-block text-xs font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
+          {formatNumber(totalCount)} کالا
+        </span>
       </div>
 
-      <div className="hidden md:flex items-center gap-2 border-t pt-3 overflow-x-auto no-scrollbar">
+      <div className="hidden md:flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
         <span className="text-xs font-bold font-iran-sans text-muted-foreground whitespace-nowrap ml-2">
           مرتب‌سازی:
         </span>
@@ -125,28 +152,8 @@ export function SearchHeader({
         </div>
       </div>
 
-      <div className="md:hidden flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-        {SORT_OPTIONS.map((opt) => {
-          const isActive = currentSort === opt.value;
-          return (
-            <button
-              key={opt.value}
-              onClick={() => onSortChange(opt.value)}
-              className={cn(
-                "px-4 py-1.5 rounded-full text-xs font-bold font-iran-sans transition-all select-none whitespace-nowrap border shrink-0",
-                isActive 
-                  ? "bg-primary border-primary text-white shadow-sm" 
-                  : "bg-background text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
-
       {chipsList.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 pt-2 animate-in fade-in duration-200">
+        <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
           {chipsList.map((chip, idx) => (
             <div
               key={`${chip.name}-${idx}`}
@@ -170,7 +177,6 @@ export function SearchHeader({
           </button>
         </div>
       )}
-
     </div>
   );
 }

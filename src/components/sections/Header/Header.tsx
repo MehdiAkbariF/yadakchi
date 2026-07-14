@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Logo } from './components/Logo/Logo';
@@ -15,6 +14,7 @@ import { MyCarButton } from './components/MyCarButton/MyCarButton';
 import { CitySelector } from './components/CitySelector/CitySelector';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/shared/store/useAppStore';
 
 interface HeaderProps {
   className?: string;
@@ -23,7 +23,8 @@ interface HeaderProps {
 export function Header({ className }: HeaderProps) {
   const router = useRouter();
   useAuth(); 
-  const [isHeaderMinimized, setIsHeaderMinimized] = useState(false);
+  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
+  const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -44,7 +45,7 @@ export function Header({ className }: HeaderProps) {
   };
 
   return (
-    <header className={cn('lg:sticky lg:top-0 z-50 w-full lg:bg-transparent transition-colors duration-300', className)}>
+    <header className={cn('lg:sticky lg:top-0 z-50 w-full bg-background border-b lg:bg-transparent lg:border-b-0 transition-colors duration-300', className)}>
       
       <div className="hidden lg:block h-[116px] w-full pointer-events-none relative">
         <motion.div 
@@ -116,7 +117,7 @@ export function Header({ className }: HeaderProps) {
         </motion.div>
       </div>
 
-      <div className="lg:hidden h-[165px] w-full bg-background" />
+      <div className="lg:hidden h-[144px] w-full" />
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-2 w-full shadow-sm">
         <div className="max-w-screen-2xl mx-auto">
           <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />

@@ -1,73 +1,79 @@
-// src/domains/front/product/mappers/product.mapper.ts
-
 import { Product, Money, Discount, Image } from '@/domains/front/product/types/domain.types';
 import { ProductViewModel, SearchProductsRequest, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
 
 export class ProductMapper {
   static toDomain(dto: any): Product {
+    const nominated = dto.nominatedShopProduct || {};
+    const rawPrice = dto.price || nominated.rialRetailPrice || nominated.price || 0;
+    const rawFinalPrice = dto.discountPrice || nominated.rialFinalPrice || nominated.price || rawPrice;
+
     const price: Money = {
-      amount: dto.price,
+      amount: rawPrice,
       currency: 'IRR',
     };
 
+    const hasDiscount = rawPrice > rawFinalPrice;
     let discount: Discount | null = null;
-    if (dto.hasDiscount && dto.discountPrice) {
+    if (hasDiscount) {
       discount = {
-        percent: Math.round(((dto.price - dto.discountPrice) / dto.price) * 100),
-        expirationDate: dto.discountExpiration ? new Date(dto.discountExpiration) : null,
+        percent: Math.round(((rawPrice - rawFinalPrice) / rawPrice) * 100),
+        expirationDate: nominated.discountUntil || dto.discountExpiration ? new Date(nominated.discountUntil || dto.discountExpiration) : null,
         originalPrice: price,
       };
     }
 
-    const images: Image[] = (dto.images || []).map((url: string, index: number) => ({
-      url,
-      alt: dto.name,
-      order: index,
-    }));
+    const images: Image[] = [];
+    if (dto.image) {
+      images.push({ url: dto.image, alt: dto.title || dto.name, order: 0 });
+    } else if (dto.images && Array.isArray(dto.images)) {
+      dto.images.forEach((url: string, index: number) => {
+        images.push({ url, alt: dto.title || dto.name, order: index });
+      });
+    }
 
     return {
       id: dto.id,
-      code: dto.code,
+      code: dto.productCode || dto.code || 0,
       name: {
-        value: dto.name,
-        english: dto.englishTitle,
+        value: dto.title || dto.name || '',
+        english: dto.englishTitle || '',
       },
-      description: dto.description,
+      description: dto.description || '',
       price,
       discount,
       images,
       category: {
-        id: dto.categoryId,
-        name: dto.categoryName,
-        englishTitle: dto.categoryName,
+        id: dto.categoryId || dto.partCategoryId || '',
+        name: dto.categoryName || dto.partCategoryName || '',
+        englishTitle: dto.categoryEnglishTitle || dto.partCategoryEnglishTitle || '',
       },
       brand: {
-        id: dto.brandId,
-        name: dto.brandName,
-        englishTitle: dto.brandName,
+        id: dto.brandId || '',
+        name: dto.brandName || '',
+        englishTitle: dto.brandName || '',
       },
       shop: {
-        id: dto.shopId,
-        name: dto.shopName,
-        rating: dto.shopRating,
+        id: nominated.shopId || dto.shopId || '',
+        name: nominated.shopTitle || dto.shopName || '',
+        rating: nominated.averageRate || dto.shopRating || 0,
       },
       inventory: {
-        isInStock: dto.isInStock,
-        count: dto.stockCount,
+        isInStock: dto.isInStock || nominated.quantity > 0 || false,
+        count: dto.stockCount || nominated.quantity || 0,
       },
-      type: dto.type.toUpperCase() as 'NEW' | 'STOCK' | 'TAKEOFF',
+      type: (dto.type || nominated.type || 'NEW').toUpperCase() as 'NEW' | 'STOCK' | 'TAKEOFF',
       metadata: {
-        createdAt: new Date(dto.createdAt),
-        updatedAt: new Date(dto.updatedAt),
+        createdAt: new Date(dto.createdAt || Date.now()),
+        updatedAt: new Date(dto.updatedAt || Date.now()),
       },
       rating: {
-        average: dto.rating,
-        count: dto.commentCount,
+        average: dto.averageRate || dto.rating || 5,
+        count: dto.commentCount || 0,
       },
       statistics: {
-        views: dto.views,
-        commentCount: dto.commentCount,
-        inquiryCount: dto.inquiryCount,
+        views: dto.viewsAndClicks || dto.views || 0,
+        commentCount: dto.commentCount || 0,
+        inquiryCount: dto.inquiryCount || 0,
       },
       isFavorite: dto.isFavorite || false,
     };
@@ -77,7 +83,7 @@ export class ProductMapper {
     const priceInToman = domain.price.amount / 10;
     const discountedPrice = domain.discount 
       ? (domain.price.amount * (1 - domain.discount.percent / 100)) / 10
-      : null;
+      : priceInToman;
 
     return {
       id: domain.id,
@@ -95,14 +101,14 @@ export class ProductMapper {
         hasDiscount: !!domain.discount,
         percent: domain.discount?.percent || 0,
         originalPrice: domain.discount ? this.formatNumber(domain.discount.originalPrice.amount / 10) + ' تومان' : '',
-        discountedPrice: domain.discount ? this.formatNumber(discountedPrice!) + ' تومان' : '',
+        discountedPrice: domain.discount ? this.formatNumber(discountedPrice) + ' تومان' : '',
         expirationDate: domain.discount?.expirationDate?.toISOString() || null,
         isActive: domain.discount?.expirationDate ? domain.discount.expirationDate > new Date() : true,
       },
       images: domain.images.map(img => ({
-        thumbnail: img.url + '?w=200&h=200',
-        medium: img.url + '?w=400&h=400',
-        large: img.url + '?w=800&h=800',
+        thumbnail: img.url,
+        medium: img.url,
+        large: img.url,
         alt: img.alt,
       })),
       category: domain.category,

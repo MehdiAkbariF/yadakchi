@@ -1,0 +1,321 @@
+'use client';
+
+import { useState, useEffect, useMemo, useRef } from 'react';
+import Link from 'next/link';
+import { Star, Store, BadgeCheck, Truck, Eye, ShoppingCart } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/primitives/Button/Button';
+import { showToast } from '@/core/utils/toast';
+
+interface ProductSearchCardProps {
+  product: any;
+  showRating?: boolean;
+  className?: string;
+}
+
+export function ProductSearchCard({
+  product,
+  showRating = true,
+  className
+}: ProductSearchCardProps) {
+  const [tickerIndex, setTickerIndex] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+  const [fade, setFade] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const nominated = product?.nominatedShopProduct || {};
+  
+  const shopName = nominated?.shopTitle || product?.shop?.name || product?.shopTitle || null;
+  const isTipax = nominated?.isTipaxShipping || product?.isTipaxShipping || false;
+  const isDirect = nominated?.isDirectShipping || product?.isDirectShipping || false;
+  const salesCount = product?.totalSalesCount || product?.salesCount || 0;
+  const views = product?.viewsAndClicks || product?.views || 0;
+
+  const originalPriceRaw = Number(
+    nominated.rialRetailPrice || 
+    product?.price?.raw || 
+    (typeof product?.price === 'number' ? product.price : 0) || 
+    nominated.price || 
+    0
+  );
+  
+  const finalPriceRaw = Number(
+    nominated.rialFinalPrice || 
+    (product?.discount?.hasDiscount ? (product?.price?.raw * (1 - product?.discount?.percent / 100)) : null) || 
+    product?.price?.raw || 
+    (typeof product?.price === 'number' ? product.price : 0) || 
+    0
+  );
+
+  const originalPriceToman = Math.round(originalPriceRaw / 10);
+  const finalPriceToman = Math.round(finalPriceRaw / 10);
+  
+  const isOutOfStock = finalPriceRaw === 0;
+  const hasDiscount = originalPriceRaw > finalPriceRaw && !isOutOfStock;
+
+  const discountPercent = hasDiscount
+    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+    : (nominated.discountPercentage || product?.discount?.percent || 0);
+
+  const tickerItems = useMemo(() => {
+    const items: { text: string; icon: any }[] = [];
+    
+    if (salesCount > 0) {
+      items.push({ text: `${salesCount} فروش موفق در یادکچی`, icon: BadgeCheck });
+    }
+    if (isTipax) {
+      items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
+    }
+    if (isDirect) {
+      items.push({ text: 'ارسال مستقیم فروشگاه', icon: Truck });
+    }
+    if (views > 0) {
+      items.push({ text: `${views} بازدید اخیر`, icon: Eye });
+    }
+    
+    return items;
+  }, [isTipax, isDirect, salesCount, views]);
+
+  const tickerLength = tickerItems.length;
+
+  useEffect(() => {
+    if (!isMounted || tickerLength <= 1) return;
+    const interval = setInterval(() => {
+      setFade(false);
+      const timeout = setTimeout(() => {
+        setTickerIndex((prev) => (prev + 1) % tickerLength);
+        setFade(true);
+      }, 300);
+      return () => clearTimeout(timeout);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [tickerLength, isMounted]);
+
+  const getFullUrl = (path: string | null) => {
+    if (!path) return '/placeholder.png';
+    if (path.startsWith('http')) return path;
+    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+  };
+
+  const formatPrice = (value: number) => {
+    return new Intl.NumberFormat('fa-IR').format(value);
+  };
+
+  const handleAddToBasket = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsAdding(true);
+    setTimeout(() => {
+      setIsAdding(false);
+      showToast.success('قطعه با موفقیت به سبد خرید اضافه شد');
+    }, 600);
+  };
+
+  const renderStars = () => {
+    const rating = product?.averageRate || product?.rating?.average || 5;
+    return (
+      <div className="flex items-center gap-1 select-none">
+        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
+        <span className="text-[10px] sm:text-[11px] font-iran-sans font-bold text-foreground">
+          {formatPrice(rating)}
+        </span>
+      </div>
+    );
+  };
+
+  const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
+
+  return (
+    <div className={cn("w-full transition-all select-none", className)}>
+      
+      <Link 
+        href={`/products/${product?.productCode || product?.code}`}
+        className="hidden md:flex w-full h-full flex-col bg-background rounded-xl border hover:border-primary/40 hover:shadow-md p-3 sm:p-3.5 relative select-none"
+        draggable={false}
+      >
+        <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
+          <img
+            src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
+            alt={product?.imageAlt || product?.title || product?.name}
+            draggable={false}
+            className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
+          />
+          
+          {showRating && (
+            <div className="absolute top-2 left-2 dark:bg-zinc-900/85 backdrop-blur-sm px-2 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
+              {renderStars()}
+            </div>
+          )}
+        </div>
+
+        <div className="w-full h-9 mb-1 mt-2 text-right">
+          <h4 className="text-sm font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed">
+            {product?.title || product?.name}
+          </h4>
+        </div>
+
+        {shopName && (
+          <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1 justify-start">
+            <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
+            <span className="font-iran-sans font-medium truncate">فروشگاه: {shopName}</span>
+          </div>
+        )}
+
+        <div className="w-full flex flex-col items-stretch select-none">
+          {isMounted && tickerLength > 0 ? (
+            <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
+              <div className={cn(
+                "flex items-center gap-1.5 transition-opacity duration-300",
+                fade ? "opacity-100" : "opacity-0"
+              )}>
+                <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="truncate font-medium">{tickerItems[tickerIndex]?.text}</span>
+              </div>
+            </div>
+          ) : (
+            isMounted && tickerLength > 0 && <div className="h-6 mt-0.5 w-full shrink-0" />
+          )}
+        </div>
+
+        <div className={cn(
+          "w-full mt-auto pt-2 flex items-center justify-between",
+          isOutOfStock ? "pb-1" : "border-b border-dashed pb-3.5"
+        )}>
+          <div className={cn(
+            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
+            hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}>
+            %{discountPercent}
+          </div>
+
+          <div className="flex flex-col items-end min-w-0">
+            {hasDiscount && originalPriceToman > 0 && (
+              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
+                {formatPrice(originalPriceToman)}
+              </span>
+            )}
+            <div className="flex items-center gap-0.5 mt-0.5">
+              {isOutOfStock ? (
+                <span className="text-sm sm:text-base font-bold font-iran-sans text-destructive">
+                  ناموجود
+                </span>
+              ) : (
+                <>
+                  <span className="text-base sm:text-lg font-black font-iran-sans text-foreground">
+                    {formatPrice(finalPriceToman)}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-iran-sans">تومان</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {!isOutOfStock && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddToBasket}
+            isLoading={isAdding}
+            className="w-full mt-3 rounded-xl text-xs h-9 text-primary border-primary hover:bg-primary/5 shrink-0"
+          >
+            <ShoppingCart className="h-4 w-4 shrink-0" />
+            <span>افزودن به سبد خرید</span>
+          </Button>
+        )}
+      </Link>
+
+      <Link
+        href={`/products/${product?.productCode || product?.code}`}
+        className="md:hidden flex flex-col w-full bg-background rounded-xl border p-3 relative select-none hover:shadow-sm"
+        draggable={false}
+      >
+        <div className="flex w-full items-stretch gap-3">
+          <div className="w-[100px] h-[100px] shrink-0 relative rounded-lg overflow-hidden bg-muted/10">
+            <img
+              src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
+              alt={product?.imageAlt || product?.title || product?.name}
+              draggable={false}
+              className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
+            />
+            {showRating && (
+              <div className="absolute top-1 left-1 dark:bg-zinc-900/85 backdrop-blur-sm px-1.5 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
+                <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400 shrink-0" />
+                <span className="text-[9px] font-iran-sans font-bold text-foreground mr-0.5">
+                  {formatPrice(product.averageRate || 5)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 flex flex-col justify-between min-w-0 text-right">
+            <div className="w-full">
+              <h4 className="text-xs font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed">
+                {product?.title || product?.name}
+              </h4>
+              
+              {shopName && (
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1.5 justify-start">
+                  <Store className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                  <span className="truncate">فروشگاه: {shopName}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full flex items-end justify-between mt-2">
+              <div className={cn(
+                "bg-primary/10 text-primary border border-primary/20 text-[10px] font-black font-iran-sans px-2 py-0.5 rounded-lg",
+                hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
+              )}>
+                %{discountPercent}
+              </div>
+
+              <div className="flex flex-col items-end min-w-0">
+                {hasDiscount && originalPriceToman > 0 && (
+                  <span className="text-[9px] text-zinc-500 line-through font-iran-sans">
+                    {formatPrice(originalPriceToman)}
+                  </span>
+                )}
+                <div className="flex items-center gap-0.5">
+                  {isOutOfStock ? (
+                    <span className="text-xs font-bold font-iran-sans text-destructive">
+                      ناموجود
+                    </span>
+                  ) : (
+                    <>
+                      <span className="text-sm font-black font-iran-sans text-foreground">
+                        {formatPrice(finalPriceToman)}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground font-iran-sans">تومان</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {!isOutOfStock && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddToBasket}
+            isLoading={isAdding}
+            className="w-full mt-3 rounded-xl text-xs h-8 text-primary border-primary hover:bg-primary/5 shrink-0"
+          >
+            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
+            <span>افزودن به سبد خرید</span>
+          </Button>
+        )}
+      </Link>
+
+    </div>
+  );
+}
