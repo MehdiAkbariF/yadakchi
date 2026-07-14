@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useGetNominatedProductsByCategory } from '@/domains/front/product/hooks/product.hooks';
 import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
@@ -13,13 +12,10 @@ import { DealsSlider } from '@/components/features/ProductCard/DealsSlider';
 import { ProductSlider } from '@/components/features/ProductCard/ProductSlider';
 import { BrandSlider } from '@/components/features/Brand/BrandSlider';
 import { ShopSlider } from '@/components/features/Shop/ShopSlider';
+import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@/design-system/utils';
 
 export function HomeContent() {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const { data: rawBanners = [], isLoading: isBannersLoading } = useGetBanners('Home');
   const { data: toolsData, isLoading: isToolsLoading, isError: isToolsError } = useGetNominatedProductsByCategory('car-tools');
   const { data: audioData, isLoading: isAudioLoading, isError: isAudioError } = useGetNominatedProductsByCategory('audio-video-multimedia-system');
@@ -314,40 +310,7 @@ export function HomeContent() {
           showTimer={false}
         />
 
-        {homePageData?.description && (
-          <div className="w-full bg-background border rounded-xl p-4 md:p-6 mt-6 relative overflow-hidden">
-            <div 
-              className={cn(
-                "max-w-none text-justify text-sm leading-relaxed transition-all duration-300 prose dark:prose-invert",
-                isExpanded ? "max-h-none" : "max-h-[160px] overflow-hidden"
-              )}
-              dangerouslySetInnerHTML={{ __html: homePageData.description }}
-            />
-            
-            {!isExpanded && (
-              <div className="absolute bottom-12 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-            )}
-
-            <div className="flex justify-center mt-4">
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
-              >
-                {isExpanded ? (
-                  <>
-                    <span>نمایش کمتر</span>
-                    <ChevronUp className="h-4 w-4" />
-                  </>
-                ) : (
-                  <>
-                    <span>نمایش بیشتر</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
+        <PageDescription htmlContent={homePageData?.description} />
       </div>
 
     </div>

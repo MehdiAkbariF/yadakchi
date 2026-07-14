@@ -4,6 +4,7 @@ import { getBannerService } from '@/domains/front/banner/services/banner.service
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
 import { getShopService } from '@/domains/front/shop/services/shop.service';
+import { getStaticService } from '@/domains/front/static/services/static.service';
 import { getHttpClient } from '@/core/http/client';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
@@ -21,6 +22,7 @@ export default async function HomePage() {
   const productService = getProductService();
   const brandService = getBrandService();
   const shopService = getShopService();
+  const staticService = getStaticService();
   const httpClient = getHttpClient();
 
   try {
@@ -67,6 +69,14 @@ export default async function HomePage() {
           const response = await httpClient.get<any>('/api/Front/GetHomePage');
           return response.data;
         },
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'footer'],
+        queryFn: () => bannerService.getFrontFooter(),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'static-page-categories'],
+        queryFn: () => staticService.getStaticPageCategories(),
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-deals', null],

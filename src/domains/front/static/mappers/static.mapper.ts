@@ -1,5 +1,3 @@
-// src/domains/front/static/mappers/static.mapper.ts
-
 import { 
   StaticPageApiDto, 
   StaticPageCategoryApiDto,
@@ -12,7 +10,6 @@ import {
 } from '../types/dto.types';
 import { 
   StaticPage, 
-
 } from '../types/domain.types';
 import { 
   StaticPageViewModel, 
@@ -74,12 +71,16 @@ export class StaticMapper {
     };
   }
 
-  static toViewCategory(dto: StaticPageCategoryApiDto): StaticPageCategoryViewModel {
+  static toViewCategory(dto: any): any {
     return {
-      id: dto.id,
-      name: dto.name,
-      description: dto.description || null,
-      order: dto.order,
+      id: dto.id || '',
+      title: dto.title || dto.name || '',
+      staticPages: (dto.staticPages || []).map((page: any) => ({
+        id: page.id,
+        title: page.title,
+        englishTitle: page.englishTitle,
+        url: page.url,
+      })),
     };
   }
 
