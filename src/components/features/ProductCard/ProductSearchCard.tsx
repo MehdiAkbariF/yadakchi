@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { Star, Store, BadgeCheck, Truck, Eye, ShoppingCart } from 'lucide-react';
+import { Star, Store, BadgeCheck, Truck, Eye, ShoppingCart, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/primitives/Button/Button';
+import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
 
 interface ProductSearchCardProps {
@@ -22,13 +23,27 @@ export function ProductSearchCard({
   const [tickerIndex, setTickerIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   const [fade, setFade] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
+  const [activeLoading, setActiveLoading] = useState(false);
+
+  const { data: rawBasket } = useGetBasket();
+  const addToBasket = useAddToBasket();
+  const deleteFromBasket = useDeleteFromBasket();
+
+  const rawBasketData = rawBasket as any;
+  const lastValidBasketRef = useRef<any>(null);
+
+  if (rawBasketData && !rawBasketData.isEmpty) {
+    lastValidBasketRef.current = rawBasketData;
+  }
+
+  const basket = rawBasketData && !rawBasketData.isEmpty ? rawBasketData : lastValidBasketRef.current;
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   const nominated = product?.nominatedShopProduct || {};
+  const shopProductId = product?.shopProductId || nominated?.id || null;
   
   const shopName = nominated?.shopTitle || product?.shop?.name || product?.shopTitle || null;
   const isTipax = nominated?.isTipaxShipping || product?.isTipaxShipping || false;
@@ -61,6 +76,20 @@ export function ProductSearchCard({
   const discountPercent = hasDiscount
     ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
     : (nominated.discountPercentage || product?.discount?.percent || 0);
+
+  const basketItem = useMemo(() => {
+    if (!basket || basket.isEmpty || !shopProductId) return null;
+    for (const sub of basket.subBaskets) {
+      const found = sub.items.find((item: any) => item.shopProductId === shopProductId);
+      if (found) return found;
+    }
+    return null;
+  }, [basket, shopProductId]);
+
+  const isInBasket = !!basketItem;
+  const basketQuantity = basketItem?.quantity || 0;
+  
+  const maxLimit = basketItem?.maxQuantity || nominated?.maxQuantityPerOrder || nominated?.quantity || 10;
 
   const tickerItems = useMemo(() => {
     const items: { text: string; icon: any }[] = [];
@@ -108,14 +137,46 @@ export function ProductSearchCard({
     return new Intl.NumberFormat('fa-IR').format(value);
   };
 
-  const handleAddToBasket = (e: React.MouseEvent) => {
+  const handleAddToBasket = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsAdding(true);
-    setTimeout(() => {
-      setIsAdding(false);
-      showToast.success('قطعه با موفقیت به سبد خرید اضافه شد');
-    }, 600);
+    if (!shopProductId || isOutOfStock) return;
+    setActiveLoading(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId, quantity: 1 });
+      showToast.success('قطعه به سبد خرید اضافه شد');
+    } catch (err: any) {
+    } finally {
+      setActiveLoading(false);
+    }
+  };
+
+  const handleIncrease = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!shopProductId || activeLoading || basketQuantity >= maxLimit) return;
+    setActiveLoading(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId, quantity: 1 });
+      showToast.success('تعداد کالا افزایش یافت');
+    } catch (err: any) {
+    } finally {
+      setActiveLoading(false);
+    }
+  };
+
+  const handleDecrease = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!shopProductId || activeLoading) return;
+    setActiveLoading(true);
+    try {
+      await deleteFromBasket.mutateAsync({ shopProductId, quantity: 1 });
+      showToast.success('تعداد کالا کاهش یافت');
+    } catch (err: any) {
+    } finally {
+      setActiveLoading(false);
+    }
   };
 
   const renderStars = () => {
@@ -219,16 +280,45 @@ export function ProductSearchCard({
         </div>
 
         {!isOutOfStock && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAddToBasket}
-            isLoading={isAdding}
-            className="w-full mt-3 rounded-xl text-xs h-9 text-primary border-primary hover:bg-primary/5 shrink-0"
-          >
-            <ShoppingCart className="h-4 w-4 shrink-0" />
-            <span>افزودن به سبد خرید</span>
-          </Button>
+          <div className="w-full mt-3 h-9 shrink-0">
+            {isInBasket ? (
+              <div className="flex items-center border border-primary rounded-xl bg-background p-1 gap-1 shadow-sm h-full justify-between">
+                <button
+                  type="button"
+                  onClick={handleIncrease}
+                  disabled={basketQuantity >= maxLimit || activeLoading}
+                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors disabled:opacity-30"
+                >
+                  <Plus className="h-4.5 w-4.5" />
+                </button>
+                <span className="text-xs font-bold font-iran-sans text-primary">
+                  {activeLoading ? (
+                    <Loader2 className="h-4.5 w-4.5 animate-spin text-primary mx-auto" />
+                  ) : (
+                    new Intl.NumberFormat('fa-IR').format(basketQuantity)
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDecrease}
+                  disabled={activeLoading}
+                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors"
+                >
+                  <Minus className="h-4.5 w-4.5" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddToBasket}
+                isLoading={activeLoading}
+                className="w-full rounded-xl text-xs h-full text-primary border-primary hover:bg-primary/5"
+              >
+                <span>افزودن به سبد خرید</span>
+              </Button>
+            )}
+          </div>
         )}
       </Link>
 
@@ -315,16 +405,45 @@ export function ProductSearchCard({
         </div>
 
         {!isOutOfStock && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAddToBasket}
-            isLoading={isAdding}
-            className="w-full mt-3 rounded-xl text-xs h-8 text-primary border-primary hover:bg-primary/5 shrink-0"
-          >
-            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-            <span>افزودن به سبد خرید</span>
-          </Button>
+          <div className="w-full mt-3 h-8 shrink-0">
+            {isInBasket ? (
+              <div className="flex items-center border border-primary rounded-xl bg-background p-1 gap-1 shadow-sm h-full justify-between">
+                <button
+                  type="button"
+                  onClick={handleIncrease}
+                  disabled={basketQuantity >= maxLimit || activeLoading}
+                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors disabled:opacity-30"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+                <span className="text-xs font-bold font-iran-sans text-primary">
+                  {activeLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary mx-auto" />
+                  ) : (
+                    new Intl.NumberFormat('fa-IR').format(basketQuantity)
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleDecrease}
+                  disabled={activeLoading}
+                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddToBasket}
+                isLoading={activeLoading}
+                className="w-full rounded-xl text-xs h-full text-primary border-primary hover:bg-primary/5"
+              >
+                <span>افزودن به سبد خرید</span>
+              </Button>
+            )}
+          </div>
         )}
       </Link>
 

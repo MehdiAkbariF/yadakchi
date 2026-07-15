@@ -1,7 +1,6 @@
-// src/domains/front/product/types/domain.types.ts
-
 export interface Product {
   id: string;
+  shopProductId?: string;
   code: number;
   name: ProductName;
   description: string;

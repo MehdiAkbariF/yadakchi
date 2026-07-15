@@ -1,90 +1,117 @@
-// src/domains/front/basket/mappers/basket.mapper.ts
-
 import { 
-  BasketApiDto, 
-  BasketItemApiDto,
   AddToBasketRequestDto,
   DeleteFromBasketRequestDto
 } from '../types/dto.types';
+
 import { 
-  Basket, 
-  BasketItem,
-} from '../types/domain.types';
-import { 
-  BasketViewModel, 
-  BasketItemViewModel,
   AddToBasketRequest,
   DeleteFromBasketRequest
 } from '../types/view.types';
 
 export class BasketMapper {
-  static toDomain(dto: BasketApiDto): Basket {
-    const items = dto.items.map(item => this.toDomainItem(item));
-    
+  static toDomain(dto: any): any {
+    const subBaskets = (dto.subBaskets || []).map((sb: any) => ({
+      id: sb.id,
+      shop: {
+        title: sb.shop?.shopTitle || '',
+        logo: sb.shop?.logo || '',
+      },
+      items: (sb.subBasketItems || []).map((item: any) => {
+        const sp = item.shopProduct || {};
+        const prod = sp.product || {};
+        return {
+          id: item.id,
+          shopProductId: sp.id,
+          quantity: item.quantity,
+          originalPrice: item.originalPrice,
+          discountAmount: item.discountAmount,
+          finalUnitPrice: item.finalUnitPrice,
+          finalTotalPrice: item.finalTotalPrice,
+          warranty: sp.warrantySupport?.title || '',
+          maxQuantity: sp.maxQuantityPerOrder || sp.quantity || 10,
+          partNumber: sp.partNumber || '',
+          type: sp.type || 'New',
+          dayOfDelivery: sp.dayOfDelivery || 1,
+          isTipaxShipping: !!sp.isTipaxShipping,
+          isDirectShipping: !!sp.isDirectShipping,
+          product: {
+            code: prod.productCode,
+            title: prod.title,
+            image: prod.image,
+          }
+        };
+      })
+    }));
+
+    let totalPrice = 0;
+    let totalDiscount = 0;
+    let finalPrice = 0;
+
+    subBaskets.forEach((sb: any) => {
+      sb.items.forEach((item: any) => {
+        totalPrice += item.originalPrice * item.quantity;
+        totalDiscount += item.discountAmount * item.quantity;
+        finalPrice += item.finalTotalPrice;
+      });
+    });
+
     return {
       id: dto.id,
-      userId: dto.userId,
-      items,
+      userLocationId: dto.userLocationId,
+      subBaskets,
       total: {
-        totalPrice: dto.totalPrice,
-        totalDiscount: dto.totalDiscount,
-        finalPrice: dto.finalPrice,
+        totalPrice,
+        totalDiscount,
+        finalPrice,
       },
       summary: {
-        itemCount: dto.itemCount,
-        shopCount: this.getShopCount(items),
-        uniqueProductCount: this.getUniqueProductCount(items),
+        itemCount: subBaskets.reduce((acc: number, sb: any) => acc + sb.items.reduce((sum: number, item: any) => sum + item.quantity, 0), 0),
       },
-      metadata: {
-        createdAt: new Date(dto.createdAt),
-        updatedAt: new Date(dto.updatedAt),
-      },
+      isEmpty: subBaskets.length === 0 || subBaskets.every((sb: any) => sb.items.length === 0),
     };
   }
 
-  private static toDomainItem(dto: BasketItemApiDto): BasketItem {
-    const price = {
-      unitPrice: dto.price,
-      discountPrice: dto.discountPrice,
-      hasDiscount: dto.hasDiscount,
-      discountPercent: dto.discountPercent,
-      totalPrice: dto.price * dto.quantity,
-      totalDiscount: dto.hasDiscount && dto.discountPrice 
-        ? (dto.price - dto.discountPrice) * dto.quantity 
-        : 0,
-      finalPrice: dto.hasDiscount && dto.discountPrice
-        ? dto.discountPrice * dto.quantity
-        : dto.price * dto.quantity,
-    };
-
-    return {
-      shopProductId: dto.shopProductId,
-      product: {
-        id: dto.productId,
-        name: dto.productName,
-        code: dto.productCode,
-        image: dto.productImage,
-      },
+  static toView(domain: any): any {
+    const subBaskets = domain.subBaskets.map((sb: any) => ({
+      id: sb.id,
       shop: {
-        id: dto.shopId,
-        name: dto.shopName,
+        title: sb.shop.title,
+        logo: sb.shop.logo,
       },
-      quantity: dto.quantity,
-      price,
-      inventory: {
-        maxQuantity: dto.maxQuantity,
-        isInStock: dto.isInStock,
-      },
-      type: dto.type.toUpperCase() as 'NEW' | 'STOCK' | 'TAKEOFF',
-    };
-  }
+      items: sb.items.map((item: any) => ({
+        id: item.id,
+        shopProductId: item.shopProductId,
+        quantity: item.quantity,
+        warranty: item.warranty,
+        maxQuantity: item.maxQuantity,
+        partNumber: item.partNumber || '',
+        type: item.type === 'New' ? 'نو' : item.type === 'Stock' ? 'استوک' : 'زیرصفری',
+        dayOfDelivery: item.dayOfDelivery || 1,
+        isTipaxShipping: !!item.isTipaxShipping,
+        isDirectShipping: !!item.isDirectShipping,
+        canIncrease: item.quantity < item.maxQuantity,
+        canDecrease: item.quantity > 1,
+        product: {
+          code: item.product.code,
+          title: item.product.title,
+          image: item.product.image,
+        },
+        price: {
+          unitPrice: this.formatPrice(item.originalPrice),
+          discountPrice: item.discountAmount > 0 ? this.formatPrice(item.finalUnitPrice) : null,
+          hasDiscount: item.discountAmount > 0,
+          totalPrice: this.formatPrice(item.originalPrice * item.quantity),
+          finalTotalPrice: this.formatPrice(item.finalTotalPrice),
+          originalPriceRaw: item.originalPrice,
+          finalTotalPriceRaw: item.finalTotalPrice,
+        }
+      }))
+    }));
 
-  static toView(domain: Basket): BasketViewModel {
-    const items = domain.items.map(item => this.toViewItem(item));
-    
     return {
       id: domain.id,
-      items,
+      userLocationId: domain.userLocationId,
+      subBaskets,
       total: {
         totalPrice: this.formatPrice(domain.total.totalPrice),
         totalDiscount: this.formatPrice(domain.total.totalDiscount),
@@ -94,44 +121,7 @@ export class BasketMapper {
         finalPriceRaw: domain.total.finalPrice,
       },
       summary: domain.summary,
-      isEmpty: domain.items.length === 0,
-    };
-  }
-
-  private static toViewItem(item: BasketItem): BasketItemViewModel {
-    const price = item.price;
-    
-    return {
-      shopProductId: item.shopProductId,
-      product: item.product,
-      shop: item.shop,
-      quantity: item.quantity,
-      price: {
-        unitPrice: this.formatPrice(price.unitPrice),
-        discountPrice: price.discountPrice ? this.formatPrice(price.discountPrice) : null,
-        hasDiscount: price.hasDiscount,
-        discountPercent: price.discountPercent || null,
-        totalPrice: this.formatPrice(price.totalPrice),
-        totalDiscount: this.formatPrice(price.totalDiscount),
-        finalPrice: this.formatPrice(price.finalPrice),
-        unitPriceRaw: price.unitPrice,
-        discountPriceRaw: price.discountPrice || null,
-        totalPriceRaw: price.totalPrice,
-        totalDiscountRaw: price.totalDiscount,
-        finalPriceRaw: price.finalPrice,
-      },
-      inventory: {
-        maxQuantity: item.inventory.maxQuantity,
-        isInStock: item.inventory.isInStock,
-        statusText: item.inventory.isInStock ? 'موجود' : 'ناموجود',
-      },
-      type: {
-        value: item.type,
-        label: item.type === 'NEW' ? 'جدید' : item.type === 'STOCK' ? 'موجود' : 'حراج',
-        badge: item.type === 'NEW' ? 'success' : item.type === 'STOCK' ? 'info' : 'warning',
-      },
-      canIncrease: item.quantity < item.inventory.maxQuantity && item.inventory.isInStock,
-      canDecrease: item.quantity > 1,
+      isEmpty: domain.isEmpty,
     };
   }
 
@@ -147,16 +137,6 @@ export class BasketMapper {
       shopProductId: request.shopProductId,
       quantity: request.quantity,
     };
-  }
-
-  private static getShopCount(items: BasketItem[]): number {
-    const shopIds = new Set(items.map(item => item.shop.id));
-    return shopIds.size;
-  }
-
-  private static getUniqueProductCount(items: BasketItem[]): number {
-    const productIds = new Set(items.map(item => item.product.id));
-    return productIds.size;
   }
 
   private static formatPrice(price: number): string {

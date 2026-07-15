@@ -33,6 +33,7 @@ export class ProductMapper {
 
     return {
       id: dto.id,
+      shopProductId: nominated.id || dto.shopProductId || '',
       code: dto.productCode || dto.code || 0,
       name: {
         value: dto.title || dto.name || '',
@@ -87,6 +88,7 @@ export class ProductMapper {
 
     return {
       id: domain.id,
+      shopProductId: domain.shopProductId || '',
       code: domain.code,
       name: domain.name.value,
       englishTitle: domain.name.english,

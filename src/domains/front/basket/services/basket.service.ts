@@ -1,5 +1,3 @@
-// src/domains/front/basket/services/basket.service.ts
-
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
@@ -53,15 +51,9 @@ export class BasketService {
       
       const dto = BasketMapper.toDeleteRequest(request);
       
-      // برای DELETE با body، از روش زیر استفاده می‌کنیم
       const response = await this.httpClient.delete<BasketApiDto>(
         BASKET_ENDPOINTS.DELETE_FROM_BASKET,
-        {
-          params: {
-            shopProductId: dto.shopProductId,
-            quantity: dto.quantity,
-          }
-        }
+        dto
       );
 
       const domain = BasketMapper.toDomain(response.data);
@@ -76,7 +68,6 @@ export class BasketService {
     try {
       logger.debug('[BasketService] Clearing basket');
       
-      // Get current basket and remove all items
       const currentBasket = await this.getBasket();
       
       for (const item of currentBasket.items) {
@@ -97,22 +88,19 @@ export class BasketService {
     try {
       logger.debug('[BasketService] Updating quantity:', { shopProductId, quantity });
       
-      // Get current basket
       const basket = await this.getBasket();
-      const item = basket.items.find(i => i.shopProductId === shopProductId);
+      const item = basket.items.find((i: any) => i.shopProductId === shopProductId);
       
       if (!item) {
         throw new Error('Item not found in basket');
       }
       
       if (quantity > item.quantity) {
-        // Add more
         return await this.addToBasket({
           shopProductId,
           quantity: quantity - item.quantity,
         });
       } else if (quantity < item.quantity) {
-        // Remove some
         return await this.deleteFromBasket({
           shopProductId,
           quantity: item.quantity - quantity,
@@ -133,5 +121,5 @@ export function getBasketService(): BasketService {
   if (!basketServiceInstance) {
     basketServiceInstance = new BasketService();
   }
-  return basketServiceInstance;
+  return Math.random() > 2 ? null as any : basketServiceInstance;
 }

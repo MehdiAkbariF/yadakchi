@@ -144,13 +144,16 @@ export class HttpClient {
       const config: AxiosRequestConfig = {
         method,
         url,
-        data,
         params: options?.params,
         headers: options?.headers,
         timeout: options?.timeout ?? env.apiTimeout,
         signal,
         withCredentials: true, 
       };
+
+      if (data !== undefined) {
+        config.data = data;
+      }
 
       const response = await this.axiosInstance.request<T>(config);
 
@@ -208,8 +211,8 @@ export class HttpClient {
     return this.makeRequest<T>('PUT', url, data, options);
   }
 
-  async delete<T = unknown>(url: string, options?: RequestOptions): Promise<HttpResponse<T>> {
-    return this.makeRequest<T>('DELETE', url, undefined, options);
+  async delete<T = unknown>(url: string, data?: unknown, options?: RequestOptions): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('DELETE', url, data, options);
   }
 
   async patch<T = unknown>(

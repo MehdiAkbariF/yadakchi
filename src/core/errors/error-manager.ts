@@ -1,9 +1,8 @@
-// src/core/errors/error-manager.ts
-
 import { ApiError } from './api-error';
 import { ErrorType } from './types/error.types';
 import { ErrorNormalizer } from './error-normalizer';
 import { logger } from '../utils/logger';
+import { showToast } from '../utils/toast';
 
 export interface ErrorHandler {
   canHandle(error: ApiError): boolean;
@@ -31,6 +30,7 @@ export class ErrorManager {
       canHandle: (error) => error.type === ErrorType.VALIDATION,
       handle: (error) => {
         logger.debug('Validation error:', error.getFieldErrors());
+        this.triggerToastIfNeeded(error);
       },
       getPriority: () => 10,
     });
@@ -55,6 +55,7 @@ export class ErrorManager {
       canHandle: (error) => error.type === ErrorType.RATE_LIMIT,
       handle: (error) => {
         logger.warn('Rate limit exceeded:', error.message);
+        this.triggerToastIfNeeded(error);
       },
       getPriority: () => 7,
     });
@@ -63,6 +64,7 @@ export class ErrorManager {
       canHandle: (error) => error.isNetworkError(),
       handle: (error) => {
         logger.error('Network error:', error.message);
+        this.triggerToastIfNeeded(error);
       },
       getPriority: () => 6,
     });
@@ -85,9 +87,20 @@ export class ErrorManager {
           userMessage: error.userMessage,
           details: error.details,
         });
+        this.triggerToastIfNeeded(error);
       },
       getPriority: () => 0,
     });
+  }
+
+  private triggerToastIfNeeded(error: ApiError): void {
+    const originalError = error.originalError as any;
+    const method = originalError?.config?.method?.toLowerCase();
+    const isMutation = method && method !== 'get';
+
+    if (isMutation && error.type !== ErrorType.ABORTED) {
+      showToast.error(error.userMessage);
+    }
   }
 
   registerHandler(handler: ErrorHandler): void {

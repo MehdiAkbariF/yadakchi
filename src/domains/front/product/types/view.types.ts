@@ -1,7 +1,6 @@
-// src/domains/front/product/types/view.types.ts
-
 export interface ProductViewModel {
   id: string;
+  shopProductId?: string;
   code: number;
   name: string;
   englishTitle: string;

@@ -1,22 +1,17 @@
-// src/core/errors/error-normalizer.ts
-
 import axios, { AxiosError } from 'axios';
 import { ApiError } from './api-error';
 import { ErrorType, ErrorDetail } from './types/error.types';
 
 export class ErrorNormalizer {
   static normalize(error: unknown): ApiError {
-    // Axios Error
     if (axios.isAxiosError(error)) {
       return this.normalizeAxiosError(error);
     }
 
-    // API Error Response
     if (this.isApiErrorResponse(error)) {
       return this.normalizeApiResponse(error);
     }
 
-    // DOM Exception (AbortError)
     if (this.isAbortError(error)) {
       return new ApiError({
         type: ErrorType.ABORTED,
@@ -26,7 +21,6 @@ export class ErrorNormalizer {
       });
     }
 
-    // Standard Error - استفاده از type assertion
     if (this.isErrorObject(error)) {
       const err = error as Error;
       return new ApiError({
@@ -37,7 +31,6 @@ export class ErrorNormalizer {
       });
     }
 
-    // Unknown error
     return new ApiError({
       type: ErrorType.UNKNOWN,
       message: 'Unknown error occurred',
@@ -46,9 +39,7 @@ export class ErrorNormalizer {
     });
   }
 
-  // Type guard برای تشخیص Error Object
   private static isErrorObject(error: unknown): error is Error {
-    // بررسی اینکه error یک شیء است و property message دارد
     return (
       typeof error === 'object' &&
       error !== null &&
@@ -57,7 +48,6 @@ export class ErrorNormalizer {
     );
   }
 
-  // Type guard برای تشخیص AbortError
   private static isAbortError(error: unknown): error is DOMException {
     return (
       typeof error === 'object' &&
@@ -68,27 +58,24 @@ export class ErrorNormalizer {
   }
 
   private static normalizeAxiosError(error: AxiosError): ApiError {
-    // Network error
     if (error.code === 'ERR_NETWORK') {
       return new ApiError({
         type: ErrorType.NETWORK,
         message: error.message,
-        userMessage: 'ارتباط با سرور برقرار نشد.',
+        userMessage: 'ارتباط با سرور برقرار نشد. اتصال اینترنت خود را بررسی کنید.',
         originalError: error,
       });
     }
 
-    // Timeout
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       return new ApiError({
         type: ErrorType.TIMEOUT,
         message: error.message,
-        userMessage: 'درخواست زمان‌بر بود.',
+        userMessage: 'درخواست زمان‌بر بود. مجدداً تلاش کنید.',
         originalError: error,
       });
     }
 
-    // Response error
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data as any;
@@ -106,7 +93,6 @@ export class ErrorNormalizer {
       });
     }
 
-    // Request error (no response)
     return new ApiError({
       type: ErrorType.UNKNOWN,
       message: error.message,
@@ -165,21 +151,19 @@ export class ErrorNormalizer {
     userMessage?: string;
     details?: ErrorDetail[];
   } | null {
-    if (!data || typeof data !== 'object') return null;
+    if (!data) return null;
 
-    if (data.message) {
-      return {
-        message: data.message,
-        userMessage: data.userMessage || data.user_message,
-        details: data.errors || data.details,
-      };
+    if (typeof data === 'string') {
+      return { message: data, userMessage: data };
     }
 
-    if (data.error) {
+    const rawMsg = data.message || data.error || data.errorMessage || data.error_message || data.userMessage || data.user_message || (typeof data.errors === 'string' ? data.errors : '') || '';
+
+    if (rawMsg) {
       return {
-        message: data.error,
-        userMessage: data.userMessage || data.user_message,
-        details: data.errors || data.details,
+        message: rawMsg,
+        userMessage: rawMsg,
+        details: Array.isArray(data.errors) ? data.errors : undefined
       };
     }
 
