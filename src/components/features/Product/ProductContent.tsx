@@ -12,6 +12,7 @@ import { ProductCommentsSection } from './components/ProductCommentsSection';
 import { ProductInquiriesSection } from './components/ProductInquiriesSection';
 import { ProductSideInvoice } from './components/ProductSideInvoice';
 import { ProductPageSkeleton } from './components/ProductPageSkeleton';
+import { ProductGallery } from './components/ProductGallery';
 
 interface ProductContentProps {
   productCode: number;
@@ -70,39 +71,46 @@ export function ProductContent({ productCode }: ProductContentProps) {
     }
   };
 
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
+  const galleryImages = product.gallery.length > 0 ? product.gallery : [product.image];
 
   return (
     <div className="w-full flex flex-col gap-8 text-right select-none" dir="rtl">
       
       <div className="w-full flex flex-col lg:flex-row items-start gap-8">
         
-        <div className="flex-1 flex flex-col gap-6 w-full lg:max-w-[70%]">
+        <div className="flex-1 flex flex-col w-full lg:max-w-[70%] gap-6">
           
-          <ProductHeader 
-            product={product} 
-            onScrollToComments={() => handleScrollToSection(commentsRef)}
-            onScrollToInquiries={() => handleScrollToSection(inquiriesRef)}
-          />
+          <div className="w-full flex flex-col md:flex-row gap-6 md:gap-8">
+            
+            <div className="w-full md:w-[45%] shrink-0">
+              <ProductGallery 
+                images={galleryImages} 
+                title={product.title} 
+              />
+            </div>
 
-          <ConditionSelector 
-            selectedCondition={selectedCondition} 
-            onChangeCondition={(cond) => {
-              setSelectedCondition(cond);
-              setActiveSellerId(null);
-            }}
-            sellersGroup={sellersGroup}
-          />
+            <div className="flex-1 min-w-0 flex flex-col gap-5">
+              <ProductHeader 
+                product={product} 
+                onScrollToComments={() => handleScrollToSection(commentsRef)}
+                onScrollToInquiries={() => handleScrollToSection(inquiriesRef)}
+              />
 
-          <SpecHighlights specGroups={product.specGroups} />
+              <ConditionSelector 
+                selectedCondition={selectedCondition} 
+                onChangeCondition={(cond) => {
+                  setSelectedCondition(cond);
+                  setActiveSellerId(null);
+                }}
+                sellersGroup={sellersGroup}
+              />
 
-          <PickupAlert />
+              <SpecHighlights specGroups={product.specGroups} />
+
+              <PickupAlert />
+            </div>
+
+          </div>
 
           <SellersList 
             activeSellers={activeSellers}
@@ -110,17 +118,17 @@ export function ProductContent({ productCode }: ProductContentProps) {
             onSelectSeller={(id) => setActiveSellerId(id)}
           />
 
-          <div className="border-b flex items-center gap-6 overflow-x-auto no-scrollbar py-2 w-full mt-4">
-            <button onClick={() => handleScrollToSection(introRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors">معرفی کالا</button>
-            <button onClick={() => handleScrollToSection(specsRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors">مشخصات فنی</button>
-            <button onClick={() => handleScrollToSection(commentsRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors">امتیاز و نظرات کاربران</button>
-            <button onClick={() => handleScrollToSection(inquiriesRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors">پرسش و پاسخ</button>
+          <div className="border-b flex items-center gap-6 overflow-x-auto no-scrollbar py-2 w-full mt-6">
+            <button onClick={() => handleScrollToSection(introRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors animate-none outline-none">معرفی کالا</button>
+            <button onClick={() => handleScrollToSection(specsRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors animate-none outline-none">مشخصات فنی</button>
+            <button onClick={() => handleScrollToSection(commentsRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors animate-none outline-none">امتیاز و نظرات کاربران</button>
+            <button onClick={() => handleScrollToSection(inquiriesRef)} className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground hover:text-primary pb-2 border-b-2 border-transparent hover:border-primary shrink-0 transition-colors animate-none outline-none">پرسش و پاسخ</button>
           </div>
 
           <div ref={introRef} className="pt-6">
             <h3 className="text-sm md:text-base font-bold font-iran-yekan text-foreground mb-3">معرفی کالا</h3>
             <div 
-              className="text-xs md:text-sm leading-relaxed text-muted-foreground text-justify"
+              className="text-xs md:text-sm leading-relaxed text-muted-foreground text-justify font-iran-sans"
               dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
             />
           </div>
@@ -140,14 +148,6 @@ export function ProductContent({ productCode }: ProductContentProps) {
         </div>
 
         <div className="w-full lg:w-[30%] shrink-0 lg:sticky lg:top-[132px] flex flex-col gap-6">
-          <div className="w-full aspect-[4/3] rounded-2xl border p-4 bg-background flex items-center justify-center overflow-hidden shadow-sm">
-            <img 
-              src={getFullUrl(product.image)} 
-              alt={product.imageAlt} 
-              className="w-full h-full object-contain"
-            />
-          </div>
-
           {currentSelectedSeller && (
             <ProductSideInvoice 
               product={product}

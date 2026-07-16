@@ -70,7 +70,8 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         </div>
       </div>
 
-      <Typography variant="h3" className="font-iran-yekan font-extrabold text-foreground leading-relaxed">
+      <Typography variant="h3"
+       className="font-iran-yekan font-extrabold text-foreground leading-relaxed text-right">
         {product.title}
       </Typography>
 

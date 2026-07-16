@@ -3,23 +3,18 @@ import { getServerCurrentUser } from '@/domains/auth/server.auth';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ProductContent } from '@/components/features/Product/ProductContent';
+import { getProductUrl } from '@/core/utils/formatters';
 
 interface ProductPageProps {
-  params: { slug: string | string[] };
+  params: { slug: string[] };
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const rawSlug = params.slug;
-  let firstSegment = '';
-
-  if (Array.isArray(rawSlug)) {
-    firstSegment = rawSlug[0] ? decodeURIComponent(rawSlug[0]) : '';
-  } else if (typeof rawSlug === 'string') {
-    firstSegment = decodeURIComponent(rawSlug);
-  }
-
+  const slugArray = params.slug || [];
+  const firstSegment = slugArray[0] ? decodeURIComponent(slugArray[0]) : '';
+  
   let match = firstSegment.match(/ykp-(\d+)/);
   let productCode = match ? Number(match[1]) : null;
 
@@ -46,6 +41,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       notFound();
     }
 
+    const correctUrl = getProductUrl(productCode, pageData.product.title);
+    const currentPath = `/product/${slugArray.map(decodeURIComponent).join('/')}`;
+
+    if (decodeURIComponent(currentPath) !== decodeURIComponent(correctUrl)) {
+      redirect(correctUrl);
+    }
+
     queryClient.setQueryData(['front', 'products', 'page-data', productCode], pageData);
 
     const productId = pageData.product.id;
@@ -69,6 +71,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       }),
     ]);
   } catch (error) {
+    if (error && typeof error === 'object' && 'digest' in error && (error as any).digest?.startsWith('NEXT_REDIRECT')) {
+      throw error;
+    }
     console.error("====================================================");
     console.error("[SERVER DETAILED ERROR ON PRODUCT DETAILS PAGE]:", error);
     console.error("====================================================");

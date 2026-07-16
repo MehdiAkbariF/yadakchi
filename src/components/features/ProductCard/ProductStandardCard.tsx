@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Star, Store, BadgeCheck, Truck, Eye } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getProductUrl } from '@/core/utils/formatters';
 
 interface ProductStandardCardProps {
   product: any;
@@ -140,10 +141,11 @@ export function ProductStandardCard({
   };
 
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
+  const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
 
   return (
     <Link 
-      href={`/product/${product?.productCode || product?.code}`} 
+      href={productCardUrl} 
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}
@@ -162,7 +164,7 @@ export function ProductStandardCard({
             src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
             alt={product?.imageAlt || product?.title || product?.name}
             draggable={false}
-            className="w-full h-full object-contain rounded-lg hover:scale-[1.01] transition-transform duration-500 absolute inset-0 select-none"
+            className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
           />
           
           {showRating && (

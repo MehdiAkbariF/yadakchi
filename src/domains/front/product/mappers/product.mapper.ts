@@ -20,6 +20,7 @@ import {
   ProductDto,
   ShopProductDto
 } from '../types/dto.types';
+import { getProductUrl } from '@/core/utils/formatters';
 
 export class ProductMapper {
   static toDomain(dto: any): Product {
@@ -294,7 +295,7 @@ export class ProductMapper {
         id: b.id,
         title: b.title,
         englishTitle: b.englishTitle,
-        url: `/categories/${b.englishTitle}`
+        url: getProductUrl(dto.productCode, dto.title)
       }))
     };
   }
