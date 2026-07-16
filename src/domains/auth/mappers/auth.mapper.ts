@@ -1,5 +1,3 @@
-// src/domains/auth/mappers/auth.mapper.ts
-
 import { User } from '../types/auth.types';
 
 export class AuthMapper {
@@ -39,27 +37,25 @@ export class AuthMapper {
         province: l.province || '',
         isDefault: l.isDefault || false,
       })),
+      isOrganizationInfoConfirmed: dto.isOrganizationInfoConfirmed || false,
+      isOrganizationNoticeDocumentConfirmed: dto.isOrganizationNoticeDocumentConfirmed || false,
     };
   }
 
-  // متد بررسی وجود یک نقش خاص در آرایه نقش‌های کاربر
   static hasRole(user: User, roleName: string): boolean {
     return (user.roles || []).some(
       r => r.roleName.toLowerCase() === roleName.toLowerCase()
     );
   }
 
-  // متد کمکی برای بررسی نقش ادمین
   static isAdmin(user: User): boolean {
     return this.hasRole(user, 'Admin');
   }
 
-  // متد کمکی برای بررسی نقش فروشنده
   static isSeller(user: User): boolean {
     return this.hasRole(user, 'Seller');
   }
 
-  // متد بررسی برخورداری کاربر از یک دسترسی صریح خاص (Claim)
   static hasClaim(user: User, claim: string): boolean {
     return (user.roles || []).some(
       r => (r.claims || []).some(c => c.toLowerCase() === claim.toLowerCase())

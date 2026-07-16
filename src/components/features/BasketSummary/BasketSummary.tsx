@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
-import { ShoppingCart, Loader2 } from 'lucide-react';
+import { useGetBasket, useCheckoutBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { BasketItemRow } from './components/BasketItemRow';
+import { BasketInvoice } from './components/BasketInvoice';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { useRouter } from 'next/navigation';
+import { ShoppingCart, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/primitives/Button';
 import { Typography } from '@/components/primitives/Typography';
-import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
-import { BasketMerchantGroup } from './components/BasketMerchantGroup';
-import { BasketInvoice } from './components/BasketInvoice';
+import { showToast } from '@/core/utils/toast';
+import Link from 'next/link';
 
 export function BasketSummary() {
+  const router = useRouter();
   const { data: basketData, isLoading, isFetching } = useGetBasket();
+  const checkoutBasket = useCheckoutBasket();
   const basket = basketData as any;
 
   if (isLoading || (isFetching && !basket)) {
-    return (
-      <div className="w-full min-h-[400px] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="text-sm font-medium font-iran-sans text-muted-foreground">در حال بارگذاری سبد خرید...</span>
-      </div>
-    );
+    return <PageLoading message="در حال بارگذاری سبد خرید شما..." />;
   }
 
   if (!basket || basket.isEmpty) {
@@ -39,16 +39,42 @@ export function BasketSummary() {
     );
   }
 
+  const allItems = basket.subBaskets.flatMap((sub: any) => sub.items);
+
+  const handleContinue = async () => {
+    try {
+      await checkoutBasket.mutateAsync(undefined);
+      router.push('/checkout');
+    } catch (err: any) {
+      showToast.error('خطا در فرآیند آماده‌سازی فاکتور خرید');
+    }
+  };
+
+  const leftPriceContent = (
+    <div className="flex flex-col text-right">
+      <span className="text-[10px] text-muted-foreground font-iran-sans mb-0.5">جمع کل سبد خرید:</span>
+      <span className="text-sm font-black text-foreground font-iran-sans">{basket.total.finalPrice}</span>
+    </div>
+  );
+
   return (
     <div className="w-full flex flex-col lg:flex-row items-start gap-6 md:gap-8 select-none">
-      <div className="flex-1 flex flex-col gap-6 w-full">
-        {basket.subBaskets.map((sub: any) => (
-          <BasketMerchantGroup key={sub.id} sub={sub} />
+      <div className="flex-1 flex flex-col w-full bg-background border rounded-xl shadow-sm divide-y divide-zinc-100 overflow-hidden">
+        {allItems.map((item: any) => (
+          <BasketItemRow key={item.id} item={item} />
         ))}
       </div>
       <BasketInvoice basket={basket} />
+
+      <MobileBottomAction
+        label="ادامه فرآیند خرید"
+        leftContent={leftPriceContent}
+        onClick={handleContinue}
+        isLoading={checkoutBasket.isPending}
+        icon={<ArrowLeft className="h-4 w-4" />}
+      />
     </div>
   );
 }
 
-export default BasketSummary
+export default BasketSummary;

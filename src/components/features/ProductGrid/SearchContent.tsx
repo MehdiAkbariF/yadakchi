@@ -9,9 +9,9 @@ import { ProductSearchCard } from '../ProductCard/ProductSearchCard';
 import { ProductCardSkeleton } from '../ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { BottomSheet } from '@/components/composites/BottomSheet/BottomSheet';
+import { Typography } from '@/components/primitives/Typography';
 import { ShoppingBag, Check } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { Typography } from '@/components/primitives/Typography';
 
 const SORT_OPTIONS = [
   { value: 'Selected', label: 'منتخب' },
@@ -50,18 +50,16 @@ export function SearchContent() {
   return (
     <div className="w-full flex flex-col gap-6 relative">
       
-      <div className="md:hidden">
-        <SearchHeader
-          totalCount={totalCount}
-          currentSort={filters.orderType || 'Selected'}
-          onSortChange={(sort) => setFilter('sort', sort)}
-          filters={filters}
-          onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
-          onOpenMobileSort={() => setIsMobileSortOpen(true)}
-          searchTitle={filters.searchTitle}
-          isMobileSticky={true}
-        />
-      </div>
+      <SearchHeader
+        totalCount={totalCount}
+        currentSort={filters.orderType || 'Selected'}
+        onSortChange={(sort) => setFilter('sort', sort)}
+        filters={filters}
+        onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
+        onOpenMobileSort={() => setIsMobileSortOpen(true)}
+        searchTitle={filters.searchTitle}
+        isMobileSticky={true}
+      />
 
       <div className="w-full flex items-start gap-6 md:gap-8">
         

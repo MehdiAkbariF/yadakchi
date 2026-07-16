@@ -1,5 +1,3 @@
-// src/components/features/Banner/BannerSlider.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,10 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { BannerGroup, BannerItem } from './Banner';
 
 interface BannerSliderProps {
-  group?: BannerGroup;
+  group?: any;
   className?: string;
   autoPlayInterval?: number;
   aspectRatio?: string;
@@ -20,12 +17,11 @@ export function BannerSlider({
   group, 
   className, 
   autoPlayInterval = 5000,
-  aspectRatio = 'aspect-[16/9] lg:aspect-[16/7]'
+  aspectRatio = 'aspect-[16/9] md:aspect-[16/7.5] lg:aspect-[16/7]'
 }: BannerSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
 
-  // هوک ۱: ثبت وضعیت مانت شدن کلاینت در اولین خطوط
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -38,17 +34,11 @@ export function BannerSlider({
     return `${base}${cleanPath}`;
   };
 
-  const desktopSlides = group?.banners ? group.banners.filter((b) => b.size === 'Desktop') : [];
-  const mobileSlides = group?.banners ? group.banners.filter((b) => b.size === 'Mobile') : [];
+  if (!group || !group.banners || group.banners.length === 0) return null;
 
-  // محاسبه اسلایدهای فعال بر اساس درگاه مرورگر با تضمین پایداری در SSR
-  const activeSlides = isMounted && typeof window !== 'undefined' && window.innerWidth < 768 
-    ? (mobileSlides.length > 0 ? mobileSlides : desktopSlides)
-    : (desktopSlides.length > 0 ? desktopSlides : mobileSlides);
+  const slides = group.banners;
+  const totalSlides = slides.length;
 
-  const totalSlides = activeSlides.length;
-
-  // هوک ۲: ثانیه‌شمار تغییر اسلایدها (unconditional - بدون شرط خروج زودهنگام قبل از هوک)
   useEffect(() => {
     if (!isMounted || totalSlides <= 1) return;
     const interval = setInterval(() => {
@@ -57,16 +47,10 @@ export function BannerSlider({
     return () => clearInterval(interval);
   }, [totalSlides, autoPlayInterval, isMounted]);
 
-  // کنترل موارد استثنای داده‌های خالی
-  if (!group || !group.banners || group.banners.length === 0) return null;
-
-  // ۲. رندر خروجی استاتیک سرور (SSR) پس از اجرای تمامی هوک‌ها
   if (!isMounted) {
-    const initialSlide = desktopSlides[0] || group.banners[0];
-    if (!initialSlide) return null;
-
-    const initialElement = (
-      <div className={cn("relative w-full overflow-hidden rounded-2xl shadow-sm", aspectRatio)}>
+    const initialSlide = slides[0];
+    return (
+      <div className={cn("relative w-full overflow-hidden rounded-2xl shadow-sm", aspectRatio, className)}>
         <img
           src={getFullUrl(initialSlide.image)}
           alt={initialSlide.imageAlt || initialSlide.title}
@@ -74,30 +58,9 @@ export function BannerSlider({
         />
       </div>
     );
-
-    if (initialSlide.targetURL) {
-      const href = initialSlide.targetURL.startsWith('http') ? initialSlide.targetURL : `https://${initialSlide.targetURL}`;
-      return (
-        <Link href={href} target="_blank" rel="noopener noreferrer" className={cn("block w-full h-full", className)}>
-          {initialElement}
-        </Link>
-      );
-    }
-    return <div className={cn("w-full h-full", className)}>{initialElement}</div>;
   }
 
-  // ۳. رندر داینامیک کلاینت مجهز به Framer Motion
-  if (totalSlides === 0) return null;
-  const currentSlide = activeSlides[currentIndex];
-  if (!currentSlide) return null;
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % totalSlides);
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
-  };
+  const currentSlide = slides[currentIndex];
 
   const slideElement = (
     <div className={cn("relative w-full overflow-hidden rounded-2xl shadow-sm", aspectRatio)}>
@@ -117,22 +80,22 @@ export function BannerSlider({
       {totalSlides > 1 && (
         <>
           <button
-            onClick={(e) => { e.preventDefault(); handlePrev(); }}
+            onClick={(e) => { e.preventDefault(); setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides); }}
             className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-colors z-10"
-            aria-label="اسلاید قبلی"
+            aria-label="Previous Slide"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
           <button
-            onClick={(e) => { e.preventDefault(); handleNext(); }}
+            onClick={(e) => { e.preventDefault(); setCurrentIndex((prev) => (prev + 1) % totalSlides); }}
             className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-sm transition-colors z-10"
-            aria-label="اسلاید بعدی"
+            aria-label="Next Slide"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-            {activeSlides.map((_, index) => (
+            {slides.map((_: any, index: number) => (
               <button
                 key={index}
                 onClick={(e) => { e.preventDefault(); setCurrentIndex(index); }}
@@ -140,7 +103,7 @@ export function BannerSlider({
                   "h-2 rounded-full transition-all duration-300",
                   index === currentIndex ? "w-6 bg-primary" : "w-2 bg-white/50"
                 )}
-                aria-label={`رفتن به اسلاید ${index + 1}`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>

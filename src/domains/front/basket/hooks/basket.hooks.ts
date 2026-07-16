@@ -1,11 +1,8 @@
-// src/domains/front/basket/hooks/basket.hooks.ts
-
 import { useQueryClient } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { getBasketService } from '../services/basket.service';
 import { AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
-import { BasketViewModel } from '../types/view.types';
 
 const basketService = getBasketService();
 
@@ -52,95 +49,129 @@ export function useDeleteFromBasket() {
   );
 }
 
-export function useUpdateBasketQuantity() {
-  const queryClient = useQueryClient();
-
-  return useTypedMutation(
-    ({ shopProductId, quantity }: { shopProductId: string; quantity: number }) =>
-      basketService.updateQuantity(shopProductId, quantity),
+export function useGetUserLocations() {
+  return useTypedQuery(
+    ['user', 'locations'],
+    () => basketService.getUserLocations(),
     {
-      onSuccess: (data) => {
-        queryClient.setQueryData(queryKeys.front.basket.current, data);
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.front.basket.current,
-        });
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+export function useCreateUserLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (formData: FormData) => basketService.createUserLocation(formData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
       },
     }
   );
 }
 
-export function useClearBasket() {
+export function useUpdateUserLocation() {
   const queryClient = useQueryClient();
-
   return useTypedMutation(
-    () => basketService.clearBasket(),
+    (formData: FormData) => basketService.updateUserLocation(formData),
     {
-      onSuccess: (data) => {
-        queryClient.setQueryData(queryKeys.front.basket.current, data);
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.front.basket.current,
-        });
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
       },
     }
   );
 }
 
-// Optimistic update hook
-export function useOptimisticAddToBasket() {
+export function useDeleteUserLocation() {
   const queryClient = useQueryClient();
-
   return useTypedMutation(
-    (request: AddToBasketRequest) => basketService.addToBasket(request),
+    (id: string) => basketService.deleteUserLocation(id),
     {
-      onMutate: async (request) => {
-        // Cancel outgoing refetches
-        await queryClient.cancelQueries({
-          queryKey: queryKeys.front.basket.current,
-        });
-
-        // Snapshot previous value
-        const previousBasket = queryClient.getQueryData<BasketViewModel>(
-          queryKeys.front.basket.current
-        );
-
-        // Optimistically update
-        if (previousBasket) {
-          const existingItem = previousBasket.items.find(
-            (item) => item.shopProductId === request.shopProductId
-          );
-
-          let updatedItems = [...previousBasket.items];
-          
-          if (existingItem) {
-            updatedItems = updatedItems.map((item) =>
-              item.shopProductId === request.shopProductId
-                ? { ...item, quantity: item.quantity + request.quantity }
-                : item
-            );
-          }
-
-          queryClient.setQueryData(queryKeys.front.basket.current, {
-            ...previousBasket,
-            items: updatedItems,
-          });
-        }
-
-        return { previousBasket };
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
       },
-      onError: (_err, _variables, context) => {
-        // Rollback on error
-        const previousBasket = (context as { previousBasket?: BasketViewModel })?.previousBasket;
-        if (previousBasket) {
-          queryClient.setQueryData(
-            queryKeys.front.basket.current,
-            previousBasket
-          );
-        }
+    }
+  );
+}
+
+export function useGetCheckoutBasket() {
+  return useTypedQuery(
+    ['front', 'basket', 'checkout'],
+    () => basketService.getCheckoutBasket(),
+    {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    }
+  );
+}
+
+export function useChangeBasketLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (locationId: string) => basketService.changeBasketLocation(locationId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
-      onSettled: () => {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.front.basket.current,
-        });
+    }
+  );
+}
+
+export function useSetBasketShipment() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ locationId, methods }: { locationId: string; methods: any[] }) =>
+      basketService.setBasketShipment(locationId, methods),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useInitiatePayment() {
+  return useTypedMutation(
+    (isLegalReceipt: boolean) => basketService.initiatePayment(isLegalReceipt)
+  );
+}
+
+export function useApplyDiscountCode() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (code: string) => basketService.applyDiscountCode(code),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
+      },
+    }
+  );
+}
+
+export function useApplyReferralCode() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (code: string) => basketService.applyReferralCode(code),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
+      },
+    }
+  );
+}
+
+export function useCheckoutBasket() {
+  const queryClient = useQueryClient();
+  return useTypedMutation<any, void>(
+    () => basketService.checkoutBasket(),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
     }
   );

@@ -20,7 +20,7 @@ export function MainLayout({
     <div className="flex min-h-screen flex-col">
       {!hideHeader && <Header />}
       
-      <main className={cn('flex-1 w-full max-w-[1840px] mx-auto px-4 md:px-6 py-6 pb-20 lg:pb-6', className)}>
+      <main className={cn('flex-1 w-full max-w-[1840px] mx-auto px-4 md:px-6 py-6 pb-20 lg:pb-6 min-h-[80vh]', className)}>
         {children}
       </main>
       

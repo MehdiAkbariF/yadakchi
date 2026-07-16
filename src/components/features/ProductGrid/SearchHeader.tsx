@@ -2,7 +2,7 @@
 
 import { cn } from '@/design-system/utils/cn';
 import { Typography } from '@/components/primitives/Typography';
-import { SlidersHorizontal, ArrowUpDown } from 'lucide-react';
+import { X, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 import { useAppStore } from '@/shared/store/useAppStore';
 import { motion } from 'framer-motion';
@@ -31,12 +31,47 @@ export function SearchHeader({
   totalCount,
   currentSort,
   onSortChange,
+  filters,
   onOpenMobileFilters,
   onOpenMobileSort,
   searchTitle,
   isMobileSticky = false,
 }: SearchHeaderProps) {
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
+
+  const activeChips = () => {
+    const chips: { name: string; label: string; value?: any }[] = [];
+
+    if (filters.isProductInStock) {
+      chips.push({ name: 'inStock', label: 'فقط کالاهای موجود' });
+    }
+    if (filters.isSellerInUserCity) {
+      chips.push({ name: 'userCity', label: 'فروشنده‌های شهر من' });
+    }
+    if (filters.hasDiscount) {
+      chips.push({ name: 'discount', label: 'دارای تخفیف' });
+    }
+    if (filters.fromPrice) {
+      chips.push({ name: 'fromPrice', label: `از ${new Intl.NumberFormat('fa-IR').format(filters.fromPrice / 10)} تومان` });
+    }
+    if (filters.toPrice) {
+      chips.push({ name: 'toPrice', label: `تا ${new Intl.NumberFormat('fa-IR').format(filters.toPrice / 10)} تومان` });
+    }
+    if (filters.brandIds) {
+      filters.brandIds.forEach(id => {
+        chips.push({ name: 'brandIds', label: 'برند خاص', value: id });
+      });
+    }
+    if (filters.carIds) {
+      filters.carIds.forEach(id => {
+        chips.push({ name: 'carIds', label: 'خودرو خاص', value: id });
+      });
+    }
+
+    return chips;
+  };
+
+  const chipsList = activeChips();
   const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
   const activeSortLabel = SORT_OPTIONS.find(o => o.value === currentSort)?.label || 'منتخب';
 
@@ -46,11 +81,9 @@ export function SearchHeader({
         style={{
           top: isHeaderMinimized ? '56px' : '122px'
         }}
-        className="
-        
-        md:hidden sticky z-40 bg-background border-b py-2.5 px-4 
-        w-full flex items-center justify-between  select-none gap-3
-        mt-3 transition-all duration-300"
+        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 
+        w-full flex items-center justify-between shadow-sm select-none gap-3 
+        transition-all duration-300 mt-5"
       >
         <button
           onClick={onOpenMobileFilters}

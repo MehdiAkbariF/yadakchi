@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { ShoppingCart, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Card, CardTitle } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button';
@@ -37,15 +38,17 @@ export function BasketInvoice({ basket }: BasketInvoiceProps) {
         <span className="text-lg font-black font-iran-sans text-foreground">{basket.total.finalPrice}</span>
       </div>
 
-      <Button
-        variant="primary"
-        size="lg"
-        fullWidth
-        className="rounded-xl font-iran-sans font-bold text-xs h-11 shadow-md shadow-primary/10 flex items-center justify-center gap-1"
-      >
-        <span>ادامه فرآیند خرید</span>
-        <ArrowLeft className="h-4.5 w-4.5 mr-1" />
-      </Button>
+      <Link href="/checkout" className="w-full block">
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          className="rounded-xl font-iran-sans font-bold text-xs h-11 shadow-md shadow-primary/10 flex items-center justify-center gap-1"
+        >
+          <span>ادامه فرآیند خرید</span>
+          <ArrowLeft className="h-4.5 w-4.5 mr-1" />
+        </Button>
+      </Link>
 
       <div className="mt-5 border-t border-dashed pt-4 flex flex-col gap-3 text-right">
         <div className="flex gap-2 items-start text-[10px] sm:text-xs leading-relaxed text-muted-foreground/85 font-iran-sans">
