@@ -58,7 +58,7 @@ export function ProductCard({
         'relative',
         isHorizontal ? 'w-1/3' : 'aspect-square w-full'
       )}>
-        <Link href={`/products/${product.code}`}>
+        <Link href={`/product/${product.code}`}>
           <Image
             src={product.images[0]?.medium || '/placeholder.png'}
             alt={product.name}
@@ -117,7 +117,7 @@ export function ProductCard({
         </Link>
 
         {/* Product Name */}
-        <Link href={`/products/${product.code}`}>
+        <Link href={`/product/${product.code}`}>
           <Typography
             variant={isCompact ? 'small' : 'h4'}
             className={cn(

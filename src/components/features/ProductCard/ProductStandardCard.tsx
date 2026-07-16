@@ -143,7 +143,7 @@ export function ProductStandardCard({
 
   return (
     <Link 
-      href={`/products/${product?.productCode || product?.code}`} 
+      href={`/product/${product?.productCode || product?.code}`} 
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}

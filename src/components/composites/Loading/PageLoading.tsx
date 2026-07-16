@@ -1,6 +1,5 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 
 interface PageLoadingProps {
@@ -10,31 +9,39 @@ interface PageLoadingProps {
 }
 
 export function PageLoading({
-  message = 'در حال بارگذاری اطلاعات...',
+  message,
   fullPage = false,
   className,
 }: PageLoadingProps) {
-  const content = (
-    <div className={cn(
-      "flex flex-col items-center justify-center gap-3.5 select-none text-center",
-      fullPage ? "w-screen h-screen bg-background/80 backdrop-blur-sm" : "w-full min-h-[350px]",
-      className
-    )}>
-      <div className="relative flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary shrink-0" />
-        <div className="absolute h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+  const loaderCard = (
+    <div className="w-36 h-36 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl shadow-xl flex flex-col items-center justify-center gap-4 animate-in zoom-in duration-200">
+      <div className="relative w-20 h-10">
+        <img
+          src="/Logo.svg"
+          alt="Yadakchi"
+          className="w-full h-full object-contain block"
+        />
+      </div>
+      <div className="flex items-center gap-1.5 mt-1">
+        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" />
       </div>
       {message && (
-        <span className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground animate-pulse">
+        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground animate-pulse mt-0.5">
           {message}
         </span>
       )}
     </div>
   );
 
-  if (fullPage) {
-    return <div className="fixed inset-0 z-[100] flex items-center justify-center">{content}</div>;
-  }
-
-  return content;
+  return (
+    <div className={cn(
+      "flex flex-col items-center justify-center select-none",
+      fullPage ? "fixed inset-0 z-[100] bg-zinc-950/20 backdrop-blur-md w-screen h-screen" : "w-full min-h-[350px]",
+      className
+    )}>
+      {loaderCard}
+    </div>
+  );
 }

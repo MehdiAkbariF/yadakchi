@@ -197,7 +197,7 @@ export function ProductSearchCard({
     <div className={cn("w-full transition-all select-none", className)}>
       
       <Link 
-        href={`/products/${product?.productCode || product?.code}`}
+        href={`/product/${product?.productCode || product?.code}`}
         className="hidden md:flex w-full h-full flex-col bg-background rounded-xl border hover:border-primary/40 hover:shadow-md p-3 sm:p-3.5 relative select-none"
         draggable={false}
       >
@@ -323,7 +323,7 @@ export function ProductSearchCard({
       </Link>
 
       <Link
-        href={`/products/${product?.productCode || product?.code}`}
+        href={`/product/${product?.productCode || product?.code}`}
         className="md:hidden flex flex-col w-full bg-background border-b border-zinc-100 dark:border-zinc-800/80 py-4 px-0 relative select-none"
         draggable={false}
       >

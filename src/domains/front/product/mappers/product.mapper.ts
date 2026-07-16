@@ -232,19 +232,22 @@ export class ProductMapper {
     };
   }
 
-  static toViewProductPage(dto: ProductPageResponseDto): ProductPageViewModel {
+  static toViewProductPage(dto: ProductPageResponseDto): ProductPageViewModel | null {
+    if (!dto || !dto.product) {
+      return null;
+    }
     return {
       product: this.toViewProductDetails(dto.product),
       shopProducts: {
-        newNominated: dto.shopProducts.newNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.newNominatedShopProduct) : null,
-        newOnline: (dto.shopProducts.newOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
-        newLocal: (dto.shopProducts.newLocalShopProducts || []).map(p => this.toViewShopProduct(p)),
-        takeOffNominated: dto.shopProducts.takeOffNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.takeOffNominatedShopProduct) : null,
-        takeOffOnline: (dto.shopProducts.takeOffOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
-        takeOffLocal: (dto.shopProducts.takeOffLocalShopProducts || []).map(p => this.toViewShopProduct(p)),
-        stockNominated: dto.shopProducts.stockNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.stockNominatedShopProduct) : null,
-        stockOnline: (dto.shopProducts.stockOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
-        stockLocal: (dto.shopProducts.stockLocalShopProducts || []).map(p => this.toViewShopProduct(p))
+        newNominated: dto.shopProducts?.newNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.newNominatedShopProduct) : null,
+        newOnline: (dto.shopProducts?.newOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
+        newLocal: (dto.shopProducts?.newLocalShopProducts || []).map(p => this.toViewShopProduct(p)),
+        takeOffNominated: dto.shopProducts?.takeOffNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.takeOffNominatedShopProduct) : null,
+        takeOffOnline: (dto.shopProducts?.takeOffOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
+        takeOffLocal: (dto.shopProducts?.takeOffLocalShopProducts || []).map(p => this.toViewShopProduct(p)),
+        stockNominated: dto.shopProducts?.stockNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.stockNominatedShopProduct) : null,
+        stockOnline: (dto.shopProducts?.stockOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
+        stockLocal: (dto.shopProducts?.stockLocalShopProducts || []).map(p => this.toViewShopProduct(p))
       }
     };
   }
@@ -263,10 +266,10 @@ export class ProductMapper {
       views: this.formatNumber(dto.views),
       salesCount: this.formatNumber(dto.totalSalesCount),
       brand: {
-        id: dto.brand.id,
-        name: dto.brand.name,
-        englishTitle: dto.brand.englishTitle,
-        logo: dto.brand.image
+        id: dto.brand?.id || '',
+        name: dto.brand?.name || '',
+        englishTitle: dto.brand?.englishTitle || '',
+        logo: dto.brand?.image || null
       },
       cars: (dto.cars || []).map(c => ({
         id: c.id,
@@ -284,8 +287,8 @@ export class ProductMapper {
         }))
       })),
       seo: {
-        title: dto.seoInformation.title,
-        description: dto.seoInformation.description
+        title: dto.seoInformation?.title || '',
+        description: dto.seoInformation?.description || ''
       },
       breadCrumbs: (dto.breadCrumbs || []).map(b => ({
         id: b.id,
@@ -316,16 +319,16 @@ export class ProductMapper {
       dayOfDelivery: dto.dayOfDelivery,
       dayOfDeliveryLabel: `ارسال ${this.formatNumber(dto.dayOfDelivery)} روزه فروشنده`,
       shop: {
-        id: dto.shop.id,
-        title: dto.shop.shopTitle,
-        latitude: dto.shop.latitude,
-        longitude: dto.shop.longitude,
-        address: dto.shop.address,
-        phone: dto.shop.tell,
-        averageRate: dto.shop.averageRate,
-        logo: dto.shop.logo
+        id: dto.shop?.id || '',
+        title: dto.shop?.shopTitle || '',
+        latitude: dto.shop?.latitude || 0,
+        longitude: dto.shop?.longitude || 0,
+        address: dto.shop?.address || '',
+        phone: dto.shop?.tell || null,
+        averageRate: dto.shop?.averageRate || 0,
+        logo: dto.shop?.logo || null
       },
-      warrantyTitle: dto.warrantySupport.title
+      warrantyTitle: dto.warrantySupport?.title || 'بدون گارانتی'
     };
   }
 

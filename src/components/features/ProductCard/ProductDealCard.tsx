@@ -149,7 +149,7 @@ export function ProductDealCard({
 
   return (
     <Link 
-      href={`/products/${product.productCode}`} 
+      href={`/product/${product.productCode}`} 
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}

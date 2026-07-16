@@ -223,12 +223,15 @@ export class ProductService {
     }
   }
 
-  async getProductPageData(productCode: number): Promise<ProductPageViewModel> {
+  async getProductPageData(productCode: number): Promise<ProductPageViewModel | null> {
     try {
       const response = await this.httpClient.get<ProductPageResponseDto>(
         PRODUCT_ENDPOINTS.GET_PRODUCT,
         { params: { ProductCode: productCode } }
       );
+      if (!response.data || typeof response.data === 'string' || !response.data.product) {
+        return null;
+      }
       return ProductMapper.toViewProductPage(response.data);
     } catch (error) {
       logger.error('[ProductService] Get product page data failed:', error);
