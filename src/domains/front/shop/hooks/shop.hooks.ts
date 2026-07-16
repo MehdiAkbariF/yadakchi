@@ -1,5 +1,3 @@
-// src/domains/front/shop/hooks/shop.hooks.ts
-
 import { UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getShopService } from '../services/shop.service';
@@ -65,10 +63,10 @@ export function useGetShopPerformance() {
   );
 }
 
-export function useGetReportSubjects() {
+export function useGetReportSubjects(reportType: string = 'ShopProductReport') {
   return useTypedQuery(
-    ['front', 'shop', 'report-subjects'],
-    () => shopService.getReportSubjects(),
+    ['front', 'shop', 'report-subjects', reportType],
+    () => shopService.getReportSubjects(reportType),
     {
       staleTime: 10 * 60 * 1000,
     }
@@ -76,7 +74,15 @@ export function useGetReportSubjects() {
 }
 
 export function useSubmitShopReport() {
+  const queryClient = useQueryClient();
   return useTypedMutation(
-    (report: ShopReportRequest) => shopService.submitShopReport(report)
+    (report: ShopReportRequest) => shopService.submitShopReport(report),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['front', 'shop', 'report-subjects'] });
+      }
+    }
   );
 }
+
+import { useQueryClient } from '@tanstack/react-query';
