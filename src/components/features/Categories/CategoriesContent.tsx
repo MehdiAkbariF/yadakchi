@@ -94,11 +94,12 @@ export function CategoriesContent() {
           {activeCategory ? (
             <div className="flex flex-col gap-5 w-full">
               
-              <div className="flex items-center justify-between border-b pb-2 w-full">
+              <div className="flex items-center justify-between  pb-2 w-full">
                 <span className="text-xs font-black text-foreground font-iran-yekan">همه قطعات {activeCategory.name}</span>
                 <Link 
                   href={activeCategory.href}
-                  className="text-[10px] md:text-xs text-primary font-bold font-iran-sans flex items-center gap-0.5 hover:underline"
+                  className="text-[10px] md:text-xs text-primary font-bold
+                   font-iran-sans flex items-center gap-0.5 hover:underline"
                 >
                   <span>مشاهده همه</span>
                   <ArrowLeft className="h-3 w-3" />
