@@ -65,10 +65,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         queryKey: ['front', 'products', 'inquiries-list', productId, 'Latest', 1],
         queryFn: () => productService.getProductInquiries(productId, 'Latest', 1, 30),
       }),
-      queryClient.prefetchQuery({
-        queryKey: ['front', 'products', 'is-favorite', productCode],
-        queryFn: () => productService.isUserFavoriteProduct(productCode),
-      }),
     ]);
   } catch (error) {
     if (error && typeof error === 'object' && 'digest' in error && (error as any).digest?.startsWith('NEXT_REDIRECT')) {

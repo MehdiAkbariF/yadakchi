@@ -1,4 +1,6 @@
-import { UseQueryOptions } from '@tanstack/react-query';
+'use client';
+
+import { useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getShopService } from '../services/shop.service';
 import { ShopFilters, ShopReportRequest, ShopCardViewModel } from '../types/view.types';
@@ -84,5 +86,3 @@ export function useSubmitShopReport() {
     }
   );
 }
-
-import { useQueryClient } from '@tanstack/react-query';

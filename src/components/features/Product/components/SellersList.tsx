@@ -8,6 +8,8 @@ import { useAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { InPersonSellersMapModal } from './InPersonSellersMapModal';
 import { useGetReportSubjects, useSubmitShopReport } from '@/domains/front/shop/hooks/shop.hooks';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
 
 interface SellersListProps {
@@ -180,7 +182,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
           )}
 
           <div className="flex flex-col items-end text-right mt-1">
-            <span className="text-sm md:text-lg font-black text-foreground font-iran-sans leading-none">{seller.finalPrice}</span>
+            <span className="text-sm md:text-base font-black text-foreground font-iran-sans leading-none">{seller.finalPrice}</span>
             <button
               type="button"
               onClick={(e) => {
@@ -268,26 +270,25 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
         </ModalHeader>
         <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
           <div className="flex flex-col gap-1 w-full">
-            <span className="text-xs font-bold text-muted-foreground font-iran-sans mb-1">دلیل گزارش *</span>
-            <select
+            <Select
+              label="دلیل گزارش *"
+              placeholder="دلیل گزارش را انتخاب کنید..."
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="w-full h-11 rounded-xl border border-zinc-200 px-3 bg-background text-xs font-iran-sans text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-            >
-              <option value="">دلیل گزارش را انتخاب کنید...</option>
-              {reportSubjects.map((sub: any) => (
-                <option key={sub.id} value={sub.id}>{sub.title}</option>
-              ))}
-            </select>
+              options={reportSubjects.map((sub: any) => ({
+                value: sub.id,
+                label: sub.title,
+              }))}
+            />
           </div>
 
-          <div className="flex flex-col gap-1 w-full mt-2">
-            <span className="text-xs font-bold text-muted-foreground font-iran-sans mb-1">توضیحات *</span>
-            <textarea
+          <div className="flex flex-col gap-1 w-full">
+            <TextArea
+              label="توضیحات (اختیاری)"
               placeholder="توضیحات خود را اینجا بنویسید..."
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
-              className="w-full h-24 rounded-xl border border-zinc-200 p-3 bg-background text-xs font-iran-sans text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
+              className="h-24"
             />
           </div>
 
@@ -299,7 +300,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 setSelectedSubjectId('');
                 setReportDescription('');
               }}
-              className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
             >
               انصراف
             </Button>
@@ -307,7 +308,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               variant="destructive"
               onClick={handleReportSubmit}
               isLoading={submitReport.isPending}
-              className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
             >
               ثبت گزارش خطا
             </Button>

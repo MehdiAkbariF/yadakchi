@@ -348,14 +348,30 @@ export class ProductService {
     try {
       const formData = new FormData();
       formData.append('ProductId', productId);
-      await this.httpClient.delete(PRODUCT_ENDPOINTS.DELETE_FAVORITE, {
-        data: formData,
+      await this.httpClient.delete(PRODUCT_ENDPOINTS.DELETE_FAVORITE, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
     } catch (error) {
       logger.error('[ProductService] Delete favorite failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async submitProductReport(productId: string, reportSubjectId: string, description: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('ProductId', productId);
+      formData.append('ReportSubjectId', reportSubjectId);
+      formData.append('Description', description);
+      await this.httpClient.post('/api/Front/ProductReport', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } catch (error) {
+      logger.error('[ProductService] Submit product report failed:', error);
       throw errorManager.normalize(error);
     }
   }

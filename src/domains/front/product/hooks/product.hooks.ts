@@ -222,26 +222,35 @@ export function useIsUserFavoriteProduct(productCode: number) {
   );
 }
 
-export function useAddFavorite() {
+export function useAddFavorite(productCode: number) {
   const queryClient = useQueryClient();
   return useTypedMutation(
     (productId: string) => productService.addFavorite(productId),
     {
-      onSuccess: (_, productId) => {
-        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite'] });
+      onSuccess: () => {
+        queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], true);
+        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
       }
     }
   );
 }
 
-export function useDeleteFavorite() {
+export function useDeleteFavorite(productCode: number) {
   const queryClient = useQueryClient();
   return useTypedMutation(
     (productId: string) => productService.deleteFavorite(productId),
     {
-      onSuccess: (_, productId) => {
-        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite'] });
+      onSuccess: () => {
+        queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], false);
+        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
       }
     }
+  );
+}
+
+export function useSubmitProductReport() {
+  return useTypedMutation(
+    ({ productId, reportSubjectId, description }: { productId: string; reportSubjectId: string; description: string }) =>
+      productService.submitProductReport(productId, reportSubjectId, description)
   );
 }

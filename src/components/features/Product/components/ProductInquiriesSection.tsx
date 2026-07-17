@@ -2,9 +2,13 @@
 
 import { useState } from 'react';
 import { useGetProductInquiries } from '@/domains/front/product/hooks/product.hooks';
-import { User, MessageSquare, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { useCreateInquiry } from '@/domains/front/inquiry/hooks/inquiry.hooks';
+import { User, MessageSquare, ThumbsUp, ThumbsDown, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
 
 interface ProductInquiriesSectionProps {
   productId: string;
@@ -13,13 +17,34 @@ interface ProductInquiriesSectionProps {
 export function ProductInquiriesSection({ productId }: ProductInquiriesSectionProps) {
   const [orderBy, setOrderBy] = useState('Latest');
   const [page, setPage] = useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+  const [inquiryText, setInquiryText] = useState('');
 
   const { data: inquiriesResponse, isLoading } = useGetProductInquiries(productId, orderBy, page);
+  const createInquiry = useCreateInquiry();
 
   const inquiries = inquiriesResponse?.items || [];
 
-  const handleWriteInquiry = () => {
-    showToast.success('درگاه ثبت پرسش به زودی فعال خواهد شد');
+  const handleInquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (inquiryText.trim().length < 5) {
+      showToast.error('متن پرسش شما باید حداقل ۵ کاراکتر باشد');
+      return;
+    }
+
+    try {
+      await createInquiry.mutateAsync({
+        productId,
+        comment: inquiryText,
+      });
+
+      showToast.success('پرسش شما با موفقیت ثبت شد و پس از تایید مدیران سیستم نمایش داده خواهد شد');
+      setInquiryText('');
+      setIsWriteModalOpen(false);
+    } catch (error: any) {
+      showToast.error(error.userMessage || 'خطا در ثبت پرسش شما');
+    }
   };
 
   return (
@@ -51,7 +76,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
         <Button
           variant="outline"
           size="sm"
-          onClick={handleWriteInquiry}
+          onClick={() => setIsWriteModalOpen(true)}
           className="rounded-xl text-xs font-bold font-iran-sans h-9 border-primary/20 text-primary hover:bg-primary/5 flex items-center gap-1 shrink-0"
         >
           <MessageSquare className="h-3.5 w-3.5" />
@@ -114,8 +139,36 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
         )}
       </div>
 
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md p-2 w-full animate-none">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
+            <HelpCircle className="h-4.5 w-4.5 text-primary" />
+            شما هم سوال خودتون رو بپرسید
+          </ModalTitle>
+        </ModalHeader>
+        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
+          <form onSubmit={handleInquirySubmit} className="flex flex-col gap-4 w-full text-right">
+            <TextArea
+              label="متن پرسش شما *"
+              placeholder="پرسش خود را در مورد این کالا مطرح نمایید..."
+              value={inquiryText}
+              onChange={(e) => setInquiryText(e.target.value)}
+              className="h-28 text-xs font-iran-sans"
+              required
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              isLoading={createInquiry.isPending}
+              className="rounded-xl font-iran-sans font-bold text-xs h-11 mt-4"
+            >
+              ثبت پرسش نهایی
+            </Button>
+          </form>
+        </ModalBody>
+      </Modal>
+
     </div>
   );
 }
-
-import { showToast } from '@/core/utils/toast';

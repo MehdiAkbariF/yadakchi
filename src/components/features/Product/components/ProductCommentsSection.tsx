@@ -2,26 +2,65 @@
 
 import { useState } from 'react';
 import { useGetProductComments, useGetProductCommentsAverage } from '@/domains/front/product/hooks/product.hooks';
+import { useCreateComment } from '@/domains/front/comment/hooks/comment.hooks';
 import { Star, ThumbsUp, ThumbsDown, User, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
 
 interface ProductCommentsSectionProps {
   productId: string;
+  productTitle?: string;
 }
 
-export function ProductCommentsSection({ productId }: ProductCommentsSectionProps) {
+export function ProductCommentsSection({ productId, productTitle = 'قطعه یدکی' }: ProductCommentsSectionProps) {
   const [orderBy, setOrderBy] = useState('Newest');
   const [page, setPage] = useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+
+  const [rate, setRate] = useState(0);
+  const [hoverRate, setHoverRate] = useState(0);
+  const [commentText, setCommentText] = useState('');
+  const [isIncognito, setIsIncognito] = useState(false);
 
   const { data: average } = useGetProductCommentsAverage(productId);
   const { data: commentsResponse, isLoading } = useGetProductComments(productId, orderBy, page);
+  const createComment = useCreateComment();
 
   const comments = commentsResponse?.items || [];
 
-  const handleWriteComment = () => {
-    showToast.success('درگاه ثبت نظر به زودی فعال خواهد شد');
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (rate === 0) {
+      showToast.error('لطفاً امتیاز خود به این کالا را انتخاب کنید');
+      return;
+    }
+
+    if (commentText.trim().length < 10) {
+      showToast.error('متن نظر شما باید حداقل ۱۰ کاراکتر باشد');
+      return;
+    }
+
+    try {
+      await createComment.mutateAsync({
+        productId,
+        comment: commentText,
+        rate,
+        isIncognito,
+      });
+
+      showToast.success('دیدگاه ارزشمند شما با موفقیت ثبت شد و پس از تایید نمایش داده خواهد شد');
+      setRate(0);
+      setCommentText('');
+      setIsIncognito(false);
+      setIsWriteModalOpen(false);
+    } catch (error: any) {
+      showToast.error(error.userMessage || 'خطا در ثبت دیدگاه شما');
+    }
   };
 
   const formatPrice = (value: number) => {
@@ -30,7 +69,7 @@ export function ProductCommentsSection({ productId }: ProductCommentsSectionProp
 
   return (
     <div className="w-full flex flex-col gap-6 text-right mt-6">
-      <h3 className="text-sm md:text-base font-bold font-iran-yekan text-foreground border-b pb-2">امتیاز و نظرات کاربران</h3>
+      <h3 className="text-sm md:text-base font-bold font-iran-yekan text-foreground">امتیاز و نظرات کاربران</h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 items-start w-full">
         
@@ -74,7 +113,7 @@ export function ProductCommentsSection({ productId }: ProductCommentsSectionProp
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleWriteComment}
+                onClick={() => setIsWriteModalOpen(true)}
                 className="rounded-xl text-xs font-bold font-iran-sans h-10 border-primary/20 text-primary hover:bg-primary/5 flex items-center gap-1.5 w-full mt-2"
               >
                 <MessageSquare className="h-4 w-4" />
@@ -161,6 +200,81 @@ export function ProductCommentsSection({ productId }: ProductCommentsSectionProp
         </div>
 
       </div>
+
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full p-2 animate-none">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right">
+            ثبت دیدگاه جدید
+          </ModalTitle>
+        </ModalHeader>
+        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
+          <form onSubmit={handleCommentSubmit} className="flex flex-col gap-4 w-full text-right">
+            
+            <div className="flex flex-col gap-1 w-full border-b pb-3">
+              <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">نام کالا:</span>
+              <span className="text-xs font-bold text-foreground font-iran-sans leading-relaxed">{productTitle}</span>
+            </div>
+
+            <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full">
+              <span className="text-xs font-bold text-muted-foreground font-iran-sans">امتیاز شما به کالا *</span>
+              <div className="flex items-center gap-1.5 mt-1" dir="ltr">
+                {[1, 2, 3, 4, 5].map((starValue) => {
+                  const isHighlighted = (hoverRate || rate) >= starValue;
+                  return (
+                    <button
+                      key={starValue}
+                      type="button"
+                      onMouseEnter={() => setHoverRate(starValue)}
+                      onMouseLeave={() => setHoverRate(0)}
+                      onClick={() => setRate(starValue)}
+                      className="p-1 hover:scale-110 transition-transform outline-none"
+                    >
+                      <Star 
+                        className={cn(
+                          "h-7 w-7 shrink-0", 
+                          isHighlighted ? "fill-yellow-400 text-yellow-400" : "text-zinc-200 dark:text-zinc-800"
+                        )} 
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="w-full">
+              <TextArea
+                label="متن نظر شما *"
+                placeholder="نظر خود را در مورد این کالا به اشتراک بگذارید..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="h-28 text-xs font-iran-sans"
+                required
+              />
+            </div>
+
+            <div className="flex items-start5 w-full mt-1 border-t border-dashed pt-4 select-none">
+              <Checkbox
+                checked={isIncognito}
+                onChange={(checked) => setIsIncognito(checked)}
+              />
+              <div className="">
+                <span className="text-xs font-bold text-foreground font-iran-sans block">ارسال به صورت ناشناس</span>
+                <span className="text-[10px] text-muted-foreground font-iran-sans block mt-0.5">در صورت فعال‌سازی، نام شما به کاربران نمایش داده نخواهد شد.</span>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              isLoading={createComment.isPending}
+              className="rounded-xl font-iran-sans font-bold text-xs h-11 mt-4"
+            >
+              ثبت نظر نهایی
+            </Button>
+          </form>
+        </ModalBody>
+      </Modal>
 
     </div>
   );

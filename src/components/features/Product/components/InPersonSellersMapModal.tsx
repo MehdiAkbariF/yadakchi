@@ -7,6 +7,8 @@ import { MapPin, X, AlertTriangle, Phone, Navigation, ArrowRight, Store, Loader2
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
 import { useGetReportSubjects, useSubmitShopReport } from '@/domains/front/shop/hooks/shop.hooks';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal';
 
@@ -461,26 +463,25 @@ export function InPersonSellersMapModal({
           </ModalHeader>
           <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
             <div className="flex flex-col gap-1 w-full">
-              <span className="text-xs font-bold text-muted-foreground font-iran-sans mb-1">دلیل گزارش *</span>
-              <select
+              <Select
+                label="دلیل گزارش *"
+                placeholder="دلیل گزارش را انتخاب کنید..."
                 value={selectedSubjectId}
                 onChange={(e) => setSelectedSubjectId(e.target.value)}
-                className="w-full h-11 rounded-xl border border-zinc-200 px-3 bg-background text-xs font-iran-sans text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-              >
-                <option value="">دلیل گزارش را انتخاب کنید...</option>
-                {reportSubjects.map((sub: any) => (
-                  <option key={sub.id} value={sub.id}>{sub.title}</option>
-                ))}
-              </select>
+                options={reportSubjects.map((sub: any) => ({
+                  value: sub.id,
+                  label: sub.title,
+                }))}
+              />
             </div>
 
-            <div className="flex flex-col gap-1 w-full mt-2">
-              <span className="text-xs font-bold text-muted-foreground font-iran-sans mb-1">توضیحات (اختیاری)</span>
-              <textarea
+            <div className="flex flex-col gap-1 w-full">
+              <TextArea
+                label="توضیحات (اختیاری)"
                 placeholder="توضیحات خود را اینجا بنویسید..."
                 value={reportDescription}
                 onChange={(e) => setReportDescription(e.target.value)}
-                className="w-full h-24 rounded-xl border border-zinc-200 p-3 bg-background text-xs font-iran-sans text-foreground focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
+                className="h-24"
               />
             </div>
 

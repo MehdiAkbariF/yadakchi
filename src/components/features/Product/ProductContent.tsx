@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useGetProductPageData } from '@/domains/front/product/hooks/product.hooks';
+import { useRouter, usePathname } from 'next/navigation';
+import { useGetProductPageData,  } from '@/domains/front/product/hooks/product.hooks';
+import { useAddToBasket as useGlobalAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { ProductHeader } from './components/ProductHeader';
 import { ConditionSelector } from './components/ConditionSelector';
 import { SpecHighlights } from './components/SpecHighlights';
@@ -13,21 +15,28 @@ import { ProductInquiriesSection } from './components/ProductInquiriesSection';
 import { ProductSideInvoice } from './components/ProductSideInvoice';
 import { ProductPageSkeleton } from './components/ProductPageSkeleton';
 import { ProductGallery } from './components/ProductGallery';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
 import { getProductUrl } from '@/core/utils/formatters';
-import { ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag } from 'lucide-react';
+import { showToast } from '@/core/utils/toast';
 import Link from 'next/link';
-import { cn } from '@/design-system/utils';
 
 interface ProductContentProps {
   productCode: number;
 }
 
 export function ProductContent({ productCode }: ProductContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { data: pageData, isLoading } = useGetProductPageData(productCode);
   const [selectedCondition, setSelectedCondition] = useState<'New' | 'Stock' | 'TakeOff'>('New');
   const [activeSellerId, setActiveSellerId] = useState<string | null>(null);
   const [isIntroExpanded, setIsIntroExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState('intro');
+  const [isMobileSubmitting, setIsMobileSubmitting] = useState(false);
+
+  const addToBasket = useGlobalAddToBasket();
 
   const introRef = useRef<HTMLDivElement>(null);
   const specsRef = useRef<HTMLDivElement>(null);
@@ -106,7 +115,33 @@ export function ProductContent({ productCode }: ProductContentProps) {
     }
   };
 
+  const handleMobileAddToBasket = async () => {
+    if (!currentSelectedSeller) return;
+    setIsMobileSubmitting(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      showToast.success('قطعه با موفقیت به سبد خرید شما افزوده شد');
+    } catch (err: any) {
+    } finally {
+      setIsMobileSubmitting(false);
+    }
+  };
+
   const galleryImages = product.gallery.length > 0 ? product.gallery : [product.image];
+
+  const leftPriceContent = currentSelectedSeller ? (
+    <div className="flex flex-col text-right">
+      <span className="text-[10px] text-muted-foreground font-iran-sans mb-0.5">قیمت فروشنده:</span>
+      {currentSelectedSeller.hasDiscount && (
+        <span className="text-[9px] text-zinc-400 line-through leading-none mb-0.5 font-iran-sans">
+          {currentSelectedSeller.retailPrice}
+        </span>
+      )}
+      <span className="text-sm font-black text-foreground font-iran-sans leading-none">
+        {currentSelectedSeller.finalPrice}
+      </span>
+    </div>
+  ) : null;
 
   return (
     <div className="w-full flex flex-col gap-5 text-right select-none" dir="rtl">
@@ -170,15 +205,17 @@ export function ProductContent({ productCode }: ProductContentProps) {
             activeSellers={activeSellers}
             selectedSellerId={currentSelectedSeller?.id || null}
             onSelectSeller={(id) => setActiveSellerId(id)}
+            productTitle={product.title}
           />
 
         </div>
 
-        <div className="w-full lg:w-[30%] shrink-0 lg:sticky lg:top-[132px] flex flex-col gap-6">
+        <div className="hidden lg:flex w-full lg:w-[30%] shrink-0 lg:sticky lg:top-[132px] flex flex-col gap-6">
           {currentSelectedSeller && (
             <ProductSideInvoice 
               product={product}
               seller={currentSelectedSeller} 
+              sellersCount={allAvailableSellersList.length}
             />
           )}
         </div>
@@ -236,6 +273,26 @@ export function ProductContent({ productCode }: ProductContentProps) {
       <div ref={inquiriesRef} className="pt-8">
         <ProductInquiriesSection productId={product.id} />
       </div>
+
+      {currentSelectedSeller && (
+        <div className="lg:hidden w-full mt-6">
+          <ProductSideInvoice 
+            product={product}
+            seller={currentSelectedSeller} 
+            sellersCount={allAvailableSellersList.length}
+          />
+        </div>
+      )}
+
+      {currentSelectedSeller && (
+        <MobileBottomAction
+          label="افزودن به سبد خرید"
+          leftContent={leftPriceContent}
+          onClick={handleMobileAddToBasket}
+          isLoading={isMobileSubmitting}
+          icon={<ShoppingBag className="h-4 w-4" />}
+        />
+      )}
 
     </div>
   );
