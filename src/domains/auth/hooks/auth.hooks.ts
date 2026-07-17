@@ -1,5 +1,3 @@
-// src/domains/auth/hooks/auth.hooks.ts
-
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
@@ -30,7 +28,7 @@ export function useConfirmLogin() {
 export function useLogout() {
   const queryClient = useQueryClient();
 
-  return useTypedMutation(
+  return useTypedMutation<void, void>(
     () => authService.logout(),
     {
       onSuccess: () => {
@@ -49,7 +47,7 @@ export function useCurrentUser() {
     queryKeys.auth.user,
     () => authService.getCurrentUser(),
     {
-      staleTime: 5 * 60 * 1000, // 5 دقیقه ماندگاری کش
+      staleTime: 5 * 60 * 1000,
       retry: (failureCount, error) => {
         if (error instanceof Error && 'status' in error && (error as any).status === 401) {
           return false;

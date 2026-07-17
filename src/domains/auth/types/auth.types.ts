@@ -41,6 +41,7 @@ export interface User {
   userLocations: UserLocation[];
   isOrganizationInfoConfirmed?: boolean;
   isOrganizationNoticeDocumentConfirmed?: boolean;
+  referralCode?: string | null;
 }
 
 export interface AuthState {

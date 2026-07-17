@@ -39,6 +39,7 @@ export class AuthMapper {
       })),
       isOrganizationInfoConfirmed: dto.isOrganizationInfoConfirmed || false,
       isOrganizationNoticeDocumentConfirmed: dto.isOrganizationNoticeDocumentConfirmed || false,
+      referralCode: dto.referralCode || null,
     };
   }
 
