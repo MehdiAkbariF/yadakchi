@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { 
   User, 
   ShoppingBag, 
@@ -15,8 +15,7 @@ import {
   LogOut, 
   Copy, 
   Share2,
-  ChevronLeft,
-  ArrowLeft
+  ChevronLeft
 } from 'lucide-react';
 import { Card } from '@/components/composites/Card';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
@@ -24,14 +23,27 @@ import { useGetWalletBalances } from '@/domains/userpanel/hooks/userpanel.hooks'
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 
-interface ProfileSidebarProps {
-  activeTab?: string;
-}
-
-export function ProfileSidebar({ activeTab = 'dashboard' }: ProfileSidebarProps) {
+export function ProfileSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout, isLoggingOut } = useAuth();
   const { data: wallet } = useGetWalletBalances();
+
+  const getActiveTab = () => {
+    if (pathname.includes('/orders')) return 'orders';
+    if (pathname.includes('/support')) return 'support';
+    if (pathname.includes('/wallet')) return 'wallet';
+    if (pathname.includes('/favorites')) return 'favorites';
+    if (pathname.includes('/addresses')) return 'addresses';
+    if (pathname.includes('/comments')) return 'comments';
+    if (pathname.includes('/notifications')) return 'notifications';
+    if (pathname.includes('/history')) return 'history';
+    if (pathname.includes('/settings')) return 'settings';
+    return 'dashboard';
+  };
+
+  const activeTab = getActiveTab();
+  const isDashboard = pathname === '/profile';
 
   const handleLogout = async () => {
     try {
@@ -77,9 +89,9 @@ export function ProfileSidebar({ activeTab = 'dashboard' }: ProfileSidebarProps)
   ];
 
   return (
-    <div className="w-full lg:w-[280px] shrink-0 flex flex-col gap-5 text-right select-none" dir="rtl">
+    <div className="w-full flex flex-col gap-5 text-right select-none" dir="rtl">
       
-      <div className="lg:hidden w-full flex flex-col gap-4">
+      <div className={cn("lg:hidden w-full flex flex-col gap-4", isDashboard ? "block" : "hidden")}>
         <Card className="w-full border rounded-xl p-4 bg-background flex items-center justify-between gap-4">
           <div className="flex flex-col text-right">
             <span className="text-[10px] text-muted-foreground font-iran-sans mb-1">موجودی کیف پول:</span>

@@ -13,24 +13,17 @@ import {
   Wrench,
   Calendar,
   Check,
-  Plus,
-  Copy,
-  Share2
+  Plus
 } from 'lucide-react';
 import { Card, CardBody } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
-import { useGetOrders, useGetUserVehicles, useGetWalletBalances } from '@/domains/userpanel/hooks/userpanel.hooks';
-import { useAuth } from '@/domains/auth/hooks/auth.hooks';
-import { showToast } from '@/core/utils/toast';
+import { useGetOrders, useGetUserVehicles } from '@/domains/userpanel/hooks/userpanel.hooks';
 
 export function ProfileDashboard() {
   const router = useRouter();
-  const { user } = useAuth();
-  const { data: wallet } = useGetWalletBalances();
   const { data: ordersData } = useGetOrders('', '', '', 1);
   const { data: vehicles = [] } = useGetUserVehicles();
 
-  const totalCount = ordersData?.totalCount || 0;
   const defaultVehicle = vehicles.find(v => v.isDefault) || vehicles[0] || null;
 
   const orderStatuses = [
@@ -40,67 +33,21 @@ export function ProfileDashboard() {
     { id: 'ReturnRequest', label: 'مرجوع شده', count: 0, icon: RotateCcw },
   ];
 
-  const handleCopyReferral = () => {
-    if (user?.referralCode) {
-      navigator.clipboard.writeText(user.referralCode);
-      showToast.success('کد معرف شما با موفقیت کپی شد');
-    }
-  };
-
-  const handleShareReferral = () => {
-    if (user?.referralCode && typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: 'کد معرف یدک‌چی',
-        text: `با ثبت کد معرف من در خرید اول خود تخفیف بگیرید. کد معرف: ${user.referralCode}`,
-        url: window.location.origin
-      }).catch(() => {});
-    } else {
-      handleCopyReferral();
-    }
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };
 
+  const getFullUrl = (path: string | null) => {
+    if (!path) return '/placeholder.png';
+    if (path.startsWith('http')) return path;
+    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+  };
+
   return (
-    <div className="flex-1 flex flex-col gap-6 w-full">
+    <div className="w-full flex flex-col gap-6">
       
-      <div className="hidden lg:grid grid-cols-2 gap-4 w-full">
-        <Card className="w-full border rounded-xl p-4 bg-background flex items-center justify-between gap-4">
-          <div className="flex flex-col text-right">
-            <span className="text-[10px] text-muted-foreground font-iran-sans mb-1">موجودی کیف پول:</span>
-            <span className="text-base font-black text-foreground font-iran-sans">{wallet?.totalBalance || '۰ تومان'}</span>
-          </div>
-          <button
-            onClick={() => router.push('/profile/wallet?action=withdraw')}
-            className="text-[10px] font-bold font-iran-sans text-primary border-b border-primary pb-0.5 hover:text-primary/80 transition-colors outline-none"
-          >
-            برداشت موجودی
-          </button>
-        </Card>
-
-        {user?.referralCode && (
-          <Card className="w-full border rounded-xl p-4 bg-background flex flex-col gap-3">
-            <div className="flex items-center justify-between w-full border-b border-dashed pb-2">
-              <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">کد معرف شما:</span>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-black text-foreground font-iran-sans tracking-widest">{user.referralCode}</span>
-                <button onClick={handleCopyReferral} className="text-primary hover:scale-105 transition-transform outline-none" aria-label="Copy">
-                  <Copy className="h-4 w-4" />
-                </button>
-                <button onClick={handleShareReferral} className="text-primary hover:scale-105 transition-transform outline-none" aria-label="Share">
-                  <Share2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <p className="text-[9px] leading-relaxed text-muted-foreground font-iran-sans text-justify">
-              با اشتراک‌گذاری این کد، هم دوستت برای خرید اولش ۱۰۰,۰۰۰ تومان تخفیف می‌گیره و هم خودت ۱۰۰,۰۰۰ تومان اعتبار خرید دریافت می‌کنی.
-            </p>
-          </Card>
-        )}
-      </div>
-
       <Card className="w-full border rounded-xl bg-background shadow-sm">
         <CardBody className="p-5 flex flex-col gap-5">
           <div className="flex items-center justify-between w-full">
@@ -221,11 +168,3 @@ export function ProfileDashboard() {
     </div>
   );
 }
-
-const getFullUrl = (path: string | null) => {
-  if (!path) return '/placeholder.png';
-  if (path.startsWith('http')) return path;
-  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${cleanPath}`;
-};
