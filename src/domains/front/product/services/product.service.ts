@@ -3,8 +3,9 @@ import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { PRODUCT_ENDPOINTS } from '../endpoints/product.endpoints';
 import { ProductMapper } from '../mappers/product.mapper';
-import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
+import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel, ProductPageViewModel, PriceChartViewModel, CommentsAverageViewModel, CommentItemViewModel, InquiryItemViewModel } from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
+import { ProductPageResponseDto, PriceChartDto, CommentsAverageDto, CommentsResponseDto, InquiriesResponseDto } from '../types/dto.types';
 
 export class ProductService {
   private readonly httpClient = getHttpClient();
@@ -12,7 +13,7 @@ export class ProductService {
   async getNominatedProducts(cityId?: string): Promise<any> {
     try {
       const response = await this.httpClient.get<any>(
-        '/api/Front/SearchNominatedProducts',
+        PRODUCT_ENDPOINTS.SEARCH_NOMINATED,
         {
           params: {
             CityId: cityId || '',
@@ -30,7 +31,7 @@ export class ProductService {
   async getNominatedProductsByCategory(categoryEnglishTitle: string, cityId?: string): Promise<any> {
     try {
       const response = await this.httpClient.get<any>(
-        '/api/Front/SearchNominatedProducts',
+        PRODUCT_ENDPOINTS.SEARCH_NOMINATED,
         {
           params: {
             PartCategoryEnglishTitle: categoryEnglishTitle,
@@ -219,6 +220,159 @@ export class ProductService {
       );
     } catch (error) {
       logger.error('[ProductService] Remove search history failed:', error);
+    }
+  }
+
+  async getProductPageData(productCode: number): Promise<ProductPageViewModel | null> {
+    try {
+      const response = await this.httpClient.get<ProductPageResponseDto>(
+        PRODUCT_ENDPOINTS.GET_PRODUCT,
+        { params: { ProductCode: productCode } }
+      );
+      if (!response.data || typeof response.data === 'string' || !response.data.product) {
+        return null;
+      }
+      return ProductMapper.toViewProductPage(response.data);
+    } catch (error) {
+      logger.error('[ProductService] Get product page data failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductCommentsAverage(productId: string): Promise<CommentsAverageViewModel> {
+    try {
+      const response = await this.httpClient.get<CommentsAverageDto>(
+        PRODUCT_ENDPOINTS.GET_COMMENTS_AVERAGE,
+        { params: { Id: productId } }
+      );
+      return ProductMapper.toViewCommentsAverage(response.data);
+    } catch (error) {
+      logger.error('[ProductService] Get product comments average failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductComments(productId: string, orderBy: string = 'Newest', pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<CommentItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<CommentsResponseDto>(
+        PRODUCT_ENDPOINTS.GET_COMMENTS,
+        {
+          params: {
+            ProductId: productId,
+            OrderBy: orderBy,
+            PageNumber: pageNumber,
+            PageSize: pageSize
+          }
+        }
+      );
+      const items = (response.data.items || []).map(dto => ProductMapper.toViewCommentItem(dto));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[ProductService] Get product comments failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductInquiries(productId: string, orderBy: string = 'Latest', pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<InquiryItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<InquiriesResponseDto>(
+        PRODUCT_ENDPOINTS.GET_INQUIRIES,
+        {
+          params: {
+            ProductId: productId,
+            OrderBy: orderBy,
+            PageNumber: pageNumber,
+            PageSize: pageSize
+          }
+        }
+      );
+      const items = (response.data.items || []).map(dto => ProductMapper.toViewInquiryItem(dto));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[ProductService] Get product inquiries failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async isUserFavoriteProduct(productCode: number): Promise<boolean> {
+    try {
+      const response = await this.httpClient.get<boolean>(
+        PRODUCT_ENDPOINTS.IS_FAVORITE,
+        { params: { productCode } }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[ProductService] Check favorite failed:', error);
+      return false;
+    }
+  }
+
+  async addFavorite(productId: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('ProductId', productId);
+      await this.httpClient.post(PRODUCT_ENDPOINTS.POST_FAVORITE, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } catch (error) {
+      logger.error('[ProductService] Add favorite failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async deleteFavorite(productId: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('ProductId', productId);
+      await this.httpClient.delete(PRODUCT_ENDPOINTS.DELETE_FAVORITE, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } catch (error) {
+      logger.error('[ProductService] Delete favorite failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async submitProductReport(productId: string, reportSubjectId: string, description: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('ProductId', productId);
+      formData.append('ReportSubjectId', reportSubjectId);
+      formData.append('Description', description);
+      await this.httpClient.post('/api/Front/ProductReport', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } catch (error) {
+      logger.error('[ProductService] Submit product report failed:', error);
+      throw errorManager.normalize(error);
     }
   }
 }

@@ -9,7 +9,7 @@ import { Banner, BannerGroup } from '@/components/features/Banner/Banner';
 import { ShopByCar } from '@/components/features/Car/ShopByCar';
 import { HomeCategories } from '@/components/features/Part/HomeCategories';
 import { DealsSlider } from '@/components/features/ProductCard/DealsSlider';
-import { ProductSlider } from '@/components/features/ProductCard/ProductSlider';
+import { ProductSlider } from '../ProductCard/ProductSlider';
 import { BrandSlider } from '@/components/features/Brand/BrandSlider';
 import { ShopSlider } from '@/components/features/Shop/ShopSlider';
 import { PageDescription } from '@/components/composites/PageDescription/PageDescription';

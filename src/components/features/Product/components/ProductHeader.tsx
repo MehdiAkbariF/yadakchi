@@ -1,0 +1,205 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Share2, Scale, Star, Heart, Loader2, AlertTriangle } from 'lucide-react';
+import { Typography } from '@/components/primitives/Typography';
+import { ProductDetailsViewModel } from '@/domains/front/product/types/view.types';
+import { useIsUserFavoriteProduct, useAddFavorite, useDeleteFavorite, useSubmitProductReport } from '@/domains/front/product/hooks/product.hooks';
+import { useGetReportSubjects } from '@/domains/front/shop/hooks/shop.hooks';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Button } from '@/components/primitives/Button/Button';
+import { showToast } from '@/core/utils/toast';
+import { cn } from '@/design-system/utils/cn';
+
+interface ProductHeaderProps {
+  product: ProductDetailsViewModel;
+  onScrollToComments: () => void;
+  onScrollToInquiries: () => void;
+}
+
+export function ProductHeader({ product, onScrollToComments, onScrollToInquiries }: ProductHeaderProps) {
+  const [mounted, setMounted] = useState(false);
+  const { data: isFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
+  const addFavorite = useAddFavorite(product.code);
+  const deleteFavorite = useDeleteFavorite(product.code);
+  const submitProductReport = useSubmitProductReport();
+  const { data: reportSubjects } = useGetReportSubjects('ProductReport');
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleFavoriteToggle = async () => {
+    try {
+      if (isFavorite) {
+        await deleteFavorite.mutateAsync(product.id);
+        showToast.success('از علاقه‌مندی‌ها حذف شد');
+      } else {
+        await addFavorite.mutateAsync(product.id);
+        showToast.success('به علاقه‌مندی‌ها اضافه شد');
+      }
+    } catch (err: any) {
+      showToast.error(err.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
+    }
+  };
+
+  const handleShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: product.title,
+        url: window.location.href
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast.success('لینک صفحه کپی شد');
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!selectedSubjectId) {
+      showToast.error('لطفاً دلیل گزارش کالا را انتخاب کنید');
+      return;
+    }
+
+    try {
+      await submitProductReport.mutateAsync({
+        productId: product.id,
+        reportSubjectId: selectedSubjectId,
+        description: reportDescription,
+      });
+
+      showToast.success('گزارش خطای کالا با موفقیت ثبت شد و توسط تیم پشتیبانی بررسی خواهد گردید');
+      setIsReportModalOpen(false);
+      setSelectedSubjectId('');
+      setReportDescription('');
+    } catch (error: any) {
+      showToast.error(error.userMessage || 'خطا در ثبت گزارش تخلف کالا');
+    }
+  };
+
+  const subjectsList = reportSubjects || [];
+
+  if (!mounted) {
+    return (
+      <div className="w-full flex flex-col gap-4 text-right select-none animate-pulse">
+        <div className="h-6 w-1/4 bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
+        <div className="h-8 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded-lg mt-2" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full flex flex-col gap-4 text-right select-none">
+      
+      <div className="flex items-center justify-between w-full border-b pb-3">
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">کد کالا: {product.code}</span>
+          <span className="text-zinc-300 text-[10px]">|</span>
+          <button
+            onClick={() => setIsReportModalOpen(true)}
+            className="text-[10px] font-bold font-iran-sans text-muted-foreground hover:text-destructive flex items-center gap-0.5 outline-none"
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span>گزارش کالا</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button onClick={handleShare} className="p-2 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all">
+            <Share2 className="h-4 w-4" />
+          </button>
+          <button className="p-2 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all">
+            <Scale className="h-4 w-4" />
+          </button>
+          <button 
+            onClick={handleFavoriteToggle} 
+            disabled={isFavLoading || addFavorite.isPending || deleteFavorite.isPending}
+            className="p-2 border rounded-xl hover:bg-muted text-muted-foreground hover:text-destructive transition-all disabled:opacity-40 select-none outline-none"
+          >
+            {isFavLoading || addFavorite.isPending || deleteFavorite.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Heart className={cn("h-4 w-4 transition-colors duration-200", isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground")} />
+            )}
+          </button>
+        </div>
+      </div>
+
+      <Typography variant="h3" className="text-right font-iran-yekan font-extrabold text-foreground leading-relaxed">
+        {product.title}
+      </Typography>
+
+      <div className="flex flex-wrap items-center gap-4 text-xs font-iran-sans text-muted-foreground mt-1">
+        <div className="flex items-center gap-1 cursor-pointer" onClick={onScrollToComments}>
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0" />
+          <span className="font-bold text-foreground">{product.averageRate}</span>
+          <span>از {product.rateCount} نظر</span>
+        </div>
+        <span className="text-zinc-300">|</span>
+        <button onClick={onScrollToInquiries} className="hover:text-primary hover:underline">تبادل پرسش و پاسخ</button>
+      </div>
+
+      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="max-w-md w-full animate-none">
+        <ModalHeader onClose={() => setIsReportModalOpen(false)}>
+          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
+            <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+            گزارش خطای کالا
+          </ModalTitle>
+        </ModalHeader>
+        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4 animate-none">
+          <div className="flex flex-col gap-1 w-full">
+            <Select
+              label="دلیل گزارش *"
+              placeholder="دلیل گزارش را انتخاب کنید..."
+              value={selectedSubjectId}
+              onChange={(e) => setSelectedSubjectId(e.target.value)}
+              options={subjectsList.map((sub: any) => ({
+                value: sub.id,
+                label: sub.title,
+              }))}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1 w-full">
+            <TextArea
+              label="توضیحات (اختیاری)"
+              placeholder="جزئیات مشکل را بنویسید..."
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              className="h-24 text-xs font-iran-sans"
+            />
+          </div>
+
+          <div className="flex gap-2.5 mt-4 w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsReportModalOpen(false);
+                setSelectedSubjectId('');
+                setReportDescription('');
+              }}
+              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
+            >
+              انصراف
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReportSubmit}
+              isLoading={submitProductReport.isPending}
+              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
+            >
+              ثبت گزارش خطا
+            </Button>
+          </div>
+        </ModalBody>
+      </Modal>
+
+    </div>
+  );
+}

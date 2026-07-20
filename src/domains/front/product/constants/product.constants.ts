@@ -1,5 +1,3 @@
-// src/domains/front/product/constants/product.constants.ts
-
 export const PRODUCT_CONSTANTS = {
   TYPES: {
     NEW: 'New',
@@ -21,9 +19,9 @@ export const PRODUCT_CONSTANTS = {
   MAX_PAGE_SIZE: 100,
   
   CACHE_TIMES: {
-    SEARCH: 60, // 1 minute
-    DETAILS: 300, // 5 minutes
-    RELATED: 300, // 5 minutes
-    PRICE_CHART: 600, // 10 minutes
+    SEARCH: 60,
+    DETAILS: 300,
+    RELATED: 300,
+    PRICE_CHART: 600,
   } as const,
 } as const;

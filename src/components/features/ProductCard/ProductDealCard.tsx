@@ -1,11 +1,10 @@
-// src/components/features/ProductCard/ProductDealCard.tsx
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Star, Hourglass } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+import { getProductUrl } from '@/core/utils/formatters';
 
 interface ProductDealCardProps {
   product: any;
@@ -30,21 +29,17 @@ export function ProductDealCard({
   const originalPriceToman = Math.round(originalPriceRaw / 10);
   const finalPriceToman = Math.round(finalPriceRaw / 10);
 
-  // بررسی واقعی وجود تخفیف (قیمت خط خورده بزرگتر از قیمت نهایی باشد)
   const hasDiscount = originalPriceRaw > finalPriceRaw;
 
-  // محاسبه داینامیک درصد تخفیف بر اساس مبالغ ریالی واقعی سرور
   const discountPercent = hasDiscount
     ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
     : (nominated.discountPercentage || 0);
 
-  // دریافت زمان انقضای واقعی تخفیف از سرور
   const expirationStr = nominated.discountUntil || nominated.discountExpiration || product.discountExpiration;
   const hasExpiration = !!expirationStr;
 
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-  // متغیرهای وضعیت برای تشخیص اسلاید/درگ از کلیک واقعی
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
@@ -93,13 +88,11 @@ export function ProductDealCard({
     return new Intl.NumberFormat('fa-IR').format(value);
   };
 
-  // هندلر تشخیص شروع حرکت موس
   const handleMouseDown = (e: React.MouseEvent) => {
     dragStart.current = { x: e.clientX, y: e.clientY };
     setIsDragging(false);
   };
 
-  // هندلر تشخیص کشیدن موس (اگر جابه‌جایی بیش از ۶ پیکسل باشد، درگ تایید می‌شود)
   const handleMouseMove = (e: React.MouseEvent) => {
     const dx = Math.abs(e.clientX - dragStart.current.x);
     const dy = Math.abs(e.clientY - dragStart.current.y);
@@ -108,7 +101,6 @@ export function ProductDealCard({
     }
   };
 
-  // هندلر لمسی موبایل برای شروع اسلاید
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     if (touch) {
@@ -117,7 +109,6 @@ export function ProductDealCard({
     }
   };
 
-  // هندلر لمسی موبایل در حین حرکت دست
   const handleTouchMove = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     if (touch) {
@@ -129,7 +120,6 @@ export function ProductDealCard({
     }
   };
 
-  // جلوگیری از ریدایرکت ناخواسته در صورت فعال بودن وضعیت درگ
   const handleClick = (e: React.MouseEvent) => {
     if (isDragging) {
       e.preventDefault();
@@ -147,9 +137,11 @@ export function ProductDealCard({
     );
   };
 
+  const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
+
   return (
     <Link 
-      href={`/products/${product.productCode}`} 
+      href={productCardUrl} 
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}
@@ -163,34 +155,29 @@ export function ProductDealCard({
         className
       )}>
         
-        {/* تصویر کالا */}
         <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
           <img
             src={getFullUrl(product.image)}
             alt={product.imageAlt || product.title}
             draggable={false}
-            className="w-full h-full object-contain rounded-lg hover:scale-[1.01] transition-transform duration-500 absolute inset-0 select-none"
+            className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
           />
         </div>
 
-        {/* عنوان کالا (اصلاح ارتفاع با حداقل فضا جهت قرارگیری بی‌نقص حالت دوخطی) */}
         <div className="w-full min-h-[2.6rem] mb-1 flex items-start justify-end select-none">
           <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed w-full">
             {product.title}
           </h4>
         </div>
 
-        {/* بخش امتیاز (موقعیت اصلی با اعمال فاصله استاندارد جدید جهت جلوگیری از تداخل) */}
         {showRating && (
           <div className="w-full flex justify-start mb-3 mt-1.5 select-none">
             {renderStars()}
           </div>
         )}
 
-        {/* بخش قیمت‌ها و درصد تخفیف شیک */}
         <div className="w-full mt-auto pt-2 flex items-center justify-between">
           
-          {/* نشان درصد تخفیف واقعی */}
           <div className={cn(
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -198,7 +185,6 @@ export function ProductDealCard({
             %{discountPercent}
           </div>
 
-          {/* باکس مبالغ تومانی */}
           <div className="flex flex-col items-end min-w-0">
             {hasDiscount && originalPriceToman > 0 && (
               <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
@@ -215,7 +201,6 @@ export function ProductDealCard({
 
         </div>
 
-        {/* بخش شمارنده معکوس تخفیف شگفت‌انگیز (تنها در صورت وجود انقضای واقعی) */}
         {showTimer && hasExpiration && (
           <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-sans border-t border-dashed">
             
@@ -227,7 +212,7 @@ export function ProductDealCard({
               <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{toPersianDigits(timeLeft.seconds)}</span>
             </div>
 
-            <Hourglass className="h-3.5 w-3.5 text-primary shrink-0 animate-spin [animation-duration:4s]" />
+            <Hourglass className="h-3.5 w-3.5 text-primary shrink-0 animate-spin" />
 
           </div>
         )}

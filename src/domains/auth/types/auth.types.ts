@@ -1,5 +1,3 @@
-// src/domains/auth/types/auth.types.ts
-
 export interface UserRole {
   roleName: string;
   claims: string[];
@@ -41,6 +39,9 @@ export interface User {
   roles: UserRole[];
   bankAccounts: BankAccount[];
   userLocations: UserLocation[];
+  isOrganizationInfoConfirmed?: boolean;
+  isOrganizationNoticeDocumentConfirmed?: boolean;
+  referralCode?: string | null;
 }
 
 export interface AuthState {

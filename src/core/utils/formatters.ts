@@ -1,8 +1,3 @@
-// src/core/utils/formatters.ts
-
-/**
- * Format date to Persian calendar
- */
 export function formatDate(date: Date | string, format: 'full' | 'short' | 'relative' = 'full'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   
@@ -24,9 +19,6 @@ export function formatDate(date: Date | string, format: 'full' | 'short' | 'rela
   return new Intl.DateTimeFormat('fa-IR', options).format(d);
 }
 
-/**
- * Format relative time (e.g., "۲ ساعت پیش")
- */
 function formatRelativeTime(date: Date): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
@@ -46,9 +38,6 @@ function formatRelativeTime(date: Date): string {
   return 'چند لحظه پیش';
 }
 
-/**
- * Format number with Persian digits
- */
 export function formatNumber(value: number, locale: 'fa' | 'en' = 'fa'): string {
   const formatted = new Intl.NumberFormat(
     locale === 'fa' ? 'fa-IR' : 'en-US'
@@ -57,48 +46,30 @@ export function formatNumber(value: number, locale: 'fa' | 'en' = 'fa'): string 
   return formatted;
 }
 
-/**
- * Format currency
- */
 export function formatCurrency(amount: number, currency: string = 'IRR'): string {
   const formatted = formatNumber(amount);
   return `${formatted} ${currency}`;
 }
 
-/**
- * Format price in Toman (IRR / 10)
- */
 export function formatToman(amount: number): string {
   const toman = amount / 10;
   return `${formatNumber(toman)} تومان`;
 }
 
-/**
- * Format percentage
- */
 export function formatPercentage(value: number, decimals: number = 0): string {
   return `${value.toFixed(decimals)}%`;
 }
 
-/**
- * Truncate text
- */
 export function truncateText(text: string, maxLength: number, suffix: string = '...'): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + suffix;
 }
 
-/**
- * Generate random ID
- */
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 15) + 
          Math.random().toString(36).substring(2, 15);
 }
 
-/**
- * Debounce function
- */
 export function debounce<T extends (...args: any[]) => any>(
   fn: T,
   delay: number
@@ -111,9 +82,6 @@ export function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-/**
- * Throttle function
- */
 export function throttle<T extends (...args: any[]) => any>(
   fn: T,
   limit: number
@@ -127,4 +95,13 @@ export function throttle<T extends (...args: any[]) => any>(
       setTimeout(() => inThrottle = false, limit);
     }
   };
+}
+
+export function getProductUrl(code: number, title: string): string {
+  const cleanTitle = title
+    .trim()
+    .replace(/[^a-zA-Z0-9آ-ی۰-۹\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+  return `/product/ykp-${code}/${encodeURIComponent(cleanTitle)}`;
 }

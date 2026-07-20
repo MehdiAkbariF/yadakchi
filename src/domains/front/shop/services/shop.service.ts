@@ -1,5 +1,3 @@
-// src/domains/front/shop/services/shop.service.ts
-
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
@@ -54,7 +52,6 @@ export class ShopService {
         SHOP_ENDPOINTS.GET_BEST_SHOPS
       );
 
-      // تبدیل BestShopApiDto به ShopCardApiDto
       return response.data.map(dto => ({
         id: dto.id,
         name: dto.name,
@@ -62,8 +59,8 @@ export class ShopService {
         rating: dto.rating,
         reviewCount: dto.reviewCount,
         productCount: dto.productCount,
-        isVerified: false, // BestShopApiDto این فیلد را ندارد
-        cityName: '', // BestShopApiDto این فیلد را ندارد
+        isVerified: false, 
+        cityName: '', 
         rank: dto.rank,
       })).map(dto => ShopMapper.toViewCard(dto as ShopCardApiDto));
     } catch (error) {
@@ -120,11 +117,11 @@ export class ShopService {
     }
   }
 
-  async getReportSubjects(): Promise<ShopReportSubjectApiDto[]> {
+  async getReportSubjects(reportType: string = 'ShopProductReport'): Promise<ShopReportSubjectApiDto[]> {
     try {
       const response = await this.httpClient.get<ShopReportSubjectApiDto[]>(
         SHOP_ENDPOINTS.GET_REPORT_SUBJECTS,
-        { params: { ReportType: 'ShopReport' } }
+        { params: { ReportType: reportType } }
       );
       return response.data;
     } catch (error) {

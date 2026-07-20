@@ -23,7 +23,7 @@ export function HeroSection({ className }: HeroSectionProps) {
           بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران
         </Typography>
         <div className="flex flex-wrap gap-4 mt-4">
-          <Link href="/products">
+          <Link href="/product">
             <Button variant="secondary" size="lg">
               مشاهده محصولات
             </Button>

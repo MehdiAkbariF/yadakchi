@@ -25,6 +25,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'yadakchi-app-state',
+      partialize: (state) => ({ selectedCity: state.selectedCity }),
     }
   )
 );

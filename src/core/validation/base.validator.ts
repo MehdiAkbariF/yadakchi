@@ -48,7 +48,7 @@ export abstract class BaseValidator<T> {
   }
 
   protected postalCode(message?: string): z.ZodString {
-    return z.string().regex(/^[0-9]{10}$/, message || 'کد پستی نامعتبر است');
+    return z.string().regex(/^[0-9]{9,10}$/, message || 'کد پستی باید ۹ یا ۱۰ رقم باشد');
   }
 
   protected price(message?: string): z.ZodNumber {

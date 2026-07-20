@@ -4,7 +4,7 @@ import { useInfiniteQuery, UseQueryOptions, useQueryClient } from '@tanstack/rea
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getProductService } from '../services/product.service';
-import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
+import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel, ProductPageViewModel, CommentsAverageViewModel, CommentItemViewModel, InquiryItemViewModel } from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 import { useAppStore } from '@/shared/store/useAppStore';
 
@@ -164,5 +164,93 @@ export function useRemoveSearchHistory() {
         });
       },
     }
+  );
+}
+
+export function useGetProductPageData(productCode: number) {
+  return useTypedQuery(
+    ['front', 'products', 'page-data', productCode],
+    () => productService.getProductPageData(productCode),
+    {
+      staleTime: 5 * 60 * 1000,
+      enabled: !!productCode && productCode > 0
+    }
+  );
+}
+
+export function useGetProductCommentsAverage(productId: string) {
+  return useTypedQuery(
+    ['front', 'products', 'comments-average', productId],
+    () => productService.getProductCommentsAverage(productId),
+    {
+      staleTime: 5 * 60 * 1000,
+      enabled: !!productId
+    }
+  );
+}
+
+export function useGetProductComments(productId: string, orderBy: string = 'Newest', pageNumber: number = 1) {
+  return useTypedQuery(
+    ['front', 'products', 'comments-list', productId, orderBy, pageNumber],
+    () => productService.getProductComments(productId, orderBy, pageNumber, 30),
+    {
+      staleTime: 60 * 1000,
+      enabled: !!productId
+    }
+  );
+}
+
+export function useGetProductInquiries(productId: string, orderBy: string = 'Latest', pageNumber: number = 1) {
+  return useTypedQuery(
+    ['front', 'products', 'inquiries-list', productId, orderBy, pageNumber],
+    () => productService.getProductInquiries(productId, orderBy, pageNumber, 30),
+    {
+      staleTime: 60 * 1000,
+      enabled: !!productId
+    }
+  );
+}
+
+export function useIsUserFavoriteProduct(productCode: number) {
+  return useTypedQuery(
+    ['front', 'products', 'is-favorite', productCode],
+    () => productService.isUserFavoriteProduct(productCode),
+    {
+      staleTime: 10 * 1000,
+      enabled: !!productCode && productCode > 0
+    }
+  );
+}
+
+export function useAddFavorite(productCode: number) {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (productId: string) => productService.addFavorite(productId),
+    {
+      onSuccess: () => {
+        queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], true);
+        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
+      }
+    }
+  );
+}
+
+export function useDeleteFavorite(productCode: number) {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (productId: string) => productService.deleteFavorite(productId),
+    {
+      onSuccess: () => {
+        queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], false);
+        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
+      }
+    }
+  );
+}
+
+export function useSubmitProductReport() {
+  return useTypedMutation(
+    ({ productId, reportSubjectId, description }: { productId: string; reportSubjectId: string; description: string }) =>
+      productService.submitProductReport(productId, reportSubjectId, description)
   );
 }

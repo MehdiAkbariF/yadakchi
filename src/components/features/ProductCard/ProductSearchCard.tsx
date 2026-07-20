@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
-import { Star, Store, BadgeCheck, Truck, Eye, ShoppingCart, Plus, Minus, Loader2 } from 'lucide-react';
+import { Star, Store, BadgeCheck, Truck, Eye, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/primitives/Button/Button';
 import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
+import { getProductUrl } from '@/core/utils/formatters';
 
 interface ProductSearchCardProps {
   product: any;
@@ -95,7 +95,7 @@ export function ProductSearchCard({
     const items: { text: string; icon: any }[] = [];
     
     if (salesCount > 0) {
-      items.push({ text: `${salesCount} فروش موفق در یادکچی`, icon: BadgeCheck });
+      items.push({ text: `${salesCount} فروش موفق در یدکچی`, icon: BadgeCheck });
     }
     if (isTipax) {
       items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
@@ -192,12 +192,13 @@ export function ProductSearchCard({
   };
 
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
+  const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
 
   return (
     <div className={cn("w-full transition-all select-none", className)}>
       
       <Link 
-        href={`/products/${product?.productCode || product?.code}`}
+        href={productCardUrl}
         className="hidden md:flex w-full h-full flex-col bg-background rounded-xl border hover:border-primary/40 hover:shadow-md p-3 sm:p-3.5 relative select-none"
         draggable={false}
       >
@@ -323,7 +324,7 @@ export function ProductSearchCard({
       </Link>
 
       <Link
-        href={`/products/${product?.productCode || product?.code}`}
+        href={productCardUrl}
         className="md:hidden flex flex-col w-full bg-background border-b border-zinc-100 dark:border-zinc-800/80 py-4 px-0 relative select-none"
         draggable={false}
       >

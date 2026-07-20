@@ -1,11 +1,9 @@
-// src/domains/front/product/validation/product.validation.ts
-
 import { z } from 'zod';
 import { BaseValidator } from '@/core/validation/base.validator';
 import { SearchProductsRequest } from '../types/view.types';
 
 export class SearchProductsValidator extends BaseValidator<SearchProductsRequest> {
-  protected getSchema(): z.ZodSchema<SearchProductsRequest> {
+  public getSchema(): z.ZodSchema<SearchProductsRequest> {
     return z.object({
       searchTitle: z.string().optional(),
       isProductInStock: z.boolean().optional(),
@@ -38,6 +36,24 @@ export class SearchProductsValidator extends BaseValidator<SearchProductsRequest
   }
 }
 
+export class ProductDetailRequestValidator extends BaseValidator<{ productCode: number }> {
+  public getSchema(): z.ZodSchema<{ productCode: number }> {
+    return z.object({
+      productCode: z.number().int().positive('کد کالا باید عدد مثبت معتبر باشد')
+    });
+  }
+}
+
+export class FavoriteRequestValidator extends BaseValidator<{ productId: string }> {
+  public getSchema(): z.ZodSchema<{ productId: string }> {
+    return z.object({
+      productId: z.string().uuid('شناسه محصول باید یک UUID معتبر باشد')
+    });
+  }
+}
+
 export const productValidators = {
   search: new SearchProductsValidator(),
+  details: new ProductDetailRequestValidator(),
+  favorite: new FavoriteRequestValidator()
 } as const;

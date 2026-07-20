@@ -1,5 +1,26 @@
 import { Product, Money, Discount, Image } from '@/domains/front/product/types/domain.types';
-import { ProductViewModel, SearchProductsRequest, ProductPriceChartViewModel } from '@/domains/front/product/types/view.types';
+import { 
+  ProductViewModel, 
+  SearchProductsRequest, 
+  ProductPriceChartViewModel,
+  ProductPageViewModel,
+  ProductDetailsViewModel,
+  ShopProductViewModel,
+  PriceChartViewModel,
+  CommentsAverageViewModel,
+  CommentItemViewModel,
+  InquiryItemViewModel
+} from '@/domains/front/product/types/view.types';
+import { 
+  ProductPageResponseDto, 
+  PriceChartDto, 
+  CommentsAverageDto, 
+  CommentItemDto, 
+  InquiryItemDto,
+  ProductDto,
+  ShopProductDto
+} from '../types/dto.types';
+import { getProductUrl } from '@/core/utils/formatters';
 
 export class ProductMapper {
   static toDomain(dto: any): Product {
@@ -52,6 +73,7 @@ export class ProductMapper {
         id: dto.brandId || '',
         name: dto.brandName || '',
         englishTitle: dto.brandName || '',
+        logo: dto.brandLogo || null,
       },
       shop: {
         id: nominated.shopId || dto.shopId || '',
@@ -211,8 +233,166 @@ export class ProductMapper {
     };
   }
 
+  static toViewProductPage(dto: ProductPageResponseDto): ProductPageViewModel | null {
+    if (!dto || !dto.product) {
+      return null;
+    }
+    return {
+      product: this.toViewProductDetails(dto.product),
+      shopProducts: {
+        newNominated: dto.shopProducts?.newNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.newNominatedShopProduct) : null,
+        newOnline: (dto.shopProducts?.newOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
+        newLocal: (dto.shopProducts?.newLocalShopProducts || []).map(p => this.toViewShopProduct(p)),
+        takeOffNominated: dto.shopProducts?.takeOffNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.takeOffNominatedShopProduct) : null,
+        takeOffOnline: (dto.shopProducts?.takeOffOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
+        takeOffLocal: (dto.shopProducts?.takeOffLocalShopProducts || []).map(p => this.toViewShopProduct(p)),
+        stockNominated: dto.shopProducts?.stockNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.stockNominatedShopProduct) : null,
+        stockOnline: (dto.shopProducts?.stockOnlineShopProducts || []).map(p => this.toViewShopProduct(p)),
+        stockLocal: (dto.shopProducts?.stockLocalShopProducts || []).map(p => this.toViewShopProduct(p))
+      }
+    };
+  }
+
+  static toViewProductDetails(dto: ProductDto): ProductDetailsViewModel {
+    return {
+      id: dto.id,
+      code: dto.productCode,
+      title: dto.title,
+      image: dto.image,
+      imageAlt: dto.imageAlt,
+      description: dto.description,
+      partNumber: dto.partNumber,
+      averageRate: dto.averageRate,
+      rateCount: dto.rateCount,
+      views: this.formatNumber(dto.views),
+      salesCount: this.formatNumber(dto.totalSalesCount),
+      brand: {
+        id: dto.brand?.id || '',
+        name: dto.brand?.name || '',
+        englishTitle: dto.brand?.englishTitle || '',
+        logo: dto.brand?.image || null
+      },
+      cars: (dto.cars || []).map(c => ({
+        id: c.id,
+        model: c.model,
+        englishTitle: c.englishTitle,
+        cover: c.cover
+      })),
+      gallery: dto.productImageGallery || [],
+      specGroups: (dto.productDetails || []).map(g => ({
+        name: g.name,
+        specs: (g.productDetails || []).map(s => ({
+          name: s.name,
+          value: s.value,
+          isMain: s.isMain
+        }))
+      })),
+      seo: {
+        title: dto.seoInformation?.title || '',
+        description: dto.seoInformation?.description || ''
+      },
+      breadCrumbs: (dto.breadCrumbs || []).map(b => ({
+        id: b.id,
+        title: b.title,
+        englishTitle: b.englishTitle,
+        url: getProductUrl(dto.productCode, dto.title)
+      }))
+    };
+  }
+
+  static toViewShopProduct(dto: ShopProductDto): ShopProductViewModel {
+    const isDiscountActive = dto.rialRetailPrice > dto.finalRialPrice;
+    return {
+      id: dto.id,
+      quantity: dto.quantity,
+      retailPrice: this.formatPrice(dto.rialRetailPrice / 10) + ' تومان',
+      finalPrice: this.formatPrice(dto.finalRialPrice / 10) + ' تومان',
+      retailPriceRaw: dto.rialRetailPrice,
+      finalPriceRaw: dto.finalRialPrice,
+      discountPercentage: dto.discountPercentage,
+      hasDiscount: isDiscountActive,
+      type: dto.type,
+      typeLabel: dto.type === 'New' ? 'قطعه نو' : dto.type === 'Stock' ? 'قطعه استوک' : 'قطعه زیرصفری',
+      isAdvertised: dto.isAdvertised,
+      isLocalSale: dto.isLocalSale,
+      isTipaxShipping: dto.isTipaxShipping,
+      isDirectShipping: dto.isDirectShipping,
+      dayOfDelivery: dto.dayOfDelivery,
+      dayOfDeliveryLabel: `ارسال ${this.formatNumber(dto.dayOfDelivery)} روزه فروشنده`,
+      shop: {
+        id: dto.shop?.id || '',
+        title: dto.shop?.shopTitle || '',
+        latitude: dto.shop?.latitude || 0,
+        longitude: dto.shop?.longitude || 0,
+        address: dto.shop?.address || '',
+        phone: dto.shop?.tell || null,
+        averageRate: dto.shop?.averageRate || 0,
+        logo: dto.shop?.logo || null
+      },
+      warrantyTitle: dto.warrantySupport?.title || 'بدون گارانتی'
+    };
+  }
+
+  static toViewCommentsAverage(dto: CommentsAverageDto): CommentsAverageViewModel {
+    const total = dto.allRatesCount || 1;
+    return {
+      averageRate: dto.averageRate,
+      allRatesCount: dto.allRatesCount,
+      allCommentsCount: dto.allCommentsCount,
+      allInquiriesCount: dto.allInquiriesCount,
+      starPercentages: {
+        five: Math.round((dto.fiveStarRatesCount / total) * 100),
+        four: Math.round((dto.fourStarRatesCount / total) * 100),
+        three: Math.round((dto.threeStarRatesCount / total) * 100),
+        two: Math.round((dto.twoStarRatesCount / total) * 100),
+        one: Math.round((dto.oneStarRatesCount / total) * 100)
+      }
+    };
+  }
+
+  static toViewCommentItem(dto: CommentItemDto): CommentItemViewModel {
+    return {
+      id: dto.id,
+      comment: dto.comment,
+      rate: dto.rate,
+      creator: dto.commentCreator,
+      likes: dto.likes,
+      dislikes: dto.dislikes,
+      repliesCount: dto.repliesCount,
+      createDateFormatted: new Date(dto.createDate).toLocaleDateString('fa-IR'),
+      isSellerComment: dto.isSellerComment,
+      isBuyerUser: dto.isBuyerUser,
+      isYourComment: dto.isYourComment,
+      userBoughtFrom: dto.userBoughtFrom,
+      userLiked: dto.userLiked,
+      userDisLiked: dto.userDisLiked
+    };
+  }
+
+  static toViewInquiryItem(dto: InquiryItemDto): InquiryItemViewModel {
+    return {
+      id: dto.id,
+      comment: dto.comment,
+      creator: dto.inquiryCreator,
+      replyCount: dto.replyCount,
+      likes: dto.likes,
+      dislikes: dto.dislikes,
+      isSellerComment: dto.isSellerComment,
+      isBuyerUser: dto.isBuyerUser,
+      isYourComment: dto.isYourComment,
+      createDateFormatted: new Date(dto.createDate).toLocaleDateString('fa-IR'),
+      userLiked: dto.userLiked,
+      userDisLiked: dto.userDisLiked,
+      bestReply: dto.bestReply ? this.toViewInquiryItem(dto.bestReply) : null
+    };
+  }
+
   private static formatNumber(value: number): string {
     return new Intl.NumberFormat('fa-IR').format(value);
+  }
+
+  private static formatPrice(value: number): string {
+    return new Intl.NumberFormat('fa-IR').format(Math.round(value));
   }
 
   private static isNew(date: Date): boolean {

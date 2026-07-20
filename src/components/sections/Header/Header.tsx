@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Logo } from './components/Logo/Logo';
@@ -13,7 +15,6 @@ import { MobileHeader } from './components/MobileHeader/MobileHeader';
 import { MyCarButton } from './components/MyCarButton/MyCarButton';
 import { CitySelector } from './components/CitySelector/CitySelector';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
-import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/shared/store/useAppStore';
 
 interface HeaderProps {
@@ -22,19 +23,30 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   useAuth(); 
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
   const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
   const { scrollY } = useScroll();
 
+  useEffect(() => {
+    setIsHeaderMinimized(false);
+  }, [pathname, setIsHeaderMinimized]);
+
   useMotionValueEvent(scrollY, "change", (latest) => {
     const prev = scrollY.getPrevious() || 0;
+    let nextState = false;
+
     if (latest < 120) {
-      setIsHeaderMinimized(false);
+      nextState = false;
     } else if (latest > prev) {
-      setIsHeaderMinimized(true);
+      nextState = true;
     } else {
-      setIsHeaderMinimized(false);
+      nextState = false;
+    }
+
+    if (nextState !== isHeaderMinimized) {
+      setIsHeaderMinimized(nextState);
     }
   });
 
@@ -117,7 +129,7 @@ export function Header({ className }: HeaderProps) {
         </motion.div>
       </div>
 
-      <div className="lg:hidden h-[144px] w-full" />
+      <div className="lg:hidden h-[166px] w-full" />
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-2 w-full shadow-sm">
         <div className="max-w-screen-2xl mx-auto">
           <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
