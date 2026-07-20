@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useGetProductPageData,  } from '@/domains/front/product/hooks/product.hooks';
+import { useGetProductPageData } from '@/domains/front/product/hooks/product.hooks';
 import { useAddToBasket as useGlobalAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { ProductHeader } from './components/ProductHeader';
 import { ConditionSelector } from './components/ConditionSelector';
@@ -100,13 +100,14 @@ export function ProductContent({ productCode }: ProductContentProps) {
 
   const activeSellers = getSellersForCondition();
   const allAvailableSellersList = [...activeSellers.online, ...activeSellers.local];
-  
-  const currentSelectedSeller = allAvailableSellersList.find(s => s.id === activeSellerId) 
-    || activeSellers.nominated 
-    || allAvailableSellersList[0] 
-    || null;
 
-  const handleScrollToSection = (ref: React.RefObject<HTMLDivElement>, sectionId: string) => {
+  const currentSelectedSeller =
+    allAvailableSellersList.find((s) => s.id === activeSellerId) ||
+    activeSellers.nominated ||
+    allAvailableSellersList[0] ||
+    null;
+
+  const handleScrollToSection = (ref: React.RefObject<HTMLDivElement | null>, sectionId: string) => {
     if (ref.current) {
       const offsetValue = window.innerWidth < 1024 ? 144 : 188;
       const topOffset = ref.current.getBoundingClientRect().top + window.scrollY - offsetValue;
@@ -119,9 +120,13 @@ export function ProductContent({ productCode }: ProductContentProps) {
     if (!currentSelectedSeller) return;
     setIsMobileSubmitting(true);
     try {
-      await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      await addToBasket.mutateAsync({
+        shopProductId: currentSelectedSeller.id,
+        quantity: 1,
+      });
       showToast.success('قطعه با موفقیت به سبد خرید شما افزوده شد');
     } catch (err: any) {
+      // خطا توسط سیستم مدیریت می‌شود
     } finally {
       setIsMobileSubmitting(false);
     }
@@ -131,62 +136,67 @@ export function ProductContent({ productCode }: ProductContentProps) {
 
   const leftPriceContent = currentSelectedSeller ? (
     <div className="flex flex-col text-right">
-      <span className="text-[10px] text-muted-foreground font-iran-sans mb-0.5">قیمت فروشنده:</span>
+      <span className="text-[10px] text-muted-foreground font-iran-sans">قیمت فروشنده:</span>
       {currentSelectedSeller.hasDiscount && (
-        <span className="text-[9px] text-zinc-400 line-through leading-none mb-0.5 font-iran-sans">
+        <span className="text-[10px] text-zinc-400 line-through leading-none mb-1 font-iran-sans">
           {currentSelectedSeller.retailPrice}
         </span>
       )}
-      <span className="text-sm font-black text-foreground font-iran-sans leading-none">
+      <span className="text-xs md:text-sm font-black text-foreground font-iran-sans leading-none">
         {currentSelectedSeller.finalPrice}
       </span>
     </div>
-  ) : null;
+  ) : (
+    <span className="text-destructive font-bold text-xs font-iran-sans">ناموجود</span>
+  );
 
   return (
-    <div className="w-full flex flex-col gap-5 text-right select-none" dir="rtl">
-      
+    <div className="w-full flex flex-col gap-1">
+      {/* Breadcrumbs - تمام عرض */}
       <div className="w-full flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans overflow-x-auto no-scrollbar py-1.5 select-none">
-        <Link href="/" className="hover:text-primary transition-colors">خانه</Link>
+        <Link href="/" className="hover:text-primary transition-colors">
+          خانه
+        </Link>
         {product.breadCrumbs.map((crumb, idx) => {
           const isLast = idx === product.breadCrumbs.length - 1;
           const url = isLast ? getProductUrl(product.code, product.title) : `/categories/${crumb.englishTitle}`;
-          
+
           return (
             <div key={crumb.id} className="flex items-center gap-1.5">
               <ChevronLeft className="h-3.5 w-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
               {isLast ? (
-                <span className="text-foreground font-bold truncate max-w-[180px] md:max-w-none">{crumb.title}</span>
+                <span className="text-foreground font-bold truncate max-w-[180px] md:max-w-none">
+                  {crumb.title}
+                </span>
               ) : (
-                <Link href={url} className="hover:text-primary transition-colors whitespace-nowrap">{crumb.title}</Link>
+                <Link href={url} className="hover:text-primary transition-colors whitespace-nowrap">
+                  {crumb.title}
+                </Link>
               )}
             </div>
           );
         })}
       </div>
 
+      {/* چیدمان دو ستونه اصلی */}
       <div className="w-full flex flex-col lg:flex-row items-start gap-8">
         
-        <div className="flex-1 flex flex-col w-full lg:max-w-[70%] gap-6">
-          
+        {/* ستون چپ (محتوای کامل کالا) */}
+        <div className="flex-1 min-w-0 flex flex-col w-full gap-6">
           <div className="w-full flex flex-col md:flex-row gap-6 md:gap-8">
-            
             <div className="w-full md:w-[45%] shrink-0">
-              <ProductGallery 
-                images={galleryImages} 
-                title={product.title} 
-              />
+              <ProductGallery images={galleryImages} title={product.title} />
             </div>
 
             <div className="flex-1 min-w-0 flex flex-col gap-5">
-              <ProductHeader 
-                product={product} 
+              <ProductHeader
+                product={product}
                 onScrollToComments={() => handleScrollToSection(commentsRef, 'comments')}
                 onScrollToInquiries={() => handleScrollToSection(inquiriesRef, 'inquiries')}
               />
 
-              <ConditionSelector 
-                selectedCondition={selectedCondition} 
+              <ConditionSelector
+                selectedCondition={selectedCondition}
                 onChangeCondition={(cond) => {
                   setSelectedCondition(cond);
                   setActiveSellerId(null);
@@ -198,102 +208,124 @@ export function ProductContent({ productCode }: ProductContentProps) {
 
               <PickupAlert />
             </div>
-
           </div>
 
-          <SellersList 
+          <SellersList
             activeSellers={activeSellers}
             selectedSellerId={currentSelectedSeller?.id || null}
             onSelectSeller={(id) => setActiveSellerId(id)}
             productTitle={product.title}
           />
 
-        </div>
+          {/* تب‌های جابجایی سریع - داخل ستون چپ تا به درستی در کل مسیر چسبان بماند */}
+          <div className="sticky top-[64px] lg:top-[76px] z-30 bg-background border-b flex items-center gap-6 overflow-x-auto no-scrollbar py-2.5 w-full mt-6 shadow-sm transition-all duration-300 px-1 outline-none">
+            <button
+              onClick={() => handleScrollToSection(introRef, 'intro')}
+              className={cn(
+                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                activeSection === 'intro' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
+              )}
+            >
+              معرفی کالا
+            </button>
+            <button
+              onClick={() => handleScrollToSection(specsRef, 'specs')}
+              className={cn(
+                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                activeSection === 'specs' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
+              )}
+            >
+              مشخصات فنی
+            </button>
+            <button
+              onClick={() => handleScrollToSection(commentsRef, 'comments')}
+              className={cn(
+                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                activeSection === 'comments' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
+              )}
+            >
+              امتیاز و نظرات کاربران
+            </button>
+            <button
+              onClick={() => handleScrollToSection(inquiriesRef, 'inquiries')}
+              className={cn(
+                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                activeSection === 'inquiries' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
+              )}
+            >
+              پرسش و پاسخ
+            </button>
+          </div>
 
-        <div className="hidden lg:flex w-full lg:w-[30%] shrink-0 lg:sticky lg:top-[132px] flex flex-col gap-6">
-          {currentSelectedSeller && (
-            <ProductSideInvoice 
+     <div ref={introRef} className="pt-6">
+  <h3 className="text-sm md:text-base font-bold font-iran-yekan text-foreground mb-3">معرفی کالا</h3>
+  <div className="relative">
+    <div 
+      style={{ maxHeight: isIntroExpanded ? 'none' : '110px' }}
+      className="text-xs md:text-sm leading-relaxed text-muted-foreground text-justify font-iran-sans overflow-hidden transition-all duration-300"
+      dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
+    />
+    {!isIntroExpanded && (
+      <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+    )}
+  </div>
+  <div className="flex justify-center mt-3">
+    <button
+      onClick={() => setIsIntroExpanded(!isIntroExpanded)}
+      className="flex items-center gap-0.5 text-xs font-bold text-primary hover:underline outline-none"
+    >
+      <span>{isIntroExpanded ? 'نمایش کمتر' : 'نمایش بیشتر'}</span>
+      {isIntroExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+    </button>
+  </div>
+</div>
+
+          <div ref={specsRef} className="pt-8">
+            <ProductSpecsTable specGroups={product.specGroups} />
+          </div>
+
+          <div ref={commentsRef} className="pt-8">
+            <ProductCommentsSection productId={product.id} />
+          </div>
+
+          <div ref={inquiriesRef} className="pt-8">
+            <ProductInquiriesSection productId={product.id} />
+          </div>
+
+          {/* فاکتور موبایل برای چیدمان عمودی در سایز کوچک */}
+          <div className="lg:hidden w-full mt-6">
+            <ProductSideInvoice
               product={product}
-              seller={currentSelectedSeller} 
+              seller={currentSelectedSeller}
               sellersCount={allAvailableSellersList.length}
             />
-          )}
+          </div>
         </div>
 
-      </div>
-
-      <div className="sticky top-[64px] lg:top-[76px] z-30 bg-background border-b flex items-center gap-6 overflow-x-auto no-scrollbar py-2.5 w-full mt-6 shadow-sm transition-all duration-300 px-1 animate-none outline-none">
-        <button onClick={() => handleScrollToSection(introRef, 'intro')} className={cn(
-          "text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors animate-none outline-none",
-          activeSection === 'intro' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
-        )}>معرفی کالا</button>
-        <button onClick={() => handleScrollToSection(specsRef, 'specs')} className={cn(
-          "text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors animate-none outline-none",
-          activeSection === 'specs' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
-        )}>مشخصات فنی</button>
-        <button onClick={() => handleScrollToSection(commentsRef, 'comments')} className={cn(
-          "text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors animate-none outline-none",
-          activeSection === 'comments' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
-        )}>امتیاز و نظرات کاربران</button>
-        <button onClick={() => handleScrollToSection(inquiriesRef, 'inquiries')} className={cn(
-          "text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors animate-none outline-none",
-          activeSection === 'inquiries' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
-        )}>پرسش و پاسخ</button>
-      </div>
-
-      <div ref={introRef} className="pt-6 relative">
-        <h3 className="text-sm md:text-base font-bold font-iran-yekan text-foreground mb-3">معرفی کالا</h3>
-        <div 
-          style={{ maxHeight: isIntroExpanded ? 'none' : '110px' }}
-          className="text-xs md:text-sm leading-relaxed text-muted-foreground text-justify font-iran-sans overflow-hidden transition-all duration-300 relative"
-          dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
-        />
-        {!isIntroExpanded && (
-          <div className="absolute bottom-10 left-0 right-0 h-14 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-        )}
-        <div className="flex justify-center mt-3">
-          <button
-            onClick={() => setIsIntroExpanded(!isIntroExpanded)}
-            className="flex items-center gap-0.5 text-xs font-bold text-primary hover:underline outline-none"
-          >
-            <span>{isIntroExpanded ? 'نمایش کمتر' : 'نمایش بیشتر'}</span>
-            {isIntroExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-
-      <div ref={specsRef} className="pt-8">
-        <ProductSpecsTable specGroups={product.specGroups} />
-      </div>
-
-      <div ref={commentsRef} className="pt-8">
-        <ProductCommentsSection productId={product.id} />
-      </div>
-
-      <div ref={inquiriesRef} className="pt-8">
-        <ProductInquiriesSection productId={product.id} />
-      </div>
-
-      {currentSelectedSeller && (
-        <div className="lg:hidden w-full mt-6">
-          <ProductSideInvoice 
+        {/* ستون راست (پیش‌فاکتور کناری چسبان با عرض کنترل شده) */}
+        <div className="hidden lg:flex w-[320px] xl:w-[340px] shrink-0 lg:sticky lg:top-[132px] flex flex-col gap-6">
+          <ProductSideInvoice
             product={product}
-            seller={currentSelectedSeller} 
+            seller={currentSelectedSeller}
             sellersCount={allAvailableSellersList.length}
           />
         </div>
-      )}
 
-      {currentSelectedSeller && (
-        <MobileBottomAction
-          label="افزودن به سبد خرید"
-          leftContent={leftPriceContent}
-          onClick={handleMobileAddToBasket}
-          isLoading={isMobileSubmitting}
-          icon={<ShoppingBag className="h-4 w-4" />}
-        />
-      )}
+      </div>
 
+      {/* منوی شناور پایین صفحه موبایل */}
+      <MobileBottomAction
+        label={currentSelectedSeller ? 'افزودن به سبد خرید' : 'ناموجود'}
+        leftContent={leftPriceContent}
+        onClick={() => {
+          if (currentSelectedSeller) {
+            handleMobileAddToBasket();
+          }
+        }}
+        disabled={!currentSelectedSeller}
+        isLoading={isMobileSubmitting}
+        icon={currentSelectedSeller ? <ShoppingBag className="h-4 w-4" /> : null}
+      />
     </div>
   );
 }

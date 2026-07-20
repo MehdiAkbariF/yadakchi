@@ -12,6 +12,7 @@ import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { Button } from '@/components/primitives/Button/Button';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductHeaderProps {
   product: ProductDetailsViewModel;
@@ -21,6 +22,7 @@ interface ProductHeaderProps {
 
 export function ProductHeader({ product, onScrollToComments, onScrollToInquiries }: ProductHeaderProps) {
   const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
   const { data: isFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
   const addFavorite = useAddFavorite(product.code);
   const deleteFavorite = useDeleteFavorite(product.code);
@@ -30,6 +32,15 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [reportDescription, setReportDescription] = useState('');
+
+  // نظارت وضعیت لحظه‌ای کوئری در کنسول مرورگر
+  useEffect(() => {
+    if (mounted) {
+      console.log('[Favorite Debug] Product Code:', product.code);
+      console.log('[Favorite Debug] isFavorite value from Query:', isFavorite);
+      console.log('[Favorite Debug] isFavLoading state:', isFavLoading);
+    }
+  }, [isFavorite, isFavLoading, product.code, mounted]);
 
   useEffect(() => {
     setMounted(true);
@@ -45,6 +56,15 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         showToast.success('به علاقه‌مندی‌ها اضافه شد');
       }
     } catch (err: any) {
+      // پشتیبان هوشمند: اگر سرور اعلام کرد که قبلاً به علاقه‌مندی‌ها اضافه شده است، دکمه را قرمز می‌کنیم
+      if (
+        err?.message?.includes('قبلا ثبت شده است') || 
+        err?.userMessage?.includes('قبلا ثبت شده است')
+      ) {
+        queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], true);
+        showToast.success('به علاقه‌مندی‌ها اضافه شد');
+        return;
+      }
       showToast.error(err.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
     }
   };
@@ -125,7 +145,10 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
             {isFavLoading || addFavorite.isPending || deleteFavorite.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
             ) : (
-              <Heart className={cn("h-4 w-4 transition-colors duration-200", isFavorite ? "fill-destructive text-destructive" : "text-muted-foreground")} />
+              <Heart className={cn(
+                "h-4 w-4 transition-colors duration-200", 
+                isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"
+              )} />
             )}
           </button>
         </div>

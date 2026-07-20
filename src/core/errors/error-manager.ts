@@ -39,6 +39,23 @@ export class ErrorManager {
       canHandle: (error) => error.type === ErrorType.UNAUTHORIZED,
       handle: (error) => {
         logger.warn('Unauthorized access:', error.message);
+        
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const originalError = error.originalError as any;
+          const requestUrl = originalError?.config?.url || '';
+
+          // چک کردن عدم ردایرکت روی متدهای پسیو کاربر مهمان
+          const isPassiveAuthCheck = 
+            requestUrl.includes('/User') || 
+            requestUrl.includes('/Refresh') || 
+            requestUrl.includes('/get-user');
+
+          // در صورتی که صفحه جاری لاگین نباشد و درخواست هم پسیو نباشد، هدایت به لاگین انجام شود
+          if (currentPath !== '/login' && !isPassiveAuthCheck) {
+            window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+          }
+        }
       },
       getPriority: () => 9,
     });

@@ -318,11 +318,29 @@ export class ProductService {
 
   async isUserFavoriteProduct(productCode: number): Promise<boolean> {
     try {
-      const response = await this.httpClient.get<boolean>(
+      const response = await this.httpClient.get<any>(
         PRODUCT_ENDPOINTS.IS_FAVORITE,
-        { params: { productCode } }
+        { 
+          params: { 
+            productCode,
+            _t: Date.now() // اضافه کردن تاچ تایم بستر جهت غیرفعال‌سازی کش مرورگر کلاینت
+          } 
+        }
       );
-      return response.data;
+
+      const result = response.data;
+
+      // بررسی دقیق بولین خام
+      if (result === true || result === 'true') return true;
+      if (result === false || result === 'false') return false;
+
+      // پشتیبان در صورت وجود آبجکت پوششی
+      if (result && typeof result === 'object') {
+        const dataValue = (result as any).data;
+        if (dataValue === true || dataValue === 'true') return true;
+      }
+
+      return false;
     } catch (error) {
       logger.error('[ProductService] Check favorite failed:', error);
       return false;
@@ -331,11 +349,12 @@ export class ProductService {
 
   async addFavorite(productId: string): Promise<void> {
     try {
-      const formData = new FormData();
-      formData.append('ProductId', productId);
-      await this.httpClient.post(PRODUCT_ENDPOINTS.POST_FAVORITE, formData, {
+      const params = new URLSearchParams();
+      params.append('ProductId', productId);
+
+      await this.httpClient.post(PRODUCT_ENDPOINTS.POST_FAVORITE, params, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
     } catch (error) {
@@ -346,11 +365,12 @@ export class ProductService {
 
   async deleteFavorite(productId: string): Promise<void> {
     try {
-      const formData = new FormData();
-      formData.append('ProductId', productId);
-      await this.httpClient.delete(PRODUCT_ENDPOINTS.DELETE_FAVORITE, formData, {
+      const params = new URLSearchParams();
+      params.append('ProductId', productId);
+
+      await this.httpClient.delete(PRODUCT_ENDPOINTS.DELETE_FAVORITE, params, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/x-www-form-urlencoded'
         }
       });
     } catch (error) {

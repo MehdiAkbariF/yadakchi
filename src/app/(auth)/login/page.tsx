@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthLayout } from '@/components/shared/Layouts/AuthLayout';
@@ -11,11 +11,13 @@ import { Typography } from '@/components/primitives/Typography';
 import { useRequestLogin, useConfirmLogin, useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { authValidators, LoginRequest } from '@/domains/auth/validation/auth.validation';
 import { Phone, RotateCcw, PencilLine } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { showToast } from '@/core/utils/toast';
 
-export default function LoginPage() {
+function LoginContent() {
   const { isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpArray, setOtpArray] = useState<string[]>(Array(5).fill(''));
@@ -24,6 +26,9 @@ export default function LoginPage() {
 
   const requestLogin = useRequestLogin();
   const confirmLogin = useConfirmLogin();
+
+  // خواندن مسیر بازگشتی (Redirect URL) از پارامتر آدرس
+  const redirectUrl = searchParams ? (searchParams.get('redirect') || '/') : '/';
 
   const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginRequest>({
     resolver: zodResolver(authValidators.login.getSchema() as any),
@@ -34,9 +39,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = '/';
+      window.location.href = redirectUrl;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, redirectUrl]);
 
   useEffect(() => {
     if (isTimerActive && countdown > 0) {
@@ -88,7 +93,7 @@ export default function LoginPage() {
     try {
       await confirmLogin.mutateAsync({ phoneNumber, code });
       showToast.success('خوش آمدید! در حال انتقال...');
-      window.location.href = '/';
+      window.location.href = redirectUrl;
     } catch (err: any) {
       const errMsg = err.userMessage || 'کد ورود معتبر نیست یا منقضی شده است';
       showToast.error(errMsg);
@@ -199,5 +204,13 @@ export default function LoginPage() {
         </div>
       )}
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }

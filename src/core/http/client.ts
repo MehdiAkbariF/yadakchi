@@ -76,7 +76,32 @@ export class HttpClient {
       async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry && typeof window !== 'undefined') {
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const requestUrl = originalRequest.url || '';
+
+          // ۱. اگر در صفحه لاگین هستیم، هرگز نباید ریدایرکت مجدد کنیم (جلوگیری از لوپ بی‌نهایت)
+          if (currentPath === '/login') {
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          // ۲. نادیده گرفتن ریدایرکت خودکار روی متدهای بررسی اولیه نشست کاربر
+          const isPassiveAuthCheck = 
+            requestUrl.includes('/User') || 
+            requestUrl.includes('/Refresh') || 
+            requestUrl.includes('/get-user');
+
+          if (isPassiveAuthCheck) {
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          // ۳. برای تمام درخواست‌های فعال دیگر کاربر روی هر صفحه‌ای، در صورت دریافت ۴۰۱ هدایت انجام می‌شود
+          if (originalRequest._retry) {
+            window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          // اگر در حال تمدید توکن توسط درخواستی دیگر هستیم
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
@@ -98,6 +123,9 @@ export class HttpClient {
               .catch((refreshError) => {
                 this.failedQueue.forEach((prom) => prom.reject(refreshError));
                 this.failedQueue = [];
+                
+                // در صورت شکست در تمدید توکن، انتقال مستقیم به صفحه لاگین
+                window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
                 reject(refreshError);
               })
               .finally(() => {
