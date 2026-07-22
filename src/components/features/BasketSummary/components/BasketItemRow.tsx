@@ -161,14 +161,9 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
         </div>
       </div>
 
-<<<<<<< HEAD
       <div className="w-full md:w-36 flex flex-row md:flex-col items-center justify-between md:justify-center 
       gap-4 shrink-0 md:order-2 border-t md:border-t-0 md:border-r md:pr-6 border-dashed pt-4 md:pt-0">
         <div className="w-20 h-20 md:w-28 md:h-28 shrink-0 rounded-xl overflow-hidden border bg-muted/10 flex items-center justify-center">
-=======
-      <div className="flex flex-col items-end justify-between shrink-0 w-24 md:w-32">
-        <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl border bg-muted/5 flex items-center justify-center overflow-hidden">
->>>>>>> ee1c3b6c9d64849d437b098183bfbfd112f4929a
           <img
             src={getFullUrl(item.product.image)}
             alt={item.product.title}
