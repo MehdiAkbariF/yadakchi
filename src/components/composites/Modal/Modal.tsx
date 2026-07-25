@@ -192,7 +192,8 @@ export const ModalFooter = forwardRef<HTMLDivElement, ModalFooterProps>(
       <div
         ref={ref}
         className={cn(
-          'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 rtl:sm:space-x-reverse shrink-0 p-4 md:p-0 border-t md:border-t-0 w-full',
+          'flex shrink-0 p-4 md:p-0 border-t md:border-t-0 w-full',
+          // حذف کلاس‌های قبلی و استفاده از کلاس‌های جدید
           className
         )}
         {...props}

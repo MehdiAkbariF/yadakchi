@@ -93,100 +93,104 @@ export function PersonalInfoModal({ isOpen, onClose, user }: PersonalInfoModalPr
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
-      <ModalHeader onClose={onClose}>
-        <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
-          <UserIcon className="h-5 w-5 text-primary" />
-          ویرایش اطلاعات فردی
-        </ModalTitle>
-      </ModalHeader>
-      <ModalBody className="p-0 pt-4 text-right">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
-          <span className="text-xs text-muted-foreground font-iran-sans block mb-2 leading-relaxed">
-            لطفاً اطلاعات خود را ویرایش و سپس ثبت کنید.
-          </span>
+<Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
+  <ModalHeader onClose={onClose}>
+    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+      <UserIcon className="h-5 w-5 text-primary" />
+      ویرایش اطلاعات فردی
+    </ModalTitle>
+  </ModalHeader>
+  
+  <ModalBody className="p-5 pt-4 text-right">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
+      <span className="text-xs text-muted-foreground font-iran-sans block mb-2 leading-relaxed">
+        لطفاً اطلاعات خود را ویرایش و سپس ثبت کنید.
+      </span>
 
-          <div className="grid grid-cols-2 gap-3 w-full">
-            <Input
-              label="نام *"
-              placeholder="نام"
-              error={errors.name?.message ? String(errors.name.message) : undefined}
-              className="text-xs font-iran-sans"
-              {...register('name')}
-            />
-            <Input
-              label="نام خانوادگی *"
-              placeholder="نام خانوادگی"
-              error={errors.lastName?.message ? String(errors.lastName.message) : undefined}
-              className="text-xs font-iran-sans"
-              {...register('lastName')}
-            />
-          </div>
+      <div className="grid grid-cols-2 gap-3 w-full">
+        <Input
+          label="نام *"
+          placeholder="نام"
+          error={errors.name?.message ? String(errors.name.message) : undefined}
+          className="text-xs font-iran-sans"
+          {...register('name')}
+        />
+        <Input
+          label="نام خانوادگی *"
+          placeholder="نام خانوادگی"
+          error={errors.lastName?.message ? String(errors.lastName.message) : undefined}
+          className="text-xs font-iran-sans"
+          {...register('lastName')}
+        />
+      </div>
 
-          <Input
-            label="کد ملی *"
-            placeholder="مثال: 0021606803"
-            error={errors.nationalCode?.message ? String(errors.nationalCode.message) : undefined}
-            className="text-xs font-iran-sans text-left"
-            dir="ltr"
-            {...register('nationalCode')}
+      <Input
+        label="کد ملی *"
+        placeholder="مثال: 0021606803"
+        error={errors.nationalCode?.message ? String(errors.nationalCode.message) : undefined}
+        className="text-xs font-iran-sans text-left"
+        dir="ltr"
+        {...register('nationalCode')}
+      />
+
+      <Input
+        label="آدرس ایمیل"
+        placeholder="مثال: email@gmail.com"
+        error={errors.email?.message ? String(errors.email.message) : undefined}
+        className="text-xs font-iran-sans text-left"
+        dir="ltr"
+        {...register('email')}
+      />
+
+      <div className="w-full flex flex-col gap-2">
+        <label className="text-xs md:text-sm font-medium leading-none text-foreground">
+          تاریخ تولد *
+        </label>
+        <div className="grid grid-cols-3 gap-2">
+          <Select
+            placeholder="روز"
+            value={String(birthDay)}
+            onChange={(e) => setBirthDay(Number(e.target.value))}
+            options={days}
           />
-
-          <Input
-            label="آدرس ایمیل"
-            placeholder="مثال: email@gmail.com"
-            error={errors.email?.message ? String(errors.email.message) : undefined}
-            className="text-xs font-iran-sans text-left"
-            dir="ltr"
-            {...register('email')}
+          <Select
+            placeholder="ماه"
+            value={String(birthMonth)}
+            onChange={(e) => setBirthMonth(Number(e.target.value))}
+            options={months}
           />
+          <Select
+            placeholder="سال"
+            value={String(birthYear)}
+            onChange={(e) => setBirthYear(Number(e.target.value))}
+            options={years}
+          />
+        </div>
+      </div>
 
-          <div className="w-full flex flex-col gap-2">
-            <label className="text-xs md:text-sm font-medium leading-none text-foreground">
-              تاریخ تولد *
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <Select
-                placeholder="روز"
-                value={String(birthDay)}
-                onChange={(e) => setBirthDay(Number(e.target.value))}
-                options={days}
-              />
-              <Select
-                placeholder="ماه"
-                value={String(birthMonth)}
-                onChange={(e) => setBirthMonth(Number(e.target.value))}
-                options={months}
-              />
-              <Select
-                placeholder="سال"
-                value={String(birthYear)}
-                onChange={(e) => setBirthYear(Number(e.target.value))}
-                options={years}
-              />
-            </div>
-          </div>
+    </form>
+  </ModalBody>
 
-          <div className="flex gap-2 mt-4 w-full">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1 rounded-xl text-xs h-10"
-            >
-              انصراف
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={updateProfile.isPending}
-              className="flex-1 rounded-xl text-xs h-10"
-            >
-              ثبت اطلاعات
-            </Button>
-          </div>
-        </form>
-      </ModalBody>
-    </Modal>
+  {/* فوتر با دکمه‌های تمام عرض */}
+  <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onClose}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+    >
+      انصراف
+    </Button>
+    <Button
+      type="submit"
+      variant="primary"
+      isLoading={updateProfile.isPending}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      onClick={handleSubmit(onSubmit)}
+    >
+      ثبت اطلاعات
+    </Button>
+  </div>
+</Modal>
   );
 }

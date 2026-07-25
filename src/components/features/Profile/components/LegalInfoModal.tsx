@@ -73,100 +73,104 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
-      <ModalHeader onClose={onClose}>
-        <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
-          <Building className="h-5 w-5 text-primary" />
-          ویرایش اطلاعات حقوقی
-        </ModalTitle>
-      </ModalHeader>
-      <ModalBody className="p-0 pt-4 text-right">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
-          <span className="text-xs text-muted-foreground font-iran-sans block mb-2 leading-relaxed">
-            لطفاً اطلاعات شرکت خود را جهت ثبت در فاکتور رسمی وارد کنید.
-          </span>
+  <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
+  <ModalHeader onClose={onClose}>
+    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+      <Building className="h-5 w-5 text-primary" />
+      ویرایش اطلاعات حقوقی
+    </ModalTitle>
+  </ModalHeader>
+  
+  <ModalBody className="p-5 pt-4 text-right">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
+      <span className="text-xs text-muted-foreground font-iran-sans block mb-2 leading-relaxed">
+        لطفاً اطلاعات شرکت خود را جهت ثبت در فاکتور رسمی وارد کنید.
+      </span>
 
-          <div className="w-full">
-            <Input
-              label="نام سازمان *"
-              placeholder="نام شرکت را وارد کنید"
-              error={errors.organizationName?.message ? String(errors.organizationName.message) : undefined}
-              className="text-xs font-iran-sans"
-              {...register('organizationName')}
-            />
-          </div>
+      <div className="w-full">
+        <Input
+          label="نام سازمان *"
+          placeholder="نام شرکت را وارد کنید"
+          error={errors.organizationName?.message ? String(errors.organizationName.message) : undefined}
+          className="text-xs font-iran-sans"
+          {...register('organizationName')}
+        />
+      </div>
 
-          <div className="w-full">
-            <Input
-              label="نوع سازمان / نوع صنف *"
-              placeholder="نوع شرکت را وارد کنید"
-              error={errors.organizationType?.message ? String(errors.organizationType.message) : undefined}
-              className="text-xs font-iran-sans"
-              {...register('organizationType')}
-            />
-          </div>
+      <div className="w-full">
+        <Input
+          label="نوع سازمان / نوع صنف *"
+          placeholder="نوع شرکت را وارد کنید"
+          error={errors.organizationType?.message ? String(errors.organizationType.message) : undefined}
+          className="text-xs font-iran-sans"
+          {...register('organizationType')}
+        />
+      </div>
 
-          <div className="grid grid-cols-2 gap-3 w-full">
-            <Input
-              label="شناسه ملی *"
-              placeholder="ثبت نشده"
-              error={errors.organizationNationalCode?.message ? String(errors.organizationNationalCode.message) : undefined}
-              className="text-xs font-iran-sans text-left"
-              dir="ltr"
-              {...register('organizationNationalCode')}
-            />
-            <Input
-              label="شناسه ثبت *"
-              placeholder="ثبت نشده"
-              error={errors.organizationRegisterationCode?.message ? String(errors.organizationRegisterationCode.message) : undefined}
-              className="text-xs font-iran-sans text-left"
-              dir="ltr"
-              {...register('organizationRegisterationCode')}
-            />
-          </div>
+      <div className="grid grid-cols-2 gap-3 w-full">
+        <Input
+          label="شناسه ملی *"
+          placeholder="ثبت نشده"
+          error={errors.organizationNationalCode?.message ? String(errors.organizationNationalCode.message) : undefined}
+          className="text-xs font-iran-sans text-left"
+          dir="ltr"
+          {...register('organizationNationalCode')}
+        />
+        <Input
+          label="شناسه ثبت *"
+          placeholder="ثبت نشده"
+          error={errors.organizationRegisterationCode?.message ? String(errors.organizationRegisterationCode.message) : undefined}
+          className="text-xs font-iran-sans text-left"
+          dir="ltr"
+          {...register('organizationRegisterationCode')}
+        />
+      </div>
 
-          <div className="w-full">
-            <Input
-              label="کد اقتصادی *"
-              placeholder="ثبت نشده"
-              error={errors.organizationEconomicCode?.message ? String(errors.organizationEconomicCode.message) : undefined}
-              className="text-xs font-iran-sans text-left"
-              dir="ltr"
-              {...register('organizationEconomicCode')}
-            />
-          </div>
+      <div className="w-full">
+        <Input
+          label="کد اقتصادی *"
+          placeholder="ثبت نشده"
+          error={errors.organizationEconomicCode?.message ? String(errors.organizationEconomicCode.message) : undefined}
+          className="text-xs font-iran-sans text-left"
+          dir="ltr"
+          {...register('organizationEconomicCode')}
+        />
+      </div>
 
-          <div className="w-full">
-            <Input
-              label="تلفن ثابت دفتر مرکزی *"
-              placeholder="ثبت نشده"
-              error={errors.organizationHeadOfficeTel?.message ? String(errors.organizationHeadOfficeTel.message) : undefined}
-              className="text-xs font-iran-sans text-left"
-              dir="ltr"
-              {...register('organizationHeadOfficeTel')}
-            />
-          </div>
+      <div className="w-full">
+        <Input
+          label="تلفن ثابت دفتر مرکزی *"
+          placeholder="ثبت نشده"
+          error={errors.organizationHeadOfficeTel?.message ? String(errors.organizationHeadOfficeTel.message) : undefined}
+          className="text-xs font-iran-sans text-left"
+          dir="ltr"
+          {...register('organizationHeadOfficeTel')}
+        />
+      </div>
 
-          <div className="flex gap-2 mt-4 w-full">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1 rounded-xl text-xs h-10"
-            >
-              انصراف
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={updateProfile.isPending}
-              className="flex-1 rounded-xl text-xs h-10"
-            >
-              ثبت اطلاعات
-            </Button>
-          </div>
-        </form>
-      </ModalBody>
-    </Modal>
+    </form>
+  </ModalBody>
+
+  {/* فوتر با دکمه‌های تمام عرض */}
+  <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onClose}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+    >
+      انصراف
+    </Button>
+    <Button
+      type="submit"
+      variant="primary"
+      isLoading={updateProfile.isPending}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      onClick={handleSubmit(onSubmit)}
+    >
+      ثبت اطلاعات
+    </Button>
+  </div>
+</Modal>
   );
 }

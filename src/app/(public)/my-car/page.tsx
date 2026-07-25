@@ -315,130 +315,132 @@ export default function MyCarPage() {
             </Button>
           </div>
         )}
+<Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
+  <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
+    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+      <Gauge className="h-5 w-5 text-primary" />
+      بروزرسانی کارکرد خودرو
+    </ModalTitle>
+  </ModalHeader>
+  
+  <ModalBody className="p-5 pt-4 text-right">
+    {selectedVehicle && (
+      <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full text-right">
+        
+        <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="w-10 h-10 shrink-0 rounded-lg border bg-background flex items-center justify-center overflow-hidden p-0.5">
+            <img src={getFullUrl(selectedVehicle.carCover)} className="w-full h-full object-contain" alt="" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>برند:</span>
+              <span className="font-bold text-foreground">{selectedVehicle.carManufacturerName}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs font-bold text-foreground">{selectedVehicle.carModel}</span>
+              <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">- {selectedVehicle.title}</span>
+            </div>
+          </div>
+        </div>
 
-        <Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
-          <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
-            <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
-              <Gauge className="h-5 w-5 text-primary" />
-              بروزرسانی کارکرد خودرو
-            </ModalTitle>
-          </ModalHeader>
-          <ModalBody className="p-0 pt-4 text-right">
-            {selectedVehicle && (
-              <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full text-right">
-                
-                <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                  <div className="w-10 h-10 shrink-0 rounded-lg border bg-background flex items-center justify-center overflow-hidden p-0.5">
-                    <img src={getFullUrl(selectedVehicle.carCover)} className="w-full h-full object-contain" alt="" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>برند:</span>
-                      <span className="font-bold text-foreground">{selectedVehicle.carManufacturerName}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-bold text-foreground">{selectedVehicle.carModel}</span>
-                      <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">- {selectedVehicle.title}</span>
-                    </div>
-                  </div>
-                </div>
+        <div className="w-full">
+          <Input
+            label="کیلومتر حدودی یا دقیق خودرو *"
+            placeholder="کیلومتر کارکرد فعلی را وارد کنید..."
+            type="number"
+            error={errorsUpdate.mileage?.message ? String(errorsUpdate.mileage.message) : undefined}
+            rightIcon={<span className="text-xs font-bold text-muted-foreground font-iran-sans">km</span>}
+            className="text-xs font-iran-sans text-left"
+            dir="ltr"
+            {...registerUpdate('mileage', { valueAsNumber: true })}
+          />
+        </div>
 
-                <div className="w-full">
-                  <Input
-                    label="کیلومتر حدودی یا دقیق خودرو *"
-                    placeholder="کیلومتر کارکرد فعلی را وارد کنید..."
-                    type="number"
-                    error={errorsUpdate.mileage?.message ? String(errorsUpdate.mileage.message) : undefined}
-                    rightIcon={<span className="text-xs font-bold text-muted-foreground font-iran-sans">km</span>}
-                    className="text-xs font-iran-sans text-left"
-                    dir="ltr"
-                    {...registerUpdate('mileage', { valueAsNumber: true })}
-                  />
-                </div>
+        <div className="w-full flex flex-col gap-2">
+          <label className="text-xs md:text-sm font-medium leading-none text-foreground">
+            تاریخ حدودی سرویس خودرو (تعویض روغن یا فیلترها) *
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            <Select
+              placeholder="روز"
+              value={String(updateDay)}
+              onChange={(e) => setUpdateDay(Number(e.target.value))}
+              options={days}
+            />
+            <Select
+              placeholder="ماه"
+              value={String(updateMonth)}
+              onChange={(e) => setUpdateMonth(Number(e.target.value))}
+              options={months}
+            />
+            <Select
+              placeholder="سال"
+              value={String(updateYear)}
+              onChange={(e) => setUpdateYear(Number(e.target.value))}
+              options={years}
+            />
+          </div>
+        </div>
 
-                <div className="w-full flex flex-col gap-2">
-                  <label className="text-xs md:text-sm font-medium leading-none text-foreground">
-                    تاریخ حدودی سرویس خودرو (تعویض روغن یا فیلترها) *
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Select
-                      placeholder="روز"
-                      value={String(updateDay)}
-                      onChange={(e) => setUpdateDay(Number(e.target.value))}
-                      options={days}
-                    />
-                    <Select
-                      placeholder="ماه"
-                      value={String(updateMonth)}
-                      onChange={(e) => setUpdateMonth(Number(e.target.value))}
-                      options={months}
-                    />
-                    <Select
-                      placeholder="سال"
-                      value={String(updateYear)}
-                      onChange={(e) => setUpdateYear(Number(e.target.value))}
-                      options={years}
-                    />
-                  </div>
-                </div>
+        <div className="w-full flex flex-col gap-2">
+          <label className="text-xs md:text-sm font-medium leading-none text-foreground">
+            کیلومتر مفید روغن استفاده شده در زمان سرویس *
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            {[5000, 7500, 10000].map((limit) => (
+              <button
+                key={limit}
+                type="button"
+                onClick={() => setUpdateOilLimit(limit)}
+                className={cn(
+                  "py-2 rounded-xl border text-xs font-bold font-iran-sans transition-all outline-none",
+                  updateOilLimit === limit
+                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
+                    : "bg-background text-foreground hover:border-zinc-300"
+                )}
+              >
+                {new Intl.NumberFormat('fa-IR').format(limit)} کیلومتر
+              </button>
+            ))}
+          </div>
+        </div>
 
-                <div className="w-full flex flex-col gap-2">
-                  <label className="text-xs md:text-sm font-medium leading-none text-foreground">
-                    کیلومتر مفید روغن استفاده شده در زمان سرویس *
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[5000, 7500, 10000].map((limit) => (
-                      <button
-                        key={limit}
-                        type="button"
-                        onClick={() => setUpdateOilLimit(limit)}
-                        className={cn(
-                          "py-2 rounded-xl border text-xs font-bold font-iran-sans transition-all outline-none",
-                          updateOilLimit === limit
-                            ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                            : "bg-background text-foreground hover:border-zinc-300"
-                        )}
-                      >
-                        {new Intl.NumberFormat('fa-IR').format(limit)} کیلومتر
-                      </button>
-                    ))}
-                  </div>
-                </div>
+        <div className="w-full bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between text-right">
+          <div className="flex items-center gap-2 text-primary">
+            <Wrench className="h-4 w-4 shrink-0" />
+            <span className="text-xs font-bold font-iran-sans">کیلومتر سرویس بعدی شما:</span>
+          </div>
+          <div className="flex items-center gap-1 text-primary font-black font-iran-sans" dir="ltr">
+            <span>{new Intl.NumberFormat('fa-IR').format((Number(watchMileage) || 0) + updateOilLimit)}</span>
+            <span className="text-[10px] font-bold">km</span>
+          </div>
+        </div>
 
-                <div className="w-full bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between text-right">
-                  <div className="flex items-center gap-2 text-primary">
-                    <Wrench className="h-4 w-4 shrink-0" />
-                    <span className="text-xs font-bold font-iran-sans">کیلومتر سرویس بعدی شما:</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-primary font-black font-iran-sans" dir="ltr">
-                    <span>{new Intl.NumberFormat('fa-IR').format((Number(watchMileage) || 0) + updateOilLimit)}</span>
-                    <span className="text-[10px] font-bold">km</span>
-                  </div>
-                </div>
+      </form>
+    )}
+  </ModalBody>
 
-                <div className="flex gap-2 mt-4 w-full">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsUpdateModalOpen(false)}
-                    className="flex-1 rounded-xl text-xs h-10"
-                  >
-                    انصراف
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    isLoading={updateVehicle.isPending}
-                    className="flex-1 rounded-xl text-xs h-10"
-                  >
-                    ثبت تغییرات
-                  </Button>
-                </div>
-
-              </form>
-            )}
-          </ModalBody>
-        </Modal>
+  {/* فوتر با دکمه‌های تمام عرض */}
+  <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => setIsUpdateModalOpen(false)}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+    >
+      انصراف
+    </Button>
+    <Button
+      type="submit"
+      variant="primary"
+      isLoading={updateVehicle.isPending}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      onClick={handleSubmitUpdate(onUpdateSubmit)}
+    >
+      ثبت تغییرات
+    </Button>
+  </div>
+</Modal>
 
       </div>
     </MainLayout>

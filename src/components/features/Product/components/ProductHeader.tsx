@@ -6,7 +6,7 @@ import { Typography } from '@/components/primitives/Typography';
 import { ProductDetailsViewModel } from '@/domains/front/product/types/view.types';
 import { useIsUserFavoriteProduct, useAddFavorite, useDeleteFavorite, useSubmitProductReport } from '@/domains/front/product/hooks/product.hooks';
 import { useGetReportSubjects } from '@/domains/front/shop/hooks/shop.hooks';
-import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@/components/composites/Modal/Modal';
 import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { Button } from '@/components/primitives/Button/Button';
@@ -159,62 +159,63 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         <button onClick={onScrollToInquiries} className="hover:text-primary hover:underline">تبادل پرسش و پاسخ</button>
       </div>
 
-      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="max-w-md w-full">
-        <ModalHeader onClose={() => setIsReportModalOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
-            <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
-            گزارش خطای کالا
-          </ModalTitle>
-        </ModalHeader>
-        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
-          <div className="flex flex-col gap-1 w-full">
-            <Select
-              label="دلیل گزارش *"
-              placeholder="دلیل گزارش را انتخاب کنید..."
-              value={selectedSubjectId}
-              onChange={(e) => setSelectedSubjectId(e.target.value)}
-              options={subjectsList.map((sub: any) => ({
-                value: sub.id,
-                label: sub.title,
-              }))}
-            />
-          </div>
+  <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="max-w-md w-full">
+  <ModalHeader onClose={() => setIsReportModalOpen(false)}>
+    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+      <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+      گزارش خطای کالا
+    </ModalTitle>
+  </ModalHeader>
+  
+  <ModalBody className="p-5 pt-4 text-right flex flex-col gap-4">
+    <div className="flex flex-col gap-1 w-full">
+      <Select
+        label="دلیل گزارش *"
+        placeholder="دلیل گزارش را انتخاب کنید..."
+        value={selectedSubjectId}
+        onChange={(e) => setSelectedSubjectId(e.target.value)}
+        options={subjectsList.map((sub: any) => ({
+          value: sub.id,
+          label: sub.title,
+        }))}
+      />
+    </div>
 
-          <div className="flex flex-col gap-1 w-full">
-            <TextArea
-              label="توضیحات (اختیاری)"
-              placeholder="جزییات مشکل را بنویسید..."
-              value={reportDescription}
-              onChange={(e) => setReportDescription(e.target.value)}
-              className="h-24 text-xs font-iran-sans"
-            />
-          </div>
+    <div className="flex flex-col gap-1 w-full">
+      <TextArea
+        label="توضیحات (اختیاری)"
+        placeholder="جزییات مشکل را بنویسید..."
+        value={reportDescription}
+        onChange={(e) => setReportDescription(e.target.value)}
+        className="h-24 text-xs font-iran-sans"
+      />
+    </div>
+  </ModalBody>
 
-          <div className="flex gap-2.5 mt-4 w-full">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setIsReportModalOpen(false);
-                setSelectedSubjectId('');
-                setReportDescription('');
-              }}
-              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
-            >
-              انصراف
-            </Button>
-            <Button
-              type="submit"
-              variant="destructive"
-              onClick={handleReportSubmit}
-              isLoading={submitProductReport.isPending}
-              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
-            >
-              ثبت گزارش خطا
-            </Button>
-          </div>
-        </ModalBody>
-      </Modal>
+  <ModalFooter className="p-5 pt-4 gap-2.5">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => {
+        setIsReportModalOpen(false);
+        setSelectedSubjectId('');
+        setReportDescription('');
+      }}
+      className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
+    >
+      انصراف
+    </Button>
+    <Button
+      type="submit"
+      variant="destructive"
+      onClick={handleReportSubmit}
+      isLoading={submitProductReport.isPending}
+      className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
+    >
+      ثبت گزارش خطا
+    </Button>
+  </ModalFooter>
+</Modal>
 
     </div>
   );
