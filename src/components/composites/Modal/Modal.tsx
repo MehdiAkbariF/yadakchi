@@ -54,6 +54,9 @@ export function Modal({
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.modalOpen === 'system-modal') {
+        window.history.back();
+      }
     };
   }, [isOpen, onClose]);
 

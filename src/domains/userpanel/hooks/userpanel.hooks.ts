@@ -241,10 +241,10 @@ export function useDeleteUserVehicle() {
   );
 }
 
-export function useGetUserNotifications(pageNumber: number = 1, channel?: string, priority?: string) {
+export function useGetUserNotifications(pageNumber: number = 1, channel?: string, priority?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest') {
   return useTypedQuery<PaginatedResult<NotificationItemViewModel>>(
-    ['user', 'notifications', 'list', { pageNumber, channel, priority }],
-    () => userPanelService.getUserNotifications(pageNumber, 10, channel, priority),
+    ['user', 'notifications', 'list', { pageNumber, channel, priority, isRead, orderBy }],
+    () => userPanelService.getUserNotifications(pageNumber, 10, channel, priority, undefined, undefined, undefined, isRead, orderBy),
     { staleTime: 30 * 1000 }
   );
 }
@@ -310,6 +310,14 @@ export function useGetFavoriteProducts(pageNumber: number = 1, order: string = '
   return useTypedQuery<PaginatedResult<any>>(
     ['user', 'favorites', 'list', { pageNumber, order }],
     () => userPanelService.getFavoriteProducts(pageNumber, 30, order),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetRecentlyViewedProducts() {
+  return useTypedQuery<any[]>(
+    ['user', 'recent-views', 'list'],
+    () => userPanelService.getRecentlyViewedProducts(),
     { staleTime: 30 * 1000 }
   );
 }

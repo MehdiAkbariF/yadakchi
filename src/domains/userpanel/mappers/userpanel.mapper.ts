@@ -141,14 +141,28 @@ export class UserPanelMapper {
       title: dto.notificationContent?.title || '',
       body: dto.notificationContent?.body || '',
       imageUrl: dto.notificationContent?.imageUrl || null,
+      linkType: dto.notificationContent?.linkType || null,
+      linkText: dto.notificationContent?.linkText || null,
+      channel: dto.notificationContent?.channel || 'System',
+      priority: dto.notificationContent?.priority || null,
       isRead: dto.isRead || false,
       createDate: dto.createDate,
     };
   }
 
   static toViewNotification(domain: NotificationItem): NotificationItemViewModel {
+    const channelLabels: Record<string, string> = {
+      Information: 'اطلاع‌رسانی',
+      AdminMessage: 'پیام مدیریت',
+      SellerMessage: 'پیام فروشنده',
+      Advertise: 'تبلیغات',
+      Discount: 'تخفیف',
+      WebBroadcastMessage: 'پیام سراسری',
+      System: 'سیستم',
+    };
     return {
       ...domain,
+      channelLabel: channelLabels[domain.channel] || 'سیستم',
       createDateFormatted: new Date(domain.createDate).toLocaleDateString('fa-IR'),
     };
   }
@@ -287,6 +301,33 @@ export class UserPanelMapper {
         discountPercentage: dto.discountPercentage || dto.product.nominatedShopProduct.discountPercentage,
         type: dto.product.nominatedShopProduct.type,
         isAdvertised: dto.product.nominatedShopProduct.isAdvertised,
+      } : null,
+    };
+  }
+
+  static toRecentlyViewedProductView(dto: any): any {
+    return {
+      id: dto.productId,
+      code: dto.productCode,
+      title: dto.title,
+      image: dto.image,
+      averageRate: dto.averageRate,
+      rateCount: dto.rateCount,
+      views: 0,
+      salesCount: 0,
+      isFavorite: false,
+      price: {
+        raw: dto.rialFinalPrice,
+        formatted: this.formatPrice(dto.rialFinalPrice / 10)
+      },
+      nominatedShopProduct: dto.nominatedShopProduct ? {
+        id: dto.nominatedShopProduct.id,
+        shopTitle: dto.nominatedShopProduct.shopTitle,
+        rialRetailPrice: dto.rialRetailPrice,
+        rialFinalPrice: dto.rialFinalPrice,
+        discountPercentage: dto.discountPercentage,
+        type: dto.nominatedShopProduct.type,
+        isAdvertised: dto.nominatedShopProduct.isAdvertised,
       } : null,
     };
   }

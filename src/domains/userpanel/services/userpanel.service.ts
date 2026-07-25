@@ -365,7 +365,7 @@ export class UserPanelService {
     }
   }
 
-  async getUserNotifications(pageNumber: number = 1, pageSize: number = 30, channel?: string, priority?: string): Promise<PaginatedResult<NotificationItemViewModel>> {
+  async getUserNotifications(pageNumber: number = 1, pageSize: number = 30, channel?: string, priority?: string, audienceType?: string, receiverAppliationType?: string, timePeriod?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest'): Promise<PaginatedResult<NotificationItemViewModel>> {
     try {
       const response = await this.httpClient.get<NotificationsListResponseDto>(
         USERPANEL_ENDPOINTS.GET_NOTIFICATIONS,
@@ -374,7 +374,12 @@ export class UserPanelService {
             PageNumber: pageNumber,
             PageSize: pageSize,
             Channel: channel || '',
-            Priority: priority || ''
+            Priority: priority || '',
+            AudienceType: audienceType || '',
+            ReceiverAppliationType: receiverAppliationType || '',
+            TimePeriod: timePeriod || '',
+            IsRead: isRead !== undefined ? isRead : '',
+            OrderBy: orderBy || 'Latest'
           }
         }
       );
@@ -503,6 +508,18 @@ export class UserPanelService {
       };
     } catch (error) {
       logger.error('[UserPanelService] Get favorite products failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getRecentlyViewedProducts(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        USERPANEL_ENDPOINTS.GET_RECENT_VIEWS
+      );
+      return (response.data || []).map(dto => UserPanelMapper.toRecentlyViewedProductView(dto));
+    } catch (error) {
+      logger.error('[UserPanelService] Get recently viewed products failed:', error);
       throw errorManager.normalize(error);
     }
   }

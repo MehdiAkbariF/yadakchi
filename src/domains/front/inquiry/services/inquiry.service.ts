@@ -1,10 +1,9 @@
-// src/domains/front/inquiry/services/inquiry.service.ts
-
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { INQUIRY_ENDPOINTS } from '../endpoints/inquiry.endpoints';
 import { InquiryMapper } from '../mappers/inquiry.mapper';
+import { UserPanelMapper } from '@/domains/userpanel/mappers/userpanel.mapper';
 import { InquiryFilters, CreateInquiryRequest, LikeInquiryRequest } from '../types/view.types';
 import { InquiryApiDto } from '../types/dto.types';
 import { InquiryViewModel } from '../types/view.types';
@@ -109,9 +108,7 @@ export class InquiryService {
 
   async deleteInquiry(inquiryId: string): Promise<void> {
     try {
-      await this.httpClient.delete(INQUIRY_ENDPOINTS.DELETE_INQUIRY, {
-        params: { id: inquiryId }
-      });
+      await this.httpClient.delete(INQUIRY_ENDPOINTS.DELETE_INQUIRY, { id: inquiryId });
     } catch (error) {
       logger.error('[InquiryService] Delete inquiry failed:', error);
       throw errorManager.normalize(error);
@@ -139,10 +136,10 @@ export class InquiryService {
     }
   }
 
-  async getUserInquiries(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<InquiryViewModel>> {
+  async getUserInquiries(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<any>> {
     try {
       const response = await this.httpClient.get<{
-        items: InquiryApiDto[];
+        items: any[];
         pageNumber: number;
         pageSize: number;
         totalCount: number;
@@ -154,8 +151,8 @@ export class InquiryService {
       });
 
       const items = response.data.items.map(dto => {
-        const domain = InquiryMapper.toDomain(dto);
-        return InquiryMapper.toView(domain);
+        const domain = UserPanelMapper.toDomainUserInquiry(dto);
+        return UserPanelMapper.toViewUserInquiry(domain);
       });
 
       return {
@@ -180,8 +177,10 @@ export class InquiryService {
 let inquiryServiceInstance: InquiryService | null = null;
 
 export function getInquiryService(): InquiryService {
-  if (!inquiryServiceInstance) {
-    inquiryServiceInstance = new InquiryService();
+  if (!userPanelServiceInstance) {
+    userPanelServiceInstance = new InquiryService();
   }
-  return inquiryServiceInstance;
+  return userPanelServiceInstance;
 }
+
+let userPanelServiceInstance: InquiryService | null = null;

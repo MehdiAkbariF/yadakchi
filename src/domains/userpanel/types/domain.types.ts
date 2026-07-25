@@ -49,6 +49,10 @@ export interface NotificationItem {
   title: string;
   body: string;
   imageUrl: string | null;
+  linkType: string | null;
+  linkText: string | null;
+  channel: string;
+  priority: string | null;
   isRead: boolean;
   createDate: string;
 }

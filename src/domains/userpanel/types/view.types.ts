@@ -54,6 +54,11 @@ export interface NotificationItemViewModel {
   title: string;
   body: string;
   imageUrl: string | null;
+  linkType: string | null;
+  linkText: string | null;
+  channel: string;
+  channelLabel: string;
+  priority: string | null;
   isRead: boolean;
   createDate: string;
   createDateFormatted: string;

@@ -1,10 +1,9 @@
-// src/domains/front/comment/services/comment.service.ts
-
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { COMMENT_ENDPOINTS } from '../endpoints/comment.endpoints';
 import { CommentMapper } from '../mappers/comment.mapper';
+import { UserPanelMapper } from '@/domains/userpanel/mappers/userpanel.mapper';
 import { CommentFilters, CreateCommentRequest, UpdateCommentRequest, LikeCommentRequest } from '../types/view.types';
 import { CommentApiDto, CommentReplyApiDto, CommentAverageApiDto } from '../types/dto.types';
 import { CommentViewModel, CommentAverageViewModel } from '../types/view.types';
@@ -69,7 +68,6 @@ export class CommentService {
         params: { CommentId: commentId, PageNumber: pageNumber, PageSize: pageSize }
       });
 
-      // تبدیل Reply به Comment
       const items = response.data.items.map(dto => {
         const domain = {
           ...dto,
@@ -145,9 +143,7 @@ export class CommentService {
 
   async deleteComment(commentId: string): Promise<void> {
     try {
-      await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT, {
-        params: { id: commentId }
-      });
+      await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT, { id: commentId });
     } catch (error) {
       logger.error('[CommentService] Delete comment failed:', error);
       throw errorManager.normalize(error);
@@ -175,10 +171,10 @@ export class CommentService {
     }
   }
 
-  async getPendingComments(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<CommentViewModel>> {
+  async getPendingComments(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<any>> {
     try {
       const response = await this.httpClient.get<{
-        items: CommentApiDto[];
+        items: any[];
         pageNumber: number;
         pageSize: number;
         totalCount: number;
@@ -190,8 +186,8 @@ export class CommentService {
       });
 
       const items = response.data.items.map(dto => {
-        const domain = CommentMapper.toDomain(dto);
-        return CommentMapper.toView(domain);
+        const domain = UserPanelMapper.toDomainPendingComment(dto);
+        return UserPanelMapper.toViewPendingComment(domain);
       });
 
       return {
@@ -212,10 +208,10 @@ export class CommentService {
     }
   }
 
-  async getUserComments(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<CommentViewModel>> {
+  async getUserComments(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<any>> {
     try {
       const response = await this.httpClient.get<{
-        items: CommentApiDto[];
+        items: any[];
         pageNumber: number;
         pageSize: number;
         totalCount: number;
@@ -227,8 +223,8 @@ export class CommentService {
       });
 
       const items = response.data.items.map(dto => {
-        const domain = CommentMapper.toDomain(dto);
-        return CommentMapper.toView(domain);
+        const domain = UserPanelMapper.toDomainUserComment(dto);
+        return UserPanelMapper.toViewUserComment(domain);
       });
 
       return {

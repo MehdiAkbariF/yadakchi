@@ -4,6 +4,10 @@ import { ErrorType, ErrorDetail } from './types/error.types';
 
 export class ErrorNormalizer {
   static normalize(error: unknown): ApiError {
+    if (error instanceof ApiError) {
+      return error;
+    }
+
     if (axios.isAxiosError(error)) {
       return this.normalizeAxiosError(error);
     }
@@ -155,6 +159,22 @@ export class ErrorNormalizer {
 
     if (typeof data === 'string') {
       return { message: data, userMessage: data };
+    }
+
+    if (data.errors && typeof data.errors === 'object' && !Array.isArray(data.errors)) {
+      const errorKeys = Object.keys(data.errors);
+      if (errorKeys.length > 0) {
+        const errorList = data.errors[errorKeys[0]];
+        if (Array.isArray(errorList) && errorList.length > 0) {
+          const persianMsg = errorList.find(msg => typeof msg === 'string' && msg.match(/^[آ-ی]/)) || errorList[0];
+          if (persianMsg && typeof persianMsg === 'string') {
+            return {
+              message: persianMsg,
+              userMessage: persianMsg
+            };
+          }
+        }
+      }
     }
 
     const rawMsg = data.message || data.error || data.errorMessage || data.error_message || data.userMessage || data.user_message || (typeof data.errors === 'string' ? data.errors : '') || '';
