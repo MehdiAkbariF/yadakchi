@@ -138,36 +138,48 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
           <span className="text-xs text-muted-foreground font-iran-sans py-4">هیچ پرسشی برای این کالا ثبت نشده است. اولین سوال خود را بپرسید!</span>
         )}
       </div>
+<Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full">
+  <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
+      <HelpCircle className="h-4.5 w-4.5 text-primary" />
+      شما هم سوال خودتون رو بپرسید
+    </ModalTitle>
+  </ModalHeader>
+  
+  <ModalBody className="p-5 pt-4 text-right">
+    <form onSubmit={handleInquirySubmit} className="flex flex-col gap-4 w-full text-right">
+      <TextArea
+        label="متن پرسش شما *"
+        placeholder="پرسش خود را در مورد این کالا مطرح نمایید..."
+        value={inquiryText}
+        onChange={(e) => setInquiryText(e.target.value)}
+        className="h-28 text-xs font-iran-sans"
+        required
+      />
+    </form>
+  </ModalBody>
 
-      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md p-2 w-full animate-none">
-        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
-            <HelpCircle className="h-4.5 w-4.5 text-primary" />
-            شما هم سوال خودتون رو بپرسید
-          </ModalTitle>
-        </ModalHeader>
-        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
-          <form onSubmit={handleInquirySubmit} className="flex flex-col gap-4 w-full text-right">
-            <TextArea
-              label="متن پرسش شما *"
-              placeholder="پرسش خود را در مورد این کالا مطرح نمایید..."
-              value={inquiryText}
-              onChange={(e) => setInquiryText(e.target.value)}
-              className="h-28 text-xs font-iran-sans"
-              required
-            />
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              isLoading={createInquiry.isPending}
-              className="rounded-xl font-iran-sans font-bold text-xs h-11 mt-4"
-            >
-              ثبت پرسش نهایی
-            </Button>
-          </form>
-        </ModalBody>
-      </Modal>
+  {/* فوتر با دکمه‌های تمام عرض */}
+  <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => setIsWriteModalOpen(false)}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+    >
+      انصراف
+    </Button>
+    <Button
+      type="submit"
+      variant="primary"
+      isLoading={createInquiry.isPending}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      onClick={handleInquirySubmit}
+    >
+      ثبت پرسش نهایی
+    </Button>
+  </div>
+</Modal>
 
     </div>
   );

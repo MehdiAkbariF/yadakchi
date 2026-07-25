@@ -198,80 +198,93 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
 
       </div>
 
-      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full p-2">
-        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right">
-            ثبت دیدگاه جدید
-          </ModalTitle>
-        </ModalHeader>
-        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
-          <form onSubmit={handleCommentSubmit} className="flex flex-col gap-4 w-full text-right">
-            
-            <div className="flex flex-col gap-1 w-full border-b pb-3">
-              <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">نام کالا:</span>
-              <span className="text-xs font-bold text-foreground font-iran-sans leading-relaxed">{toPersianDigits(productTitle)}</span>
-            </div>
+ <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full">
+  <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right">
+      ثبت دیدگاه جدید
+    </ModalTitle>
+  </ModalHeader>
+  
+  <ModalBody className="p-5 pt-4 text-right">
+    <form onSubmit={handleCommentSubmit} className="flex flex-col gap-4 w-full text-right">
+      
+      <div className="flex flex-col gap-1 w-full border-b pb-3">
+        <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">نام کالا:</span>
+        <span className="text-xs font-bold text-foreground font-iran-sans leading-relaxed">{toPersianDigits(productTitle)}</span>
+      </div>
 
-            <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full">
-              <span className="text-xs font-bold text-muted-foreground font-iran-sans">امتیاز شما به کالا *</span>
-              <div className="flex items-center gap-1.5 mt-1" dir="ltr">
-                {[1, 2, 3, 4, 5].map((starValue) => {
-                  const isHighlighted = (hoverRate || rate) >= starValue;
-                  return (
-                    <button
-                      key={starValue}
-                      type="button"
-                      onMouseEnter={() => setHoverRate(starValue)}
-                      onMouseLeave={() => setHoverRate(0)}
-                      onClick={() => setRate(starValue)}
-                      className="p-1 hover:scale-110 transition-transform outline-none"
-                    >
-                      <Star 
-                        className={cn(
-                          "h-7 w-7 shrink-0", 
-                          isHighlighted ? "fill-yellow-400 text-yellow-400" : "text-zinc-200 dark:text-zinc-800"
-                        )} 
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+      <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full">
+        <span className="text-xs font-bold text-muted-foreground font-iran-sans">امتیاز شما به کالا *</span>
+        <div className="flex items-center gap-1.5 mt-1" dir="ltr">
+          {[1, 2, 3, 4, 5].map((starValue) => {
+            const isHighlighted = (hoverRate || rate) >= starValue;
+            return (
+              <button
+                key={starValue}
+                type="button"
+                onMouseEnter={() => setHoverRate(starValue)}
+                onMouseLeave={() => setHoverRate(0)}
+                onClick={() => setRate(starValue)}
+                className="p-1 hover:scale-110 transition-transform outline-none"
+              >
+                <Star 
+                  className={cn(
+                    "h-7 w-7 shrink-0", 
+                    isHighlighted ? "fill-yellow-400 text-yellow-400" : "text-zinc-200 dark:text-zinc-800"
+                  )} 
+                />
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-            <div className="w-full">
-              <TextArea
-                label="متن نظر *"
-                placeholder="نظر خود را در مورد این کالا به اشتراک بگذارید..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="h-28 text-xs font-iran-sans"
-                required
-              />
-            </div>
+      <div className="w-full">
+        <TextArea
+          label="متن نظر *"
+          placeholder="نظر خود را در مورد این کالا به اشتراک بگذارید..."
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          className="h-28 text-xs font-iran-sans"
+          required
+        />
+      </div>
 
-            <div className="flex items-start gap-2.5 w-full mt-1 border-t border-dashed pt-4 select-none">
-              <Checkbox
-                checked={isIncognito}
-                onChange={(checked) => setIsIncognito(checked)}
-              />
-              <div className="">
-                <span className="text-xs font-bold text-foreground font-iran-sans block">ارسال به صورت ناشناس</span>
-                <span className="text-[10px] text-muted-foreground font-iran-sans block mt-0.5">در صورت فعال‌سازی، نام شما به کاربران نمایش داده نخواهد شد.</span>
-              </div>
-            </div>
+      <div className="flex items-start gap-2.5 w-full mt-1 border-t border-dashed pt-4 select-none">
+        <Checkbox
+          checked={isIncognito}
+          onChange={(checked) => setIsIncognito(checked)}
+        />
+        <div className="">
+          <span className="text-xs font-bold text-foreground font-iran-sans block">ارسال به صورت ناشناس</span>
+          <span className="text-[10px] text-muted-foreground font-iran-sans block mt-0.5">در صورت فعال‌سازی، نام شما به کاربران نمایش داده نخواهد شد.</span>
+        </div>
+      </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              isLoading={createComment.isPending}
-              className="rounded-xl font-iran-sans font-bold text-xs h-10 mt-4"
-            >
-              ثبت نظر نهایی
-            </Button>
-          </form>
-        </ModalBody>
-      </Modal>
+    </form>
+  </ModalBody>
+
+  {/* فوتر با دکمه‌های تمام عرض */}
+  <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => setIsWriteModalOpen(false)}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+    >
+      انصراف
+    </Button>
+    <Button
+      type="submit"
+      variant="primary"
+      isLoading={createComment.isPending}
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      onClick={handleCommentSubmit}
+    >
+      ثبت نظر نهایی
+    </Button>
+  </div>
+</Modal>
 
     </div>
   );
