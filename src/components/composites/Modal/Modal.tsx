@@ -43,33 +43,11 @@ export function Modal({
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    const handlePopState = () => {
-      onClose();
-    };
-
-    window.history.pushState({ modalOpen: 'system-modal' }, '');
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      if (window.history.state?.modalOpen === 'system-modal') {
-        window.history.back();
-      }
-    };
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
     if (!isOpen || !closeOnEscape) return;
 
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (window.history.state?.modalOpen === 'system-modal') {
-          window.history.back();
-        } else {
-          onClose();
-        }
+        onClose();
       }
     };
 
@@ -80,11 +58,7 @@ export function Modal({
   }, [isOpen, closeOnEscape, onClose]);
 
   const handleClose = () => {
-    if (window.history.state?.modalOpen === 'system-modal') {
-      window.history.back();
-    } else {
-      onClose();
-    }
+    onClose();
   };
 
   if (!isOpen || !mounted) return null;
@@ -126,11 +100,7 @@ export const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(
   ({ className, children, onClose, ...props }, ref) => {
     const handleClose = () => {
       if (onClose) {
-        if (window.history.state?.modalOpen === 'system-modal') {
-          window.history.back();
-        } else {
-          onClose();
-        }
+        onClose();
       }
     };
 

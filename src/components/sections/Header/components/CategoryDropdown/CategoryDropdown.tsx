@@ -1,5 +1,3 @@
-// src/components/sections/Header/components/CategoryDropdown/CategoryDropdown.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -23,28 +21,24 @@ interface CategoryDropdownProps {
   isOpen: boolean;
 }
 
-// تابع هوشمند برای اختصاص آیکون جایگزین متناسب با نام دسته‌بندی
 function getFallbackIcon(categoryName: string) {
   const name = categoryName || '';
   if (name.includes('سوخت') || name.includes('بنزین')) return Fuel;
-  if (name.includes('برق') || name.includes('باتری') || name.includes('الکتریک')) return Zap;
+  if (name.includes('برق') || name.includes('باتری') || name.includes('الکترونیک')) return Zap;
   if (name.includes('ترمز') || name.includes('لنت')) return Activity;
   if (name.includes('موتور') || name.includes('سیلندر')) return Settings;
   if (name.includes('گیربکس') || name.includes('جعبه دنده') || name.includes('کلاچ')) return Gauge;
   if (name.includes('بدنه') || name.includes('چراغ')) return Sparkles;
-  return Wrench; // آیکون پیش‌فرض در صورت عدم مطابقت
+  return Wrench;
 }
 
 export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
   const { data: categories = [], isLoading, isError } = useGetMegaMenu();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
-  
-  // ذخیره وضعیت خطای لود تصاویر برای هر دسته‌بندی به صورت داینامیک
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   if (!isOpen) return null;
 
-  // انتخاب دسته‌بندی فعال
   const activeCategory = categories.find(c => c.id === (activeCategoryId || categories[0]?.id)) || categories[0];
 
   const handleImageError = (id: string) => {
@@ -52,9 +46,8 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
   };
 
   return (
-    <div className="absolute top-full right-0 mt-1 w-[800px] bg-background border rounded-xl shadow-2xl overflow-hidden z-50 flex h-[450px]">
+    <div className="absolute top-full right-0 w-[800px] bg-background border rounded-xl shadow-2xl overflow-hidden z-50 flex h-[450px]">
       
-      {/* حالت بارگذاری (Loading Skeleton) */}
       {isLoading && (
         <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -62,7 +55,6 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
         </div>
       )}
 
-      {/* حالت خطا (Error Handling) */}
       {isError && (
         <div className="flex flex-1 items-center justify-center gap-2 text-destructive p-4">
           <AlertCircle className="h-5 w-5" />
@@ -70,10 +62,8 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
         </div>
       )}
 
-      {/* نمایش مگا منو وقتی داده‌ها با موفقیت لود شدند */}
       {!isLoading && !isError && categories.length > 0 && (
         <>
-          {/* ستون سمت راست: لیست دسته‌بندی‌ها */}
           <div className="w-[240px] bg-muted/20 border-l overflow-y-auto py-2 shrink-0">
             {categories.map((category) => {
               const isActive = activeCategory?.id === category.id;
@@ -92,7 +82,6 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                   onMouseEnter={() => setActiveCategoryId(category.id)}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    {/* اگر آیکون با خطا مواجه شد یا آدرس نداشت، به سرعت آیکون متناسب بومی لود می‌شود */}
                     {hasImageFailed ? (
                       <FallbackIconComponent className="h-5 w-5 shrink-0 text-muted-foreground/80" />
                     ) : (
@@ -111,11 +100,9 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
             })}
           </div>
 
-          {/* ستون سمت چپ: لیست قطعات دسته‌بندی فعال */}
           <div className="flex-1 overflow-y-auto p-6 bg-background">
             {activeCategory ? (
               <div className="space-y-4">
-                {/* سربرگ بخش فعال */}
                 <div className="flex items-center justify-between border-b pb-2">
                   <span className="text-sm font-bold text-foreground font-iran-yekan flex items-center gap-2">
                     {failedImages[activeCategory.id] || !activeCategory.icon ? (
@@ -142,7 +129,6 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                   </Link>
                 </div>
 
-                {/* گرید قطعات مربوطه */}
                 {activeCategory.parts && activeCategory.parts.length > 0 ? (
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                     {activeCategory.parts.map((part) => (

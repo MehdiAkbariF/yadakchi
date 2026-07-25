@@ -28,37 +28,15 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
 
   const selectedCity = mounted ? storeCity : null;
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handlePopState = () => {
-      setIsOpen(false);
-    };
-
-    window.history.pushState({ modalOpen: 'city-selector' }, '');
-    window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [isOpen]);
-
   const handleOpenModal = () => {
     setIsOpen(true);
     setSearchQuery('');
     setActiveProvinceId(null);
   };
 
-  const handleCloseModal = () => {
-    setIsOpen(false);
-    if (window.history.state?.modalOpen === 'city-selector') {
-      window.history.back();
-    }
-  };
-
   const handleSelectCity = (id: string, name: string) => {
     setStoreCity({ id, name });
-    handleCloseModal();
+    setIsOpen(false);
   };
 
   const handleClearCity = (e: React.MouseEvent) => {
@@ -90,14 +68,14 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
   const renderModalContent = () => (
     <Modal
       isOpen={isOpen}
-      onClose={handleCloseModal}
+      onClose={() => setIsOpen(false)}
       className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-50 bg-background md:relative md:max-w-2xl md:h-[550px] md:max-h-[90vh] md:rounded-xl md:p-0 md:overflow-hidden"
       overlayClassName="bg-black/40 backdrop-blur-md"
     >
       <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
         <div className="flex items-center gap-2">
           <button 
-            onClick={handleCloseModal}
+            onClick={() => setIsOpen(false)}
             className="md:hidden p-1 -mr-1 hover:bg-muted rounded-full"
             aria-label="Back"
           >
@@ -109,7 +87,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
           </span>
         </div>
         <button 
-          onClick={handleCloseModal}
+          onClick={() => setIsOpen(false)}
           className="hidden md:flex p-1.5 hover:bg-muted rounded-full transition-colors"
           aria-label="Close"
         >
@@ -162,7 +140,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
                 <MapPinOff className="h-8 w-8 text-muted-foreground/60" />
-                <span className="text-sm font-iran-sans">شهری با این نام یافت نشد.</span>
+                <span className="text-sm font-iran-sans">شهرستی با این نام یافت نشد.</span>
               </div>
             )}
           </div>

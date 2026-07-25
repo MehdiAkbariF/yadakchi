@@ -1,5 +1,3 @@
-// src/domains/front/reference/car/types/dto.types.ts
-
 export interface CarApiDto {
   id: string;
   model: string;
@@ -12,6 +10,10 @@ export interface CarApiDto {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  description?: string;
+  cover?: string | null;
+  coverAlt?: string | null;
+  breadCrumbs?: Array<{ id: string; title: string; englishTitle: string }>;
 }
 
 export interface CarManufacturerApiDto {

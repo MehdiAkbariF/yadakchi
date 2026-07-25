@@ -1,5 +1,3 @@
-// src/domains/front/reference/car/types/view.types.ts
-
 export interface CarViewModel {
   id: string;
   model: string;
@@ -19,6 +17,10 @@ export interface CarViewModel {
     createdAt: string;
     updatedAt: string;
   };
+  description: string | null;
+  cover: string | null;
+  coverAlt: string | null;
+  breadCrumbs: Array<{ id: string; title: string; englishTitle: string }>;
 }
 
 export interface CarManufacturerViewModel {

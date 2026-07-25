@@ -1,5 +1,3 @@
-// src/domains/front/reference/car/types/domain.types.ts
-
 export interface Car {
   id: string;
   model: string;
@@ -9,6 +7,10 @@ export interface Car {
   year?: number;
   metadata: CarMetadata;
   isActive: boolean;
+  description?: string;
+  cover?: string | null;
+  coverAlt?: string | null;
+  breadCrumbs?: Array<{ id: string; title: string; englishTitle: string }>;
 }
 
 export interface CarManufacturer {

@@ -23,9 +23,9 @@ export class CarMapper {
       model: dto.model,
       englishTitle: dto.englishTitle,
       manufacturer: {
-        id: dto.carManufacturerId,
-        name: dto.carManufacturerName,
-        englishTitle: dto.carManufacturerName,
+        id: dto.carManufacturerId || '',
+        name: dto.carManufacturerName || '',
+        englishTitle: dto.carManufacturerName || '',
       },
       country: dto.countryId && dto.countryName ? {
         id: dto.countryId,
@@ -34,10 +34,14 @@ export class CarMapper {
       } : undefined,
       year: dto.year,
       metadata: {
-        createdAt: new Date(dto.createdAt),
-        updatedAt: new Date(dto.updatedAt),
+        createdAt: new Date(dto.createdAt || Date.now()),
+        updatedAt: new Date(dto.updatedAt || Date.now()),
       },
       isActive: dto.isActive,
+      description: dto.description || '',
+      cover: dto.cover || null,
+      coverAlt: dto.coverAlt || null,
+      breadCrumbs: dto.breadCrumbs || [],
     };
   }
 
@@ -61,6 +65,10 @@ export class CarMapper {
         createdAt: domain.metadata.createdAt.toISOString(),
         updatedAt: domain.metadata.updatedAt.toISOString(),
       },
+      description: domain.description || null,
+      cover: domain.cover || null,
+      coverAlt: domain.coverAlt || null,
+      breadCrumbs: domain.breadCrumbs || [],
     };
   }
 

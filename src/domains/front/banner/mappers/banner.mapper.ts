@@ -1,5 +1,3 @@
-// src/domains/front/banner/mappers/banner.mapper.ts
-
 import { env } from '@/core/config/env';
 import { 
   BannerApiDto, 
@@ -99,7 +97,6 @@ export class BannerMapper {
   }
 
   static toViewMegaMenu(dto: MegaMenuCategoryApiDto): MegaMenuCategoryViewModel {
-    // اصلاح مقدار ثابت به دامنه رسمی برای لود بدون نقص مگامنو
     const apiBase = (env.apiBaseUrl || 'https://api.yadakchi.com').replace(/\/$/, '');
     
     const getFullUrl = (path: string | null) => {
@@ -125,7 +122,7 @@ export class BannerMapper {
           englishTitle: part.englishTitle,
           icon: partIcon,
           iconAlt: part.iconAlt || null,
-          href: `/search?partEnglishTitle=${part.englishTitle}`,
+          href: `/parts/${dto.englishTitle}/${part.englishTitle}`,
         };
       }),
     };
