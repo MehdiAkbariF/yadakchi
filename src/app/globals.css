@@ -58,48 +58,11 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2');
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-
 @layer base {
   :root {
+    --font-iran-sans: 'IRANYekan', sans-serif;
+    --font-iran-yekan: 'IRANYekan', sans-serif;
+    
     --background: 0 0% 100%;
     --foreground: 0 0% 12.5%;
     --card: 0 0% 100%;
@@ -166,9 +129,10 @@
 @layer base {
   * {
     @apply border-border;
+    font-family: 'IRANYekan', system-ui, sans-serif !important;
   }
-  body {
+  body, input, button, select, textarea {
     @apply bg-background text-foreground;
-    font-family: 'IRANYekan', system-ui, sans-serif;
+    font-family: 'IRANYekan', system-ui, sans-serif !important;
   }
 }

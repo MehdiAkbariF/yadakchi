@@ -1,5 +1,7 @@
 'use client';
 
+import { toPersianDigits } from '@/core/utils/formatters';
+
 interface ProductSpecsTableProps {
   specGroups: any[];
 }
@@ -19,14 +21,12 @@ export function ProductSpecsTable({ specGroups }: ProductSpecsTableProps) {
             key={gIdx} 
             className="w-full flex flex-col lg:flex-row items-stretch lg:items-center gap-4 lg:gap-8 border-b border-zinc-100 dark:border-zinc-800/80 pb-6 last:border-none last:pb-0"
           >
-            {/* نام گروه مشخصات (متن نارنجی - قرارگیری در کنار و تراز وسط) */}
             <div className="lg:w-1/4 shrink-0 flex items-center">
               <span className="text-xs md:text-sm font-black text-primary font-iran-yekan leading-relaxed">
                 {group.name}
               </span>
             </div>
 
-            {/* لیست جدول ویژگی‌های این گروه */}
             <div className="flex-1 flex flex-col">
               {(group.specs || []).map((spec: any, sIdx: number) => (
                 <div 
@@ -37,7 +37,7 @@ export function ProductSpecsTable({ specGroups }: ProductSpecsTableProps) {
                     {spec.name}
                   </div>
                   <div className="w-2/3 text-foreground font-bold">
-                    {spec.value}
+                    {toPersianDigits(spec.value)}
                   </div>
                 </div>
               ))}

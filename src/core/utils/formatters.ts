@@ -154,3 +154,10 @@ export function jalaliToGregorian(jy: number, jm: number, jd: number): string {
   const gd = g_day_no + 1;
   return `${gy}-${String(gm).padStart(2, '0')}-${String(gd).padStart(2, '0')}`;
 }
+
+export function toPersianDigits(value: string | number | undefined | null): string {
+  if (value === undefined || value === null) return '';
+  const str = String(value);
+  const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+  return str.replace(/[0-9]/g, (w) => persianDigits[parseInt(w)]);
+}

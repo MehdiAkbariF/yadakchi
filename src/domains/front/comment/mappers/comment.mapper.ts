@@ -1,5 +1,3 @@
-// src/domains/front/comment/mappers/comment.mapper.ts
-
 import { 
   CommentApiDto, 
   CommentAverageApiDto,
@@ -19,28 +17,31 @@ import {
 } from '../types/view.types';
 
 export class CommentMapper {
-  static toDomain(dto: CommentApiDto): Comment {
+  static toDomain(dto: any): Comment {
+    const rawCreateDate = dto.createdAt || dto.createDate || Date.now();
+    const rawUpdateDate = dto.updatedAt || dto.createDate || Date.now();
+
     return {
       id: dto.id,
       productId: dto.productId,
       user: {
-        id: dto.userId,
-        name: dto.userName,
-        avatar: dto.userAvatar,
-        isIncognito: dto.isIncognito,
+        id: dto.userId || '',
+        name: dto.userName || dto.commentCreator || 'کاربر یدک‌چی',
+        avatar: dto.userAvatar || null,
+        isIncognito: !!dto.isIncognito,
       },
       rate: dto.rate,
       content: dto.comment,
       likes: {
-        likes: dto.likes,
-        dislikes: dto.dislikes,
-        isLikedByUser: dto.isLikedByUser,
+        likes: dto.likes || 0,
+        dislikes: dto.dislikes || 0,
+        isLikedByUser: !!dto.isLikedByUser,
       },
-      parentId: dto.parentId,
-      replyCount: dto.replyCount,
+      parentId: dto.parentId || null,
+      replyCount: dto.replyCount || 0,
       metadata: {
-        createdAt: new Date(dto.createdAt),
-        updatedAt: new Date(dto.updatedAt),
+        createdAt: new Date(rawCreateDate),
+        updatedAt: new Date(rawUpdateDate),
       },
     };
   }

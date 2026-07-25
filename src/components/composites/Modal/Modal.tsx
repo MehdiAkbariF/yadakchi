@@ -80,7 +80,7 @@ export function Modal({
       <div
         ref={modalRef}
         className={cn(
-          'relative z-10 w-full h-full max-h-full max-w-none rounded-none p-0 flex flex-col fixed inset-0 bg-background overflow-hidden md:relative md:w-full md:max-w-lg md:h-auto md:max-h-[90vh] md:rounded-2xl md:p-6 md:shadow-xl md:overflow-y-auto',
+          'relative z-10 w-full h-full max-h-full max-w-none rounded-none p-0 flex flex-col fixed inset-0 bg-background overflow-hidden md:relative md:w-full md:max-w-2xl md:h-auto md:max-h-[90vh] md:rounded-2xl md:p-6 md:shadow-xl md:overflow-y-auto',
           className
         )}
         tabIndex={-1}
@@ -179,7 +179,7 @@ export interface ModalBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export const ModalBody = forwardRef<HTMLDivElement, ModalBodyProps>(
   ({ className, ...props }, ref) => {
-    return <div ref={ref} className={cn('flex-1 overflow-y-auto p-5 md:p-0 md:py-4 w-full', className)} {...props} />;
+    return <div ref={ref} className={cn('flex-1 overflow-y-auto p-6 md:p-0 md:py-4 w-full', className)} {...props} />;
   }
 );
 ModalBody.displayName = 'ModalBody';

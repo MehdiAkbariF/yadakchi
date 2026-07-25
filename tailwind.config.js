@@ -113,7 +113,7 @@ module.exports = {
         full: '9999px',
       },
         fontFamily: {
-        sans: ['IRANSans', 'system-ui', 'sans-serif'],
+        sans: ['IRANYekan', 'system-ui', 'sans-serif'],
         yekan: ['IRANYekan', 'system-ui', 'sans-serif'],
       },
       keyframes: {

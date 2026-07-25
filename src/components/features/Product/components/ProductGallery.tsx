@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, ZoomOut, RotateCcw, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
@@ -57,11 +57,21 @@ export function ProductGallery({ images = [], title }: ProductGalleryProps) {
   };
 
   const getFullUrl = (path: any) => {
-    if (!path || typeof path !== 'string') return '/placeholder.png';
-    if (path.startsWith('http')) return path;
+    if (!path) return '/placeholder.png';
+    
+    let cleanPath = '';
+    if (typeof path === 'string') {
+      cleanPath = path;
+    } else if (typeof path === 'object' && path !== null) {
+      cleanPath = path.image || path.url || path.imageUrl || path.medium || path.large || '';
+    }
+
+    if (!cleanPath) return '/placeholder.png';
+    if (cleanPath.startsWith('http')) return cleanPath;
+
     const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
+    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    return `${base}${normalizedPath}`;
   };
 
   if (images.length === 0) return null;
@@ -78,7 +88,7 @@ export function ProductGallery({ images = [], title }: ProductGalleryProps) {
         />
         <button
           onClick={() => setIsFullscreenOpen(true)}
-          className="absolute bottom-3 left-3 p-2 bg-background/80 hover:bg-primary hover:text-white border text-muted-foreground rounded-xl backdrop-blur-sm transition-all shadow-sm"
+          className="absolute bottom-3 left-3 p-2 bg-background/80 hover:bg-primary hover:text-white border text-muted-foreground rounded-xl backdrop-blur-sm transition-all shadow-sm outline-none"
         >
           <Maximize2 className="h-4 w-4" />
         </button>
@@ -123,9 +133,7 @@ export function ProductGallery({ images = [], title }: ProductGalleryProps) {
 
             <div className="flex-1 min-h-0 relative w-full overflow-hidden flex items-center justify-center">
               <div 
-                className={cn(
-                  "w-full h-full max-w-4xl max-h-[75vh] p-4 flex items-center justify-center relative touch-none"
-                )}
+                className="w-full h-full max-w-4xl max-h-[75vh] p-4 flex items-center justify-center relative touch-none"
               >
                 <motion.img
                   src={getFullUrl(images[activeIndex])}

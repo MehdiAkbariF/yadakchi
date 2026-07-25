@@ -10,6 +10,7 @@ import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composit
 import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { Button } from '@/components/primitives/Button/Button';
+import { toPersianDigits } from '@/core/utils/formatters';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 import { useQueryClient } from '@tanstack/react-query';
@@ -33,15 +34,6 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [reportDescription, setReportDescription] = useState('');
 
-  // نظارت وضعیت لحظه‌ای کوئری در کنسول مرورگر
-  useEffect(() => {
-    if (mounted) {
-      console.log('[Favorite Debug] Product Code:', product.code);
-      console.log('[Favorite Debug] isFavorite value from Query:', isFavorite);
-      console.log('[Favorite Debug] isFavLoading state:', isFavLoading);
-    }
-  }, [isFavorite, isFavLoading, product.code, mounted]);
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -56,7 +48,6 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         showToast.success('به علاقه‌مندی‌ها اضافه شد');
       }
     } catch (err: any) {
-      // پشتیبان هوشمند: اگر سرور اعلام کرد که قبلاً به علاقه‌مندی‌ها اضافه شده است، دکمه را قرمز می‌کنیم
       if (
         err?.message?.includes('قبلا ثبت شده است') || 
         err?.userMessage?.includes('قبلا ثبت شده است')
@@ -99,7 +90,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
       setSelectedSubjectId('');
       setReportDescription('');
     } catch (error: any) {
-      showToast.error(error.userMessage || 'خطا در ثبت گزارش تخلف کالا');
+      showToast.error(error.userMessage || 'خطا در ثبت گزارش خطا');
     }
   };
 
@@ -119,7 +110,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
       
       <div className="flex items-center justify-between w-full border-b pb-3">
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">کد کالا: {product.code}</span>
+          <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">کد کالا: {toPersianDigits(product.code)}</span>
           <span className="text-zinc-300 text-[10px]">|</span>
           <button
             onClick={() => setIsReportModalOpen(true)}
@@ -155,27 +146,27 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
       </div>
 
       <Typography variant="h3" className="text-right font-iran-yekan font-extrabold text-foreground leading-relaxed">
-        {product.title}
+        {toPersianDigits(product.title)}
       </Typography>
 
       <div className="flex flex-wrap items-center gap-4 text-xs font-iran-sans text-muted-foreground mt-1">
         <div className="flex items-center gap-1 cursor-pointer" onClick={onScrollToComments}>
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0" />
-          <span className="font-bold text-foreground">{product.averageRate}</span>
-          <span>از {product.rateCount} نظر</span>
+          <span className="font-bold text-foreground">{toPersianDigits(product.averageRate)}</span>
+          <span>از {toPersianDigits(product.rateCount)} نظر</span>
         </div>
         <span className="text-zinc-300">|</span>
         <button onClick={onScrollToInquiries} className="hover:text-primary hover:underline">تبادل پرسش و پاسخ</button>
       </div>
 
-      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="max-w-md w-full animate-none">
+      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsReportModalOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
+          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
             <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
             گزارش خطای کالا
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4 animate-none">
+        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
           <div className="flex flex-col gap-1 w-full">
             <Select
               label="دلیل گزارش *"
@@ -192,7 +183,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
           <div className="flex flex-col gap-1 w-full">
             <TextArea
               label="توضیحات (اختیاری)"
-              placeholder="جزئیات مشکل را بنویسید..."
+              placeholder="جزییات مشکل را بنویسید..."
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
               className="h-24 text-xs font-iran-sans"
@@ -201,6 +192,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
 
           <div className="flex gap-2.5 mt-4 w-full">
             <Button
+              type="button"
               variant="outline"
               onClick={() => {
                 setIsReportModalOpen(false);
@@ -212,6 +204,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
               انصراف
             </Button>
             <Button
+              type="submit"
               variant="destructive"
               onClick={handleReportSubmit}
               isLoading={submitProductReport.isPending}

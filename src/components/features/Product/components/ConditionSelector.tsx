@@ -13,48 +13,58 @@ export function ConditionSelector({ selectedCondition, onChangeCondition, seller
   const isStockAvailable = sellersGroup.stockOnline.length > 0 || sellersGroup.stockLocal.length > 0;
   const isTakeOffAvailable = sellersGroup.takeOffOnline.length > 0 || sellersGroup.takeOffLocal.length > 0;
 
+  const hasAnyCondition = isNewAvailable || isStockAvailable || isTakeOffAvailable;
+
+  if (!hasAnyCondition) return null;
+
   return (
-    <div className="w-full flex flex-col gap-2.5 text-right mt-2">
+    <div className="w-full flex flex-col gap-2.5 text-right mt-2 select-none">
       <span className="text-xs font-bold font-iran-yekan text-muted-foreground">نوع قطعه را انتخاب کنید:</span>
       <div className="flex flex-wrap gap-2">
-        <button
-          disabled={!isNewAvailable}
-          onClick={() => onChangeCondition('New')}
-          className={cn(
-            "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all disabled:opacity-35 outline-none",
-            selectedCondition === 'New' 
-              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-              : "hover:border-primary/20 bg-background text-foreground"
-          )}
-        >
-          قطعه نو
-        </button>
+        {isNewAvailable && (
+          <button
+            type="button"
+            onClick={() => onChangeCondition('New')}
+            className={cn(
+              "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all outline-none",
+              selectedCondition === 'New' 
+                ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
+                : "hover:border-primary/20 bg-background text-foreground"
+            )}
+          >
+            قطعه نو
+          </button>
+        )}
 
-        <button
-          disabled={!isStockAvailable}
-          onClick={() => onChangeCondition('Stock')}
-          className={cn(
-            "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all disabled:opacity-35 outline-none",
-            selectedCondition === 'Stock' 
-              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-              : "hover:border-primary/20 bg-background text-foreground"
-          )}
-        >
-          قطعه استوک
-        </button>
+        {isStockAvailable && (
+          <button
+            type="button"
+            onClick={() => onChangeCondition('Stock')}
+            className={cn(
+              "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all outline-none",
+              selectedCondition === 'Stock' 
+                ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
+                : "hover:border-primary/20 bg-background text-foreground"
+            )}
+          >
+            قطعه استوک
+          </button>
+        )}
 
-        <button
-          disabled={!isTakeOffAvailable}
-          onClick={() => onChangeCondition('TakeOff')}
-          className={cn(
-            "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all disabled:opacity-35 outline-none",
-            selectedCondition === 'TakeOff' 
-              ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
-              : "hover:border-primary/20 bg-background text-foreground"
-          )}
-        >
-          قطعه زیرصفری
-        </button>
+        {isTakeOffAvailable && (
+          <button
+            type="button"
+            onClick={() => onChangeCondition('TakeOff')}
+            className={cn(
+              "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all outline-none",
+              selectedCondition === 'TakeOff' 
+                ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
+                : "hover:border-primary/20 bg-background text-foreground"
+            )}
+          >
+            قطعه زیرصفری
+          </button>
+        )}
       </div>
     </div>
   );

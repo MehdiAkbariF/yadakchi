@@ -8,6 +8,7 @@ import { Button } from '@/components/primitives/Button/Button';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+import { toPersianDigits } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
 
@@ -63,10 +64,6 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
     }
   };
 
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value);
-  };
-
   return (
     <div className="w-full flex flex-col gap-6 text-right mt-6">
       <h3 className="text-sm md:text-base font-bold font-iran-yekan text-foreground">امتیاز و نظرات کاربران</h3>
@@ -77,9 +74,9 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
           {average && (
             <div className="flex flex-col gap-5 items-center w-full">
               <div className="flex flex-col items-center justify-center text-center gap-2">
-                <span className="text-4xl font-black text-foreground font-iran-sans">{average.averageRate.toFixed(1)}</span>
+                <span className="text-4xl font-black text-foreground font-iran-sans">{toPersianDigits(average.averageRate.toFixed(1))}</span>
                 <div className="flex items-center gap-0.5">
-                  {[...Array(5)].map((_, i) => (
+                  {Array.from({ length: 5 }).map((_, i) => (
                     <Star 
                       key={i} 
                       className={cn(
@@ -89,7 +86,7 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
                     />
                   ))}
                 </div>
-                <span className="text-[10px] font-bold text-muted-foreground font-iran-sans mt-1">از {average.allRatesCount} امتیاز ثبت شده</span>
+                <span className="text-[10px] font-bold text-muted-foreground font-iran-sans mt-1">از {toPersianDigits(average.allRatesCount)} امتیاز ثبت شده</span>
               </div>
 
               <div className="w-full flex flex-col gap-2.5 border-t border-dashed pt-4">
@@ -105,7 +102,7 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
                     <div className="flex-1 h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
                       <div style={{ width: `${star.value}%` }} className="absolute inset-y-0 right-0 bg-yellow-400 rounded-full" />
                     </div>
-                    <span className="w-8 shrink-0 text-left font-bold">{star.value}%</span>
+                    <span className="w-8 shrink-0 text-left font-bold">{toPersianDigits(star.value)}%</span>
                   </div>
                 ))}
               </div>
@@ -127,9 +124,9 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
           <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1 border-b border-dashed pb-2.5">
             <span className="text-xs font-bold text-muted-foreground font-iran-sans shrink-0">نمایش بر اساس:</span>
             {[
-              { value: 'Newest', label: 'جدیدترین' },
-              { value: 'Oldest', label: 'قدیمی‌ترین' },
-              { value: 'MostLike', label: 'مفیدترین' },
+              { value: 'Newest', label: 'جدیدترین‌ها' },
+              { value: 'Oldest', label: 'قدیمی‌ترین‌ها' },
+              { value: 'MostLike', label: 'مفیدترین‌ها' },
               { value: 'LeastLike', label: 'کمترین امتیاز' }
             ].map((opt) => (
               <button
@@ -157,11 +154,11 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-xs font-bold text-foreground font-iran-sans">{comment.creator}</span>
-                      <span className="text-[10px] text-muted-foreground font-iran-sans">{comment.createDateFormatted}</span>
+                      <span className="text-[10px] text-muted-foreground font-iran-sans">{toPersianDigits(comment.createDateFormatted)}</span>
                     </div>
                     
                     <div className="flex items-center gap-0.5 mt-1">
-                      {[...Array(5)].map((_, i) => (
+                      {Array.from({ length: 5 }).map((_, i) => (
                         <Star 
                           key={i} 
                           className={cn(
@@ -183,11 +180,11 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
                     <div className="flex items-center gap-4 justify-end mt-4 border-t border-dashed pt-2.5">
                       <button className="flex items-center gap-1 text-[10px] font-bold font-iran-sans text-muted-foreground hover:text-success-500 transition-colors">
                         <ThumbsUp className="h-3.5 w-3.5" />
-                        <span>({comment.likes})</span>
+                        <span>({toPersianDigits(comment.likes)})</span>
                       </button>
                       <button className="flex items-center gap-1 text-[10px] font-bold font-iran-sans text-muted-foreground hover:text-destructive transition-colors">
                         <ThumbsDown className="h-3.5 w-3.5" />
-                        <span>({comment.dislikes})</span>
+                        <span>({toPersianDigits(comment.dislikes)})</span>
                       </button>
                     </div>
                   </div>
@@ -201,7 +198,7 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
 
       </div>
 
-      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full p-2 animate-none">
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full p-2">
         <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
           <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right">
             ثبت دیدگاه جدید
@@ -212,7 +209,7 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
             
             <div className="flex flex-col gap-1 w-full border-b pb-3">
               <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">نام کالا:</span>
-              <span className="text-xs font-bold text-foreground font-iran-sans leading-relaxed">{productTitle}</span>
+              <span className="text-xs font-bold text-foreground font-iran-sans leading-relaxed">{toPersianDigits(productTitle)}</span>
             </div>
 
             <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full">
@@ -243,7 +240,7 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
 
             <div className="w-full">
               <TextArea
-                label="متن نظر شما *"
+                label="متن نظر *"
                 placeholder="نظر خود را در مورد این کالا به اشتراک بگذارید..."
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
@@ -252,7 +249,7 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
               />
             </div>
 
-            <div className="flex items-start5 w-full mt-1 border-t border-dashed pt-4 select-none">
+            <div className="flex items-start gap-2.5 w-full mt-1 border-t border-dashed pt-4 select-none">
               <Checkbox
                 checked={isIncognito}
                 onChange={(checked) => setIsIncognito(checked)}
@@ -268,7 +265,7 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
               variant="primary"
               fullWidth
               isLoading={createComment.isPending}
-              className="rounded-xl font-iran-sans font-bold text-xs h-11 mt-4"
+              className="rounded-xl font-iran-sans font-bold text-xs h-10 mt-4"
             >
               ثبت نظر نهایی
             </Button>
