@@ -523,6 +523,45 @@ export class UserPanelService {
       throw errorManager.normalize(error);
     }
   }
+
+  async requestUpdatePhoneNumber(phoneNumber: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('PhoneNumber', phoneNumber);
+      await this.httpClient.put(USERPANEL_ENDPOINTS.UPDATE_PHONE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Request update phone failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async confirmCurrentPhoneOTP(otpCode: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('OTPCode', otpCode);
+      await this.httpClient.put(USERPANEL_ENDPOINTS.CONFIRM_CURRENT_PHONE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Confirm current phone OTP failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async confirmNewPhoneOTP(otpCode: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('OTPCode', otpCode);
+      await this.httpClient.put(USERPANEL_ENDPOINTS.CONFIRM_NEW_PHONE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Confirm new phone OTP failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
 }
 
 let userPanelServiceInstance: UserPanelService | null = null;

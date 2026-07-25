@@ -20,6 +20,20 @@ export interface UserLocation {
   isDefault: boolean;
 }
 
+export interface LegalInfo {
+  organizationName: string | null;
+  organizationType: string | null;
+  organizationEconomicCode: string | null;
+  organizationNationalCode: string | null;
+  organizationRegisterationCode: string | null;
+  organizationNoticeDocument: string | null;
+  organizationHeadOfficeCityId: string | null;
+  organizationHeadOfficeCity: string | null;
+  organizationHeadOfficeProvinceId: string | null;
+  organizationHeadOfficeProvince: string | null;
+  organizationHeadOfficeTel: string | null;
+}
+
 export interface User {
   id: string;
   lastName: string;
@@ -28,6 +42,10 @@ export interface User {
   status: string;
   registerDate: string;
   birthDate?: string;
+  job: string | null;
+  naturalPersonEconomicCode: string | null;
+  educationType: string | null;
+  gender: string | null;
   userChosenCity: string | null;
   userChosenCityId: string | null;
   shopTitle: string | null;
@@ -39,6 +57,7 @@ export interface User {
   roles: UserRole[];
   bankAccounts: BankAccount[];
   userLocations: UserLocation[];
+  legalInfo: LegalInfo | null;
   isOrganizationInfoConfirmed?: boolean;
   isOrganizationNoticeDocumentConfirmed?: boolean;
   referralCode?: string | null;

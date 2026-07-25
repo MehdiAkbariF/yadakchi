@@ -321,3 +321,21 @@ export function useGetRecentlyViewedProducts() {
     { staleTime: 30 * 1000 }
   );
 }
+
+export function useRequestUpdatePhoneNumber() {
+  return useTypedMutation(
+    (phoneNumber: string) => userPanelService.requestUpdatePhoneNumber(phoneNumber)
+  );
+}
+
+export function useConfirmCurrentPhoneOTP() {
+  return useTypedMutation(
+    (otpCode: string) => userPanelService.confirmCurrentPhoneOTP(otpCode)
+  );
+}
+
+export function useConfirmNewPhoneOTP() {
+  return useTypedMutation(
+    (otpCode: string) => userPanelService.confirmNewPhoneOTP(otpCode)
+  );
+}
