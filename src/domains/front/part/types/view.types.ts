@@ -33,6 +33,7 @@ export interface PartCategoryViewModel {
   name: string;
   englishTitle: string;
   description: string;
+  thumbnail: string | null;
   parentId: string | null;
   hasSeo: boolean;
   hasDescription: boolean;

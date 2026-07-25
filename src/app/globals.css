@@ -1,51 +1,7 @@
-/* src/app/globals.css */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* تعریف فونت‌ها با @font-face */
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranSans/woff2/IRANSansWeb(FaNum).woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranSans/woff2/IRANSansWeb(FaNum)_Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranSans/woff2/IRANSansWeb(FaNum)_Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranSans/woff2/IRANSansWeb(FaNum)_Light.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranSans/woff2/IRANSansWeb(FaNum)_UltraLight.woff2') format('woff2');
-  font-weight: 200;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* فونت ایران‌یکان */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2');
@@ -102,7 +58,46 @@
   font-display: swap;
 }
 
-/* لایه‌های متغیرهای رنگی با استاندارد جهانی زینک تیره */
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -159,16 +154,12 @@
 }
 
 @layer utilities {
-  /* 
-    افزودن کلاس شیک کمکی جهت پنهان‌سازی کامل اسکرول‌بار مزاحم مرورگر 
-    ضمن حفظ قابلیت تعامل اسکرول لمسی و کلیکی
-  */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 
@@ -178,6 +169,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'IRANSans', system-ui, sans-serif;
+    font-family: 'IRANYekan', system-ui, sans-serif;
   }
 }

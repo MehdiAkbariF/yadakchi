@@ -30,6 +30,7 @@ export interface PartCategoryApiDto {
   englishTitle: string;
   description: string;
   parentId?: string;
+  thumbnail?: string | null;
   hasSeo: boolean;
   hasDescription: boolean;
   isActive: boolean;
@@ -45,6 +46,7 @@ export interface PartCategoryPageApiDto {
   englishTitle: string;
   description: string;
   image?: string;
+  thumbnail?: string | null;
   seoTitle?: string;
   seoDescription?: string;
   parentId?: string;

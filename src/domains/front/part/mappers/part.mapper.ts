@@ -18,39 +18,39 @@ import {
 } from '../types/view.types';
 
 export class PartMapper {
-  static toDomain(dto: PartApiDto): Part {
+  static toDomain(dto: any): Part {
     return {
       id: dto.id,
       name: {
         value: dto.name,
         english: dto.englishTitle,
       },
-      description: dto.description,
+      description: dto.description || '',
       category: {
-        id: dto.partCategoryId,
-        name: dto.partCategoryName,
-        englishTitle: dto.partCategoryEnglishTitle,
+        id: dto.partCategoryId || dto.categoryId || '',
+        name: dto.partCategoryName || dto.categoryName || '',
+        englishTitle: dto.partCategoryEnglishTitle || dto.categoryEnglishTitle || '',
         description: '',
         hasSeo: false,
         hasDescription: false,
       },
       brand: {
-        id: dto.brandId,
-        name: dto.brandName,
+        id: dto.brandId || '',
+        name: dto.brandName || '',
       },
-      carModel: dto.carModel,
-      carIds: dto.carIds,
+      carModel: dto.carModel || '',
+      carIds: dto.carIds || [],
       properties: [],
       metadata: {
-        createdAt: new Date(dto.createdAt),
-        updatedAt: new Date(dto.updatedAt),
+        createdAt: new Date(dto.createdAt || Date.now()),
+        updatedAt: new Date(dto.updatedAt || Date.now()),
       },
-      isActive: dto.isActive,
+      isActive: dto.isActive !== undefined ? dto.isActive : true,
     };
   }
 
   static toView(domain: Part, properties: PartPropertiesApiDto[] = []): PartViewModel {
-    const formattedProperties = properties.map(p => ({
+    const formattedProperties = (properties || []).map(p => ({
       key: p.propertyKey,
       value: p.propertyValue,
       displayOrder: p.displayOrder,
@@ -62,17 +62,17 @@ export class PartMapper {
       englishTitle: domain.name.english,
       description: domain.description,
       category: {
-        id: domain.category.id,
-        name: domain.category.name,
-        englishTitle: domain.category.englishTitle,
+        id: domain.category.id || '',
+        name: domain.category.name || '',
+        englishTitle: domain.category.englishTitle || '',
       },
       brand: {
-        id: domain.brand.id,
-        name: domain.brand.name,
-        englishTitle: domain.brand.englishTitle,
+        id: domain.brand.id || '',
+        name: domain.brand.name || '',
+        englishTitle: domain.brand.englishTitle || '',
       },
-      carModel: domain.carModel,
-      carIds: domain.carIds,
+      carModel: domain.carModel || '',
+      carIds: domain.carIds || [],
       image: null,
       properties: formattedProperties,
       metadata: {
@@ -89,6 +89,7 @@ export class PartMapper {
       name: dto.name,
       englishTitle: dto.englishTitle,
       description: dto.description,
+      thumbnail: dto.thumbnail || null,
       parentId: dto.parentId || null,
       hasSeo: dto.hasSeo,
       hasDescription: dto.hasDescription,
@@ -104,6 +105,7 @@ export class PartMapper {
       name: dto.name,
       englishTitle: dto.englishTitle,
       description: dto.description,
+      thumbnail: dto.thumbnail || dto.image || null,
       hasSeo: false,
       hasDescription: false,
       isActive: true,

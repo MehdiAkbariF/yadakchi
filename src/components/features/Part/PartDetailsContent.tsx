@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
-import { useGetPartCategoryPage } from '@/domains/front/part/hooks/part.hooks';
+import { useGetPartPage } from '@/domains/front/part/hooks/part.hooks';
 import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
 import { SearchSidebar } from '@/components/features/ProductGrid/SearchSidebar';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
@@ -12,14 +12,15 @@ import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { BottomSheet } from '@/components/composites/BottomSheet/BottomSheet';
 import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
-import { PartCategoryHeaderCard } from '@/components/features/Part/components/PartCategoryHeaderCard';
+import { PartHeaderCard } from './components/PartHeaderCard';
 import { Typography } from '@/components/primitives/Typography';
 import { useAppStore } from '@/shared/store/useAppStore';
-import { ShoppingBag, Check } from 'lucide-react';
+import { Check, ShoppingBag } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 
-interface PartCategoryContentProps {
-  slug: string;
+interface PartDetailsContentProps {
+  categorySlug: string;
+  partSlug: string;
 }
 
 const SORT_OPTIONS = [
@@ -31,7 +32,7 @@ const SORT_OPTIONS = [
   { value: 'MostExpensive', label: 'گران‌ترین' },
 ];
 
-export function PartCategoryContent({ slug }: PartCategoryContentProps) {
+export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsContentProps) {
   const router = useRouter();
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
 
@@ -39,9 +40,13 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
   const [isMobileSortOpen, setIsMobileSortOpen] = useState(false);
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
-  const currentFilters = { ...filters, partCategoryEnglishTitle: slug };
+  const currentFilters = { 
+    ...filters, 
+    partCategoryEnglishTitle: categorySlug, 
+    partEnglishTitle: partSlug 
+  };
 
-  const { data: categoryData } = useGetPartCategoryPage(slug);
+  const { data: partData } = useGetPartPage(partSlug);
   const { data: productsResponse, isLoading } = useSearchProducts(currentFilters);
 
   const products = productsResponse?.items || [];
@@ -55,13 +60,17 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
 
   const activeSortLabel = SORT_OPTIONS.find(o => o.value === (filters.orderType || 'Selected'))?.label || 'منتخب';
 
+  const rawBreadcrumbs = (partData as any)?.breadCrumbs || [];
   const breadcrumbItems = [
     { id: 'categories-root', title: 'دسته‌بندی‌ها', href: '/categories' },
-    ...(categoryData?.breadCrumbs || []).map((b: any) => ({
-      id: b.id,
-      title: b.title,
-      href: `/part-category/${b.englishTitle}`
-    }))
+    ...rawBreadcrumbs.map((b: any, idx: number) => {
+      const isLast = idx === rawBreadcrumbs.length - 1;
+      return {
+        id: b.id,
+        title: b.title,
+        href: isLast ? undefined : `/part-category/${b.englishTitle}`
+      };
+    })
   ];
 
   return (
@@ -71,7 +80,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
         style={{
           top: isHeaderMinimized ? '56px' : '122px'
         }}
-        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 w-full flex items-center justify-between shadow-sm select-none gap-3 transition-all duration-300 mt-1 shrink-0"
+        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 w-full flex items-center justify-between shadow-sm select-none gap-3 mt-1 shrink-0"
       >
         <button
           onClick={() => setIsMobileFiltersOpen(true)}
@@ -100,14 +109,15 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}
           onClose={() => setIsMobileFiltersOpen(false)}
+          hidePartFilter={true}
         />
 
         <div className="flex-1 flex flex-col items-stretch gap-6">
           
-          <PartCategoryHeaderCard 
-            slug={slug}
-            categoryName={categoryData?.category?.name || 'سیستم سوخت'}
-            thumbnail={categoryData?.category?.thumbnail || null}
+          <PartHeaderCard 
+            partSlug={partSlug}
+            categorySlug={categorySlug}
+            partName={partData?.name || 'پمپ بنزین با درجه باک'}
           />
 
           <div className="hidden md:flex items-center gap-2 overflow-x-auto no-scrollbar py-1 border-b pb-3">
@@ -164,10 +174,10 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
 
       </div>
 
-      {categoryData?.category?.description && (
+      {partData?.description && (
         <PageDescription 
-          htmlContent={categoryData.category.description} 
-          title={`راهنمای خرید و شناخت قطعات ${categoryData.category.name}`}
+          htmlContent={partData.description} 
+          title={`راهنمای خرید و شناخت ${partData.name}`}
         />
       )}
 

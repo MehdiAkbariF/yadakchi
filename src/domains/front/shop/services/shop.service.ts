@@ -31,15 +31,13 @@ export class ShopService {
     }
   }
 
-  async getShopPage(shopId: string): Promise<ShopViewModel> {
+  async getShopPage(shopId: string): Promise<any> {
     try {
-      const response = await this.httpClient.get<ShopApiDto>(
+      const response = await this.httpClient.get<any>(
         SHOP_ENDPOINTS.GET_SHOP_PAGE,
         { params: { ShopId: shopId } }
       );
-
-      const domain = ShopMapper.toDomain(response.data);
-      return ShopMapper.toView(domain);
+      return response.data;
     } catch (error) {
       logger.error('[ShopService] Get shop page failed:', error);
       throw errorManager.normalize(error);

@@ -11,7 +11,7 @@ import { PriceSlider } from '@/components/composites/PriceSlider/PriceSlider';
 import { FilterList } from '@/components/composites/FilterList/FilterList';
 import { Button } from '@/components/primitives/Button/Button';
 import { Typography } from '@/components/primitives/Typography';
-import { X, Filter, } from 'lucide-react';
+import { X, Filter, ArrowRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 import { Modal } from '@/components/composites/Modal/Modal';
@@ -22,6 +22,7 @@ interface SearchSidebarProps {
   onClearAll: () => void;
   isOpen: boolean;
   onClose: () => void;
+  hidePartFilter?: boolean;
 }
 
 export function SearchSidebar({
@@ -30,6 +31,7 @@ export function SearchSidebar({
   onClearAll,
   isOpen,
   onClose,
+  hidePartFilter = false,
 }: SearchSidebarProps) {
   const [brandSearch, setBrandSearch] = useState('');
   const [carSearch, setCarSearch] = useState('');
@@ -187,20 +189,22 @@ export function SearchSidebar({
         </div>
       </Accordion>
 
-      <Accordion title={`قطعه${formatCount(activePartsCount)}`} defaultOpen={activePartsCount > 0}>
-        <FilterList
-          items={formattedParts}
-          selectedIds={(filters.partIds as string[]) || []}
-          onChange={(id, checked) => handleCheckboxChange('partIds', id, checked)}
-          searchPlaceholder="جستجوی نام قطعه..."
-          onSearchChange={(query) => {
-            setPartSearch(query);
-          }}
-          onLoadMore={() => setPartPage(prev => prev + 1)}
-          hasMore={hasMoreParts}
-          isLoadingMore={isPartsLoading}
-        />
-      </Accordion>
+      {!hidePartFilter && (
+        <Accordion title={`قطعه${formatCount(activePartsCount)}`} defaultOpen={activePartsCount > 0}>
+          <FilterList
+            items={formattedParts}
+            selectedIds={(filters.partIds as string[]) || []}
+            onChange={(id, checked) => handleCheckboxChange('partIds', id, checked)}
+            searchPlaceholder="جستجوی نام قطعه..."
+            onSearchChange={(query) => {
+              setPartSearch(query);
+            }}
+            onLoadMore={() => setPartPage(prev => prev + 1)}
+            hasMore={hasMoreParts}
+            isLoadingMore={isPartsLoading}
+          />
+        </Accordion>
+      )}
 
       <Accordion title={`برند قطعه${formatCount(activeBrandsCount)}`} defaultOpen={activeBrandsCount > 0}>
         <FilterList
@@ -274,7 +278,7 @@ export function SearchSidebar({
               className="p-1 -mr-1 hover:bg-muted rounded-full"
               aria-label="Back"
             >
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5 text-muted-foreground" />
             </button>
             <span className="text-sm font-bold font-iran-yekan flex items-center gap-1.5 text-foreground">
               <Filter className="h-4 w-4 text-primary" />
@@ -319,22 +323,5 @@ export function SearchSidebar({
         </div>
       </Modal>
     </>
-  );
-}
-
-interface ArrowRightProps extends React.SVGProps<SVGSVGElement> {}
-
-function ArrowRight({ className, ...props }: ArrowRightProps) {
-  return (
-    <svg
-      className={cn("h-5 w-5 text-muted-foreground", className)}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth="2"
-      {...props}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-    </svg>
   );
 }

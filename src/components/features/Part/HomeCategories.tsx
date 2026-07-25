@@ -116,7 +116,7 @@ export function HomeCategories() {
               className="flex gap-6 sm:gap-8 px-4 md:px-12 py-2 cursor-grab active:cursor-grabbing"
             >
               {activeCategories.map((cat: PartCategoryItem) => {
-                const href = `/categories/${cat.englishTitle}`;
+                const href = `/part-category/${cat.englishTitle}`;
                 const imageSrc = cat.thumbnail || cat.icon;
                 
                 return (
