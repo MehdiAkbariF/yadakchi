@@ -159,7 +159,7 @@ export function ProductContent({ productCode }: ProductContentProps) {
         </Link>
         {product.breadCrumbs.map((crumb, idx) => {
           const isLast = idx === product.breadCrumbs.length - 1;
-          const url = isLast ? getProductUrl(product.code, product.title) : `/categories/${crumb.englishTitle}`;
+          const url = isLast ? getProductUrl(product.code, product.title) : `/part-category/${crumb.englishTitle}`;
 
           return (
             <div key={crumb.id} className="flex items-center gap-1.5">

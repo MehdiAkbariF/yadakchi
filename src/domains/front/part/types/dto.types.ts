@@ -1,5 +1,3 @@
-// src/domains/front/part/types/dto.types.ts
-
 export interface PartApiDto {
   id: string;
   name: string;
@@ -50,8 +48,9 @@ export interface PartCategoryPageApiDto {
   seoTitle?: string;
   seoDescription?: string;
   parentId?: string;
-  children: PartCategoryApiDto[];
-  parts: PartApiDto[];
+  children?: PartCategoryApiDto[];
+  parts?: PartApiDto[];
+  breadCrumbs?: Array<{ id: string; title: string; englishTitle: string }>;
 }
 
 export interface PartNameApiDto {

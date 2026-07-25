@@ -1,5 +1,3 @@
-// src/domains/front/part/mappers/part.mapper.ts
-
 import { 
   PartApiDto, 
   PartPropertiesApiDto,
@@ -110,12 +108,12 @@ export class PartMapper {
       hasDescription: false,
       isActive: true,
       isDeleted: false,
-      children: dto.children,
+      children: dto.children || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
 
-    const parts = dto.parts.map(p => {
+    const parts = (dto.parts || []).map(p => {
       const domain = this.toDomain(p);
       return this.toView(domain);
     });
@@ -124,6 +122,7 @@ export class PartMapper {
       category,
       parts,
       totalParts: parts.length,
+      breadCrumbs: dto.breadCrumbs || [],
     };
   }
 

@@ -14,7 +14,12 @@ export function PageLoading({
   className,
 }: PageLoadingProps) {
   const loaderCard = (
-    <div className="w-36 h-36 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl shadow-xl flex flex-col items-center justify-center gap-4 animate-in zoom-in duration-200">
+    <div className={cn(
+      "w-36 h-36 flex flex-col items-center justify-center gap-4 animate-in zoom-in duration-200",
+      message 
+        ? "bg-transparent border-0 shadow-none" 
+        : "bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl shadow-xl"
+    )}>
       <div className="relative w-20 h-10">
         <img
           src="/Logo.svg"

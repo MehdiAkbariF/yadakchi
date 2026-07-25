@@ -178,7 +178,7 @@ export class ProductService {
           id: dto.partCategoryId,
           name: dto.partCategoryName,
           englishTitle: dto.partCategoryEnglishTitle,
-          href: `/categories/${dto.partCategoryEnglishTitle}`,
+          href: `/part-category/${dto.partCategoryEnglishTitle}`,
         },
         partCategoryId: dto.partCategoryId,
         partCategoryName: dto.partCategoryName,

@@ -116,7 +116,7 @@ export class BannerMapper {
       name: dto.name,
       englishTitle: dto.englishTitle,
       icon: categoryIcon,
-      href: `/categories/${dto.englishTitle}`,
+      href: `/part-category/${dto.englishTitle}`,
       parts: (dto.parts || []).map(part => {
         const partIcon = getFullUrl(part.icon);
         return {

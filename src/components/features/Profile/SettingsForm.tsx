@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+
 import { Card } from '@/components/composites/Card';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { PersonalInfoModal } from './components/PersonalInfoModal';
@@ -29,18 +29,20 @@ export function SettingsForm() {
   const defaultAccount = user.bankAccounts?.find(b => b.isDefault) || user.bankAccounts?.[0] || null;
 
   const renderItemCard = (label: string, value: string | null, required: boolean, onClick: () => void) => (
-    <Card 
-      onClick={onClick}
-      className="cursor-pointer border rounded-2xl p-5 bg-card hover:border-primary/25 hover:bg-primary/5 hover:scale-[1.01] transition-all duration-200 flex flex-col justify-center gap-2 text-right select-none shadow-sm min-h-[96px]"
-    >
-      <span className="text-[10px] md:text-xs text-muted-foreground font-bold font-iran-sans flex items-center gap-1">
+    <div className="w-full flex flex-col gap-1.5 select-none text-right">
+      <span className="text-[10px] md:text-xs text-muted-foreground font-bold mr-1 flex items-center gap-1 select-none">
         {label}
         {required && <span className="text-destructive">*</span>}
       </span>
-      <span className="text-xs md:text-sm font-black text-foreground leading-relaxed truncate">
-        {value || 'ثبت نشده'}
-      </span>
-    </Card>
+      <Card 
+        onClick={onClick}
+        className="cursor-pointer border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 bg-card hover:border-primary/20 hover:bg-primary/5 hover:scale-[1.01] transition-all duration-200 flex items-center justify-start shadow-sm h-11"
+      >
+        <span className="text-xs md:text-sm font-black text-foreground truncate select-none">
+          {value || 'ثبت نشده'}
+        </span>
+      </Card>
+    </div>
   );
 
   return (
@@ -66,7 +68,7 @@ export function SettingsForm() {
           <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">اطلاعات حساب</span>
         </div>
         <p className="text-xs text-muted-foreground font-iran-sans">
-          مشاهده شناسنامه اطلاعات فردی، کارت تسویه، و فاکتور حقوقی شما (برای ویرایش روی کارت مورد نظر کلیک کنید)
+          مشاهده شناسنامه اطلاعات فردی، کارت تسویه، و فاکتور حقوقی شما (برای ویرایش روی هر کارت کلیک کنید)
         </p>
       </div>
 

@@ -228,7 +228,7 @@ export class ProductMapper {
         id: dto.partCategoryId,
         name: dto.partCategoryName,
         englishTitle: dto.partCategoryEnglishTitle,
-        href: `/categories/${dto.partCategoryEnglishTitle}`,
+        href: `/part-category/${dto.partCategoryEnglishTitle}`,
       },
     };
   }

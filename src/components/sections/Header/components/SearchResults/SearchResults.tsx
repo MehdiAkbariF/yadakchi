@@ -59,7 +59,7 @@ export function SearchResults({ isOpen, onClose, keywords, isMobile }: SearchRes
               {uniqueCategories.map((cat) => (
                 <Link
                   key={cat.partCategoryId}
-                  href={`/categories/${cat.partCategoryEnglishTitle}`}
+                  href={`/part-category/${cat.partCategoryEnglishTitle}`}
                   onClick={onClose}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium hover:bg-primary/10 transition-colors"
                 >

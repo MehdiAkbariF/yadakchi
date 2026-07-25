@@ -191,7 +191,7 @@ export function HomeContent() {
           products={toolsProducts}
           isLoading={isToolsLoading}
           isError={isToolsError}
-          viewAllLink="/categories/car-tools"
+          viewAllLink="/part-category/car-tools"
           showTimer={false}
         />
 
@@ -217,7 +217,7 @@ export function HomeContent() {
           products={audioProducts}
           isLoading={isAudioLoading}
           isError={isAudioError}
-          viewAllLink="/categories/audio-video-multimedia-system"
+          viewAllLink="/part-category/audio-video-multimedia-system"
           showTimer={false}
         />
 
@@ -259,7 +259,7 @@ export function HomeContent() {
           products={exhaustProducts}
           isLoading={isExhaustLoading}
           isError={isExhaustError}
-          viewAllLink="/categories/Exhaust"
+          viewAllLink="/part-category/Exhaust"
           showTimer={false}
         />
 
@@ -288,7 +288,7 @@ export function HomeContent() {
           products={heaterProducts}
           isLoading={isHeaterLoading}
           isError={isHeaterError}
-          viewAllLink="/categories/heater"
+          viewAllLink="/part-category/heater"
           showTimer={false}
         />
 
@@ -297,7 +297,7 @@ export function HomeContent() {
           products={doorProducts}
           isLoading={isDoorLoading}
           isError={isDoorError}
-          viewAllLink="/categories/door-handles-locks-and-safety"
+          viewAllLink="/part-category/door-handles-locks-and-safety"
           showTimer={false}
         />
 
@@ -306,7 +306,7 @@ export function HomeContent() {
           products={bodyProducts}
           isLoading={isBodyLoading}
           isError={isBodyError}
-          viewAllLink="/categories/body-and-weatherstrips"
+          viewAllLink="/part-category/body-and-weatherstrips"
           showTimer={false}
         />
 

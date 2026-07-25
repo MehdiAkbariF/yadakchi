@@ -1,5 +1,3 @@
-// src/domains/front/part/types/view.types.ts
-
 export interface PartViewModel {
   id: string;
   name: string;
@@ -47,6 +45,7 @@ export interface PartCategoryPageViewModel {
   category: PartCategoryViewModel;
   parts: PartViewModel[];
   totalParts: number;
+  breadCrumbs: Array<{ id: string; title: string; englishTitle: string }>;
 }
 
 export interface PartNameViewModel {

@@ -47,7 +47,7 @@ export function SearchBar({
   const activeCar = cars.find((c: any) => c.id === urlCarId)?.model || '';
   const activeBrand = brands.find((b: any) => b.id === urlBrandId)?.name || '';
   
-  const isCategoryPage = pathname.startsWith('/categories/');
+  const isCategoryPage = pathname.startsWith('/part-category/');
   const catSlug = isCategoryPage ? pathname.split('/').pop() : '';
   const activeCategory = categories.find((c: any) => c.englishTitle === catSlug)?.name || '';
 
@@ -191,7 +191,7 @@ export function SearchBar({
                   {uniqueCategories.map((cat: any) => (
                     <Link
                       key={cat.partCategoryId}
-                      href={`/categories/${cat.partCategoryEnglishTitle}`}
+                      href={`/part-category/${cat.partCategoryEnglishTitle}`}
                       onClick={() => {
                         setQuery(cat.partCategoryName);
                         setIsFocused(false);
