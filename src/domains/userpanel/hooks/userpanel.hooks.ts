@@ -1,11 +1,11 @@
 'use client';
 
-import { useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getUserPanelService } from '../services/userpanel.service';
-import { OrderListItemViewModel, WalletViewModel, TransactionViewModel, UserVehicleViewModel, NotificationItemViewModel, ReturnRequestItemViewModel } from '../types/view.types';
+import { OrderListItemViewModel, WalletViewModel, TransactionViewModel, UserVehicleViewModel, NotificationItemViewModel, WithdrawRequestItemViewModel } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
-import { OrderDetailsDto, SubOrderCancelReasonDto, ReturnRequestReasonDto, BankAccountDto, AdvantageDto } from '../types/dto.types';
+import { OrderDetailsDto, BankAccountDto } from '../types/dto.types';
 
 const userPanelService = getUserPanelService();
 
@@ -46,7 +46,7 @@ export function useRetryOrderPayment() {
 }
 
 export function useGetSubOrderCancelReasons() {
-  return useTypedQuery<SubOrderCancelReasonDto[]>(
+  return useTypedQuery<any[]>(
     ['user', 'orders', 'cancel-reasons'],
     () => userPanelService.getSubOrderCancelReasons(),
     { staleTime: 10 * 60 * 1000 }
@@ -97,7 +97,7 @@ export function useSubmitSubOrderItemFeedback() {
 }
 
 export function useGetReturnRequestReasons() {
-  return useTypedQuery<ReturnRequestReasonDto[]>(
+  return useTypedQuery<any[]>(
     ['user', 'return-requests', 'reasons'],
     () => userPanelService.getReturnRequestReasons(),
     { staleTime: 10 * 60 * 1000 }
@@ -126,7 +126,7 @@ export function useGetReturnRequestDetails(id: string) {
 }
 
 export function useGetReturnRequests(pageNumber: number = 1, status?: string, subOrderId?: string) {
-  return useTypedQuery<PaginatedResult<ReturnRequestItemViewModel>>(
+  return useTypedQuery<PaginatedResult<any>>(
     ['user', 'return-requests', 'list', { pageNumber, status, subOrderId }],
     () => userPanelService.getReturnRequests(pageNumber, 10, status, subOrderId),
     { staleTime: 30 * 1000 }
@@ -219,7 +219,7 @@ export function useCreateUserVehicle() {
 export function useUpdateUserVehicle() {
   const queryClient = useQueryClient();
   return useTypedMutation(
-    ({ id, title, mileage, oilKmLimit, lastServiceDate, isDefault }: { id: string; title: string; mileage: number; oilKmLimit: number; lastServiceDate: string; isDefault: boolean }) =>
+    ({ id, title, mileage, oilKmLimit, lastServiceDate, isDefault }: { id: string; title: string; mileage: number | null; oilKmLimit: number | null; lastServiceDate: string | null; isDefault: boolean }) =>
       userPanelService.updateUserVehicle(id, title, mileage, oilKmLimit, lastServiceDate, isDefault),
     {
       onSuccess: () => {
@@ -258,7 +258,7 @@ export function useGetNotificationDetails(id: string) {
 }
 
 export function useGetShopAdvantages() {
-  return useTypedQuery<AdvantageDto[]>(
+  return useTypedQuery<any[]>(
     ['user', 'shop-feedback', 'advantages'],
     () => userPanelService.getShopAdvantages(),
     { staleTime: 10 * 60 * 1000 }
@@ -266,7 +266,7 @@ export function useGetShopAdvantages() {
 }
 
 export function useGetShopDisadvantages() {
-  return useTypedQuery<AdvantageDto[]>(
+  return useTypedQuery<any[]>(
     ['user', 'shop-feedback', 'disadvantages'],
     () => userPanelService.getShopDisadvantages(),
     { staleTime: 10 * 60 * 1000 }
@@ -282,5 +282,34 @@ export function useUpdateProfile() {
         queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
       }
     }
+  );
+}
+
+export function useGetWithdrawRequests(pageNumber: number = 1, status?: string) {
+  return useTypedQuery<PaginatedResult<WithdrawRequestItemViewModel>>(
+    ['user', 'wallet', 'withdraw-requests', { pageNumber, status }],
+    () => userPanelService.getWithdrawRequests(pageNumber, 10, status),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useSubmitWithdrawRequest() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ amount, bankAccountId }: { amount: number; bankAccountId: string }) =>
+      userPanelService.submitWithdrawRequest(amount, bankAccountId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'wallet'] });
+      }
+    }
+  );
+}
+
+export function useGetFavoriteProducts(pageNumber: number = 1, order: string = 'Latest') {
+  return useTypedQuery<PaginatedResult<any>>(
+    ['user', 'favorites', 'list', { pageNumber, order }],
+    () => userPanelService.getFavoriteProducts(pageNumber, 30, order),
+    { staleTime: 30 * 1000 }
   );
 }

@@ -32,10 +32,10 @@ export interface Transaction {
 export interface UserVehicle {
   id: string;
   title: string;
-  oilKmLimit: number;
-  mileage: number;
+  oilKmLimit: number | null;
+  mileage: number | null;
   isDefault: boolean;
-  lastServiceDate: string;
+  lastServiceDate: string | null;
   createDate: string;
   carModel: string;
   carManufacturerName: string;
@@ -98,4 +98,14 @@ export interface ReturnRequestItem {
   createDate: string;
   productImage: string;
   productTitle: string;
+}
+
+export interface WithdrawRequestItem {
+  id: string;
+  amount: number;
+  status: 'Pending' | 'Paid' | 'Cancelled';
+  statusLabel: string;
+  cardNumber: string;
+  shebaNumber: string;
+  createDate: string;
 }

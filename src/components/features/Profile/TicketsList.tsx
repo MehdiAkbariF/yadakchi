@@ -26,8 +26,20 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
     pageSize: 10
   });
 
+  const { data: allTicketsResponse } = useGetTicketsList({
+    status: '',
+    pageNumber: 1,
+    pageSize: 100
+  });
+
   const tickets = ticketsResponse?.items || [];
   const totalPages = ticketsResponse?.totalPages || 1;
+
+  const allTickets = allTicketsResponse?.items || [];
+  const totalCount = allTickets.length;
+  const waitingCount = allTickets.filter(t => t.status === 'WaitingForAnswer').length;
+  const answeredCount = allTickets.filter(t => t.status === 'Answered').length;
+  const closedCount = allTickets.filter(t => t.status === 'Closed').length;
 
   const handleTabChange = (newStatus: string) => {
     setStatus(newStatus);
@@ -36,10 +48,10 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
   };
 
   const statusTabs = [
-    { id: '', label: 'همه تیکت‌ها', count: 3 },
-    { id: 'WaitingForAnswer', label: 'در انتظار پاسخ', count: 2 },
-    { id: 'Answered', label: 'پاسخ داده شده', count: 1 },
-    { id: 'Closed', label: 'بسته شده', count: 0 },
+    { id: '', label: 'همه تیکت‌ها', count: totalCount },
+    { id: 'WaitingForAnswer', label: 'در انتظار پاسخ', count: waitingCount },
+    { id: 'Answered', label: 'پاسخ داده شده', count: answeredCount },
+    { id: 'Closed', label: 'بسته شده', count: closedCount },
   ];
 
   return (

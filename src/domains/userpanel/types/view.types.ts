@@ -35,9 +35,11 @@ export interface UserVehicleViewModel {
   id: string;
   title: string;
   oilKmLimit: string;
+  oilKmLimitRaw: number | null;
   mileage: string;
+  mileageRaw: number | null;
   isDefault: boolean;
-  lastServiceDate: string;
+  lastServiceDate: string | null;
   lastServiceDateFormatted: string;
   createDate: string;
   carModel: string;
@@ -106,4 +108,15 @@ export interface ReturnRequestItemViewModel {
   createDateFormatted: string;
   productImage: string;
   productTitle: string;
+}
+
+export interface WithdrawRequestItemViewModel {
+  id: string;
+  amount: string;
+  status: 'Pending' | 'Paid' | 'Cancelled';
+  statusLabel: string;
+  statusColor: 'warning' | 'success' | 'destructive';
+  cardNumber: string;
+  shebaNumber: string;
+  createDateFormatted: string;
 }

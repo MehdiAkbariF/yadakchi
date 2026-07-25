@@ -323,18 +323,16 @@ export class ProductService {
         { 
           params: { 
             productCode,
-            _t: Date.now() // اضافه کردن تاچ تایم بستر جهت غیرفعال‌سازی کش مرورگر کلاینت
+            _t: Date.now()
           } 
         }
       );
 
       const result = response.data;
 
-      // بررسی دقیق بولین خام
       if (result === true || result === 'true') return true;
       if (result === false || result === 'false') return false;
 
-      // پشتیبان در صورت وجود آبجکت پوششی
       if (result && typeof result === 'object') {
         const dataValue = (result as any).data;
         if (dataValue === true || dataValue === 'true') return true;

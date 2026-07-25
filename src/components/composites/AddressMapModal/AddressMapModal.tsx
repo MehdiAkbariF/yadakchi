@@ -20,9 +20,15 @@ interface AddressMapModalProps {
     cityName: string;
     provinceName: string;
   }) => void;
+  initialCoordinates?: { lat: number; lon: number } | null;
 }
 
-export function AddressMapModal({ isOpen, onClose, onConfirmAddress }: AddressMapModalProps) {
+export function AddressMapModal({ 
+  isOpen, 
+  onClose, 
+  onConfirmAddress,
+  initialCoordinates = null
+}: AddressMapModalProps) {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 500);
@@ -41,6 +47,16 @@ export function AddressMapModal({ isOpen, onClose, onConfirmAddress }: AddressMa
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialCoordinates) {
+        setCoordinates(initialCoordinates);
+      } else {
+        setCoordinates({ lat: 35.6892, lon: 51.3890 });
+      }
+    }
+  }, [isOpen, initialCoordinates]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -103,7 +119,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirmAddress }: AddressMa
 
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLon],
-      zoom: 13,
+      zoom: 15,
       zoomControl: false,
     });
 
@@ -214,7 +230,6 @@ export function AddressMapModal({ isOpen, onClose, onConfirmAddress }: AddressMa
       cityName,
       provinceName,
     });
-    onClose();
   };
 
   if (!mounted || !isOpen) return null;
@@ -264,7 +279,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirmAddress }: AddressMa
               placeholder="جستجوی شهر، خیابان یا محله روی نقشه..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={isSearching ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Search className="h-4 w-4 text-muted-foreground" />}
+              leftIcon={isSearching ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Search className="h-4 w-4 text-zinc-400" />}
               className="flex-1 text-xs font-iran-sans"
               dir="rtl"
             />
@@ -316,6 +331,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirmAddress }: AddressMa
           </div>
 
           <Button
+            type="button"
             variant="primary"
             size="md"
             fullWidth

@@ -46,4 +46,5 @@ export const USERPANEL_ENDPOINTS = {
   GET_ADVANTAGES: '/api/UserPanel/ShopAdvantages',
   GET_DISADVANTAGES: '/api/UserPanel/ShopDisadvantages',
   POST_SHOP_COMMENT: '/api/UserPanel/ShopComment',
+  GET_FAVORITES: '/api/UserPanel/ProductFavorite'
 } as const;

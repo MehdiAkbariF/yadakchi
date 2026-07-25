@@ -105,3 +105,52 @@ export function getProductUrl(code: number, title: string): string {
     .replace(/-+/g, '-');
   return `/product/ykp-${code}/${encodeURIComponent(cleanTitle)}`;
 }
+
+export function formatToLocalDateString(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function jalaliToGregorian(jy: number, jm: number, jd: number): string {
+  const g_days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const j_days_in_month = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29];
+  let jy2 = jy - 979;
+  let jm2 = jm - 1;
+  let jd2 = jd - 1;
+  let j_day_no = 365 * jy2 + Math.floor(jy2 / 33) * 8 + Math.floor((jy2 % 33 + 3) / 4);
+  for (let i = 0; i < jm2; ++i) j_day_no += j_days_in_month[i];
+  j_day_no += jd2;
+  let g_day_no = j_day_no + 79;
+  let gy = 1600 + 400 * Math.floor(g_day_no / 146097);
+  g_day_no = g_day_no % 146097;
+  let leap = true;
+  if (g_day_no >= 36525) {
+    g_day_no--;
+    gy += 100 * Math.floor(g_day_no / 36524);
+    g_day_no = g_day_no % 36524;
+    if (g_day_no >= 365) g_day_no++;
+    else leap = false;
+  }
+  gy += 4 * Math.floor(g_day_no / 1461);
+  g_day_no %= 1461;
+  if (g_day_no >= 366) {
+    leap = false;
+    g_day_no--;
+    gy += Math.floor(g_day_no / 365);
+    g_day_no = g_day_no % 365;
+  }
+  let i = 0;
+  for (; i < 12; i++) {
+    let temp = g_days_in_month[i];
+    if (i === 1 && leap) temp++;
+    if (g_day_no < temp) break;
+    g_day_no -= temp;
+  }
+  const gm = i + 1;
+  const gd = g_day_no + 1;
+  return `${gy}-${String(gm).padStart(2, '0')}-${String(gd).padStart(2, '0')}`;
+}

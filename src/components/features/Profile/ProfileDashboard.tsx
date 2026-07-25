@@ -22,9 +22,14 @@ import { useGetOrders, useGetUserVehicles } from '@/domains/userpanel/hooks/user
 export function ProfileDashboard() {
   const router = useRouter();
   const { data: ordersData } = useGetOrders('', '', '', 1);
-  const { data: vehicles = [] } = useGetUserVehicles();
+  const { data: vehicles = [], isLoading, isError, error } = useGetUserVehicles();
 
-  const defaultVehicle = vehicles.find(v => v.isDefault) || vehicles[0] || null;
+  console.log('[Dashboard Debug] Vehicles Array:', vehicles);
+  console.log('[Dashboard Debug] Loading State:', isLoading);
+  
+  if (isError) {
+    console.error('[Dashboard Debug] React Query Error:', error);
+  }
 
   const orderStatuses = [
     { id: 'WaitingForPayment', label: 'در انتظار پرداخت', count: 2, icon: CreditCard },
@@ -52,7 +57,7 @@ export function ProfileDashboard() {
         <CardBody className="p-5 flex flex-col gap-5">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="h-4.5 w-4.5 text-primary shrink-0" />
+              <ShoppingBag className="h-5 w-5 text-primary shrink-0" />
               <span className="text-xs md:text-sm font-bold text-foreground font-iran-yekan">سفارش‌های من</span>
             </div>
             <button 
@@ -89,64 +94,71 @@ export function ProfileDashboard() {
         <CardBody className="p-5 flex flex-col gap-5">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <Car className="h-4.5 w-4.5 text-primary" />
+              <Car className="h-5 w-5 text-primary" />
               <span className="text-xs md:text-sm font-bold text-foreground font-iran-yekan">گاراژ من</span>
             </div>
             <button 
-              onClick={() => router.push('/profile/garage')}
+              onClick={() => router.push('/my-car')}
               className="text-xs font-bold font-iran-sans text-primary hover:underline flex items-center gap-0.5 outline-none"
             >
-              <span>مشاهده گاراژ ({formatPrice(vehicles.length)} از ۱۰)</span>
+              <span>مدیریت گاراژ ({formatPrice(vehicles.length)} از ۱۰)</span>
               <ChevronLeft className="h-4 w-4" />
             </button>
           </div>
 
-          {defaultVehicle ? (
-            <div className="w-full flex flex-col md:flex-row items-stretch justify-between gap-5 border rounded-xl p-4 bg-background">
-              <div className="flex-1 flex gap-4 items-start min-w-0">
-                <div className="w-16 h-16 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden">
-                  {defaultVehicle.carCover ? (
-                    <img src={getFullUrl(defaultVehicle.carCover)} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <Car className="h-6 w-6 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 text-right flex flex-col gap-1">
-                  <div className="flex items-center gap-2 w-full">
-                    <span className="text-xs md:text-sm font-bold text-foreground truncate font-iran-sans">{defaultVehicle.title}</span>
-                    <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-iran-sans">{defaultVehicle.carModel}</span>
+          {vehicles.length > 0 ? (
+            <div className="flex flex-col gap-4 w-full">
+              {vehicles.map((vehicle: any) => (
+                <div key={vehicle.id} className="w-full flex flex-col md:flex-row items-stretch justify-between gap-5 border rounded-xl p-4 bg-background hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors">
+                  <div className="flex-1 flex gap-4 items-start min-w-0">
+                    <div className="w-16 h-16 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden">
+                      {vehicle.carCover ? (
+                        <img src={getFullUrl(vehicle.carCover)} className="w-full h-full object-contain" alt="" />
+                      ) : (
+                        <Car className="h-6 w-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 text-right flex flex-col gap-1">
+                      <div className="flex items-center gap-2 w-full">
+                        <span className="text-xs md:text-sm font-bold text-foreground truncate font-iran-sans">{vehicle.carModel}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-iran-sans">- {vehicle.title}</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-2 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
+                        <div className="flex items-center gap-1.5">
+                          <Gauge className="h-4 w-4 text-zinc-400" />
+                          <span>کارکرد خودرو: {vehicle.mileage}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Wrench className="h-4 w-4 text-zinc-400" />
+                          <span>سرویس بعدی: {vehicle.oilKmLimit}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 sm:col-span-2">
+                          <Calendar className="h-4 w-4 text-zinc-400" />
+                          <span>تاریخ اضافه به گاراژ: {vehicle.lastServiceDateFormatted}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-2 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
-                    <div className="flex items-center gap-1">
-                      <Gauge className="h-3.5 w-3.5 text-zinc-400" />
-                      <span>کارکرد خودرو: {defaultVehicle.mileage}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Wrench className="h-3.5 w-3.5 text-zinc-400" />
-                      <span>سرویس بعدی: {defaultVehicle.oilKmLimit}</span>
-                    </div>
-                    <div className="flex items-center gap-1 sm:col-span-2">
-                      <Calendar className="h-3.5 w-3.5 text-zinc-400" />
-                      <span>تاریخ اضافه به گاراژ: {defaultVehicle.lastServiceDateFormatted}</span>
-                    </div>
+                  <div className="flex flex-col items-end justify-between gap-3 shrink-0 border-t md:border-t-0 border-dashed pt-3 md:pt-0">
+                    {vehicle.isDefault && (
+                      <span className="text-[9px] font-bold text-success-500 bg-success-50 dark:bg-success-950/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-iran-sans animate-in zoom-in duration-150">
+                        <Check className="h-3 w-3" />
+                        خودروی پیش فرض
+                      </span>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push('/my-car')}
+                      className="rounded-xl text-[10px] font-bold font-iran-sans h-8 w-full md:w-auto"
+                    >
+                      بروزرسانی کارکرد
+                    </Button>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex flex-col items-end justify-between gap-3 shrink-0 border-t md:border-t-0 border-dashed pt-3 md:pt-0">
-                <span className="text-[9px] font-bold text-success-500 bg-success-50 dark:bg-success-950/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-iran-sans">
-                  <Check className="h-3 w-3" />
-                  خودروی پیش فرض
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-xl text-[10px] font-bold font-iran-sans h-8"
-                >
-                  به‌روزرسانی کارکرد
-                </Button>
-              </div>
+              ))}
             </div>
           ) : (
             <div className="w-full py-8 text-center flex flex-col items-center justify-center">
@@ -154,7 +166,7 @@ export function ProfileDashboard() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => router.push('/profile/garage/add')}
+                onClick={() => router.push('/my-car/add')}
                 className="rounded-xl mt-4 text-xs font-bold font-iran-sans h-10 px-6 py-2 flex items-center justify-center gap-1"
               >
                 <Plus className="h-4 w-4" />

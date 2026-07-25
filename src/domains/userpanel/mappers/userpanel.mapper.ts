@@ -7,7 +7,9 @@ import {
   PendingCommentItemDto, 
   UserCommentItemDto, 
   UserInquiryItemDto, 
-  ReturnRequestItemDto 
+  ReturnRequestItemDto,
+  WithdrawRequestItemDto,
+  FavoriteProductItemDto
 } from '../types/dto.types';
 import { 
   OrderListItem, 
@@ -18,7 +20,8 @@ import {
   PendingCommentItem, 
   UserCommentItem, 
   UserInquiryItem, 
-  ReturnRequestItem 
+  ReturnRequestItem,
+  WithdrawRequestItem
 } from '../types/domain.types';
 import { 
   OrderListItemViewModel, 
@@ -29,7 +32,8 @@ import {
   PendingCommentItemViewModel, 
   UserCommentItemViewModel, 
   UserInquiryItemViewModel, 
-  ReturnRequestItemViewModel 
+  ReturnRequestItemViewModel,
+  WithdrawRequestItemViewModel
 } from '../types/view.types';
 import { USERPANEL_CONSTANTS } from '../constants/userpanel.constants';
 
@@ -119,9 +123,14 @@ export class UserPanelMapper {
   static toViewVehicle(domain: UserVehicle): UserVehicleViewModel {
     return {
       ...domain,
-      mileage: this.formatNumber(domain.mileage) + ' کیلومتر',
-      oilKmLimit: this.formatNumber(domain.oilKmLimit) + ' کیلومتر',
-      lastServiceDateFormatted: new Date(domain.lastServiceDate).toLocaleDateString('fa-IR'),
+      mileage: domain.mileage !== null ? this.formatNumber(domain.mileage) + ' کیلومتر' : 'ثبت نشده',
+      mileageRaw: domain.mileage,
+      oilKmLimit: domain.oilKmLimit !== null ? this.formatNumber(domain.oilKmLimit) + ' کیلومتر' : 'ثبت نشده',
+      oilKmLimitRaw: domain.oilKmLimit,
+      lastServiceDateFormatted: domain.lastServiceDate 
+        ? new Date(domain.lastServiceDate).toLocaleDateString('fa-IR') 
+        : 'ثبت نشده',
+      lastServiceDate: domain.lastServiceDate,
     };
   }
 
@@ -226,6 +235,59 @@ export class UserPanelMapper {
       ...domain,
       totlaPayBackAmount: this.formatPrice(domain.totlaPayBackAmount / 10) + ' تومان',
       createDateFormatted: new Date(domain.createDate).toLocaleDateString('fa-IR'),
+    };
+  }
+
+  static toDomainWithdrawRequest(dto: WithdrawRequestItemDto): WithdrawRequestItem {
+    return {
+      id: dto.id,
+      amount: dto.amount,
+      status: dto.status,
+      statusLabel: dto.status === 'Pending' ? 'در انتظار پرداخت' : dto.status === 'Paid' ? 'پرداخت شده' : 'لغو شده',
+      cardNumber: dto.bankAccount?.cardNumber || dto.cardNumber || '',
+      shebaNumber: dto.bankAccount?.shebaNumber || dto.shebaNumber || '',
+      createDate: dto.createDate,
+    };
+  }
+
+  static toViewWithdrawRequest(domain: WithdrawRequestItem): WithdrawRequestItemViewModel {
+    const colors: Record<string, 'warning' | 'success' | 'destructive'> = {
+      Pending: 'warning',
+      Paid: 'success',
+      Cancelled: 'destructive',
+    };
+    return {
+      ...domain,
+      amount: this.formatPrice(domain.amount / 10) + ' تومان',
+      statusColor: colors[domain.status] || 'warning',
+      createDateFormatted: new Date(domain.createDate).toLocaleDateString('fa-IR'),
+    };
+  }
+
+  static toFavoriteProductView(dto: FavoriteProductItemDto): any {
+    return {
+      id: dto.product.id,
+      code: dto.product.productCode,
+      title: dto.product.title,
+      image: dto.product.image,
+      imageAlt: dto.product.imageAlt,
+      averageRate: dto.product.averageRate,
+      views: dto.product.viewsAndClicks,
+      salesCount: dto.product.totalSalesCount,
+      isFavorite: true,
+      price: {
+        raw: dto.nominatedRialFinalPrice,
+        formatted: this.formatPrice(dto.nominatedRialFinalPrice / 10)
+      },
+      nominatedShopProduct: dto.product.nominatedShopProduct ? {
+        id: dto.product.nominatedShopProduct.id,
+        shopTitle: dto.product.nominatedShopProduct.shopTitle,
+        rialRetailPrice: dto.nominatedRialRetailPrice || dto.product.nominatedShopProduct.rialRetailPrice,
+        rialFinalPrice: dto.nominatedRialFinalPrice || dto.product.nominatedShopProduct.rialFinalPrice,
+        discountPercentage: dto.discountPercentage || dto.product.nominatedShopProduct.discountPercentage,
+        type: dto.product.nominatedShopProduct.type,
+        isAdvertised: dto.product.nominatedShopProduct.isAdvertised,
+      } : null,
     };
   }
 

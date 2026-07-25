@@ -9,14 +9,12 @@ interface ProfileLayoutProps {
 }
 
 export default async function ProfileLayout({ children }: ProfileLayoutProps) {
-  // گرفتن هدر کوکی در سرورکامپوننت برای احراز هویت
   const cookieStore = cookies();
   const cookieHeader = cookieStore.toString();
 
   const authService = getAuthService();
   const currentUser = await authService.getCurrentUser({ cookie: cookieHeader });
 
-  // اگر کاربر معتبر یافت نشد، انتقال سریع به صفحه لاگین به همراه بازگشت به روت جاری
   if (!currentUser) {
     redirect('/login?redirect=/profile');
   }
@@ -24,7 +22,7 @@ export default async function ProfileLayout({ children }: ProfileLayoutProps) {
   return (
     <MainLayout>
       <div className="w-full flex flex-col lg:flex-row gap-8 select-none text-right" dir="rtl">
-        <div className="w-full lg:w-[280px] shrink-0">
+        <div className="w-full lg:w-[320px] shrink-0">
           <ProfileSidebar />
         </div>
         

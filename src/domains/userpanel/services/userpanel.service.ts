@@ -11,13 +11,8 @@ import {
   BankAccountDto, 
   UserVehicleDto, 
   NotificationsListResponseDto, 
-  PendingCommentsResponseDto, 
-  UserCommentsResponseDto, 
-  UserInquiriesResponseDto, 
-  ReturnRequestsListResponseDto,
-  ReturnRequestReasonDto,
-  SubOrderCancelReasonDto,
-  AdvantageDto
+  WithdrawRequestsResponseDto,
+  FavoriteProductsResponseDto
 } from '../types/dto.types';
 import { 
   OrderListItemViewModel, 
@@ -25,10 +20,7 @@ import {
   TransactionViewModel, 
   UserVehicleViewModel, 
   NotificationItemViewModel, 
-  PendingCommentItemViewModel, 
-  UserCommentItemViewModel, 
-  UserInquiryItemViewModel, 
-  ReturnRequestItemViewModel 
+  WithdrawRequestItemViewModel
 } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 
@@ -112,9 +104,9 @@ export class UserPanelService {
     }
   }
 
-  async getSubOrderCancelReasons(): Promise<SubOrderCancelReasonDto[]> {
+  async getSubOrderCancelReasons(): Promise<any[]> {
     try {
-      const response = await this.httpClient.get<SubOrderCancelReasonDto[]>(
+      const response = await this.httpClient.get<any[]>(
         USERPANEL_ENDPOINTS.GET_CANCEL_REASONS
       );
       return response.data;
@@ -164,9 +156,9 @@ export class UserPanelService {
     }
   }
 
-  async getReturnRequestReasons(): Promise<ReturnRequestReasonDto[]> {
+  async getReturnRequestReasons(): Promise<any[]> {
     try {
-      const response = await this.httpClient.get<ReturnRequestReasonDto[]>(
+      const response = await this.httpClient.get<any[]>(
         USERPANEL_ENDPOINTS.GET_RETURN_REASONS
       );
       return response.data;
@@ -203,9 +195,9 @@ export class UserPanelService {
     }
   }
 
-  async getReturnRequests(pageNumber: number = 1, pageSize: number = 30, status?: string, subOrderId?: string): Promise<PaginatedResult<ReturnRequestItemViewModel>> {
+  async getReturnRequests(pageNumber: number = 1, pageSize: number = 30, status?: string, subOrderId?: string): Promise<PaginatedResult<any>> {
     try {
-      const response = await this.httpClient.get<ReturnRequestsListResponseDto>(
+      const response = await this.httpClient.get<any>(
         USERPANEL_ENDPOINTS.GET_RETURN_REQUESTS,
         {
           params: {
@@ -216,7 +208,7 @@ export class UserPanelService {
           }
         }
       );
-      const items = (response.data.items || []).map(dto => UserPanelMapper.toViewReturnRequest(UserPanelMapper.toDomainReturnRequest(dto)));
+      const items = (response.data.items || []).map((dto: any) => UserPanelMapper.toViewReturnRequest(UserPanelMapper.toDomainReturnRequest(dto)));
       return {
         items,
         pageNumber: response.data.currentPage,
@@ -335,7 +327,7 @@ export class UserPanelService {
       return (response.data || []).map(dto => UserPanelMapper.toViewVehicle(UserPanelMapper.toDomainVehicle(dto)));
     } catch (error) {
       logger.error('[UserPanelService] Get user vehicles failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -348,7 +340,7 @@ export class UserPanelService {
     }
   }
 
-  async updateUserVehicle(id: string, title: string, mileage: number, oilKmLimit: number, lastServiceDate: string, isDefault: boolean): Promise<void> {
+  async updateUserVehicle(id: string, title: string, mileage: number | null, oilKmLimit: number | null, lastServiceDate: string | null, isDefault: boolean): Promise<void> {
     try {
       await this.httpClient.put(USERPANEL_ENDPOINTS.PUT_VEHICLE, {
         id,
@@ -418,9 +410,9 @@ export class UserPanelService {
     }
   }
 
-  async getShopAdvantages(): Promise<AdvantageDto[]> {
+  async getShopAdvantages(): Promise<any[]> {
     try {
-      const response = await this.httpClient.get<AdvantageDto[]>(
+      const response = await this.httpClient.get<any[]>(
         USERPANEL_ENDPOINTS.GET_ADVANTAGES
       );
       return Array.isArray(response.data) ? response.data : [];
@@ -430,9 +422,9 @@ export class UserPanelService {
     }
   }
 
-  async getShopDisadvantages(): Promise<AdvantageDto[]> {
+  async getShopDisadvantages(): Promise<any[]> {
     try {
-      const response = await this.httpClient.get<AdvantageDto[]>(
+      const response = await this.httpClient.get<any[]>(
         USERPANEL_ENDPOINTS.GET_DISADVANTAGES
       );
       return Array.isArray(response.data) ? response.data : [];
@@ -449,6 +441,68 @@ export class UserPanelService {
       });
     } catch (error) {
       logger.error('[UserPanelService] Update profile failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getWithdrawRequests(pageNumber: number = 1, pageSize: number = 30, status?: string): Promise<PaginatedResult<WithdrawRequestItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<WithdrawRequestsResponseDto>(
+        USERPANEL_ENDPOINTS.GET_WITHDRAW_REQUESTS,
+        { params: { PageNumber: pageNumber, PageSize: pageSize, Status: status || '' } }
+      );
+      const items = (response.data.items || []).map(dto => UserPanelMapper.toViewWithdrawRequest(UserPanelMapper.toDomainWithdrawRequest(dto)));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[UserPanelService] Get withdraw requests failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async submitWithdrawRequest(amount: number, bankAccountId: string): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_WITHDRAW, {
+        amount,
+        bankAccountId
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Submit withdraw request failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getFavoriteProducts(pageNumber: number = 1, pageSize: number = 30, order: string = 'Latest'): Promise<PaginatedResult<any>> {
+    try {
+      const response = await this.httpClient.get<FavoriteProductsResponseDto>(
+        USERPANEL_ENDPOINTS.GET_FAVORITES,
+        { params: { PageNumber: pageNumber, PageSize: pageSize, Order: order } }
+      );
+      const items = (response.data.items || []).map(dto => UserPanelMapper.toFavoriteProductView(dto));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[UserPanelService] Get favorite products failed:', error);
       throw errorManager.normalize(error);
     }
   }

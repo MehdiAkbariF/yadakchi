@@ -123,13 +123,13 @@ export class CarService {
 }
 
 const CarManufacturerMapper = {
-  toViewManufacturer(dto: CarManufacturerApiDto): CarManufacturerViewModel {
+  toViewManufacturer(dto: any): CarManufacturerViewModel {
     return {
       id: dto.id,
       name: dto.name,
       englishTitle: dto.englishTitle,
       country: dto.countryName || null,
-      logo: dto.logo || null,
+      logo: dto.icon || dto.logo || null,
     };
   }
 };

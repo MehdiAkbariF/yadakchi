@@ -182,11 +182,11 @@ export interface VehicleCarDto {
 export interface UserVehicleDto {
   id: string;
   title: string;
-  oilKmLimit: number;
+  oilKmLimit: number | null;
   nextServiceKM: number | null;
-  mileage: number;
+  mileage: number | null;
   isDefault: boolean;
-  lastServiceDate: string;
+  lastServiceDate: string | null;
   createDate: string;
   car: VehicleCarDto;
 }
@@ -344,4 +344,61 @@ export interface SubOrderCancelReasonDto {
 export interface AdvantageDto {
   id: string;
   title: string;
+}
+
+export interface WithdrawRequestItemDto {
+  id: string;
+  amount: number;
+  status: 'Pending' | 'Paid' | 'Cancelled';
+  bankAccountId: string;
+  cardNumber?: string;
+  shebaNumber?: string;
+  createDate: string;
+  bankAccount?: BankAccountDto;
+}
+
+export interface WithdrawRequestsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: WithdrawRequestItemDto[];
+}
+
+export interface FavoriteProductItemDto {
+  id: string;
+  shopProductsQuantity: number;
+  nominatedRialRetailPrice: number;
+  nominatedRialFinalPrice: number;
+  discountPercentage: number;
+  rateCount: number;
+  product: {
+    id: string;
+    title: string;
+    productCode: number;
+    image: string;
+    imageAlt: string;
+    averageRate: number;
+    likes: number;
+    viewsAndClicks: number;
+    totalSalesCount: number;
+    nominatedShopProduct: {
+      id: string;
+      shopTitle: string;
+      quantity: number;
+      rialRetailPrice: number;
+      discountPercentage: number;
+      rialFinalPrice: number;
+      type: 'New' | 'Stock' | 'TakeOff';
+      isAdvertised: boolean;
+    } | null;
+  };
+}
+
+export interface FavoriteProductsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: FavoriteProductItemDto[];
 }

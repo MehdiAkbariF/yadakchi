@@ -15,20 +15,25 @@ export class CreateUserVehicleValidator extends BaseValidator<{ carId: string; t
     return z.object({
       carId: z.string().uuid('شناسه خودرو نامعتبر است'),
       title: z.string().min(2, 'عنوان خودرو باید حداقل ۲ کاراکتر باشد'),
-      isDefault: z.boolean()
+      isDefault: z.boolean() 
     });
   }
 }
 
-export class UpdateUserVehicleValidator extends BaseValidator<{ id: string; title: string; mileage: number; oilKmLimit: number; lastServiceDate: string; isDefault: boolean }> {
-  public getSchema(): z.ZodSchema<{ id: string; title: string; mileage: number; oilKmLimit: number; lastServiceDate: string; isDefault: boolean }> {
+export class UpdateUserVehicleValidator extends BaseValidator<{ id: string; title: string; mileage: number | null; oilKmLimit: number | null; lastServiceDate: string | null; isDefault: boolean }> {
+  public getSchema(): z.ZodSchema<{ id: string; title: string; mileage: number | null; oilKmLimit: number | null; lastServiceDate: string | null; isDefault: boolean }> {
     return z.object({
       id: z.string().uuid('شناسه خودرو نامعتبر است'),
       title: z.string().min(2, 'عنوان خودرو باید حداقل ۲ کاراکتر باشد'),
-      mileage: z.number().int().nonnegative('کارکرد خودرو باید عدد مثبت یا صفر باشد'),
-      oilKmLimit: z.number().int().positive('حد مجاز تعویض روغن باید عدد مثبت باشد'),
-      lastServiceDate: z.string().datetime('تاریخ آخرین سرویس معتبر نیست'),
-      isDefault: z.boolean()
+      mileage: z.number().int().nonnegative('کارکرد خودرو باید عدد مثبت یا صفر باشد').nullable(),
+      oilKmLimit: z.number().int().positive('حد مجاز تعویض روغن باید عدد مثبت باشد').nullable(),
+      lastServiceDate: z.string().nullable().refine((val) => {
+        if (!val) return true;
+        return !isNaN(Date.parse(val));
+      }, {
+        message: 'تاریخ آخرین سرویس معتبر نیست'
+      }),
+      isDefault: z.boolean() 
     });
   }
 }
