@@ -64,35 +64,69 @@ export class BannerMapper {
     };
   }
 
-  static toViewShopProduct(dto: ShopProductBannerApiDto): ShopProductBannerViewModel {
-    const price = dto.price / 10;
-    const discountPrice = dto.discountPrice ? dto.discountPrice / 10 : null;
-    const discountPercent = dto.hasDiscount && dto.discountPrice 
-      ? Math.round(((dto.price - dto.discountPrice) / dto.price) * 100)
-      : null;
+  /**
+   * مپر اختصاصی و منعطف بنرهای کالا و تبلیغات حمایتی
+   * سازگار با ساختار پاسخ خام قدیمی و پاسخ ساختاریافته جدید حاوی ریال فینال پرایس و پروداکت تایتل
+   */
+  static toViewShopProduct(dto: any): ShopProductBannerViewModel {
+    if (!dto) {
+      return {
+        id: '',
+        title: '',
+        imageUrl: '',
+        link: null,
+        product: {
+          id: '',
+          name: '',
+          code: 0,
+          shopName: '',
+          price: { raw: 0, formatted: '۰', toman: '۰ تومان' },
+          discount: { hasDiscount: false, discountPrice: null, discountPercent: null }
+        },
+        position: 0
+      };
+    }
+
+    // استخراج قیمت خام اولیه و نهایی بر اساس فیلدهای مختلف هر دو ساختار API
+    const originalPriceRaw = Number(dto.rialRetailPrice || dto.price || 0);
+    const finalPriceRaw = Number(dto.rialFinalPrice || dto.discountPrice || originalPriceRaw);
+
+    const price = finalPriceRaw / 10;
+    const discountPrice = originalPriceRaw > finalPriceRaw ? finalPriceRaw / 10 : null;
+
+    const hasDiscount = originalPriceRaw > finalPriceRaw;
+    const discountPercent = hasDiscount
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+      : (dto.discountPercentage || 0);
+
+    const productId = dto.shopProductId || dto.id || '';
+    const productName = dto.productTitle || dto.productName || dto.title || '';
+    const imageUrl = dto.image || dto.imageUrl || '';
+    const shopName = dto.shopTitle || dto.shopName || 'یدکچی';
+    const position = dto.position || 0;
 
     return {
-      id: dto.id,
-      title: dto.title,
-      imageUrl: dto.imageUrl,
+      id: dto.id || productId,
+      title: productName,
+      imageUrl: imageUrl,
       link: dto.linkUrl || null,
       product: {
-        id: dto.shopProductId,
-        name: dto.productName,
-        code: dto.productCode,
-        shopName: dto.shopName,
+        id: productId,
+        name: productName,
+        code: dto.productCode || 0,
+        shopName: shopName,
         price: {
-          raw: dto.price,
-          formatted: new Intl.NumberFormat('fa-IR').format(dto.price),
+          raw: finalPriceRaw,
+          formatted: new Intl.NumberFormat('fa-IR').format(finalPriceRaw),
           toman: new Intl.NumberFormat('fa-IR').format(price) + ' تومان',
         },
         discount: {
-          hasDiscount: dto.hasDiscount,
+          hasDiscount,
           discountPrice: discountPrice ? new Intl.NumberFormat('fa-IR').format(discountPrice) + ' تومان' : null,
-          discountPercent,
+          discountPercent: discountPercent > 0 ? discountPercent : null,
         },
       },
-      position: dto.position,
+      position,
     };
   }
 

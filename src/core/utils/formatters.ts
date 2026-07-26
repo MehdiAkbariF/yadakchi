@@ -97,22 +97,25 @@ export function throttle<T extends (...args: any[]) => any>(
   };
 }
 
+// ایمن‌سازی کامل متد درگاه لینک کالا در برابر فیلدهای خالی یا نامعتبر ارسالی از API
 export function getProductUrl(code: number, title: string): string {
-  const cleanTitle = title
+  const safeTitle = typeof title === 'string' ? title : '';
+  const cleanTitle = safeTitle
     .trim()
     .replace(/[^a-zA-Z0-9Ø¢-ÛŒÛ°-Û¹\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
-  return `/product/ykp-${code}/${encodeURIComponent(cleanTitle)}`;
+  return `/product/ykp-${code || 0}/${encodeURIComponent(cleanTitle || 'product')}`;
 }
 
+// ایمن‌سازی کامل متد درگاه لینک خودرو در برابر فیلدهای خالی یا نامعتبر ارسالی از API
 export function getCarUrl(englishTitle: string): string {
-  if (!englishTitle) return '/search';
-  const slug = englishTitle
+  const safeTitle = typeof englishTitle === 'string' ? englishTitle : '';
+  const slug = safeTitle
     .trim()
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
-  return `/car/${encodeURIComponent(slug)}`;
+  return `/car/${encodeURIComponent(slug || 'car')}`;
 }
 
 export function formatToLocalDateString(date: Date | string): string {

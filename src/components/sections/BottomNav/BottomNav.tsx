@@ -35,7 +35,7 @@ export function BottomNav() {
   ];
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t h-16 px-4 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex items-center justify-between pb-safe">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t h-16 px-4 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] flex items-center justify-between pb-safe select-none">
       <div className="flex w-full items-center justify-between max-w-md mx-auto h-full">
         {navItems.map((item) => {
           const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
@@ -46,45 +46,40 @@ export function BottomNav() {
               key={item.id}
               href={item.href}
               draggable={false}
-              className="flex flex-col items-center justify-center flex-1 h-full relative"
+              className="flex flex-col items-center justify-center flex-1 h-full relative outline-none"
             >
+              {/* بخش آیکون مینی‌مال با افکت لمس فنری ملایم و فاقد هرگونه پس‌زمینه رنگی */}
               <motion.div 
                 whileTap={{ scale: 0.9 }}
                 className={cn(
-                  "relative flex items-center justify-center px-4.5 py-1 rounded-full transition-all duration-200",
-                  isActive ? "text-primary" : "text-muted-foreground/70"
+                  "relative flex items-center justify-center transition-all duration-200 outline-none",
+                  isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTabPill"
-                    className="absolute inset-0 bg-primary/10 rounded-full"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
-                
                 <IconComponent
                   className={cn(
-                    "h-5 w-5 transition-all duration-200 z-10",
-                    isActive ? "text-primary scale-110" : "text-muted-foreground"
+                    "h-5.5 w-5.5 transition-all duration-200",
+                    isActive ? "text-primary scale-105" : "text-muted-foreground"
                   )}
                 />
                 
+                {/* نشان تعداد اقلام سبد خرید */}
                 {item.badge !== undefined && item.badge > 0 && (
                   <Badge
                     variant="destructive"
                     size="sm"
-                    className="absolute -top-1 -right-1 h-4 min-w-4 flex items-center justify-center p-0.5 text-[9px] font-bold rounded-full z-20 animate-in zoom-in duration-200"
+                    className="absolute -top-1.5 -right-2 h-4 min-w-4 flex items-center justify-center p-0.5 text-[9px] font-bold rounded-full z-20 animate-in zoom-in duration-200"
                   >
                     {item.badge}
                   </Badge>
                 )}
               </motion.div>
               
+              {/* بخش متن ناوبری با ضخامت فونت متغیر در حالت فعال */}
               <span
                 className={cn(
-                  "text-[9px] font-iran-yekan font-bold transition-colors duration-200 truncate max-w-[65px] tracking-tight mt-1",
-                  isActive ? "text-primary font-black" : "text-muted-foreground/75"
+                  "text-[9px] font-iran-sans font-bold transition-colors duration-200 truncate max-w-[65px] tracking-tight mt-1.5",
+                  isActive ? "text-primary font-black" : "text-muted-foreground/80"
                 )}
               >
                 {item.label}

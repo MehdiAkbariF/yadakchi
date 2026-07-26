@@ -15,6 +15,7 @@ import { X, Filter, ArrowRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 import { Modal } from '@/components/composites/Modal/Modal';
+import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner'; // وارد کردن بنر تبلیغات
 
 interface SearchSidebarProps {
   filters: SearchProductsRequest;
@@ -23,6 +24,9 @@ interface SearchSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   hidePartFilter?: boolean;
+  carId?: string; // دریافت پاپ‌های تبلیغات برای لود در سایدبار دسکتاپ
+  partCategoryId?: string;
+  partId?: string;
 }
 
 export function SearchSidebar({
@@ -32,6 +36,9 @@ export function SearchSidebar({
   isOpen,
   onClose,
   hidePartFilter = false,
+  carId,
+  partCategoryId,
+  partId,
 }: SearchSidebarProps) {
   const [brandSearch, setBrandSearch] = useState('');
   const [carSearch, setCarSearch] = useState('');
@@ -140,7 +147,7 @@ export function SearchSidebar({
     <div className={cn("w-full flex flex-col gap-5 text-right", isMobile && "pb-24")}>
       <div className="flex flex-col gap-4 border-b pb-4">
         <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-yekan text-foreground">فقط کالاهای موجود</span>
+          <span className="text-xs font-bold font-iran-sans text-foreground">فقط کالاهای موجود</span>
           <Switch
             checked={!!filters.isProductInStock}
             onChange={(checked) => onFilterChange('inStock', checked ? true : undefined)}
@@ -148,7 +155,7 @@ export function SearchSidebar({
         </div>
 
         <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-yekan text-foreground">فقط فروشنده‌های شهر من</span>
+          <span className="text-xs font-bold font-iran-sans text-foreground">فقط فروشنده‌های شهر من</span>
           <Switch
             checked={!!filters.isSellerInUserCity}
             onChange={(checked) => onFilterChange('userCity', checked ? true : undefined)}
@@ -156,7 +163,7 @@ export function SearchSidebar({
         </div>
 
         <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-yekan text-foreground">دارای تخفیف ویژه</span>
+          <span className="text-xs font-bold font-iran-sans text-foreground">دارای تخفیف ویژه</span>
           <Switch
             checked={!!filters.hasDiscount}
             onChange={(checked) => onFilterChange('discount', checked ? true : undefined)}
@@ -247,22 +254,31 @@ export function SearchSidebar({
 
   return (
     <>
-      <div className="hidden lg:flex flex-col w-[280px] shrink-0 border rounded-xl p-5 bg-background shadow-sm h-fit">
-        <div className="flex items-center justify-between border-b pb-3 mb-4 select-none w-full">
-          <div className="flex items-center gap-2 text-right">
-            <Filter className="h-4.5 w-4.5 text-primary" />
-            <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">فیلترها</Typography>
+      {/* سایدبار دسکتاپ: لود اتوماتیک بنر تبلیغاتی دقیقا در بالای کارت فیلترها در صورت پاس شدن آیدی مربوطه */}
+      <div className="hidden lg:flex flex-col w-[280px] shrink-0 gap-5">
+        <ShopProductAdBanner 
+          carId={carId} 
+          partCategoryId={partCategoryId} 
+          partId={partId} 
+        />
+        
+        <div className="w-full border rounded-xl p-5 bg-background shadow-sm h-fit">
+          <div className="flex items-center justify-between border-b pb-3 mb-4 select-none w-full">
+            <div className="flex items-center gap-2 text-right">
+              <Filter className="h-4.5 w-4.5 text-primary" />
+              <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">فیلترها</Typography>
+            </div>
+            {hasActiveFilters && (
+              <button
+                onClick={onClearAll}
+                className="text-xs font-bold font-iran-sans text-destructive hover:underline"
+              >
+                حذف فیلترها
+              </button>
+            )}
           </div>
-          {hasActiveFilters && (
-            <button
-              onClick={onClearAll}
-              className="text-xs font-bold font-iran-yekan text-destructive hover:underline"
-            >
-              حذف فیلترها
-            </button>
-          )}
+          {renderFilterContent(false)}
         </div>
-        {renderFilterContent(false)}
       </div>
 
       <Modal
@@ -307,7 +323,7 @@ export function SearchSidebar({
                 onClearAll();
                 onClose();
               }}
-              className="flex-1 rounded-xl text-xs font-bold font-iran-yekan text-destructive border-destructive/20 hover:bg-destructive/5 h-10"
+              className="flex-1 rounded-xl text-xs font-bold font-iran-sans text-destructive border-destructive/20 hover:bg-destructive/5 h-10"
             >
               حذف فیلترها
             </Button>
@@ -316,7 +332,7 @@ export function SearchSidebar({
             variant="primary"
             size="sm"
             onClick={onClose}
-            className="flex-1 rounded-xl text-xs font-bold font-iran-yekan h-10"
+            className="flex-1 rounded-xl text-xs font-bold font-iran-sans h-10"
           >
             مشاهده نتایج
           </Button>

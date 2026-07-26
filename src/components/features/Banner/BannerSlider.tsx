@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+import { useBannerImpression } from '@/shared/hooks/useBannerImpression'; // هوک بازدید
+import { bannerTracker } from '@/core/utils/banner-tracker'; // ترکر کلیک
 
 interface BannerSliderProps {
   group?: any;
@@ -21,7 +23,6 @@ interface BaseSliderProps {
   className?: string;
 }
 
-// کامپوننت داخلی و ایزوله برای مدیریت مستقل چرخه‌های انیمیشنی اسلایدر دسکتاپ و موبایل
 function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
@@ -39,6 +40,11 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
     }, autoPlayInterval);
     return () => clearInterval(interval);
   }, [totalSlides, autoPlayInterval, isMounted]);
+
+  const currentSlide = slides[currentIndex];
+  
+  // اتصال به سیستم ناظر بازدید بر اساس آیدی اسلاید اکتیو فعلی
+  const slideImpressionRef = useBannerImpression(currentSlide?.id || null);
 
   const getFullUrl = (path: string) => {
     if (!path) return '/placeholder.png';
@@ -66,13 +72,12 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
     );
   }
 
-  const currentSlide = slides[currentIndex];
-
   const slideElement = (
     <div className={cn("relative w-full overflow-hidden rounded-2xl shadow-sm", aspectRatio)}>
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide.id}
+          ref={slideImpressionRef} // انتساب به تگ نگهدارنده متحرک جهت ثبت دقیق بازدید چشمی هر اسلاید
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
@@ -134,6 +139,7 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
         rel="noopener noreferrer" 
         aria-label={currentSlide.title || currentSlide.imageAlt || "اسلاید بنر تبلیغاتی"}
         className={cn("block w-full h-full", className)}
+        onClick={() => bannerTracker.trackClick(currentSlide.id)} // ثبت آنی رویداد کلیک بر روی اسلاید فعال
       >
         {slideElement}
       </Link>
@@ -151,17 +157,14 @@ export function BannerSlider({
 }: BannerSliderProps) {
   if (!group || !group.banners || group.banners.length === 0) return null;
 
-  // تفکیک بنرها بر اساس سایز دسکتاپ و موبایل جهت بهینه‌سازی کامل لود تصاویر
   const desktopSlides = group.banners.filter((b: any) => b.size === 'Desktop');
   const mobileSlides = group.banners.filter((b: any) => b.size === 'Mobile');
 
-  // سناریوی فال‌بک برای حالتی که ادمین برای یکی از بخش‌ها تصویری ثبت نکرده باشد
   const finalDesktopSlides = desktopSlides.length > 0 ? desktopSlides : group.banners;
   const finalMobileSlides = mobileSlides.length > 0 ? mobileSlides : group.banners;
 
   return (
     <div className="w-full h-full">
-      {/* رندر اسلایدر مخصوص دسکتاپ */}
       <div className="hidden md:block w-full h-full">
         <BaseSlider 
           slides={finalDesktopSlides} 
@@ -171,7 +174,6 @@ export function BannerSlider({
         />
       </div>
       
-      {/* رندر اسلایدر مخصوص موبایل */}
       <div className="block md:hidden w-full h-full">
         <BaseSlider 
           slides={finalMobileSlides} 
