@@ -9,6 +9,7 @@ import { Input } from '@/components/primitives/Input/Input';
 import { Typography } from '@/components/primitives/Typography';
 import { Car, Search, Loader2, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+import { getCarUrl } from '@/core/utils/formatters';
 
 interface CarItem {
   id: string;
@@ -36,7 +37,7 @@ export function ShopByCar() {
 
   const handleSearchSubmit = () => {
     if (selectedCar) {
-      router.push(`/search?carId=${selectedCar.id}`);
+      window.location.href = getCarUrl(selectedCar.englishTitle);
     }
   };
 

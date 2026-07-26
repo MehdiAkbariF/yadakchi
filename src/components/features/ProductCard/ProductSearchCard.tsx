@@ -7,22 +7,24 @@ import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
 import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
-import { getProductUrl } from '@/core/utils/formatters';
+import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductSearchCardProps {
   product: any;
   showRating?: boolean;
+  showAddToBasket?: boolean;
   className?: string;
 }
 
 export function ProductSearchCard({
   product,
   showRating = true,
+  showAddToBasket = false,
   className
 }: ProductSearchCardProps) {
   const [tickerIndex, setTickerIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
-  const [fade, setFade] = useState(true);
   const [activeLoading, setActiveLoading] = useState(false);
 
   const { data: rawBasket } = useGetBasket();
@@ -95,7 +97,7 @@ export function ProductSearchCard({
     const items: { text: string; icon: any }[] = [];
     
     if (salesCount > 0) {
-      items.push({ text: `${salesCount} فروش موفق در یدکچی`, icon: BadgeCheck });
+      items.push({ text: `${toPersianDigits(salesCount)} فروش موفق در یدک‌چی`, icon: BadgeCheck });
     }
     if (isTipax) {
       items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
@@ -104,7 +106,7 @@ export function ProductSearchCard({
       items.push({ text: 'ارسال مستقیم فروشگاه', icon: Truck });
     }
     if (views > 0) {
-      items.push({ text: `${views} بازدید اخیر`, icon: Eye });
+      items.push({ text: `${toPersianDigits(views)} بازدید اخیر`, icon: Eye });
     }
     
     return items;
@@ -115,12 +117,7 @@ export function ProductSearchCard({
   useEffect(() => {
     if (!isMounted || tickerLength <= 1) return;
     const interval = setInterval(() => {
-      setFade(false);
-      const timeout = setTimeout(() => {
-        setTickerIndex((prev) => (prev + 1) % tickerLength);
-        setFade(true);
-      }, 300);
-      return () => clearTimeout(timeout);
+      setTickerIndex((prev) => (prev + 1) % tickerLength);
     }, 3000);
     return () => clearInterval(interval);
   }, [tickerLength, isMounted]);
@@ -197,6 +194,7 @@ export function ProductSearchCard({
   return (
     <div className={cn("w-full transition-all select-none", className)}>
       
+      {/* دسکتاپ کارت محصول */}
       <Link 
         href={productCardUrl}
         className="hidden md:flex w-full h-full flex-col bg-background rounded-xl border hover:border-primary/40 hover:shadow-md p-3 sm:p-3.5 relative select-none"
@@ -233,13 +231,19 @@ export function ProductSearchCard({
         <div className="w-full flex flex-col items-stretch select-none">
           {isMounted && tickerLength > 0 ? (
             <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
-              <div className={cn(
-                "flex items-center gap-1.5 transition-opacity duration-300",
-                fade ? "opacity-100" : "opacity-0"
-              )}>
-                <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="truncate font-medium">{tickerItems[tickerIndex]?.text}</span>
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={tickerIndex}
+                  initial={{ y: 15, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -15, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
+                >
+                  <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
+                </motion.span>
+              </AnimatePresence>
             </div>
           ) : (
             isMounted && tickerLength > 0 && <div className="h-6 mt-0.5 w-full shrink-0" />
@@ -248,13 +252,13 @@ export function ProductSearchCard({
 
         <div className={cn(
           "w-full mt-auto pt-2 flex items-center justify-between",
-          isOutOfStock ? "pb-1" : "border-b border-dashed pb-3.5"
+          (isOutOfStock || !showAddToBasket) ? "pb-1" : "border-b border-dashed pb-3.5"
         )}>
           <div className={cn(
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
-            %{discountPercent}
+            {toPersianDigits(discountPercent)}٪
           </div>
 
           <div className="flex flex-col items-end min-w-0">
@@ -280,7 +284,7 @@ export function ProductSearchCard({
           </div>
         </div>
 
-        {!isOutOfStock && (
+        {showAddToBasket && !isOutOfStock && (
           <div className="w-full mt-3 h-9 shrink-0">
             {isInBasket ? (
               <div className="flex items-center border border-primary rounded-xl bg-background p-1 gap-1 shadow-sm h-full justify-between">
@@ -323,6 +327,7 @@ export function ProductSearchCard({
         )}
       </Link>
 
+      {/* موبایل کارت محصول */}
       <Link
         href={productCardUrl}
         className="md:hidden flex flex-col w-full bg-background border-b border-zinc-100 dark:border-zinc-800/80 py-4 px-0 relative select-none"
@@ -361,13 +366,19 @@ export function ProductSearchCard({
 
               {isMounted && tickerLength > 0 && (
                 <div className="h-5 overflow-hidden relative w-full flex items-center justify-start text-[9px] sm:text-[10px] text-muted-foreground mt-1 select-none shrink-0">
-                  <div className={cn(
-                    "flex items-center gap-1 transition-opacity duration-300",
-                    fade ? "opacity-100" : "opacity-0"
-                  )}>
-                    <CurrentTickerIcon className="h-3 w-3 text-primary shrink-0" />
-                    <span className="truncate font-medium">{tickerItems[tickerIndex]?.text}</span>
-                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={tickerIndex}
+                      initial={{ y: 15, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -15, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                      className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
+                    >
+                      <CurrentTickerIcon className="h-3 w-3 text-primary shrink-0" />
+                      <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
+                    </motion.span>
+                  </AnimatePresence>
                 </div>
               )}
             </div>
@@ -377,7 +388,7 @@ export function ProductSearchCard({
                 "bg-primary/10 text-primary border border-primary/20 text-[10px] font-black font-iran-sans px-2 py-0.5 rounded-lg",
                 hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
               )}>
-                %{discountPercent}
+                {toPersianDigits(discountPercent)}٪
               </div>
 
               <div className="flex flex-col items-end min-w-0">
@@ -405,7 +416,7 @@ export function ProductSearchCard({
           </div>
         </div>
 
-        {!isOutOfStock && (
+        {showAddToBasket && !isOutOfStock && (
           <div className="w-full mt-3 h-8 shrink-0">
             {isInBasket ? (
               <div className="flex items-center border border-primary rounded-xl bg-background p-1 gap-1 shadow-sm h-full justify-between">

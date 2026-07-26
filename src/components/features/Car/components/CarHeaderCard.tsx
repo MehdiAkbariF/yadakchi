@@ -10,6 +10,7 @@ import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks
 import { SelectPartModal } from '@/components/features/Part/components/SelectPartModal';
 import { Car as CarIcon, Search, ArrowRight, X, ChevronLeft } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+import { getCarUrl } from '@/core/utils/formatters';
 
 interface CarHeaderCardProps {
   slug: string;
@@ -120,7 +121,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
                 <div
                   key={car.id}
                   onClick={() => {
-                    window.location.href = `/car/${car.englishTitle}`;
+                    window.location.href = getCarUrl(car.englishTitle);
                     setIsChangeCarOpen(false);
                   }}
                   className={cn(

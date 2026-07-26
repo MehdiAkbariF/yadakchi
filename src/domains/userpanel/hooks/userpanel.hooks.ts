@@ -39,6 +39,7 @@ export function useGetOrderReceipt(orderId: string) {
   );
 }
 
+// اصلاح هوک پرداخت مجدد برای قبول و ارسال پاسخ حاوی لینک درگاه بانکی برگشت داده شده از سرویس
 export function useRetryOrderPayment() {
   return useTypedMutation(
     (orderId: string) => userPanelService.retryOrderPayment(orderId)
@@ -107,11 +108,12 @@ export function useGetReturnRequestReasons() {
 export function useSubmitReturnRequest() {
   const queryClient = useQueryClient();
   return useTypedMutation(
-    ({ subOrderId, items }: { subOrderId: string; items: any[] }) =>
-      userPanelService.submitReturnRequest(subOrderId, items),
+    ({ subOrderId, items, files }: { subOrderId: string; items: any[]; files?: File[] }) =>
+      userPanelService.submitReturnRequest(subOrderId, items, files),
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['user', 'return-requests'] });
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
       }
     }
   );
@@ -241,7 +243,7 @@ export function useDeleteUserVehicle() {
   );
 }
 
-export function useGetUserNotifications(pageNumber: number = 1, channel?: string, priority?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest') {
+export function useGetUserNotifications(pageNumber: number = 1, pageSize: number = 30, channel?: string, priority?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest') {
   return useTypedQuery<PaginatedResult<NotificationItemViewModel>>(
     ['user', 'notifications', 'list', { pageNumber, channel, priority, isRead, orderBy }],
     () => userPanelService.getUserNotifications(pageNumber, 10, channel, priority, undefined, undefined, undefined, isRead, orderBy),

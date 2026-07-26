@@ -64,7 +64,7 @@ export function DealsSlider() {
           href="/special" 
           className="text-xs font-bold font-iran-sans text-primary hover:underline transition-colors shrink-0"
         >
-          مشاهده همه &lt;
+          مشاهده همه 
         </Link>
       </div>
 
@@ -83,7 +83,7 @@ export function DealsSlider() {
             href="/special" 
             className="text-xs font-bold font-iran-sans border-b border-white hover:text-white/80 pb-0.5 transition-colors"
           >
-            مشاهده همه &lt;
+            مشاهده همه 
           </Link>
         </div>
 

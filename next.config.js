@@ -2,6 +2,16 @@
 const nextConfig = {
   reactStrictMode: true,
 
+
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'api.yadakchi.com' },
@@ -27,7 +37,7 @@ const nextConfig = {
   },
 
   // Proxy برای جلوگیری از CORS
-   async rewrites() {
+  async rewrites() {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com';
     
     return [

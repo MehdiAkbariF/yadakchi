@@ -1,8 +1,7 @@
-// src/components/features/Banner/Banner.tsx
-
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/design-system/utils/cn';
 
 export interface BannerItem {
@@ -25,11 +24,18 @@ interface BannerProps {
   group?: BannerGroup;
   className?: string;
   aspectRatio?: string;
+  priority?: boolean; // پروپ اختصاصی جهت اولویت لود در بالای صفحه (بنرهای LCP)
 }
 
-export function Banner({ group, className, aspectRatio = 'aspect-[16/9] lg:aspect-[16/10]' }: BannerProps) {
+export function Banner({ 
+  group, 
+  className, 
+  aspectRatio = 'aspect-[16/9] lg:aspect-[16/10]',
+  priority = false 
+}: BannerProps) {
   if (!group || !group.banners || group.banners.length === 0) return null;
 
+  // تفکیک بنرها بر اساس سایز دسکتاپ و موبایل از پاسخ API
   const desktopBanner = group.banners.find((b) => b.size === 'Desktop') || group.banners[0];
   const mobileBanner = group.banners.find((b) => b.size === 'Mobile') || desktopBanner;
 
@@ -51,12 +57,14 @@ export function Banner({ group, className, aspectRatio = 'aspect-[16/9] lg:aspec
         'relative w-full h-full overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-all duration-300',
         aspectRatio === 'h-full' ? 'h-full min-h-full' : aspectRatio
       )}>
-        <img
+        <Image
           src={fullSrc}
           alt={alt}
-          // استفاده از absolute inset-0 برای غلبه بر هرگونه فروپاشی ارتفاع در ساختار CSS
-          className="w-full h-full object-cover rounded-2xl hover:scale-[1.01] transition-transform duration-500 absolute inset-0"
-          loading="lazy"
+          fill
+          priority={priority} // لود پرسرعت بدون تأخیر در رندر اولیه بنر
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover rounded-2xl hover:scale-[1.01] transition-transform duration-500"
+          unoptimized={fullSrc.endsWith('.gif')}
         />
       </div>
     );
@@ -64,7 +72,13 @@ export function Banner({ group, className, aspectRatio = 'aspect-[16/9] lg:aspec
     if (banner.targetURL) {
       const href = banner.targetURL.startsWith('http') ? banner.targetURL : `https://${banner.targetURL}`;
       return (
-        <Link href={href} target="_blank" rel="noopener noreferrer" className={cn("block w-full h-full", sizeClass)}>
+        <Link 
+          href={href} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          aria-label={banner.title || alt} // بهبود دسترسی‌پذیری و دسترسی سریع صفحه‌خوان‌ها
+          className={cn("block w-full h-full", sizeClass)}
+        >
           {imageElement}
         </Link>
       );
@@ -75,8 +89,10 @@ export function Banner({ group, className, aspectRatio = 'aspect-[16/9] lg:aspec
 
   return (
     <div className={cn('w-full h-full flex flex-col', className)}>
-      {/* رندر هوشمند بر اساس سیستم واکنش‌گرا بدون تداخل در ارتفاع والد */}
+      {/* نمایش بنر دسکتاپ بر روی دسکتاپ و مخفی‌سازی در موبایل */}
       {renderBannerImage(desktopBanner, 'hidden md:block')}
+      
+      {/* نمایش بنر موبایل بر روی موبایل و مخفی‌سازی در دسکتاپ */}
       {renderBannerImage(mobileBanner, 'block md:hidden')}
     </div>
   );

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Star, Store, BadgeCheck, Truck, Eye } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getProductUrl } from '@/core/utils/formatters';
+import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
 
 interface ProductStandardCardProps {
   product: any;
@@ -48,11 +48,12 @@ export function ProductStandardCard({
     ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
     : (nominated.discountPercentage || product?.discount?.percent || 0);
 
+  // اصلاح و فارسی‌سازی اعداد داینامیک داخل چرخه اسلاید متنی کارت استاندارد
   const tickerItems = useMemo(() => {
     const items: { text: string; icon: any }[] = [];
     
     if (salesCount > 0) {
-      items.push({ text: `${salesCount} فروش موفق در یدکچی`, icon: BadgeCheck });
+      items.push({ text: `${toPersianDigits(salesCount)} فروش موفق در یدک‌چی`, icon: BadgeCheck });
     }
     if (isTipax) {
       items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
@@ -61,7 +62,7 @@ export function ProductStandardCard({
       items.push({ text: 'ارسال مستقیم فروشگاه', icon: Truck });
     }
     if (views > 0) {
-      items.push({ text: `${views} بازدید اخیر`, icon: Eye });
+      items.push({ text: `${toPersianDigits(views)} بازدید اخیر`, icon: Eye });
     }
     
     return items;
@@ -200,7 +201,7 @@ export function ProductStandardCard({
                   className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1"
                 >
                   <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate font-medium">{tickerItems[tickerIndex]?.text}</span>
+                  <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
                 </motion.span>
               </AnimatePresence>
             </div>
@@ -214,7 +215,7 @@ export function ProductStandardCard({
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
-            %{discountPercent}
+            {toPersianDigits(discountPercent)}٪
           </div>
 
           <div className="flex flex-col items-end min-w-0">

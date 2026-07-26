@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/design-system/utils/cn';
+
 
 interface BottomSheetProps {
   isOpen: boolean;

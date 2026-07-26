@@ -162,7 +162,8 @@ export function HomeContent() {
 
           {hasLeftBanner && (
             <div className="hidden md:block md:col-span-3 h-full w-full">
-              <Banner group={a1BannerGroup} aspectRatio="h-full" />
+              {/* اولویت بالا (priority={true}) برای بنر لود شونده در صفحه اصلی */}
+              <Banner group={a1BannerGroup} aspectRatio="h-full" priority={true} />
             </div>
           )}
 

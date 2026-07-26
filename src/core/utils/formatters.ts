@@ -100,10 +100,19 @@ export function throttle<T extends (...args: any[]) => any>(
 export function getProductUrl(code: number, title: string): string {
   const cleanTitle = title
     .trim()
-    .replace(/[^a-zA-Z0-9آ-ی۰-۹\s-]/g, '')
+    .replace(/[^a-zA-Z0-9Ø¢-ÛŒÛ°-Û¹\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
   return `/product/ykp-${code}/${encodeURIComponent(cleanTitle)}`;
+}
+
+export function getCarUrl(englishTitle: string): string {
+  if (!englishTitle) return '/search';
+  const slug = englishTitle
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+  return `/car/${encodeURIComponent(slug)}`;
 }
 
 export function formatToLocalDateString(date: Date | string): string {

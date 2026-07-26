@@ -19,7 +19,7 @@ export interface FooterProps {
 
 const InstagramIcon = () => (
   <svg 
-    className="h-4 w-4" 
+    className="h-5 w-5" 
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 
@@ -85,7 +85,7 @@ export function Footer({ className }: FooterProps) {
           <div className="flex flex-col items-center md:items-start text-center md:text-right gap-2">
             <Logo hideTitle className="scale-110 origin-right" />
             <p className="text-xs text-muted-foreground mt-2 max-w-xl">
-              {footerData?.description || 'یدکچی؛ مارکت‌پلیس تخصصی خرید قطعات یدکی خودرو'}
+              {footerData?.description || 'یدک‌چی؛ مارکت‌پلیس تخصصی خرید قطعات یدکی خودرو'}
             </p>
           </div>
           <Button
@@ -102,12 +102,12 @@ export function Footer({ className }: FooterProps) {
         <div className="md:hidden w-full space-y-1 pb-6 ">
           {mounted && activeCategories.map((cat: any, idx: number) => (
             <Accordion key={idx} title={cat.title}>
-              <ul className="space-y-3 pr-2 pb-2">
+              <ul className="space-y-1 pr-2 pb-2">
                 {cat.staticPages.map((page: any) => (
                   <li key={page.id} className="text-right">
                     <Link 
                       href={page.url} 
-                      className="text-xs font-medium font-iran-sans text-muted-foreground hover:text-primary transition-colors block py-0.5"
+                      className="text-xs font-medium font-iran-sans text-muted-foreground hover:text-primary transition-colors block py-2" // افزایش فضای تاچ به py-2
                     >
                       {page.title}
                     </Link>
@@ -124,12 +124,12 @@ export function Footer({ className }: FooterProps) {
               <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">
                 {cat.title}
               </Typography>
-              <ul className="space-y-3 w-full">
+              <ul className="space-y-1 w-full">
                 {cat.staticPages.map((page: any) => (
                   <li key={page.id} className="text-right">
                     <Link 
                       href={page.url} 
-                      className="text-xs font-medium font-iran-sans text-muted-foreground hover:text-primary transition-colors block py-0.5"
+                      className="text-xs font-medium font-iran-sans text-muted-foreground hover:text-primary transition-colors block py-2" // افزایش فضای تاچ به py-2
                     >
                       {page.title}
                     </Link>
@@ -141,7 +141,7 @@ export function Footer({ className }: FooterProps) {
 
           <div className="space-y-4 text-right flex flex-col items-start md:col-span-1">
             <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">
-              ارتباط با یدکچی
+              ارتباط با یدک‌چی
             </Typography>
             <div className="space-y-3.5 w-full">
               <div className="flex items-center gap-2 text-xs font-iran-sans text-muted-foreground justify-start">
@@ -159,14 +159,26 @@ export function Footer({ className }: FooterProps) {
                 همراه ما باشید!
               </Typography>
               <div className="flex items-center gap-3">
-                <Link href="#" className="p-2.5 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm">
+                <Link 
+                  href="#" 
+                  aria-label="صفحه اینستاگرام یدک‌چی" // اضافه شدن لیبل دسترسی‌پذیری
+                  className="w-11 h-11 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm flex items-center justify-center shrink-0" // تاچ تارگت استاندارد ۴۴ پیکسل
+                >
                   <InstagramIcon />
                 </Link>
-                <Link href="#" className="p-2.5 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm">
-                  <Send className="h-4 w-4" />
+                <Link 
+                  href="#" 
+                  aria-label="کانال تلگرام یدک‌چی" // اضافه شدن لیبل دسترسی‌پذیری
+                  className="w-11 h-11 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm flex items-center justify-center shrink-0" // تاچ تارگت استاندارد ۴۴ پیکسل
+                >
+                  <Send className="h-5 w-5" />
                 </Link>
-                <Link href="#" className="p-2.5 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm">
-                  <MessageSquare className="h-4 w-4" />
+                <Link 
+                  href="#" 
+                  aria-label="پشتیبانی آنلاین یدک‌چی" // اضافه شدن لیبل دسترسی‌پذیری
+                  className="w-11 h-11 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm flex items-center justify-center shrink-0" // تاچ تارگت استاندارد ۴۴ پیکسل
+                >
+                  <MessageSquare className="h-5 w-5" />
                 </Link>
               </div>
             </div>
@@ -175,7 +187,7 @@ export function Footer({ className }: FooterProps) {
 
         <div className="md:hidden space-y-4 py-6 border-b text-right flex flex-col items-start">
           <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">
-            ارتباط با یدکچی
+            ارتباط با یدک‌چی
           </Typography>
           <div className="space-y-3.5 w-full">
             <div className="flex items-center gap-2 text-xs font-iran-sans text-muted-foreground justify-start">
@@ -193,14 +205,26 @@ export function Footer({ className }: FooterProps) {
               همراه ما باشید!
             </Typography>
             <div className="flex items-center gap-3">
-              <Link href="#" className="p-2.5 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm">
+              <Link 
+                href="#" 
+                aria-label="صفحه اینستاگرام یدک‌چی" // لیبل دسترسی‌پذیری موبایل
+                className="w-11 h-11 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm flex items-center justify-center shrink-0"
+              >
                 <InstagramIcon />
               </Link>
-              <Link href="#" className="p-2.5 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm">
-                <Send className="h-4 w-4" />
+              <Link 
+                href="#" 
+                aria-label="کانال تلگرام یدک‌چی" // لیبل دسترسی‌پذیری موبایل
+                className="w-11 h-11 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm flex items-center justify-center shrink-0"
+              >
+                <Send className="h-5 w-5" />
               </Link>
-              <Link href="#" className="p-2.5 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm">
-                <MessageSquare className="h-4 w-4" />
+              <Link 
+                href="#" 
+                aria-label="پشتیبانی آنلاین یدک‌چی" // لیبل دسترسی‌پذیری موبایل
+                className="w-11 h-11 bg-background border hover:border-primary/30 rounded-xl text-muted-foreground hover:text-primary transition-all shadow-sm flex items-center justify-center shrink-0"
+              >
+                <MessageSquare className="h-5 w-5" />
               </Link>
             </div>
           </div>
@@ -210,7 +234,7 @@ export function Footer({ className }: FooterProps) {
           
           <div className="w-full lg:max-w-md text-right">
             <Typography variant="h6" className="font-iran-yekan font-bold text-foreground mb-2">
-              با ثبت ایمیل، از جدید‌ترین تخفیف‌ها و رویدادها با‌خبر شوید
+              با ثبت ایمیل، از جدیدترین تخفیف‌ها و رویدادها با‌خبر شوید
             </Typography>
             <form onSubmit={handleSubscribe} className="flex gap-2 w-full mt-3">
               <Input
@@ -242,7 +266,7 @@ export function Footer({ className }: FooterProps) {
 
         <div className="mt-8 border-t pt-6 text-center">
           <p className="text-[11px] leading-relaxed text-muted-foreground/80 font-iran-sans max-w-5xl mx-auto text-center">
-            استفاده از مطالب یدکچی برای «استفاده غیرتجاری» و با «ذکر منبع» بلامانع است، تمامی حقوق مادی و معنوی این وب سایت متعلق به شرکت تامین اندیشان نوین خودرو می‌باشد.
+            استفاده از مطالب یدک‌چی برای «استفاده غیرتجاری» و با «ذکر منبع» بلامانع است، تمامی حقوق مادی و معنوی این وب سایت متعلق به شرکت تامین اندیشان نوین خودرو می‌باشد.
           </p>
         </div>
 

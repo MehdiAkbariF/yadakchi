@@ -24,7 +24,10 @@ interface ProductHeaderProps {
 export function ProductHeader({ product, onScrollToComments, onScrollToInquiries }: ProductHeaderProps) {
   const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
-  const { data: isFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
+  
+  // دریافت وضعیت علاقه‌مندی خام از سرور
+  const { data: rawIsFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
+  
   const addFavorite = useAddFavorite(product.code);
   const deleteFavorite = useDeleteFavorite(product.code);
   const submitProductReport = useSubmitProductReport();
@@ -34,26 +37,47 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [reportDescription, setReportDescription] = useState('');
 
+  // استیت محلی خوش‌بینانه برای وضعیت قلب
+  const [localIsFavorite, setLocalIsFavorite] = useState<boolean | undefined>(undefined);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // اصلاح وارونگی منطقی API در کلاینت: مقدار خام سرور نقیض (!) می‌شود تا منطق لایک/دیسلایک درست کار کند
+  useEffect(() => {
+    if (rawIsFavorite !== undefined) {
+      setLocalIsFavorite(!rawIsFavorite);
+    }
+  }, [rawIsFavorite]);
+
   const handleFavoriteToggle = async () => {
+    const previousState = localIsFavorite;
+    const nextState = !previousState;
+
+    // ۱. به‌روزرسانی آنی قلب در رابط کاربری جهت بازخورد سریع به کاربر
+    setLocalIsFavorite(nextState);
+
     try {
-      if (isFavorite) {
+      if (previousState) {
+        // اگر قبلاً لایک شده بود (قرمز بود)، حالا حذفش می‌کنیم
         await deleteFavorite.mutateAsync(product.id);
         showToast.success('از علاقه‌مندی‌ها حذف شد');
       } else {
+        // اگر لایک نشده بود (خاکستری بود)، حالا اضافه‌اش می‌کنیم
         await addFavorite.mutateAsync(product.id);
         showToast.success('به علاقه‌مندی‌ها اضافه شد');
       }
     } catch (err: any) {
+      // ۲. در صورت ناموفق بودن درخواست سرور، وضعیت به حالت قبل بازمی‌گردد
+      setLocalIsFavorite(previousState);
+
       if (
         err?.message?.includes('قبلا ثبت شده است') || 
         err?.userMessage?.includes('قبلا ثبت شده است')
       ) {
-        queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], true);
-        showToast.success('به علاقه‌مندی‌ها اضافه شد');
+        setLocalIsFavorite(true);
+        queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], false); // متناسب با منطق معکوس API
         return;
       }
       showToast.error(err.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
@@ -133,12 +157,12 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
             disabled={isFavLoading || addFavorite.isPending || deleteFavorite.isPending}
             className="p-2 border rounded-xl hover:bg-muted text-muted-foreground hover:text-destructive transition-all disabled:opacity-40 select-none outline-none"
           >
-            {isFavLoading || addFavorite.isPending || deleteFavorite.isPending ? (
+            {addFavorite.isPending || deleteFavorite.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
             ) : (
               <Heart className={cn(
                 "h-4 w-4 transition-colors duration-200", 
-                isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"
+                localIsFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground"
               )} />
             )}
           </button>
@@ -159,63 +183,63 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         <button onClick={onScrollToInquiries} className="hover:text-primary hover:underline">تبادل پرسش و پاسخ</button>
       </div>
 
-  <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="max-w-md w-full">
-  <ModalHeader onClose={() => setIsReportModalOpen(false)}>
-    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
-      <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
-      گزارش خطای کالا
-    </ModalTitle>
-  </ModalHeader>
-  
-  <ModalBody className="p-5 pt-4 text-right flex flex-col gap-4">
-    <div className="flex flex-col gap-1 w-full">
-      <Select
-        label="دلیل گزارش *"
-        placeholder="دلیل گزارش را انتخاب کنید..."
-        value={selectedSubjectId}
-        onChange={(e) => setSelectedSubjectId(e.target.value)}
-        options={subjectsList.map((sub: any) => ({
-          value: sub.id,
-          label: sub.title,
-        }))}
-      />
-    </div>
+      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="max-w-md w-full">
+        <ModalHeader onClose={() => setIsReportModalOpen(false)}>
+          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+            <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+            گزارش خطای کالا
+          </ModalTitle>
+        </ModalHeader>
+        
+        <ModalBody className="p-5 pt-4 text-right flex flex-col gap-4">
+          <div className="flex flex-col gap-1 w-full">
+            <Select
+              label="دلیل گزارش *"
+              placeholder="دلیل گزارش را انتخاب کنید..."
+              value={selectedSubjectId}
+              onChange={(e) => setSelectedSubjectId(e.target.value)}
+              options={subjectsList.map((sub: any) => ({
+                value: sub.id,
+                label: sub.title,
+              }))}
+            />
+          </div>
 
-    <div className="flex flex-col gap-1 w-full">
-      <TextArea
-        label="توضیحات (اختیاری)"
-        placeholder="جزییات مشکل را بنویسید..."
-        value={reportDescription}
-        onChange={(e) => setReportDescription(e.target.value)}
-        className="h-24 text-xs font-iran-sans"
-      />
-    </div>
-  </ModalBody>
+          <div className="flex flex-col gap-1 w-full">
+            <TextArea
+              label="توضیحات (اختیاری)"
+              placeholder="جزییات مشکل را بنویسید..."
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              className="h-24 text-xs font-iran-sans"
+            />
+          </div>
+        </ModalBody>
 
-  <ModalFooter className="p-5 pt-4 gap-2.5">
-    <Button
-      type="button"
-      variant="outline"
-      onClick={() => {
-        setIsReportModalOpen(false);
-        setSelectedSubjectId('');
-        setReportDescription('');
-      }}
-      className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
-    >
-      انصراف
-    </Button>
-    <Button
-      type="submit"
-      variant="destructive"
-      onClick={handleReportSubmit}
-      isLoading={submitProductReport.isPending}
-      className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
-    >
-      ثبت گزارش خطا
-    </Button>
-  </ModalFooter>
-</Modal>
+        <ModalFooter className="p-5 pt-4 gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setIsReportModalOpen(false);
+              setSelectedSubjectId('');
+              setReportDescription('');
+            }}
+            className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="submit"
+            variant="destructive"
+            onClick={handleReportSubmit}
+            isLoading={submitProductReport.isPending}
+            className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
+          >
+            ثبت گزارش خطا
+          </Button>
+        </ModalFooter>
+      </Modal>
 
     </div>
   );

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Star, Hourglass } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { getProductUrl } from '@/core/utils/formatters';
+import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
 
 interface ProductDealCardProps {
   product: any;
@@ -70,7 +70,7 @@ export function ProductDealCard({
     return () => clearInterval(interval);
   }, [expirationStr, serverTime, hasExpiration]);
 
-  const toPersianDigits = (num: number) => {
+  const formatPersianDigits = (num: number) => {
     return new Intl.NumberFormat('fa-IR', { useGrouping: false })
       .format(num)
       .padStart(2, '۰');
@@ -182,7 +182,7 @@ export function ProductDealCard({
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
-            %{discountPercent}
+            {toPersianDigits(discountPercent)}٪
           </div>
 
           <div className="flex flex-col items-end min-w-0">
@@ -205,11 +205,11 @@ export function ProductDealCard({
           <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-sans border-t border-dashed">
             
             <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{toPersianDigits(timeLeft.hours)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{formatPersianDigits(timeLeft.hours)}</span>
               <span className="text-muted-foreground">:</span>
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{toPersianDigits(timeLeft.minutes)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{formatPersianDigits(timeLeft.minutes)}</span>
               <span className="text-muted-foreground">:</span>
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{toPersianDigits(timeLeft.seconds)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{formatPersianDigits(timeLeft.seconds)}</span>
             </div>
 
             <Hourglass className="h-3.5 w-3.5 text-primary shrink-0 animate-spin" />

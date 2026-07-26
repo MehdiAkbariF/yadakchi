@@ -9,35 +9,24 @@ import { SearchSidebar } from '@/components/features/ProductGrid/SearchSidebar';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
 import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
-import { BottomSheet } from '@/components/composites/BottomSheet/BottomSheet';
 import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
 import { PartHeaderCard } from './components/PartHeaderCard';
 import { Typography } from '@/components/primitives/Typography';
 import { useAppStore } from '@/shared/store/useAppStore';
-import { Check, ShoppingBag } from 'lucide-react';
-import { cn } from '@/design-system/utils/cn';
+import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
+import { ShoppingBag } from 'lucide-react';
 
 interface PartDetailsContentProps {
   categorySlug: string;
   partSlug: string;
 }
 
-const SORT_OPTIONS = [
-  { value: 'Selected', label: 'منتخب' },
-  { value: 'MostVisited', label: 'پربازدیدترین' },
-  { value: 'Newest', label: 'جدیدترین' },
-  { value: 'BestSelling', label: 'پرفروش‌ترین' },
-  { value: 'Cheapest', label: 'ارزان‌ترین' },
-  { value: 'MostExpensive', label: 'گران‌ترین' },
-];
-
 export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsContentProps) {
   const router = useRouter();
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
 
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  const [isMobileSortOpen, setIsMobileSortOpen] = useState(false);
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
   const currentFilters = { 
@@ -52,13 +41,6 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
   const products = productsResponse?.items || [];
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
-
-  const handleMobileSortSelect = (value: string) => {
-    setFilter('sort', value);
-    setIsMobileSortOpen(false);
-  };
-
-  const activeSortLabel = SORT_OPTIONS.find(o => o.value === (filters.orderType || 'Selected'))?.label || 'منتخب';
 
   const rawBreadcrumbs = (partData as any)?.breadCrumbs || [];
   const breadcrumbItems = [
@@ -76,25 +58,27 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
   return (
     <div className="w-full flex flex-col gap-6 text-right" dir="rtl">
       
+      {/* هدر چسبان موبایل با دکمه‌های هم‌اندازه و قرینه فیلتر و مرتب‌سازی */}
       <div 
         style={{
           top: isHeaderMinimized ? '56px' : '122px'
         }}
-        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 w-full flex items-center justify-between shadow-sm select-none gap-3 mt-1 shrink-0"
+        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 w-full flex items-center justify-between  select-none gap-3 mt-1 shrink-0"
       >
         <button
           onClick={() => setIsMobileFiltersOpen(true)}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm outline-none"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 h-9 shadow-sm outline-none"
         >
           <span className="truncate">فیلترها</span>
         </button>
-        <button
-          onClick={() => setIsMobileSortOpen(true)}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm outline-none"
-        >
-          <span className="truncate">{activeSortLabel}</span>
-        </button>
-        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0">
+
+        <SortSelector
+          value={filters.orderType || 'Selected'}
+          onChange={(val) => setFilter('sort', val)}
+          variant="trigger"
+        />
+
+        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center">
           {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
         </span>
       </div>
@@ -120,27 +104,13 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
             partName={partData?.name || 'پمپ بنزین با درجه باک'}
           />
 
-          <div className="hidden md:flex items-center gap-2 overflow-x-auto no-scrollbar py-1 border-b pb-3">
-            <span className="text-xs font-bold font-iran-sans text-muted-foreground whitespace-nowrap ml-2">
-              مرتب‌سازی:
-            </span>
-            <div className="flex items-center gap-2">
-              {SORT_OPTIONS.map((opt) => {
-                const isActive = (filters.orderType || 'Selected') === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    onClick={() => setFilter('sort', opt.value)}
-                    className={cn(
-                      "px-4 py-1.5 rounded-full text-xs font-bold font-iran-sans transition-all whitespace-nowrap outline-none",
-                      isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
+          {/* نمایش افقی و کپسولی مرتب‌سازی به صورت اختصاصی فقط در دسکتاپ */}
+          <div className="hidden md:block">
+            <SortSelector
+              value={filters.orderType || 'Selected'}
+              onChange={(val) => setFilter('sort', val)}
+              className="mt-1"
+            />
           </div>
 
           {isLoading ? (
@@ -180,31 +150,6 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
           title={`راهنمای خرید و شناخت ${partData.name}`}
         />
       )}
-
-      <BottomSheet
-        isOpen={isMobileSortOpen}
-        onClose={() => setIsMobileSortOpen(false)}
-        title="مرتب‌سازی بر اساس"
-      >
-        <div className="flex flex-col w-full text-right divide-y dark:divide-zinc-800">
-          {SORT_OPTIONS.map((opt) => {
-            const isActive = (filters.orderType || 'Selected') === opt.value;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => handleMobileSortSelect(opt.value)}
-                className={cn(
-                  "flex items-center justify-between w-full py-4 text-sm font-bold font-iran-sans transition-colors outline-none",
-                  isActive ? "text-primary" : "text-foreground"
-                )}
-              >
-                <span>{opt.label}</span>
-                {isActive && <Check className="h-4.5 w-4.5 text-primary stroke-[3]" />}
-              </button>
-            );
-          })}
-        </div>
-      </BottomSheet>
 
     </div>
   );

@@ -95,9 +95,14 @@ export class UserPanelService {
     }
   }
 
-  async retryOrderPayment(orderId: string): Promise<void> {
+  // اصلاح متد برای بازگرداندن پاسخ حاوی لینک درگاه بانکی به کلاینت
+  async retryOrderPayment(orderId: string): Promise<any> {
     try {
-      await this.httpClient.post(USERPANEL_ENDPOINTS.RETRY_PAYMENT, { orderId });
+      const response = await this.httpClient.post<any>(
+        USERPANEL_ENDPOINTS.RETRY_PAYMENT, 
+        { orderId }
+      );
+      return response.data;
     } catch (error) {
       logger.error('[UserPanelService] Retry order payment failed:', error);
       throw errorManager.normalize(error);
@@ -168,11 +173,24 @@ export class UserPanelService {
     }
   }
 
-  async submitReturnRequest(subOrderId: string, items: any[]): Promise<void> {
+  async submitReturnRequest(subOrderId: string, items: any[], files?: File[]): Promise<void> {
     try {
       const formData = new FormData();
       formData.append('SubOrderId', subOrderId);
-      formData.append('Items', JSON.stringify(items));
+      
+      items.forEach((item, index) => {
+        formData.append(`Items[${index}].SubOrderItemId`, item.subOrderItemId);
+        formData.append(`Items[${index}].Quantity`, String(item.quantity));
+        formData.append(`Items[${index}].ReturnRequestReasonId`, item.returnRequestReasonId);
+        formData.append(`Items[${index}].Description`, item.description);
+      });
+      
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          formData.append('ReturnRequestImages', file);
+        });
+      }
+
       await this.httpClient.post(USERPANEL_ENDPOINTS.POST_RETURN_REQUEST, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });

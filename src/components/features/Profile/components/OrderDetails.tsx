@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useGetOrderDetails } from '@/domains/userpanel/hooks/userpanel.hooks';
+import { useGetOrderDetails, useRetryOrderPayment } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { Card, CardBody } from '@/components/composites/Card';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { ReturnRequestModal } from './ReturnRequestModal';
+import { Button } from '@/components/primitives/Button/Button';
+import { showToast } from '@/core/utils/toast';
 
 import { cn } from '@/design-system/utils/cn';
 import { CreditCard, Calendar, Truck, Clock, Store, ShieldCheck, Sparkles, Receipt, ArrowRight, Hourglass } from 'lucide-react';
@@ -55,6 +58,29 @@ interface OrderDetailsProps {
 export function OrderDetails({ orderId }: OrderDetailsProps) {
   const router = useRouter();
   const { data: order, isLoading } = useGetOrderDetails(orderId);
+  const retryPayment = useRetryOrderPayment(); // فعال‌سازی هوک پرداخت مجدد
+
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedSubOrder, setSelectedSubOrder] = useState<any | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+
+  // متد فعال‌سازی فرآیند پرداخت مجدد و ریدایرکت خودکار به درگاه بانکی
+  const handleRetryPayment = async () => {
+    try {
+      const response = await retryPayment.mutateAsync(orderId);
+      // مدیریت هوشمند کلیدهای متفاوت برگشت داده شده از وب API (مانند link یا paymentUrl)
+      const gatewayUrl = response?.link || response?.paymentUrl || response?.data?.link || response?.data?.paymentUrl;
+
+      if (gatewayUrl) {
+        showToast.success('در حال انتقال ایمن به درگاه بانکی...');
+        window.location.href = gatewayUrl;
+      } else {
+        showToast.error('خطا در دریافت درگاه بانکی فعال از سمت سرور');
+      }
+    } catch (error: any) {
+      showToast.error(error.userMessage || 'اتصال به درگاه پرداخت با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
+    }
+  };
 
   if (isLoading || !order) {
     return <PageLoading message="در حال دریافت فاکتور رسمی سفارش..." />;
@@ -112,12 +138,25 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
       </div>
 
       {order.status === 'WaitingForPayment' && (
-        <div className="w-full bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-center justify-between gap-4 select-none">
+        <div className="w-full bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
           <div className="flex items-center gap-2.5 text-destructive">
             <Clock className="h-5 w-5 animate-pulse shrink-0" />
-            <span className="text-xs md:text-sm font-bold font-iran-sans">مهلت پرداخت این سفارش رو به پایان است:</span>
+            <div className="flex flex-col text-right">
+              <span className="text-xs md:text-sm font-bold font-iran-sans">مهلت پرداخت این سفارش رو به پایان است:</span>
+              <PayableTimer payableUntil={order.payableUntil} />
+            </div>
           </div>
-          <PayableTimer payableUntil={order.payableUntil} />
+          
+          {/* دکمه پرداخت سریع شماره ۱ در بنر هشدار بالای صفحه */}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleRetryPayment}
+            isLoading={retryPayment.isPending}
+            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-6 shrink-0 shadow-sm"
+          >
+            <span>ادامه پرداخت سفارش</span>
+          </Button>
         </div>
       )}
 
@@ -156,22 +195,39 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
 
                   <div className="flex flex-col gap-4">
                     {sub.subOrderItems.map((item) => (
-                      <div key={item.id} className="flex gap-4 items-center">
-                        <div className="w-14 h-14 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden p-0.5">
-                          <img src={getFullUrl(item.shopProduct.product.image)} className="w-full h-full object-contain" alt="" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs md:text-sm font-bold text-foreground block truncate font-iran-sans">
-                            {item.shopProduct.product.title}
-                          </span>
-                          <div className="flex flex-wrap gap-2.5 items-center mt-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
-                            <span>تعداد: {formatPrice(item.quantity)} عدد</span>
-                            <span>|</span>
-                            <span>{item.shopProduct.type === 'New' ? 'قطعه نو' : 'قطعه استوک'}</span>
-                            <span>|</span>
-                            <span className="font-bold text-foreground">{formatPrice(item.finalUnitPrice / 10)} تومان</span>
+                      <div key={item.id} className="flex gap-4 items-center justify-between">
+                        <div className="flex gap-4 items-center flex-1 min-w-0">
+                          <div className="w-14 h-14 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden p-0.5">
+                            <img src={getFullUrl(item.shopProduct.product.image)} className="w-full h-full object-contain" alt="" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs md:text-sm font-bold text-foreground block truncate font-iran-sans">
+                              {item.shopProduct.product.title}
+                            </span>
+                            <div className="flex flex-wrap gap-2.5 items-center mt-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
+                              <span>تعداد: {formatPrice(item.quantity)} عدد</span>
+                              <span>|</span>
+                              <span>{item.shopProduct.type === 'New' ? 'قطعه نو' : 'قطعه استوک'}</span>
+                              <span>|</span>
+                              <span className="font-bold text-foreground">{formatPrice(item.finalUnitPrice / 10)} تومان</span>
+                            </div>
                           </div>
                         </div>
+
+                        {sub.status === 'Delivered' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSubOrder(sub);
+                              setSelectedItem(item);
+                              setIsReturnModalOpen(true);
+                            }}
+                            className="rounded-xl text-[10px] font-bold h-8 px-3.5 border-zinc-200 text-foreground shrink-0 shadow-sm outline-none"
+                          >
+                            درخواست مرجوعی
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -212,13 +268,36 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-right">
+          <div className="flex items-center justify-between text-right mb-4">
             <span className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground">مبلغ نهایی پرداخت شده</span>
-            <span className="text-base md:text-lg font-black font-iran-sans text-foreground">{formatPrice(order.totalFinalPrice / 10)} تومان</span>
+            <span className="text-base md:text-lg font-black text-foreground">{formatPrice(order.totalFinalPrice / 10)} تومان</span>
           </div>
+
+          {/* دکمه پرداخت آنلاین شماره ۲ در انتهای بخش صورتحساب فاکتور */}
+          {order.status === 'WaitingForPayment' && (
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={handleRetryPayment}
+              isLoading={retryPayment.isPending}
+              className="rounded-xl font-iran-sans font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 flex items-center justify-center gap-1.5"
+            >
+              <CreditCard className="h-4.5 w-4.5 shrink-0" />
+              <span>پرداخت آنلاین و نهایی‌سازی سفارش</span>
+            </Button>
+          )}
         </Card>
 
       </div>
+
+      <ReturnRequestModal
+        isOpen={isReturnModalOpen}
+        onClose={() => setIsReturnModalOpen(false)}
+        subOrder={selectedSubOrder}
+        item={selectedItem}
+      />
+
     </div>
   );
 }
