@@ -1,3 +1,5 @@
+// src/domains/front/product/services/product.service.ts
+
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
@@ -44,6 +46,30 @@ export class ProductService {
       return response.data;
     } catch (error) {
       throw errorManager.normalize(error);
+    }
+  }
+
+  // ✅ متد جدید: دریافت محصولات چند دسته‌بندی با یک بار درخواست
+  async getNominatedProductsByCategories(
+    categoryEnglishTitles: string[], 
+    cityId?: string
+  ): Promise<Record<string, any>> {
+    try {
+      // ✅ اجرای موازی با حداکثر ۶ درخواست همزمان
+      const results = await Promise.all(
+        categoryEnglishTitles.map(title =>
+          this.getNominatedProductsByCategory(title, cityId)
+        )
+      );
+
+      // ✅ تبدیل به آبجکت
+      return categoryEnglishTitles.reduce((acc, title, index) => {
+        acc[title] = results[index];
+        return acc;
+      }, {} as Record<string, any>);
+    } catch (error) {
+      logger.error('[ProductService] Get nominated products by categories failed:', error);
+      return {};
     }
   }
 

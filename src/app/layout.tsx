@@ -39,7 +39,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fa" dir="rtl">
+    /* افزودن suppressHydrationWarning جهت نادیده گرفتن هشدارهای تزریق اتریبیوت کلاس و استایل تم توسط next-themes */
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useInfiniteQuery, UseQueryOptions, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
@@ -11,7 +12,15 @@ import { useAppStore } from '@/shared/store/useAppStore';
 const productService = getProductService();
 
 export function useGetNominatedProducts() {
-  const cityId = useAppStore((state) => state.selectedCity?.id);
+  const selectedCity = useAppStore((state) => state.selectedCity);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // در رندر اول کلاینت مقدار null داده می‌شود تا با رندر سرور تطابق کامل داشته باشد
+  const cityId = mounted ? selectedCity?.id : null;
 
   return useTypedQuery<any>(
     ['front', 'products', 'nominated-deals', cityId || null],
@@ -23,7 +32,14 @@ export function useGetNominatedProducts() {
 }
 
 export function useGetNominatedProductsByCategory(categoryEnglishTitle: string) {
-  const cityId = useAppStore((state) => state.selectedCity?.id);
+  const selectedCity = useAppStore((state) => state.selectedCity);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cityId = mounted ? selectedCity?.id : null;
 
   return useTypedQuery<any>(
     ['front', 'products', 'nominated-category', categoryEnglishTitle, cityId || null],
@@ -39,7 +55,14 @@ export function useSearchProducts(
   params: SearchProductsRequest,
   options?: Omit<UseQueryOptions<PaginatedResult<ProductViewModel>>, 'queryKey' | 'queryFn'>
 ) {
-  const cityId = useAppStore((state) => state.selectedCity?.id);
+  const selectedCity = useAppStore((state) => state.selectedCity);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cityId = mounted ? selectedCity?.id : null;
   const updatedParams = { ...params, cityId: params.cityId || cityId || undefined };
 
   return useTypedQuery(
@@ -56,7 +79,14 @@ export function useSearchProducts(
 export function useInfiniteSearchProducts(
   params: Omit<SearchProductsRequest, 'pageNumber' | 'pageSize'>
 ) {
-  const cityId = useAppStore((state) => state.selectedCity?.id);
+  const selectedCity = useAppStore((state) => state.selectedCity);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cityId = mounted ? selectedCity?.id : null;
   const updatedParams = { ...params, cityId: params.cityId || cityId || undefined };
 
   return useInfiniteQuery({

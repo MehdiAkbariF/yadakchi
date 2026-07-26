@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -43,7 +43,7 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
 
   const currentSlide = slides[currentIndex];
   
-  // اتصال به سیستم ناظر بازدید بر اساس آیدی اسلاید اکتیو فعلی
+  // لود وضعیت ناظر بر اساس شناسه بنر اسلاید اکتیو فعلی
   const slideImpressionRef = useBannerImpression(currentSlide?.id || null);
 
   const getFullUrl = (path: string) => {
@@ -73,11 +73,17 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
   }
 
   const slideElement = (
-    <div className={cn("relative w-full overflow-hidden rounded-2xl shadow-sm", aspectRatio)}>
+    /* 
+      انتقال هوشمند رفرنس ناظر (slideImpressionRef) به تگ نگهدارنده ثابت بیرونی کلِ اسلایدر.
+      این کار مانع از صدور هشدارهای شبیه‌ساز انیمیشنِ AnimatePresence در کپی کردن رفرنس‌ها می‌شود.
+    */
+    <div 
+      ref={slideImpressionRef}
+      className={cn("relative w-full overflow-hidden rounded-2xl shadow-sm", aspectRatio)}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide.id}
-          ref={slideImpressionRef} // انتساب به تگ نگهدارنده متحرک جهت ثبت دقیق بازدید چشمی هر اسلاید
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
@@ -139,7 +145,7 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
         rel="noopener noreferrer" 
         aria-label={currentSlide.title || currentSlide.imageAlt || "اسلاید بنر تبلیغاتی"}
         className={cn("block w-full h-full", className)}
-        onClick={() => bannerTracker.trackClick(currentSlide.id)} // ثبت آنی رویداد کلیک بر روی اسلاید فعال
+        onClick={() => bannerTracker.trackClick(currentSlide.id)} // ثبت رویداد کلیک
       >
         {slideElement}
       </Link>

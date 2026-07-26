@@ -9,7 +9,7 @@ import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/fro
 import { showToast } from '@/core/utils/toast';
 import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useImpression } from '@/shared/hooks/useImpression'; // وارد کردن هوک جدید
+import { useImpression } from '@/shared/hooks/useImpression';
 
 interface ProductSearchCardProps {
   product: any;
@@ -48,7 +48,6 @@ export function ProductSearchCard({
   const nominated = product?.nominatedShopProduct || {};
   const shopProductId = product?.shopProductId || nominated?.id || null;
   
-  // اتصال به هوک هوشمند تشخیص ورود به ویوپورت و ارسال به صف تجمیع
   const impressionRef = useImpression(shopProductId);
 
   const shopName = nominated?.shopTitle || product?.shop?.name || product?.shopTitle || null;
@@ -185,7 +184,7 @@ export function ProductSearchCard({
     return (
       <div className="flex items-center gap-1 select-none">
         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
-        <span className="text-[10px] sm:text-[11px] font-iran-yekan font-bold text-foreground">
+        <span className="text-[10px] sm:text-[11px] font-iran-sans font-bold text-foreground">
           {formatPrice(rating)}
         </span>
       </div>
@@ -196,7 +195,6 @@ export function ProductSearchCard({
   const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
 
   return (
-    /* ارجاع رفرنس کلاینتی به تگ نگهدارنده بیرونی جهت شناسایی ورود به ویوپورت */
     <div ref={impressionRef} className={cn("w-full transition-all select-none", className)}>
       
       {/* دسکتاپ کارت محصول */}
@@ -221,7 +219,7 @@ export function ProductSearchCard({
         </div>
 
         <div className="w-full h-9 mb-1 mt-2 text-right">
-          <h4 className="text-sm font-bold font-iran-yekan text-foreground line-clamp-2 leading-relaxed">
+          <h4 className="text-sm font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed">
             {product?.title || product?.name}
           </h4>
         </div>
@@ -229,10 +227,11 @@ export function ProductSearchCard({
         {shopName && (
           <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1 justify-start">
             <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
-            <span className="font-iran-yekan font-medium truncate">فروشگاه: {shopName}</span>
+            <span className="font-iran-sans font-medium truncate">فروشگاه: {shopName}</span>
           </div>
         )}
 
+        {/* فیکس تداخل هیدریشن: لود همگن تگ ساختاری فضا پر کن در حالت SSR و کلاینت */}
         <div className="w-full flex flex-col items-stretch select-none">
           {isMounted && tickerLength > 0 ? (
             <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
@@ -243,7 +242,7 @@ export function ProductSearchCard({
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -15, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-yekan truncate h-full py-1 justify-start"
+                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
                 >
                   <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
@@ -251,7 +250,7 @@ export function ProductSearchCard({
               </AnimatePresence>
             </div>
           ) : (
-            isMounted && tickerLength > 0 && <div className="h-6 mt-0.5 w-full shrink-0" />
+            <div className="h-6 mt-0.5 w-full shrink-0" /> // تگ همگن لود شونده در سرور و کلاینت
           )}
         </div>
 
@@ -260,7 +259,7 @@ export function ProductSearchCard({
           (isOutOfStock || !showAddToBasket) ? "pb-1" : "border-b border-dashed pb-3.5"
         )}>
           <div className={cn(
-            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-yekan px-2.5 py-1 rounded-lg transition-opacity",
+            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
             {toPersianDigits(discountPercent)}٪
@@ -268,21 +267,21 @@ export function ProductSearchCard({
 
           <div className="flex flex-col items-end min-w-0">
             {hasDiscount && originalPriceToman > 0 && (
-              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-yekan font-medium">
+              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
                 {formatPrice(originalPriceToman)}
               </span>
             )}
             <div className="flex items-center gap-0.5 mt-0.5">
               {isOutOfStock ? (
-                <span className="text-sm sm:text-base font-bold font-iran-yekan text-destructive">
+                <span className="text-sm sm:text-base font-bold font-iran-sans text-destructive">
                   ناموجود
                 </span>
               ) : (
                 <>
-                  <span className="text-base sm:text-lg font-black font-iran-yekan text-foreground">
+                  <span className="text-base sm:text-lg font-black font-iran-sans text-foreground">
                     {formatPrice(finalPriceToman)}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-iran-yekan">تومان</span>
+                  <span className="text-[10px] text-muted-foreground font-iran-sans">تومان</span>
                 </>
               )}
             </div>
@@ -301,7 +300,7 @@ export function ProductSearchCard({
                 >
                   <Plus className="h-4.5 w-4.5" />
                 </button>
-                <span className="text-xs font-bold font-iran-yekan text-primary">
+                <span className="text-xs font-bold font-iran-sans text-primary">
                   {activeLoading ? (
                     <Loader2 className="h-4.5 w-4.5 animate-spin text-primary mx-auto" />
                   ) : (
@@ -349,7 +348,7 @@ export function ProductSearchCard({
             {showRating && (
               <div className="absolute top-1 left-1 dark:bg-zinc-900/85 backdrop-blur-sm px-1.5 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
                 <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400 shrink-0" />
-                <span className="text-[9px] font-iran-yekan font-bold text-foreground mr-0.5">
+                <span className="text-[9px] font-iran-sans font-bold text-foreground mr-0.5">
                   {formatPrice(product.averageRate || 5)}
                 </span>
               </div>
@@ -358,18 +357,18 @@ export function ProductSearchCard({
 
           <div className="flex-1 flex flex-col justify-between min-w-0 text-right">
             <div className="w-full">
-              <h4 className="text-xs font-bold font-iran-yekan text-foreground line-clamp-2 leading-relaxed">
+              <h4 className="text-xs font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed">
                 {product?.title || product?.name}
               </h4>
               
               {shopName && (
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1.5 justify-start">
-                  <Store className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                  <Store className="h-3 w-3 shrink-0 text-muted-foreground/75" />
                   <span className="truncate">فروشگاه: {shopName}</span>
                 </div>
               )}
 
-              {isMounted && tickerLength > 0 && (
+              {isMounted && tickerLength > 0 ? (
                 <div className="h-5 overflow-hidden relative w-full flex items-center justify-start text-[9px] sm:text-[10px] text-muted-foreground mt-1 select-none shrink-0">
                   <AnimatePresence mode="wait">
                     <motion.span
@@ -378,19 +377,21 @@ export function ProductSearchCard({
                       animate={{ y: 0, opacity: 1 }}
                       exit={{ y: -15, opacity: 0 }}
                       transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                      className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-yekan truncate h-full py-1 justify-start"
+                      className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
                     >
                       <CurrentTickerIcon className="h-3 w-3 text-primary shrink-0" />
                       <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
                     </motion.span>
                   </AnimatePresence>
                 </div>
+              ) : (
+                <div className="h-5 mt-1 w-full shrink-0" /> // تگ همگن لود شونده در سرور و کلاینت
               )}
             </div>
 
             <div className="w-full flex items-end justify-between mt-2">
               <div className={cn(
-                "bg-primary/10 text-primary border border-primary/20 text-[10px] font-black font-iran-yekan px-2 py-0.5 rounded-lg",
+                "bg-primary/10 text-primary border border-primary/20 text-[10px] font-black font-iran-sans px-2 py-0.5 rounded-lg",
                 hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
               )}>
                 {toPersianDigits(discountPercent)}٪
@@ -398,21 +399,21 @@ export function ProductSearchCard({
 
               <div className="flex flex-col items-end min-w-0">
                 {hasDiscount && originalPriceToman > 0 && (
-                  <span className="text-[9px] text-zinc-500 line-through font-iran-yekan">
+                  <span className="text-[9px] text-zinc-500 line-through font-iran-sans">
                     {formatPrice(originalPriceToman)}
                   </span>
                 )}
                 <div className="flex items-center gap-0.5">
                   {isOutOfStock ? (
-                    <span className="text-xs font-bold font-iran-yekan text-destructive">
+                    <span className="text-xs font-bold font-iran-sans text-destructive">
                       ناموجود
                     </span>
                   ) : (
                     <>
-                      <span className="text-sm font-black font-iran-yekan text-foreground">
+                      <span className="text-sm font-black text-foreground font-iran-sans">
                         {formatPrice(finalPriceToman)}
                       </span>
-                      <span className="text-[9px] text-muted-foreground font-iran-yekan">تومان</span>
+                      <span className="text-[9px] text-muted-foreground font-iran-sans">تومان</span>
                     </>
                   )}
                 </div>
@@ -433,7 +434,7 @@ export function ProductSearchCard({
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </button>
-                <span className="text-xs font-bold font-iran-yekan text-primary">
+                <span className="text-xs font-bold font-iran-sans text-primary">
                   {activeLoading ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin text-primary mx-auto" />
                   ) : (

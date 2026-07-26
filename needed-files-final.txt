@@ -1,0 +1,2086 @@
+﻿============================================================
+          NEEDED FILES FOR REVIEW - FINAL
+          Date: 07/26/2026 11:39:42
+          Total Files: 14
+============================================================
+
+
+
+==================== FILE: src/domains/front/banner/services/banner.service.ts ====================
+
+
+// src/domains/front/banner/services/banner.service.ts
+
+import { getHttpClient } from '@/core/http/client';
+import { logger } from '@/core/utils/logger';
+import { BANNER_ENDPOINTS, BannerPageName } from '../endpoints/banner.endpoints';
+import { BannerMapper } from '../mappers/banner.mapper';
+import { BannerClickRequest, BannerViewRequest } from '../types/view.types';
+import { 
+  BannerApiDto, 
+  ShopProductBannerApiDto,
+  MegaMenuResponseApiDto,
+  FrontFooterApiDto
+} from '../types/dto.types';
+import { 
+  ShopProductBannerViewModel,
+  MegaMenuCategoryViewModel,
+  FrontFooterViewModel
+} from '../types/view.types';
+
+export class BannerService {
+  private readonly httpClient = getHttpClient();
+
+  async getBanners(pageName: BannerPageName): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        BANNER_ENDPOINTS.GET_BANNERS,
+        { params: { YadakchiPageName: pageName } }
+      );
+
+      return response.data;
+    } catch (error) {
+      logger.error('[BannerService] Get banners failed:', error);
+      // Ø±ÙØ¹ Ø¨Ø§Ú¯ Ú©Ù„ÛŒØ¯ÛŒ: Ù¾Ø±ØªØ§Ø¨ Ø®Ø·Ø§ Ø¨Ù‡ Ø¬Ø§ÛŒ Ø¨Ø§Ø²Ú¯Ø±Ø¯Ø§Ù†Ø¯Ù† Ø¢Ø±Ø§ÛŒÙ‡ Ø®Ø§Ù„ÛŒ Ø¨Ø±Ø§ÛŒ Ø§ÛŒØ¬Ø§Ø¯ Ù‚Ø§Ø¨Ù„ÛŒØª ÙØ§Ù„â€ŒØ¨Ú© Ø±ÙˆÛŒ Ú©Ù„Ø§ÛŒÙ†Øª
+      throw error; 
+    }
+  }
+
+  async getShopProductBanners(params: {
+    partCategoryId?: string;
+    partId?: string;
+    carId?: string;
+  }): Promise<ShopProductBannerViewModel[]> {
+    try {
+      const response = await this.httpClient.get<ShopProductBannerApiDto[]>(
+        BANNER_ENDPOINTS.GET_SHOP_PRODUCT_BANNERS,
+        { params }
+      );
+
+      return response.data.map(dto => BannerMapper.toViewShopProduct(dto));
+    } catch (error) {
+      logger.error('[BannerService] Get shop product banners failed:', error);
+      throw error;
+    }
+  }
+
+  async getMegaMenu(): Promise<MegaMenuCategoryViewModel[]> {
+    try {
+      const response = await this.httpClient.get<MegaMenuResponseApiDto>(
+        BANNER_ENDPOINTS.GET_MEGA_MENU
+      );
+
+      if (!response.data || !response.data.partCategories) {
+        return [];
+      }
+
+      return response.data.partCategories.map(dto => BannerMapper.toViewMegaMenu(dto));
+    } catch (error) {
+      logger.error('[BannerService] Get mega menu failed:', error);
+      throw error;
+    }
+  }
+
+  async getFrontFooter(): Promise<FrontFooterViewModel | null> {
+    try {
+      const response = await this.httpClient.get<FrontFooterApiDto>(
+        BANNER_ENDPOINTS.GET_FRONT_FOOTER
+      );
+
+      return BannerMapper.toViewFooter(response.data);
+    } catch (error) {
+      logger.error('[BannerService] Get front footer failed:', error);
+      throw error;
+    }
+  }
+
+  async trackBannerClick(request: BannerClickRequest): Promise<void> {
+    try {
+      const dto = BannerMapper.toClickRequest(request);
+      await this.httpClient.post(BANNER_ENDPOINTS.POST_BANNER_CLICK, dto);
+    } catch (error) {
+      logger.error('[BannerService] Track banner click failed:', error);
+    }
+  }
+
+  async trackBannerView(request: BannerViewRequest): Promise<void> {
+    try {
+      const dto = BannerMapper.toViewRequest(request);
+      await this.httpClient.post(BANNER_ENDPOINTS.POST_BANNER_VIEW, dto);
+    } catch (error) {
+      logger.error('[BannerService] Track banner view failed:', error);
+    }
+  }
+}
+
+let bannerServiceInstance: BannerService | null = null;
+
+export function getBannerService(): BannerService {
+  if (!bannerServiceInstance) {
+    bannerServiceInstance = new BannerService();
+  }
+  return bannerServiceInstance;
+}
+
+
+==================== END OF src/domains/front/banner/services/banner.service.ts ====================
+
+
+
+
+==================== FILE: src/domains/front/product/services/product.service.ts ====================
+
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { PRODUCT_ENDPOINTS } from '../endpoints/product.endpoints';
+import { ProductMapper } from '../mappers/product.mapper';
+import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel, ProductPageViewModel, PriceChartViewModel, CommentsAverageViewModel, CommentItemViewModel, InquiryItemViewModel } from '@/domains/front/product/types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+import { ProductPageResponseDto, PriceChartDto, CommentsAverageDto, CommentsResponseDto, InquiriesResponseDto } from '../types/dto.types';
+
+export class ProductService {
+  private readonly httpClient = getHttpClient();
+
+  async getNominatedProducts(cityId?: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        PRODUCT_ENDPOINTS.SEARCH_NOMINATED,
+        {
+          params: {
+            CityId: cityId || '',
+            PageNumber: 1,
+            PageSize: 30
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getNominatedProductsByCategory(categoryEnglishTitle: string, cityId?: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        PRODUCT_ENDPOINTS.SEARCH_NOMINATED,
+        {
+          params: {
+            PartCategoryEnglishTitle: categoryEnglishTitle,
+            CityId: cityId || '',
+            PageNumber: 1,
+            PageSize: 30
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async searchProducts(request: SearchProductsRequest): Promise<PaginatedResult<ProductViewModel>> {
+    try {
+      const dto = ProductMapper.toDomainSearchRequest(request);
+      
+      const response = await this.httpClient.get<any>(
+        PRODUCT_ENDPOINTS.SEARCH_PRODUCTS,
+        { params: dto as Record<string, unknown> }
+      );
+
+      const productsData = response.data.products;
+      
+      if (!productsData || !productsData.items) {
+        return {
+          items: [],
+          pageNumber: 1,
+          pageSize: 8,
+          totalCount: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          hasMore: false,
+          from: 1,
+          to: 0,
+        };
+      }
+
+      const items = productsData.items.map((item: any) => {
+        const domain = ProductMapper.toDomain(item);
+        return ProductMapper.toView(domain);
+      });
+
+      return {
+        items,
+        pageNumber: productsData.currentPage,
+        pageSize: productsData.pageSize,
+        totalCount: productsData.totalCount,
+        totalPages: productsData.totalPages,
+        hasNextPage: productsData.currentPage < productsData.totalPages,
+        hasPreviousPage: productsData.currentPage > 1,
+        hasMore: productsData.currentPage < productsData.totalPages,
+        from: (productsData.currentPage - 1) * productsData.pageSize + 1,
+        to: Math.min(productsData.currentPage * productsData.pageSize, productsData.totalCount),
+      };
+    } catch (error) {
+      logger.error('[ProductService] Search products failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductDetails(productCode: number): Promise<ProductViewModel> {
+    try {
+      const response = await this.httpClient.get<any>(
+        PRODUCT_ENDPOINTS.GET_PRODUCT,
+        { params: { ProductCode: productCode } }
+      );
+
+      const domain = ProductMapper.toDomain(response.data);
+      return ProductMapper.toView(domain);
+    } catch (error) {
+      logger.error('[ProductService] Get product details failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getRelatedProducts(productCode: number): Promise<ProductViewModel[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        PRODUCT_ENDPOINTS.GET_RELATED_PRODUCTS,
+        { params: { ProductCode: productCode } }
+      );
+
+      return response.data.map(item => {
+        const domain = ProductMapper.toDomain(item);
+        return ProductMapper.toView(domain);
+      });
+    } catch (error) {
+      logger.error('[ProductService] Get related products failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductPriceChart(productId: string, shopProductType: 'New' | 'Stock' | 'TakeOff'): Promise<ProductPriceChartViewModel> {
+    try {
+      const response = await this.httpClient.get<any>(
+        PRODUCT_ENDPOINTS.GET_PRICE_CHART,
+        { params: { ProductId: productId, ShopProductType: shopProductType } }
+      );
+
+      return ProductMapper.toViewPriceChart(response.data);
+    } catch (error) {
+      logger.error('[ProductService] Get price chart failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getSearchSuggestions(searchTitle?: string): Promise<string[]> {
+    try {
+      const response = await this.httpClient.get<string[]>(
+        PRODUCT_ENDPOINTS.SEARCH_SUGGESTIONS,
+        { params: { SearchTitle: searchTitle || '' } }
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      logger.error('[ProductService] Get search suggestions failed:', error);
+      return [];
+    }
+  }
+
+  async getSearchKeywords(searchTitle: string): Promise<{ keywords: any[], cars: any[] }> {
+    try {
+      const response = await this.httpClient.get<any>(
+        PRODUCT_ENDPOINTS.SEARCH_KEYWORDS,
+        { params: { SearchTitle: searchTitle } }
+      );
+      
+      const rawKeywords = response.data?.searchProductKeywords || [];
+      const rawCars = response.data?.cars || [];
+      
+      const keywords = rawKeywords.map((dto: any) => ({
+        suggestion: dto.searchKeywordSuggestion,
+        productTitles: dto.productTitles || [],
+        part: {
+          id: dto.partId,
+          name: dto.partName,
+          englishTitle: dto.partEnglishTitle,
+          href: `/search?partEnglishTitle=${dto.partEnglishTitle}`,
+        },
+        category: {
+          id: dto.partCategoryId,
+          name: dto.partCategoryName,
+          englishTitle: dto.partCategoryEnglishTitle,
+          href: `/part-category/${dto.partCategoryEnglishTitle}`,
+        },
+        partCategoryId: dto.partCategoryId,
+        partCategoryName: dto.partCategoryName,
+        partCategoryEnglishTitle: dto.partCategoryEnglishTitle,
+      }));
+
+      const cars = rawCars.map((dto: any) => ({
+        id: dto.id,
+        model: dto.model,
+        englishTitle: dto.englishTitle,
+        cover: dto.cover,
+        coverAlt: dto.coverAlt,
+      }));
+      
+      return { keywords, cars };
+    } catch (error) {
+      logger.error('[ProductService] Get search keywords failed:', error);
+      return { keywords: [], cars: [] };
+    }
+  }
+
+  async getSearchHistory(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        PRODUCT_ENDPOINTS.SEARCH_HISTORY
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      logger.error('[ProductService] Get search history failed:', error);
+      return [];
+    }
+  }
+
+  async removeSearchHistory(searchTitle?: string): Promise<void> {
+    try {
+      await this.httpClient.delete(
+        PRODUCT_ENDPOINTS.REMOVE_SEARCH_HISTORY,
+        { params: { SearchTitle: searchTitle || '' } }
+      );
+    } catch (error) {
+      logger.error('[ProductService] Remove search history failed:', error);
+    }
+  }
+
+  async getProductPageData(productCode: number): Promise<ProductPageViewModel | null> {
+    try {
+      const response = await this.httpClient.get<ProductPageResponseDto>(
+        PRODUCT_ENDPOINTS.GET_PRODUCT,
+        { params: { ProductCode: productCode } }
+      );
+      if (!response.data || typeof response.data === 'string' || !response.data.product) {
+        return null;
+      }
+      return ProductMapper.toViewProductPage(response.data);
+    } catch (error) {
+      logger.error('[ProductService] Get product page data failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductCommentsAverage(productId: string): Promise<CommentsAverageViewModel> {
+    try {
+      const response = await this.httpClient.get<CommentsAverageDto>(
+        PRODUCT_ENDPOINTS.GET_COMMENTS_AVERAGE,
+        { params: { Id: productId } }
+      );
+      return ProductMapper.toViewCommentsAverage(response.data);
+    } catch (error) {
+      logger.error('[ProductService] Get product comments average failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductComments(productId: string, orderBy: string = 'Newest', pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<CommentItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<CommentsResponseDto>(
+        PRODUCT_ENDPOINTS.GET_COMMENTS,
+        {
+          params: {
+            ProductId: productId,
+            OrderBy: orderBy,
+            PageNumber: pageNumber,
+            PageSize: pageSize
+          }
+        }
+      );
+      const items = (response.data.items || []).map(dto => ProductMapper.toViewCommentItem(dto));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[ProductService] Get product comments failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getProductInquiries(productId: string, orderBy: string = 'Latest', pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<InquiryItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<InquiriesResponseDto>(
+        PRODUCT_ENDPOINTS.GET_INQUIRIES,
+        {
+          params: {
+            ProductId: productId,
+            OrderBy: orderBy,
+            PageNumber: pageNumber,
+            PageSize: pageSize
+          }
+        }
+      );
+      const items = (response.data.items || []).map(dto => ProductMapper.toViewInquiryItem(dto));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[ProductService] Get product inquiries failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async isUserFavoriteProduct(productCode: number): Promise<boolean> {
+    try {
+      const response = await this.httpClient.get<any>(
+        PRODUCT_ENDPOINTS.IS_FAVORITE,
+        { 
+          params: { 
+            productCode,
+            _t: Date.now()
+          } 
+        }
+      );
+
+      const result = response.data;
+
+      if (result === true || result === 'true') return true;
+      if (result === false || result === 'false') return false;
+
+      if (result && typeof result === 'object') {
+        const dataValue = (result as any).data;
+        if (dataValue === true || dataValue === 'true') return true;
+      }
+
+      return false;
+    } catch (error) {
+      logger.error('[ProductService] Check favorite failed:', error);
+      return false;
+    }
+  }
+
+  async addFavorite(productId: string): Promise<void> {
+    try {
+      const params = new URLSearchParams();
+      params.append('ProductId', productId);
+
+      await this.httpClient.post(PRODUCT_ENDPOINTS.POST_FAVORITE, params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+    } catch (error) {
+      logger.error('[ProductService] Add favorite failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async deleteFavorite(productId: string): Promise<void> {
+    try {
+      const params = new URLSearchParams();
+      params.append('ProductId', productId);
+
+      await this.httpClient.delete(PRODUCT_ENDPOINTS.DELETE_FAVORITE, params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+    } catch (error) {
+      logger.error('[ProductService] Delete favorite failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async submitProductReport(productId: string, reportSubjectId: string, description: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('ProductId', productId);
+      formData.append('ReportSubjectId', reportSubjectId);
+      formData.append('Description', description);
+      await this.httpClient.post('/api/Front/ProductReport', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } catch (error) {
+      logger.error('[ProductService] Submit product report failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+}
+
+let productServiceInstance: ProductService | null = null;
+
+export function getProductService(): ProductService {
+  if (!productServiceInstance) {
+    productServiceInstance = new ProductService();
+  }
+  return productServiceInstance;
+}
+
+
+==================== END OF src/domains/front/product/services/product.service.ts ====================
+
+
+
+
+==================== FILE: src/domains/front/reference/brand/services/brand.service.ts ====================
+
+
+// src/domains/front/reference/brand/services/brand.service.ts
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { BRAND_ENDPOINTS } from '../endpoints/brand.endpoints';
+import { BrandMapper } from '../mappers/brand.mapper';
+import { BrandFilters, BrandNameFilters } from '../types/view.types';
+import { BrandApiDto, BrandNameApiDto } from '../types/dto.types';
+import { BrandViewModel, BrandNameViewModel } from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+
+export class BrandService {
+  private readonly httpClient = getHttpClient();
+
+  async getBrands(filters: BrandFilters): Promise<PaginatedResult<BrandViewModel>> {
+    try {
+      const dto = BrandMapper.toDomainRequest(filters);
+      
+      const response = await this.httpClient.get<{
+        items: BrandApiDto[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(BRAND_ENDPOINTS.GET_BRANDS, { params: dto as Record<string, unknown> });
+
+      const items = response.data.items.map(dto => BrandMapper.toView(dto));
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[BrandService] Get brands failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getBrandsName(filters: BrandNameFilters): Promise<BrandNameViewModel[]> {
+    try {
+      const dto = BrandMapper.toDomainNameRequest(filters);
+      
+      const response = await this.httpClient.get<BrandNameApiDto[]>(
+        BRAND_ENDPOINTS.GET_BRANDS_NAME,
+        { params: dto as Record<string, unknown> }
+      );
+
+      return response.data.map(dto => BrandMapper.toViewName(dto));
+    } catch (error) {
+      logger.error('[BrandService] Get brands name failed:', error);
+      return [];
+    }
+  }
+
+  async getMainBrands(): Promise<BrandViewModel[]> {
+    try {
+      const response = await this.httpClient.get<BrandApiDto[]>(
+        BRAND_ENDPOINTS.GET_MAIN_BRANDS
+      );
+
+      return response.data.map(dto => BrandMapper.toView(dto));
+    } catch (error) {
+      logger.error('[BrandService] Get main brands failed:', error);
+      return [];
+    }
+  }
+}
+
+let brandServiceInstance: BrandService | null = null;
+
+export function getBrandService(): BrandService {
+  if (!brandServiceInstance) {
+    brandServiceInstance = new BrandService();
+  }
+  return brandServiceInstance;
+}
+
+
+==================== END OF src/domains/front/reference/brand/services/brand.service.ts ====================
+
+
+
+
+==================== FILE: src/domains/front/shop/services/shop.service.ts ====================
+
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { SHOP_ENDPOINTS } from '../endpoints/shop.endpoints';
+import { ShopMapper } from '../mappers/shop.mapper';
+import { ShopFilters, ShopReportRequest, ShopViewModel, ShopCardViewModel, ShopPerformanceViewModel } from '../types/view.types';
+import { 
+  ShopApiDto, 
+  ShopCardApiDto, 
+  BestShopApiDto,
+  ShopPerformanceApiDto,
+  ShopReportSubjectApiDto 
+} from '../types/dto.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+
+export class ShopService {
+  private readonly httpClient = getHttpClient();
+
+  async getShop(shopId: string): Promise<ShopViewModel> {
+    try {
+      const response = await this.httpClient.get<ShopApiDto>(
+        SHOP_ENDPOINTS.GET_SHOP,
+        { params: { Id: shopId } }
+      );
+
+      const domain = ShopMapper.toDomain(response.data);
+      return ShopMapper.toView(domain);
+    } catch (error) {
+      logger.error('[ShopService] Get shop failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getShopPage(shopId: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        SHOP_ENDPOINTS.GET_SHOP_PAGE,
+        { params: { ShopId: shopId } }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[ShopService] Get shop page failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getBestShops(): Promise<ShopCardViewModel[]> {
+    try {
+      const response = await this.httpClient.get<BestShopApiDto[]>(
+        SHOP_ENDPOINTS.GET_BEST_SHOPS
+      );
+
+      return response.data.map(dto => ({
+        id: dto.id,
+        name: dto.name,
+        logo: dto.logo,
+        rating: dto.rating,
+        reviewCount: dto.reviewCount,
+        productCount: dto.productCount,
+        isVerified: false, 
+        cityName: '', 
+        rank: dto.rank,
+      })).map(dto => ShopMapper.toViewCard(dto as ShopCardApiDto));
+    } catch (error) {
+      logger.error('[ShopService] Get best shops failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getShopCards(filters: ShopFilters): Promise<PaginatedResult<ShopCardViewModel>> {
+    try {
+      const params: Record<string, unknown> = {
+        OrderBy: filters.orderBy || 'Rating',
+        PageNumber: filters.pageNumber || 1,
+        PageSize: filters.pageSize || 30,
+      };
+
+      if (filters.carManufacturerIds?.length) {
+        params.CarManufacturerIds = filters.carManufacturerIds;
+      }
+      if (filters.carIds?.length) {
+        params.CarIds = filters.carIds;
+      }
+      if (filters.partIds?.length) {
+        params.PartIds = filters.partIds;
+      }
+
+      const response = await this.httpClient.get<{
+        items: ShopCardApiDto[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(SHOP_ENDPOINTS.GET_SHOP_CARDS, { params });
+
+      const items = response.data.items.map(dto => ShopMapper.toViewCard(dto));
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[ShopService] Get shop cards failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getReportSubjects(reportType: string = 'ShopProductReport'): Promise<ShopReportSubjectApiDto[]> {
+    try {
+      const response = await this.httpClient.get<ShopReportSubjectApiDto[]>(
+        SHOP_ENDPOINTS.GET_REPORT_SUBJECTS,
+        { params: { ReportType: reportType } }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[ShopService] Get report subjects failed:', error);
+      return [];
+    }
+  }
+
+  async submitShopReport(report: ShopReportRequest): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('ShopId', report.shopId);
+      if (report.shopProductId) {
+        formData.append('ShopProductId', report.shopProductId);
+      }
+      formData.append('Description', report.description);
+      formData.append('ReportSubjectId', report.reportSubjectId);
+
+      await this.httpClient.post(SHOP_ENDPOINTS.POST_SHOP_REPORT, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (error) {
+      logger.error('[ShopService] Submit shop report failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getShopPerformance(): Promise<ShopPerformanceViewModel> {
+    try {
+      const response = await this.httpClient.get<ShopPerformanceApiDto>(
+        SHOP_ENDPOINTS.GET_SHOP_PERFORMANCE
+      );
+      return ShopMapper.toViewPerformance(response.data);
+    } catch (error) {
+      logger.error('[ShopService] Get shop performance failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+}
+
+let shopServiceInstance: ShopService | null = null;
+
+export function getShopService(): ShopService {
+  if (!shopServiceInstance) {
+    shopServiceInstance = new ShopService();
+  }
+  return shopServiceInstance;
+}
+
+
+==================== END OF src/domains/front/shop/services/shop.service.ts ====================
+
+
+
+
+==================== FILE: src/domains/front/static/services/static.service.ts ====================
+
+
+// src/domains/front/static/services/static.service.ts
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { STATIC_ENDPOINTS } from '../endpoints/static.endpoints';
+import { StaticMapper } from '../mappers/static.mapper';
+import { 
+  FAQFilters, 
+  ContactUsRequest, 
+  NewsletterRequest 
+} from '../types/view.types';
+import { 
+  StaticPageApiDto, 
+  StaticPageCategoryApiDto,
+  FAQApiDto,
+  ContactUsSubjectApiDto,
+  ToolTipApiDto,
+  MarketMessageApiDto
+} from '../types/dto.types';
+import { 
+  StaticPageViewModel, 
+  StaticPageCategoryViewModel,
+  FAQViewModel,
+  ContactUsSubjectViewModel,
+  ToolTipViewModel,
+  MarketMessageViewModel
+} from '../types/view.types';
+
+export class StaticService {
+  private readonly httpClient = getHttpClient();
+
+  async getStaticPage(title: string): Promise<StaticPageViewModel | null> {
+    try {
+      const response = await this.httpClient.get<StaticPageApiDto>(
+        STATIC_ENDPOINTS.GET_STATIC_PAGE,
+        { params: { Title: title } }
+      );
+
+      const domain = StaticMapper.toDomainPage(response.data);
+      return StaticMapper.toViewPage(domain);
+    } catch (error) {
+      logger.error('[StaticService] Get static page failed:', error);
+      return null;
+    }
+  }
+
+  async getStaticPageCategories(): Promise<StaticPageCategoryViewModel[]> {
+    try {
+      const response = await this.httpClient.get<StaticPageCategoryApiDto[]>(
+        STATIC_ENDPOINTS.GET_STATIC_PAGE_CATEGORY
+      );
+
+      return response.data.map(dto => StaticMapper.toViewCategory(dto));
+    } catch (error) {
+      logger.error('[StaticService] Get static page categories failed:', error);
+      return [];
+    }
+  }
+
+  async getFAQ(filters: FAQFilters = {}): Promise<FAQViewModel[]> {
+    try {
+      const params: Record<string, unknown> = {
+        FAQCategoryId: filters.categoryId || '',
+        QorA: filters.qorA || '',
+      };
+
+      const response = await this.httpClient.get<FAQApiDto[]>(
+        STATIC_ENDPOINTS.GET_FAQ,
+        { params }
+      );
+
+      return response.data.map(dto => StaticMapper.toViewFAQ(dto));
+    } catch (error) {
+      logger.error('[StaticService] Get FAQ failed:', error);
+      return [];
+    }
+  }
+
+  async getContactUsSubjects(): Promise<ContactUsSubjectViewModel[]> {
+    try {
+      const response = await this.httpClient.get<ContactUsSubjectApiDto[]>(
+        STATIC_ENDPOINTS.GET_CONTACT_US_SUBJECTS
+      );
+
+      return response.data.map(dto => StaticMapper.toViewContactSubject(dto));
+    } catch (error) {
+      logger.error('[StaticService] Get contact us subjects failed:', error);
+      return [];
+    }
+  }
+
+  async submitContactUs(request: ContactUsRequest): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('SubjectId', request.subjectId);
+      formData.append('Fullname', request.fullname);
+      formData.append('Description', request.description);
+      formData.append('PhoneNumber', request.phoneNumber);
+      if (request.email) {
+        formData.append('Email', request.email);
+      }
+      if (request.attachments) {
+        request.attachments.forEach(file => {
+          formData.append('Attachments', file);
+        });
+      }
+
+      await this.httpClient.post(STATIC_ENDPOINTS.POST_CONTACT_US, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (error) {
+      logger.error('[StaticService] Submit contact us failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getToolTip(key: string): Promise<ToolTipViewModel | null> {
+    try {
+      const response = await this.httpClient.get<ToolTipApiDto>(
+        STATIC_ENDPOINTS.GET_TOOL_TIP,
+        { params: { Key: key } }
+      );
+
+      return StaticMapper.toViewToolTip(response.data);
+    } catch (error) {
+      logger.error('[StaticService] Get tool tip failed:', error);
+      return null;
+    }
+  }
+
+  async getMarketMessage(params: {
+    pageUrl?: string;
+    pageName?: string;
+    description?: string;
+  }): Promise<MarketMessageViewModel | null> {
+    try {
+      const response = await this.httpClient.get<MarketMessageApiDto>(
+        STATIC_ENDPOINTS.GET_MARKET_MESSAGE,
+        { params }
+      );
+
+      return StaticMapper.toViewMarketMessage(response.data);
+    } catch (error) {
+      logger.error('[StaticService] Get market message failed:', error);
+      return null;
+    }
+  }
+
+  async subscribeNewsletter(request: NewsletterRequest): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('Email', request.email);
+
+      await this.httpClient.post(STATIC_ENDPOINTS.POST_NEWSLETTER, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (error) {
+      logger.error('[StaticService] Subscribe newsletter failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  // Ø§ØµÙ„Ø§Ø­ Ú©Ù„ÛŒØ¯ÛŒ Ù…ØªØ¯ Ù„ÙˆØ¯ Ø³Ø§Ø¹Øª Ø³Ø±ÙˆØ±: Ø§Ø² Ø¢Ù†Ø¬Ø§ Ú©Ù‡ Ø³Ø±ÙˆØ± Ø§Ø³ØªØ±ÛŒÙ†Ú¯ Ø®Ø§Ù… Ø¨Ø±Ù…ÛŒâ€ŒÚ¯Ø±Ø¯Ø§Ù†Ø¯ØŒ Ù…Ø³ØªÙ‚ÛŒÙ… Ø¢Ù† Ø±Ø§ Ù¾Ø§Ø±Ø³ Ùˆ Ø¨Ù‡ Date ØªØ¨Ø¯ÛŒÙ„ Ù…ÛŒâ€ŒÚ©Ù†ÛŒÙ…
+  async getCurrentTime(): Promise<Date> {
+    try {
+      const response = await this.httpClient.get<string>(
+        STATIC_ENDPOINTS.GET_CURRENT_TIME
+      );
+      return new Date(response.data);
+    } catch (error) {
+      logger.error('[StaticService] Get current time failed:', error);
+      return new Date();
+    }
+  }
+}
+
+let staticServiceInstance: StaticService | null = null;
+
+export function getStaticService(): StaticService {
+  if (!staticServiceInstance) {
+    staticServiceInstance = new StaticService();
+  }
+  return staticServiceInstance;
+}
+
+
+==================== END OF src/domains/front/static/services/static.service.ts ====================
+
+
+
+
+==================== FILE: src/domains/auth/services/auth.service.ts ====================
+
+
+// src/domains/auth/services/auth.service.ts
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { AUTH_ENDPOINTS } from '../endpoints/auth.endpoints';
+import { AuthMapper } from '../mappers/auth.mapper';
+import { LoginRequest, ConfirmLoginRequest } from '../validation/auth.validation';
+import { User } from '../types/auth.types';
+
+export class AuthService {
+  private readonly httpClient = getHttpClient();
+
+  /**
+   * Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ø§Ø±Ø³Ø§Ù„ Ù¾ÛŒØ§Ù…Ú© Ú©Ø¯ ØªØ§ÛŒÛŒØ¯ (Authentication) Ù‡Ù…Ø±Ø§Ù‡ Ø¨Ø§ Ù‡Ø¯Ø± x-client
+   */
+  async requestLogin(credentials: LoginRequest): Promise<void> {
+    try {
+      logger.debug('[Auth] Requesting login code for:', credentials.phoneNumber);
+      
+      await this.httpClient.post(
+        AUTH_ENDPOINTS.LOGIN,
+        {
+          pattern: 'VerificationSms',
+          phoneNumber: credentials.phoneNumber,
+        },
+        {
+          headers: {
+            'X-Client-Type': 'web', // Ø§Ø±Ø³Ø§Ù„ Ù‡Ø¯Ø± Ø§Ù„Ø²Ø§Ù…ÛŒ
+          }
+        }
+      );
+    } catch (error) {
+      logger.error('[Auth] Login request failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  /**
+   * ØªØ§ÛŒÛŒØ¯ Ú©Ø¯ Ø§Ø±Ø³Ø§Ù„ÛŒ Ùˆ ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ø³ÛŒØ³ØªÙ… (ConfirmAuthentication)
+   */
+  async confirmLogin(credentials: ConfirmLoginRequest): Promise<User> {
+    try {
+      logger.debug('[Auth] Confirming login for:', credentials.phoneNumber);
+      
+      const response = await this.httpClient.post<any>(
+        AUTH_ENDPOINTS.CONFIRM_LOGIN,
+        {
+          pattern: 'VerificationSms',
+          phoneNumber: credentials.phoneNumber,
+          code: credentials.code,
+        },
+        {
+          headers: {
+            'X-Client-Type': 'web', // Ø§Ø±Ø³Ø§Ù„ Ù‡Ø¯Ø± Ø§Ù„Ø²Ø§Ù…ÛŒ
+          }
+        }
+      );
+
+      const rawUser = response.data?.data || response.data;
+      
+      if (!rawUser || typeof rawUser !== 'object') {
+        throw new Error('Ø³Ø§Ø®ØªØ§Ø± Ø¯Ø§Ø¯Ù‡ Ú©Ø§Ø±Ø¨Ø± Ø¯Ø±ÛŒØ§ÙØªâ€ŒØ´Ø¯Ù‡ Ø§Ø² Ø³Ø±ÙˆØ± Ù…Ø¹ØªØ¨Ø± Ù†ÛŒØ³Øª.');
+      }
+
+      const user = AuthMapper.toDomain(rawUser);
+      logger.info('[Auth] User logged in successfully:', user.id);
+      return user;
+    } catch (error) {
+      logger.error('[Auth] Confirm login failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  /**
+   * Ø®Ø±ÙˆØ¬ Ø§Ø² Ø³ÛŒØ³ØªÙ…
+   */
+  async logout(): Promise<void> {
+    try {
+      logger.debug('[Auth] Logging out');
+      await this.httpClient.post(AUTH_ENDPOINTS.LOGOUT);
+      logger.info('[Auth] User logged out successfully');
+    } catch (error) {
+      logger.error('[Auth] Logout failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  /**
+   * Ø¯Ø±ÛŒØ§ÙØª Ù¾Ø±ÙˆÙØ§ÛŒÙ„ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ù…Ø¹ØªØ¨Ø± ÙØ¹Ù„ÛŒ
+   * Ø§ØµÙ„Ø§Ø­ Ø§Ø³Ø§Ø³ÛŒ: ÙÙ‚Ø· Ø¯Ø± ØµÙˆØ±Øª Ø®Ø·Ø§ÛŒ Û´Û°Û± ÛŒØ§ Û´Û°Û³ Ù…Ù‚Ø¯Ø§Ø± null (Ú©Ø§Ø±Ø¨Ø± Ù…Ù‡Ù…Ø§Ù†) Ø¨Ø±Ù…ÛŒâ€ŒÚ¯Ø±Ø¯Ø§Ù†Ø¯.
+   * Ø¯Ø± ØµÙˆØ±Øª Ù‚Ø·Ø¹ÛŒ Ø³Ø±ÙˆØ± (ÛµÛ°Û² ÛŒØ§ ÛµÛ°Û³)ØŒ Ø®Ø·Ø§ Ø±Ø§ Ø¨Ø§Ù„Ø§ Ù…ÛŒâ€ŒÙØ±Ø³ØªØ¯ ØªØ§ Ú©Ø§Ø±Ø¨Ø± Ø§Ø² Ù¾Ø±ÙˆÙØ§ÛŒÙ„ Ø®ÙˆØ¯ Ù„Ø§Ú¯â€ŒØ§ÙˆØª Ù†Ø´ÙˆØ¯.
+   */
+  async getCurrentUser(reqHeaders?: Record<string, string>): Promise<User | null> {
+    try {
+      logger.debug('[Auth] Getting current user profile');
+      
+      const response = await this.httpClient.get<any>(
+        AUTH_ENDPOINTS.GET_USER,
+        {
+          headers: reqHeaders ? { Cookie: reqHeaders.cookie } : undefined,
+        }
+      );
+
+      if (!response.data) {
+        return null;
+      }
+
+      return AuthMapper.toDomain(response.data);
+    } catch (error: any) {
+      // ÙÙ‚Ø· Ø¯Ø± ØµÙˆØ±Øª Ø®Ø·Ø§ÛŒ Ø±Ø³Ù…ÛŒ Ø¹Ø¯Ù… Ø¯Ø³ØªØ±Ø³ÛŒ ÛŒØ§ Ø§Ø­Ø±Ø§Ø² Ù‡ÙˆÛŒØªØŒ Ú©Ø§Ø±Ø¨Ø± Ø¨Ù‡ Ø¹Ù†ÙˆØ§Ù† Ù…Ù‡Ù…Ø§Ù† (null) Ø¹Ù„Ø§Ù…Øªâ€ŒÚ¯Ø°Ø§Ø±ÛŒ Ù…ÛŒâ€ŒØ´ÙˆØ¯
+      if (
+        error?.status === 401 || 
+        error?.status === 403 || 
+        error?.type === 'unauthorized' ||
+        error?.message?.includes('401')
+      ) {
+        return null;
+      }
+
+      // Ø¯Ø± Ø®Ø·Ø§Ù‡Ø§ÛŒ Ù…Ø±Ø¨ÙˆØ· Ø¨Ù‡ Ø¯Ø±Ú¯Ø§Ù‡ ÛŒØ§ Ø³Ø±ÙˆØ± (Ù†Ø¸ÛŒØ± ÛµÛ°Û² ÛŒØ§ ÛµÛ°Û³)ØŒ Ø®Ø·Ø§ Ù¾Ø±ØªØ§Ø¨ Ù…ÛŒâ€ŒØ´ÙˆØ¯ ØªØ§ Ú©Ø§Ø±Ø¨Ø± Ø¨Ù‡ Ø§Ø´ØªØ¨Ø§Ù‡ Ø¨ÛŒØ±ÙˆÙ† Ø§Ù†Ø¯Ø§Ø®ØªÙ‡ Ù†Ø´ÙˆØ¯
+      throw errorManager.normalize(error);
+    }
+  }
+}
+
+let authServiceInstance: AuthService | null = null;
+
+export function getAuthService(): AuthService {
+  if (!authServiceInstance) {
+    authServiceInstance = new AuthService();
+  }
+  return authServiceInstance;
+}
+
+
+==================== END OF src/domains/auth/services/auth.service.ts ====================
+
+
+
+
+==================== FILE: src/core/http/client.ts ====================
+
+
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
+import { errorManager } from '../errors/error-manager';
+import { ApiError } from '../errors/api-error';
+import { HttpResponse, RequestOptions, HttpMethod } from './types';
+
+export class HttpClient {
+  private readonly axiosInstance: AxiosInstance;
+  private abortControllers: Map<string, AbortController> = new Map();
+  private serverRequestConfig: Record<string, any> = {};
+  private isRefreshing = false;
+  private failedQueue: { resolve: (value: any) => void; reject: (reason: any) => void }[] = [];
+
+  constructor() {
+    const baseURL = typeof window === 'undefined'
+      ? (env.apiBaseUrl || 'https://api.yadakchi.com')
+      : '/proxy-api';
+    
+    this.axiosInstance = axios.create({
+      baseURL,
+      timeout: env.apiTimeout,
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-App-Version': env.appVersion,
+      },
+    });
+
+    this.setupInterceptors();
+  }
+
+  setServerConfig(config: Record<string, any>) {
+    this.serverRequestConfig = config;
+  }
+
+  private setupInterceptors(): void {
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        if (typeof window === 'undefined' && this.serverRequestConfig?.headers) {
+          config.headers = {
+            ...config.headers,
+            ...this.serverRequestConfig.headers,
+          };
+        }
+
+        if (env.enableLogging) {
+          logger.debug(`[HTTP] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
+            params: config.params,
+            data: config.data,
+          });
+        }
+
+        const requestId = this.generateRequestId();
+        config.headers['X-Request-ID'] = requestId;
+
+        return config;
+      },
+      (error) => {
+        logger.error('[HTTP] Request error', error);
+        return Promise.reject(error);
+      }
+    );
+
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        if (env.enableLogging) {
+          logger.debug(`[HTTP] Response ${response.status} ${response.config.url}`, {
+            status: response.status,
+            data: response.data,
+          });
+        }
+        return response;
+      },
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const requestUrl = originalRequest.url || '';
+
+          // Û±. Ø§Ú¯Ø± Ø¯Ø± ØµÙØ­Ù‡ Ù„Ø§Ú¯ÛŒÙ† Ù‡Ø³ØªÛŒÙ…ØŒ Ù‡Ø±Ú¯Ø² Ù†Ø¨Ø§ÛŒØ¯ Ø±ÛŒØ¯Ø§ÛŒØ±Ú©Øª Ù…Ø¬Ø¯Ø¯ Ú©Ù†ÛŒÙ… (Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ù„ÙˆÙ¾ Ø¨ÛŒâ€ŒÙ†Ù‡Ø§ÛŒØª)
+          if (currentPath === '/login') {
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          // Û². Ù†Ø§Ø¯ÛŒØ¯Ù‡ Ú¯Ø±ÙØªÙ† Ø±ÛŒØ¯Ø§ÛŒØ±Ú©Øª Ø®ÙˆØ¯Ú©Ø§Ø± Ø±ÙˆÛŒ Ù…ØªØ¯Ù‡Ø§ÛŒ Ø¨Ø±Ø±Ø³ÛŒ Ø§ÙˆÙ„ÛŒÙ‡ Ù†Ø´Ø³Øª Ú©Ø§Ø±Ø¨Ø±
+          const isPassiveAuthCheck = 
+            requestUrl.includes('/User') || 
+            requestUrl.includes('/Refresh') || 
+            requestUrl.includes('/get-user');
+
+          if (isPassiveAuthCheck) {
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          // Û³. Ø¨Ø±Ø§ÛŒ ØªÙ…Ø§Ù… Ø¯Ø±Ø®ÙˆØ§Ø³Øªâ€ŒÙ‡Ø§ÛŒ ÙØ¹Ø§Ù„ Ø¯ÛŒÚ¯Ø± Ú©Ø§Ø±Ø¨Ø± Ø±ÙˆÛŒ Ù‡Ø± ØµÙØ­Ù‡â€ŒØ§ÛŒØŒ Ø¯Ø± ØµÙˆØ±Øª Ø¯Ø±ÛŒØ§ÙØª Û´Û°Û± Ù‡Ø¯Ø§ÛŒØª Ø§Ù†Ø¬Ø§Ù… Ù…ÛŒâ€ŒØ´ÙˆØ¯
+          if (originalRequest._retry) {
+            window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          // Ø§Ú¯Ø± Ø¯Ø± Ø­Ø§Ù„ ØªÙ…Ø¯ÛŒØ¯ ØªÙˆÚ©Ù† ØªÙˆØ³Ø· Ø¯Ø±Ø®ÙˆØ§Ø³ØªÛŒ Ø¯ÛŒÚ¯Ø± Ù‡Ø³ØªÛŒÙ…
+          if (this.isRefreshing) {
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then(() => this.axiosInstance(originalRequest))
+              .catch((err) => Promise.reject(err));
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          return new Promise((resolve, reject) => {
+            this.axiosInstance.post('/api/Login/Refresh')
+              .then(() => {
+                this.failedQueue.forEach((prom) => prom.resolve(null));
+                this.failedQueue = [];
+                resolve(this.axiosInstance(originalRequest));
+              })
+              .catch((refreshError) => {
+                this.failedQueue.forEach((prom) => prom.reject(refreshError));
+                this.failedQueue = [];
+                
+                // Ø¯Ø± ØµÙˆØ±Øª Ø´Ú©Ø³Øª Ø¯Ø± ØªÙ…Ø¯ÛŒØ¯ ØªÙˆÚ©Ù†ØŒ Ø§Ù†ØªÙ‚Ø§Ù„ Ù…Ø³ØªÙ‚ÛŒÙ… Ø¨Ù‡ ØµÙØ­Ù‡ Ù„Ø§Ú¯ÛŒÙ†
+                window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+                reject(refreshError);
+              })
+              .finally(() => {
+                this.isRefreshing = false;
+              });
+          });
+        }
+
+        const apiError = errorManager.normalize(error);
+        logger.error('[HTTP] Response error', {
+          type: apiError.type,
+          status: apiError.status,
+          message: apiError.message,
+          userMessage: apiError.userMessage,
+        });
+        return Promise.reject(apiError);
+      }
+    );
+  }
+
+  private generateRequestId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  private async makeRequest<T = unknown>(
+    method: HttpMethod,
+    url: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<HttpResponse<T>> {
+    const startTime = Date.now();
+    const requestId = this.generateRequestId();
+
+    let signal = options?.signal;
+    let controller: AbortController | undefined;
+
+    if (!signal) {
+      controller = new AbortController();
+      signal = controller.signal;
+      this.abortControllers.set(requestId, controller);
+    }
+
+    try {
+      const config: AxiosRequestConfig = {
+        method,
+        url,
+        params: options?.params,
+        headers: options?.headers,
+        timeout: options?.timeout ?? env.apiTimeout,
+        signal,
+        withCredentials: true, 
+      };
+
+      if (data !== undefined) {
+        config.data = data;
+      }
+
+      const response = await this.axiosInstance.request<T>(config);
+
+      if (controller) {
+        this.abortControllers.delete(requestId);
+      }
+
+      const duration = Date.now() - startTime;
+
+      return {
+        data: response.data,
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers as Record<string, string>,
+        config: {
+          url: response.config.url || '',
+          method: response.config.method as HttpMethod,
+          data: response.config.data,
+          params: response.config.params,
+          headers: response.config.headers as Record<string, string>,
+        },
+        duration,
+      };
+    } catch (error) {
+      if (controller) {
+        this.abortControllers.delete(requestId);
+      }
+
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
+      const apiError = errorManager.normalize(error);
+      throw apiError;
+    }
+  }
+
+  async get<T = unknown>(url: string, options?: RequestOptions): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('GET', url, undefined, options);
+  }
+
+  async post<T = unknown>(
+    url: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('POST', url, data, options);
+  }
+
+  async put<T = unknown>(
+    url: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('PUT', url, data, options);
+  }
+
+  async delete<T = unknown>(url: string, data?: unknown, options?: RequestOptions): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('DELETE', url, data, options);
+  }
+
+  async patch<T = unknown>(
+    url: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('PATCH', url, data, options);
+  }
+
+  cancelRequest(requestId: string): void {
+    const controller = this.abortControllers.get(requestId);
+    if (controller) {
+      controller.abort();
+      this.abortControllers.delete(requestId);
+    }
+  }
+
+  cancelAllRequests(): void {
+    this.abortControllers.forEach((controller) => controller.abort());
+    this.abortControllers.clear();
+  }
+
+  setBaseURL(url: string): void {
+    this.axiosInstance.defaults.baseURL = url;
+  }
+
+  setDefaultTimeout(timeout: number): void {
+    this.axiosInstance.defaults.timeout = timeout;
+  }
+}
+
+let httpClientInstance: HttpClient | null = null;
+
+export function getHttpClient(): HttpClient {
+  if (!httpClientInstance) {
+    httpClientInstance = new HttpClient();
+  }
+  return httpClientInstance;
+}
+
+
+==================== END OF src/core/http/client.ts ====================
+
+
+
+
+==================== FILE: src/lib/react-query/query-keys.ts ====================
+
+
+// src/lib/react-query/query-keys.ts (Ø¨Ù‡â€ŒØ±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ Ù†Ù‡Ø§ÛŒÛŒ)
+
+export const queryKeys = {
+  // Auth
+  auth: {
+    user: ['auth', 'user'] as const,
+    session: ['auth', 'session'] as const,
+  },
+
+  // Front
+  front: {
+    // Products
+    products: {
+      all: ['front', 'products'] as const,
+      details: (productCode: number) => ['front', 'products', 'details', productCode] as const,
+      search: (params: any) => ['front', 'products', 'search', params] as const,
+    },
+
+    // Shops
+    shops: {
+      details: (shopId: string) => ['front', 'shops', 'details', shopId] as const,
+      cards: (params: any) => ['front', 'shops', 'cards', params] as const,
+      best: ['front', 'shops', 'best'] as const,
+    },
+
+    // Basket
+    basket: {
+      current: ['front', 'basket', 'current'] as const,
+    },
+
+    // Comments
+    comments: {
+      product: (productId: string, params: any) => 
+        ['front', 'comments', 'product', productId, params] as const,
+      replies: (commentId: string, params: any) => 
+        ['front', 'comments', 'replies', commentId, params] as const,
+    },
+
+    // Inquiries
+    inquiries: {
+      product: (productId: string, params: any) => 
+        ['front', 'inquiries', 'product', productId, params] as const,
+      replies: (inquiryId: string, params: any) => 
+        ['front', 'inquiries', 'replies', inquiryId, params] as const,
+    },
+
+    // Parts
+    parts: {
+      list: (params: any) => ['front', 'parts', 'list', params] as const,
+      page: (englishName: string, carModel?: string) => 
+        ['front', 'parts', 'page', englishName, carModel] as const,
+      categories: (carId?: string) => ['front', 'parts', 'categories', carId] as const,
+    },
+
+    // Banners
+    banners: {
+      list: (pageName: string) => ['front', 'banners', pageName] as const,
+      shopProduct: (params: any) => ['front', 'banners', 'shop-product', params] as const,
+    },
+
+    // Static
+    static: {
+      page: (title: string) => ['front', 'static', 'page', title] as const,
+      faq: (params: any) => ['front', 'static', 'faq', params] as const,
+    },
+
+    // Reference
+    reference: {
+      cars: {
+        list: (params: any) => ['front', 'reference', 'cars', 'list', params] as const,
+        names: (params: any) => ['front', 'reference', 'cars', 'names', params] as const,
+        manufacturers: (params: any) => ['front', 'reference', 'cars', 'manufacturers', params] as const,
+      },
+      brands: {
+        list: (params: any) => ['front', 'reference', 'brands', 'list', params] as const,
+        main: ['front', 'reference', 'brands', 'main'] as const,
+      },
+      cities: {
+        list: (params: any) => ['front', 'reference', 'cities', 'list', params] as const,
+        province: (provinceId: string) => ['front', 'reference', 'cities', 'province', provinceId] as const,
+      },
+      provinces: {
+        list: (params: any) => ['front', 'reference', 'provinces', 'list', params] as const,
+      },
+    },
+
+    // Shared
+    megaMenu: ['front', 'mega-menu'] as const,
+    footer: ['front', 'footer'] as const,
+  },
+
+  // User
+  user: {
+    profile: ['user', 'profile'] as const,
+    orders: {
+      list: (params: any) => ['user', 'orders', 'list', params] as const,
+      details: (orderId: string) => ['user', 'orders', 'details', orderId] as const,
+    },
+    favorites: {
+      list: (params: any) => ['user', 'favorites', 'list', params] as const,
+    },
+    notifications: {
+      list: (params: any) => ['user', 'notifications', 'list', params] as const,
+    },
+    wallet: {
+      balance: ['user', 'wallet', 'balance'] as const,
+      transactions: (params: any) => ['user', 'wallet', 'transactions', params] as const,
+    },
+  },
+} as const;
+
+
+==================== END OF src/lib/react-query/query-keys.ts ====================
+
+
+
+
+❌ FILE NOT FOUND: src/lib/react-query/client.ts
+
+
+
+
+==================== FILE: src/components/features/Home/HomeContent.tsx ====================
+
+
+'use client';
+
+import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
+import { useGetNominatedProductsByCategory } from '@/domains/front/product/hooks/product.hooks';
+import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
+import { getHttpClient } from '@/core/http/client';
+import { BannerSlider } from '@/components/features/Banner/BannerSlider';
+import { Banner, BannerGroup } from '@/components/features/Banner/Banner';
+import { ShopByCar } from '@/components/features/Car/ShopByCar';
+import { HomeCategories } from '@/components/features/Part/HomeCategories';
+import { DealsSlider } from '@/components/features/ProductCard/DealsSlider';
+import { ProductSlider } from '../ProductCard/ProductSlider';
+import { BrandSlider } from '@/components/features/Brand/BrandSlider';
+import { ShopSlider } from '@/components/features/Shop/ShopSlider';
+import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
+import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+
+export function HomeContent() {
+  const { data: rawBanners = [], isLoading: isBannersLoading } = useGetBanners('Home');
+  const { data: toolsData, isLoading: isToolsLoading, isError: isToolsError } = useGetNominatedProductsByCategory('car-tools');
+  const { data: audioData, isLoading: isAudioLoading, isError: isAudioError } = useGetNominatedProductsByCategory('audio-video-multimedia-system');
+  const { data: exhaustData, isLoading: isExhaustLoading, isError: isExhaustError } = useGetNominatedProductsByCategory('Exhaust');
+  
+  const { data: heaterData, isLoading: isHeaterLoading, isError: isHeaterError } = useGetNominatedProductsByCategory('heater');
+  const { data: doorData, isLoading: isDoorLoading, isError: isDoorError } = useGetNominatedProductsByCategory('door-handles-locks-and-safety');
+  const { data: bodyData, isLoading: isBodyLoading, isError: isBodyError } = useGetNominatedProductsByCategory('body-and-weatherstrips');
+
+  const { data: homePageData } = useTypedQuery<any>(
+    ['front', 'get-home-page'],
+    async () => {
+      const client = getHttpClient();
+      const response = await client.get<any>('/api/Front/GetHomePage');
+      return response.data;
+    },
+    {
+      staleTime: 30 * 60 * 1000,
+    }
+  );
+
+  const sliderGroup = rawBanners?.find((b: any) => b.name === 'Home-Top-Slider') as unknown as BannerGroup;
+  const a1BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A1') as unknown as BannerGroup;
+  const a2BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A2') as unknown as BannerGroup;
+  
+  const a3BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A3') as unknown as BannerGroup;
+  const a4BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A4') as unknown as BannerGroup;
+  const a5BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A5') as unknown as BannerGroup;
+  const a6BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A6') as unknown as BannerGroup;
+
+  const a7BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A7') as unknown as BannerGroup;
+  const a8BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A8') as unknown as BannerGroup;
+
+  const a9BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A9') as unknown as BannerGroup;
+  const a10BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A10') as unknown as BannerGroup;
+  const a11BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A11') as unknown as BannerGroup;
+
+  const a12BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A12') as unknown as BannerGroup;
+  const a13BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A13') as unknown as BannerGroup;
+
+  const hasLeftBanner = !!a1BannerGroup && a1BannerGroup.banners?.length > 0;
+  const toolsProducts = toolsData?.products?.items || [];
+  const audioProducts = audioData?.products?.items || [];
+  const exhaustProducts = exhaustData?.products?.items || [];
+  const heaterProducts = heaterData?.products?.items || [];
+  const doorProducts = doorData?.products?.items || [];
+  const bodyProducts = bodyData?.products?.items || [];
+
+  if (isBannersLoading) {
+    return (
+      <div className="w-full space-y-4 md:space-y-6 py-0 animate-in fade-in duration-300">
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-10 gap-4 md:gap-6 items-stretch w-full h-[180px] sm:h-[240px] md:h-[300px] lg:h-[350px] xl:h-[400px] 2xl:h-[440px]">
+            <div className="md:col-span-7 h-full w-full">
+              <Skeleton className="w-full h-full rounded-2xl" />
+            </div>
+            <div className="hidden md:block md:col-span-3 h-full w-full">
+              <Skeleton className="w-full h-full rounded-2xl" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="w-full space-y-4 md:space-y-6 py-2 md:py-3">
+          <ShopByCar />
+          <HomeCategories />
+          <DealsSlider />
+          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
+          <ProductSlider title="Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø®ÙˆØ¯Ø±Ùˆ" products={[]} isLoading={true} isError={false} />
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
+            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
+            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
+            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
+            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
+          </div>
+
+          <ProductSlider title="ØªÛŒÙˆÙ†ÛŒÙ†Ú¯ Ùˆ ØªÙ‚ÙˆÛŒØª Ø®ÙˆØ¯Ø±Ùˆ" products={[]} isLoading={true} isError={false} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full pt-2">
+            <Skeleton className="w-full aspect-[16/9] md:aspect-[16/5.5] rounded-2xl" />
+            <Skeleton className="w-full aspect-[16/9] md:aspect-[16/5.5] rounded-2xl" />
+          </div>
+
+          <div className="w-full space-y-4 py-4">
+            <div className="flex items-center gap-2 px-1">
+              <Skeleton className="w-5 h-5" variant="circle" />
+              <Skeleton className="w-32 h-5" />
+            </div>
+            <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
+              {[...Array(8)].map((_, index) => (
+                <Skeleton key={index} className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl" />
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
+            <Skeleton className="col-span-1 aspect-[1:1] md:aspect-[16/11] rounded-2xl" />
+            <Skeleton className="col-span-1 aspect-[1:1] md:aspect-[16/11] rounded-2xl" />
+            <Skeleton className="col-span-2 aspect-[16/7.5] md:aspect-[16/5.5] rounded-2xl" />
+          </div>
+
+          <ProductSlider title="Ø§Ú¯Ø²ÙˆØ²" products={[]} isLoading={true} isError={false} />
+
+          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
+
+          <div className="w-full space-y-4 py-4">
+            <div className="flex items-center gap-2 px-1">
+              <Skeleton className="w-5 h-5" variant="circle" />
+              <Skeleton className="w-32 h-5" />
+            </div>
+            <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
+              {[...Array(8)].map((_, index) => (
+                <Skeleton key={index} className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 rounded-xl" />
+              ))}
+            </div>
+          </div>
+
+          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
+
+          <ProductSlider title="Ø¨Ø®Ø§Ø±ÛŒ" products={[]} isLoading={true} isError={false} />
+          <ProductSlider title="Ø¯Ø³ØªÚ¯ÛŒØ±Ù‡ Ùˆ Ù‚ÙÙ„ Ø¯Ø±Ø¨" products={[]} isLoading={true} isError={false} />
+          <ProductSlider title="ØªØ¬Ù‡ÛŒØ²Ø§Øª Ø¨Ø¯Ù†Ù‡" products={[]} isLoading={true} isError={false} />
+
+          <div className="w-full bg-background border rounded-xl p-6 mt-6 space-y-3">
+            <Skeleton className="w-1/3 h-5 rounded" />
+            <Skeleton className="w-full h-4 rounded" />
+            <Skeleton className="w-full h-4 rounded" />
+            <Skeleton className="w-1/2 h-4 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full space-y-4 md:space-y-6 py-0">
+      
+      <div className="w-full">
+        <div className="grid grid-cols-1 md:grid-cols-10 gap-4 md:gap-6 items-stretch w-full h-[180px] sm:h-[240px] md:h-[300px] lg:h-[350px] xl:h-[400px] 2xl:h-[440px]">
+          
+          <div className={hasLeftBanner ? "md:col-span-7" : "md:col-span-10"}>
+            <BannerSlider group={sliderGroup} aspectRatio="h-full" />
+          </div>
+
+          {hasLeftBanner && (
+            <div className="hidden md:block md:col-span-3 h-full w-full">
+              {/* Ø§ÙˆÙ„ÙˆÛŒØª Ø¨Ø§Ù„Ø§ (priority={true}) Ø¨Ø±Ø§ÛŒ Ø¨Ù†Ø± Ù„ÙˆØ¯ Ø´ÙˆÙ†Ø¯Ù‡ Ø¯Ø± ØµÙØ­Ù‡ Ø§ØµÙ„ÛŒ */}
+              <Banner group={a1BannerGroup} aspectRatio="h-full" priority={true} />
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      <div className="w-full space-y-4 md:space-y-6 py-2 md:py-3">
+        
+        <ShopByCar />
+
+        <HomeCategories />
+
+        <DealsSlider />
+
+        {a2BannerGroup && (
+          <div className="w-full">
+            <Banner 
+              group={a2BannerGroup} 
+              aspectRatio="aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6]" 
+            />
+          </div>
+        )}
+
+        <ProductSlider
+          title="Ø§Ø¨Ø²Ø§Ø±Ø¢Ù„Ø§Øª Ø®ÙˆØ¯Ø±Ùˆ"
+          products={toolsProducts}
+          isLoading={isToolsLoading}
+          isError={isToolsError}
+          viewAllLink="/part-category/car-tools"
+          showTimer={false}
+        />
+
+        {(a3BannerGroup || a4BannerGroup || a5BannerGroup || a6BannerGroup) && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
+            {a3BannerGroup && (
+              <Banner group={a3BannerGroup} aspectRatio="aspect-[16/10]" className="w-full" />
+            )}
+            {a4BannerGroup && (
+              <Banner group={a4BannerGroup} aspectRatio="aspect-[16/10]" className="w-full" />
+            )}
+            {a5BannerGroup && (
+              <Banner group={a5BannerGroup} aspectRatio="aspect-[16/10]" className="w-full" />
+            )}
+            {a6BannerGroup && (
+              <Banner group={a6BannerGroup} aspectRatio="aspect-[16/10]" className="w-full" />
+            )}
+          </div>
+        )}
+
+        <ProductSlider
+          title="ØªÛŒÙˆÙ†ÛŒÙ†Ú¯ Ùˆ ØªÙ‚ÙˆÛŒØª Ø®ÙˆØ¯Ø±Ùˆ"
+          products={audioProducts}
+          isLoading={isAudioLoading}
+          isError={isAudioError}
+          viewAllLink="/part-category/audio-video-multimedia-system"
+          showTimer={false}
+        />
+
+        {(a7BannerGroup || a8BannerGroup) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full pt-2">
+            {a7BannerGroup && (
+              <Banner group={a7BannerGroup} aspectRatio="aspect-[16/9] md:aspect-[16/5.5]" className="w-full" />
+            )}
+            {a8BannerGroup && (
+              <Banner group={a8BannerGroup} aspectRatio="aspect-[16/9] md:aspect-[16/5.5]" className="w-full" />
+            )}
+          </div>
+        )}
+
+        <BrandSlider />
+
+        {(a9BannerGroup || a10BannerGroup || a11BannerGroup) && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
+            {a9BannerGroup && (
+              <div className="col-span-1">
+                <Banner group={a9BannerGroup} aspectRatio="aspect-[1:1] md:aspect-[16/11]" />
+              </div>
+            )}
+            {a10BannerGroup && (
+              <div className="col-span-1">
+                <Banner group={a10BannerGroup} aspectRatio="aspect-[1:1] md:aspect-[16/11]" />
+              </div>
+            )}
+            {a11BannerGroup && (
+              <div className="col-span-2">
+                <Banner group={a11BannerGroup} aspectRatio="aspect-[16/7.5] md:aspect-[16/5.5]" />
+              </div>
+            )}
+          </div>
+        )}
+
+        <ProductSlider
+          title="Ø§Ú¯Ø²ÙˆØ²"
+          products={exhaustProducts}
+          isLoading={isExhaustLoading}
+          isError={isExhaustError}
+          viewAllLink="/part-category/Exhaust"
+          showTimer={false}
+        />
+
+        {a12BannerGroup && (
+          <div className="w-full">
+            <Banner 
+              group={a12BannerGroup} 
+              aspectRatio="aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6]" 
+            />
+          </div>
+        )}
+
+        <ShopSlider />
+
+        {a13BannerGroup && (
+          <div className="w-full">
+            <Banner 
+              group={a13BannerGroup} 
+              aspectRatio="aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6]" 
+            />
+          </div>
+        )}
+
+        <ProductSlider
+          title="Ø¨Ø®Ø§Ø±ÛŒ"
+          products={heaterProducts}
+          isLoading={isHeaterLoading}
+          isError={isHeaterError}
+          viewAllLink="/part-category/heater"
+          showTimer={false}
+        />
+
+        <ProductSlider
+          title="Ø¯Ø³ØªÚ¯ÛŒØ±Ù‡ Ùˆ Ù‚ÙÙ„ Ø¯Ø±Ø¨"
+          products={doorProducts}
+          isLoading={isDoorLoading}
+          isError={isDoorError}
+          viewAllLink="/part-category/door-handles-locks-and-safety"
+          showTimer={false}
+        />
+
+        <ProductSlider
+          title="ØªØ¬Ù‡ÛŒØ²Ø§Øª Ø¨Ø¯Ù†Ù‡"
+          products={bodyProducts}
+          isLoading={isBodyLoading}
+          isError={isBodyError}
+          viewAllLink="/part-category/body-and-weatherstrips"
+          showTimer={false}
+        />
+
+        <PageDescription htmlContent={homePageData?.description} />
+      </div>
+
+    </div>
+  );
+}
+
+
+==================== END OF src/components/features/Home/HomeContent.tsx ====================
+
+
+
+
+❌ FILE NOT FOUND: src/components/shared/Layouts/MainLayout.tsx
+
+
+
+
+==================== FILE: next.config.js ====================
+
+
+/** @type {import('next').NextConfig} */
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public', // Ù…Ø³ÛŒØ± ÙØ§ÛŒÙ„â€ŒÙ‡Ø§ÛŒ ØªÙˆÙ„ÛŒØ¯ Ø´Ø¯Ù‡ Ø³Ø±ÙˆÛŒØ³â€ŒÙˆØ±Ú©Ø±
+  register: true, // Ø«Ø¨Øª Ø®ÙˆØ¯Ú©Ø§Ø± Ø³Ø±ÙˆÛŒØ³â€ŒÙˆØ±Ú©Ø±
+  skipWaiting: true, // ÙØ¹Ø§Ù„â€ŒØ³Ø§Ø²ÛŒ Ø¢Ù†ÛŒ Ø¢Ù¾Ø¯ÛŒØªâ€ŒÙ‡Ø§ÛŒ Ø¬Ø¯ÛŒØ¯ Ø§Ù¾Ù„ÛŒÚ©ÛŒØ´Ù†
+  disable: process.env.NODE_ENV === 'development', // ØºÛŒØ±ÙØ¹Ø§Ù„ Ø¨ÙˆØ¯Ù† Ø¯Ø± Ù„ÙˆÚ©Ø§Ù„ Ø¯ÙˆÙ„ÙˆÙ¾Ù…Ù†Øª Ø¬Ù‡Øª Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² Ø§Ø®ØªÙ„Ø§Ù„ Ø¯Ø± Ú©Ø´ Ú©Ø¯Ù‡Ø§
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+const nextConfig = {
+  reactStrictMode: true,
+
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'api.yadakchi.com' },
+      { protocol: 'https', hostname: 'cdn.yadakchi.com' },
+      { protocol: 'http', hostname: '51.158.252.139' },
+    ],
+    formats: ['image/avif', 'image/webp'],
+  },
+
+  env: {
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
+    NEXT_PUBLIC_ENABLE_LOGGING: process.env.NEXT_PUBLIC_ENABLE_LOGGING,
+    NEXT_PUBLIC_ENABLE_DEV_TOOLS: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+    NEXT_PUBLIC_DEFAULT_PAGE_SIZE: process.env.NEXT_PUBLIC_DEFAULT_PAGE_SIZE,
+    NEXT_PUBLIC_MAX_PAGE_SIZE: process.env.NEXT_PUBLIC_MAX_PAGE_SIZE,
+  },
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Proxy Ø¨Ø±Ø§ÛŒ Ø¬Ù„ÙˆÚ¯ÛŒØ±ÛŒ Ø§Ø² CORS
+  async rewrites() {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com';
+    
+    return [
+      {
+        source: '/proxy-api/:path*',
+        destination: `${apiBaseUrl}/:path*`,
+        basePath: false, 
+      },
+    ];
+  },
+
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/home',
+        permanent: true,
+      },
+    ];
+  },
+
+  output: 'standalone',
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+};
+
+module.exports = withPWA(nextConfig);
+
+
+==================== END OF next.config.js ====================
+
+
+
+
+==================== FILE: package.json ====================
+
+
+{
+  "name": "yadakchi-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@fontsource/vazirmatn": "^5.2.8",
+    "@hookform/resolvers": "^5.4.0",
+    "@next/font": "^14.2.15",
+    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query-devtools": "^5.0.0",
+    "axios": "^1.6.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.0.0",
+    "lucide-react": "^1.24.0",
+    "motion": "^12.42.2",
+    "next": "14.0.4",
+    "next-themes": "^0.4.6",
+    "nextjs-toploader": "^3.9.17",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.81.0",
+    "react-hot-toast": "^2.6.0",
+    "tailwind-merge": "^2.6.1",
+    "zod": "^3.22.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "autoprefixer": "^10.5.2",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "14.0.4",
+    "jest": "^29.7.0",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^3.4.19",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.3.0"
+  }
+}
+
+
+
+==================== END OF package.json ====================
+
+
+
+
+❌ FILE NOT FOUND: src/app/api/front/GetHomePage/route.ts
+
+
+
+============================================================
+          SUMMARY
+============================================================
+Total files requested: 14
+Files found: 11
+Files not found: 3
+Output file: needed-files-final.txt
+============================================================
