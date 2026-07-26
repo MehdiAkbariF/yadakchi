@@ -52,7 +52,7 @@ export function ChangeCategoryModal({ isOpen, onClose }: ChangeCategoryModalProp
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search className="h-4 w-4 text-zinc-400" />}
-            className="w-full font-iran-sans"
+            className="w-full font-iran-yekan"
           />
         </div>
 
@@ -76,14 +76,14 @@ export function ChangeCategoryModal({ isOpen, onClose }: ChangeCategoryModalProp
                       <Settings className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
-                  <span className="text-xs font-bold font-iran-sans text-foreground truncate w-full">{cat.name}</span>
+                  <span className="text-xs font-bold font-iran-yekan text-foreground truncate w-full">{cat.name}</span>
                 </Card>
               ))}
             </div>
           </div>
         ) : (
           <div className="w-full py-12 text-center border border-dashed rounded-xl bg-card">
-            <span className="text-xs font-bold font-iran-sans text-muted-foreground">دسته‌بندی یافت نشد.</span>
+            <span className="text-xs font-bold font-iran-yekan text-muted-foreground">دسته‌بندی یافت نشد.</span>
           </div>
         )}
       </ModalBody>

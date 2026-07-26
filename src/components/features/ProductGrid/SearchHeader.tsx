@@ -74,7 +74,7 @@ export function SearchHeader({
       >
         <button
           onClick={onOpenMobileFilters}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 h-9 shadow-sm select-none outline-none"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-yekan text-foreground flex-1 h-9 shadow-sm select-none outline-none"
         >
           <SlidersHorizontal className="h-4 w-4 text-primary shrink-0" />
           <span className="truncate whitespace-nowrap">فیلترها</span>
@@ -87,7 +87,7 @@ export function SearchHeader({
           variant="trigger"
         />
 
-        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center select-none">
+        <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center select-none">
           {formatNumber(totalCount)} کالا
         </span>
       </div>
@@ -100,7 +100,7 @@ export function SearchHeader({
         <Typography variant="h3" className="font-iran-yekan font-extrabold text-foreground">
           {searchTitle ? `نتایج جستجو برای «${searchTitle}»` : 'لیست قطعات یدکی'}
         </Typography>
-        <span className="hidden md:inline-block text-xs font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
+        <span className="hidden md:inline-block text-xs font-bold font-iran-yekan text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
           {formatNumber(totalCount)} کالا
         </span>
       </div>

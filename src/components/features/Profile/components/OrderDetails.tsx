@@ -42,7 +42,7 @@ function PayableTimer({ payableUntil }: PayableTimerProps) {
   }, [payableUntil]);
 
   return (
-    <div className="flex items-center gap-1.5 text-destructive font-black font-iran-sans text-sm" dir="ltr">
+    <div className="flex items-center gap-1.5 text-destructive font-black font-iran-yekan text-sm" dir="ltr">
       <span>{timeLeft}</span>
       {timeLeft !== 'پایان یافته' && (
         <Hourglass className="h-4.5 w-4.5 animate-spin shrink-0" style={{ animationDuration: '4s' }} />
@@ -58,17 +58,37 @@ interface OrderDetailsProps {
 export function OrderDetails({ orderId }: OrderDetailsProps) {
   const router = useRouter();
   const { data: order, isLoading } = useGetOrderDetails(orderId);
-  const retryPayment = useRetryOrderPayment(); // فعال‌سازی هوک پرداخت مجدد
+  const retryPayment = useRetryOrderPayment();
 
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [selectedSubOrder, setSelectedSubOrder] = useState<any | null>(null);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-  // متد فعال‌سازی فرآیند پرداخت مجدد و ریدایرکت خودکار به درگاه بانکی
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    if (!order?.payableUntil) return;
+
+    const checkExpiration = () => {
+      const now = new Date();
+      const deadline = new Date(order.payableUntil);
+      const expired = deadline.getTime() - now.getTime() <= 0;
+      setIsExpired(expired);
+    };
+
+    checkExpiration();
+    const interval = setInterval(checkExpiration, 1000);
+    return () => clearInterval(interval);
+  }, [order?.payableUntil]);
+
   const handleRetryPayment = async () => {
+    if (isExpired) {
+      showToast.error('مهلت پرداخت این فاکتور به پایان رسیده است و امکان پرداخت وجود ندارد');
+      return;
+    }
+
     try {
       const response = await retryPayment.mutateAsync(orderId);
-      // مدیریت هوشمند کلیدهای متفاوت برگشت داده شده از وب API (مانند link یا paymentUrl)
       const gatewayUrl = response?.link || response?.paymentUrl || response?.data?.link || response?.data?.paymentUrl;
 
       if (gatewayUrl) {
@@ -123,13 +143,13 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
         <div className="flex flex-col gap-1.5 text-right">
           <h3 className="text-sm md:text-base font-black text-foreground font-iran-yekan">کد سفارش: {order.orderNumber}</h3>
-          <span className="text-[10px] md:text-xs text-muted-foreground font-iran-sans">
+          <span className="text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
             تاریخ ثبت سفارش: {new Date(order.createDate).toLocaleDateString('fa-IR')}
           </span>
         </div>
 
         <span className={cn(
-          "px-4 py-1.5 rounded-full text-xs font-black font-iran-sans self-start sm:self-auto",
+          "px-4 py-1.5 rounded-full text-xs font-black font-iran-yekan self-start sm:self-auto",
           order.status === 'WaitingForPayment' && "bg-destructive/10 text-destructive",
           order.status === 'Cancelled' && "bg-muted text-muted-foreground"
         )}>
@@ -138,25 +158,34 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
       </div>
 
       {order.status === 'WaitingForPayment' && (
-        <div className="w-full bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
-          <div className="flex items-center gap-2.5 text-destructive">
-            <Clock className="h-5 w-5 animate-pulse shrink-0" />
+        <div className={cn(
+          "w-full border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none transition-all duration-300",
+          /* سازگار سازی کامل با متغیرهای معنایی سیستم دیزاین برای پشتیبانی بی نقص از دارک مود */
+          isExpired 
+            ? "bg-muted/40 border-border text-muted-foreground" 
+            : "bg-destructive/10 border-destructive/20 text-destructive dark:bg-destructive/20 dark:border-destructive/30"
+        )}>
+          <div className="flex items-center gap-2.5">
+            <Clock className={cn("h-5 w-5 shrink-0", !isExpired && "animate-pulse")} />
             <div className="flex flex-col text-right">
-              <span className="text-xs md:text-sm font-bold font-iran-sans">مهلت پرداخت این سفارش رو به پایان است:</span>
-              <PayableTimer payableUntil={order.payableUntil} />
+              <span className="text-xs md:text-sm font-bold font-iran-yekan">
+                {isExpired ? "مهلت پرداخت این سفارش به پایان رسیده است" : "مهلت پرداخت این سفارش رو به پایان است:"}
+              </span>
+              {!isExpired && <PayableTimer payableUntil={order.payableUntil} />}
             </div>
           </div>
           
-          {/* دکمه پرداخت سریع شماره ۱ در بنر هشدار بالای صفحه */}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleRetryPayment}
-            isLoading={retryPayment.isPending}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-6 shrink-0 shadow-sm"
-          >
-            <span>ادامه پرداخت سفارش</span>
-          </Button>
+          {!isExpired && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleRetryPayment}
+              isLoading={retryPayment.isPending}
+              className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-6 shrink-0 shadow-sm"
+            >
+              <span>ادامه پرداخت سفارش</span>
+            </Button>
+          )}
         </div>
       )}
 
@@ -166,8 +195,8 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
           <div className="flex items-start gap-3 border rounded-xl p-4 bg-background">
             <Clock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <span className="text-xs font-bold text-foreground font-iran-sans block">تاریخچه تراکنش</span>
-              <div className="flex items-center justify-between w-full mt-2 text-xs text-muted-foreground font-iran-sans">
+              <span className="text-xs font-bold text-foreground font-iran-yekan block">تاریخچه تراکنش</span>
+              <div className="flex items-center justify-between w-full mt-2 text-xs text-muted-foreground font-iran-yekan">
                 <span>{statusLabels[order.status] || order.status}</span>
                 <span>{new Date(order.createDate).toLocaleDateString('fa-IR')}</span>
               </div>
@@ -188,8 +217,8 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                       <img src={getFullUrl(sub.shop.logo)} className="w-full h-full object-contain" alt="" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs md:text-sm font-bold text-foreground block font-iran-sans">{sub.shop.shopTitle}</span>
-                      <span className="text-[10px] text-muted-foreground block mt-0.5 font-iran-sans">ارسال از {sub.shipmentMethod === 'Local' ? 'حضوری' : 'تیپاکس'}</span>
+                      <span className="text-xs md:text-sm font-bold text-foreground block font-iran-yekan">{sub.shop.shopTitle}</span>
+                      <span className="text-[10px] text-muted-foreground block mt-0.5 font-iran-yekan">ارسال از {sub.shipmentMethod === 'Local' ? 'حضوری' : 'تیپاکس'}</span>
                     </div>
                   </div>
 
@@ -201,10 +230,10 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                             <img src={getFullUrl(item.shopProduct.product.image)} className="w-full h-full object-contain" alt="" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="text-xs md:text-sm font-bold text-foreground block truncate font-iran-sans">
+                            <span className="text-xs md:text-sm font-bold text-foreground block truncate font-iran-yekan">
                               {item.shopProduct.product.title}
                             </span>
-                            <div className="flex flex-wrap gap-2.5 items-center mt-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
+                            <div className="flex flex-wrap gap-2.5 items-center mt-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
                               <span>تعداد: {formatPrice(item.quantity)} عدد</span>
                               <span>|</span>
                               <span>{item.shopProduct.type === 'New' ? 'قطعه نو' : 'قطعه استوک'}</span>
@@ -232,7 +261,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
                     ))}
                   </div>
 
-                  <div className="border-t border-dashed pt-3 mt-1.5 flex flex-wrap gap-x-6 gap-y-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
+                  <div className="border-t border-dashed pt-3 mt-1.5 flex flex-wrap gap-x-6 gap-y-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
                     <span>هزینه ارسال: {sub.shipmentPrice === 0 ? 'رایگان' : `${formatPrice(sub.shipmentPrice / 10)} تومان`}</span>
                     <span>روش ارسال: {sub.shipmentMethod === 'Local' ? 'تحویل حضوری' : 'تیپاکس'}</span>
                   </div>
@@ -250,38 +279,37 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
           </div>
 
           <div className="space-y-4 border-b pb-4 mb-4 text-right">
-            <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-sans text-muted-foreground">
+            <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-yekan text-muted-foreground">
               <span>قیمت کل کالاها</span>
               <span>{formatPrice(order.totalOriginalPrice / 10)} تومان</span>
             </div>
 
             {order.totalDiscountValue > 0 && (
-              <div className="flex items-center justify-between text-xs md:text-sm font-bold font-iran-sans text-destructive">
+              <div className="flex items-center justify-between text-xs md:text-sm font-bold font-iran-yekan text-destructive">
                 <span>تخفیف کل</span>
                 <span>{formatPrice(order.totalDiscountValue / 10)} تومان-</span>
               </div>
             )}
 
-            <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-sans text-muted-foreground">
+            <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-yekan text-muted-foreground">
               <span>هزینه ارسال کل</span>
               <span>{order.totalShipmentPrice === 0 ? 'رایگان' : `${formatPrice(order.totalShipmentPrice / 10)} تومان`}</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between text-right mb-4">
-            <span className="text-xs md:text-sm font-bold font-iran-sans text-muted-foreground">مبلغ نهایی پرداخت شده</span>
+            <span className="text-xs md:text-sm font-bold font-iran-yekan text-muted-foreground">مبلغ نهایی پرداخت شده</span>
             <span className="text-base md:text-lg font-black text-foreground">{formatPrice(order.totalFinalPrice / 10)} تومان</span>
           </div>
 
-          {/* دکمه پرداخت آنلاین شماره ۲ در انتهای بخش صورتحساب فاکتور */}
-          {order.status === 'WaitingForPayment' && (
+          {order.status === 'WaitingForPayment' && !isExpired && (
             <Button
               variant="primary"
               size="lg"
               fullWidth
               onClick={handleRetryPayment}
               isLoading={retryPayment.isPending}
-              className="rounded-xl font-iran-sans font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 flex items-center justify-center gap-1.5"
+              className="rounded-xl font-iran-yekan font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 flex items-center justify-center gap-1.5"
             >
               <CreditCard className="h-4.5 w-4.5 shrink-0" />
               <span>پرداخت آنلاین و نهایی‌سازی سفارش</span>

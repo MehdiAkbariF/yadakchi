@@ -33,7 +33,7 @@ export function PageLoading({
         <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" />
       </div>
       {message && (
-        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground animate-pulse mt-0.5">
+        <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground animate-pulse mt-0.5">
           {message}
         </span>
       )}

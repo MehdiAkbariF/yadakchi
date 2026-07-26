@@ -35,19 +35,19 @@ export function DiscountCard() {
         </div>
       </CardHeader>
       <CardBody className="p-5 flex flex-col gap-3">
-        <span className="text-xs text-muted-foreground font-iran-sans block">اگر کد تخفیف دارین لطفا وارد کنین</span>
+        <span className="text-xs text-muted-foreground font-iran-yekan block">اگر کد تخفیف دارین لطفا وارد کنین</span>
         <div className="flex gap-2 w-full mt-1">
           <Input
             placeholder="کد تخفیف را وارد کنید"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="flex-1 font-iran-sans text-xs h-10 w-full"
+            className="flex-1 font-iran-yekan text-xs h-10 w-full"
           />
           <Button
             variant="outline"
             onClick={handleApply}
             isLoading={applyDiscount.isPending}
-            className="px-5 text-xs font-bold font-iran-sans h-10 rounded-xl"
+            className="px-5 text-xs font-bold font-iran-yekan h-10 rounded-xl"
           >
             ثبت کد
           </Button>

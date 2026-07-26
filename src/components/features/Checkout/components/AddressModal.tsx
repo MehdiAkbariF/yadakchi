@@ -181,7 +181,7 @@ export function AddressModal({
                 <Input
                   placeholder="عنوان آدرس * (مثال: خانه، محل کار)"
                   error={errors.title?.message}
-                  className="text-xs font-iran-sans w-full"
+                  className="text-xs font-iran-yekan w-full"
                   {...register('title')}
                 />
               </div>
@@ -189,7 +189,7 @@ export function AddressModal({
                 <Input
                   placeholder="کد پستی * (۹ یا ۱۰ رقمی)"
                   error={errors.postalCode?.message}
-                  className="text-xs font-iran-sans text-left w-full"
+                  className="text-xs font-iran-yekan text-left w-full"
                   dir="ltr"
                   {...register('postalCode')}
                 />
@@ -198,7 +198,7 @@ export function AddressModal({
                 <Input
                   placeholder="شماره پلاک *"
                   error={errors.plaque?.message}
-                  className="text-xs font-iran-sans w-full"
+                  className="text-xs font-iran-yekan w-full"
                   {...register('plaque')}
                 />
               </div>
@@ -206,7 +206,7 @@ export function AddressModal({
                 <Input
                   placeholder="شماره واحد *"
                   error={errors.unit?.message}
-                  className="text-xs font-iran-sans w-full"
+                  className="text-xs font-iran-yekan w-full"
                   {...register('unit')}
                 />
               </div>
@@ -214,7 +214,7 @@ export function AddressModal({
                 <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground mr-1">موقعیت جغرافیایی قفل‌شده روی نقشه</span>
                 <Input
                   value={mapAddressData?.cityName || ''}
-                  className="text-xs font-iran-sans bg-muted/30 border-zinc-200 w-full"
+                  className="text-xs font-iran-yekan bg-muted/30 border-zinc-200 w-full"
                   disabled
                   readOnly
                 />
@@ -223,7 +223,7 @@ export function AddressModal({
                 <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground mr-1">نشانی پستی قفل‌شده روی نقشه</span>
                 <Input
                   value={mapAddressData?.address || ''}
-                  className="text-xs font-iran-sans bg-muted/30 border-zinc-200 w-full"
+                  className="text-xs font-iran-yekan bg-muted/30 border-zinc-200 w-full"
                   disabled
                   readOnly
                 />
@@ -236,7 +236,7 @@ export function AddressModal({
                 size="sm"
                 fullWidth
                 onClick={onOpenMapModal}
-                className="rounded-xl text-xs font-bold font-iran-sans h-10 border-primary/20 text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
+                className="rounded-xl text-xs font-bold font-iran-yekan h-10 border-primary/20 text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
               >
                 <Plus className="h-4 w-4" />
                 <span>ثبت آدرس جدید روی نقشه</span>
@@ -256,7 +256,7 @@ export function AddressModal({
                     >
                       <div className="flex-1 min-w-0">
                         <span className="text-xs font-bold font-iran-yekan text-foreground block mb-1">{loc.title}</span>
-                        <p className="text-xs text-muted-foreground leading-relaxed font-iran-sans">{loc.province}، {loc.city}، {loc.address} (پلاک {loc.plaque}، واحد {loc.unit})</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed font-iran-yekan">{loc.province}، {loc.city}، {loc.address} (پلاک {loc.plaque}، واحد {loc.unit})</p>
                       </div>
                       <div className="shrink-0 mt-0.5 text-primary">
                         {isCurrent ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5 text-muted-foreground/40" />}
@@ -276,7 +276,7 @@ export function AddressModal({
               variant="outline"
               size="sm"
               onClick={() => setIsNewAddressOpen(false)}
-              className="flex-1 rounded-xl text-xs font-bold font-iran-sans h-10"
+              className="flex-1 rounded-xl text-xs font-bold font-iran-yekan h-10"
             >
               مرحله قبل (نقشه)
             </Button>
@@ -286,7 +286,7 @@ export function AddressModal({
               variant="primary"
               size="sm"
               isLoading={createLocation.isPending}
-              className="flex-1 rounded-xl text-xs font-bold font-iran-sans h-10"
+              className="flex-1 rounded-xl text-xs font-bold font-iran-yekan h-10"
             >
               ثبت آدرس نهایی
             </Button>

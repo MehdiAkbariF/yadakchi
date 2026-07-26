@@ -18,19 +18,19 @@ export function PaymentMethodCard() {
             <CheckCircle2 className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-sm md:text-base font-bold text-foreground block font-iran-sans">درگاه بانکی (پرداخت اینترنتی)</span>
-            <span className="text-xs text-muted-foreground block mt-1 font-iran-sans">پرداخت از تمامی بانک های عضو شتاب</span>
+            <span className="text-sm md:text-base font-bold text-foreground block font-iran-yekan">درگاه بانکی (پرداخت اینترنتی)</span>
+            <span className="text-xs text-muted-foreground block mt-1 font-iran-yekan">پرداخت از تمامی بانک های عضو شتاب</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 pt-3 justify-start">
-          <span className="text-xs font-bold text-muted-foreground font-iran-sans">بانک‌های منتخب:</span>
+          <span className="text-xs font-bold text-muted-foreground font-iran-yekan">بانک‌های منتخب:</span>
           <div className="flex flex-wrap gap-2">
-            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-sans text-zinc-500 bg-muted/30">سامان</div>
-            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-sans text-zinc-500 bg-muted/30">پارسیان</div>
-            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-sans text-zinc-500 bg-muted/30">ملت</div>
-            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-sans text-zinc-500 bg-muted/30">پاسارگاد</div>
-            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-sans text-zinc-500 bg-muted/30">سایر بانک‌ها</div>
+            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-yekan text-zinc-500 bg-muted/30">سامان</div>
+            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-yekan text-zinc-500 bg-muted/30">پارسیان</div>
+            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-yekan text-zinc-500 bg-muted/30">ملت</div>
+            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-yekan text-zinc-500 bg-muted/30">پاسارگاد</div>
+            <div className="border rounded-lg px-2.5 py-1 text-xs font-bold font-iran-yekan text-zinc-500 bg-muted/30">سایر بانک‌ها</div>
           </div>
         </div>
       </CardBody>

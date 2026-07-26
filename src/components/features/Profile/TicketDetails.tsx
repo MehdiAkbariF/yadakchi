@@ -103,11 +103,11 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
           </button>
           <div className="flex flex-col text-right">
             <span className="text-xs font-bold text-foreground block truncate max-w-[200px] sm:max-w-md">{ticket.title}</span>
-            <span className="text-[9px] text-muted-foreground font-iran-sans block mt-0.5">شماره تیکت: {ticket.ticketNumberFormatted}</span>
+            <span className="text-[9px] text-muted-foreground font-iran-yekan block mt-0.5">شماره تیکت: {ticket.ticketNumberFormatted}</span>
           </div>
         </div>
         <span className={cn(
-          "px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold font-iran-sans shrink-0",
+          "px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold font-iran-yekan shrink-0",
           ticket.status === 'WaitingForAnswer' && "bg-warning-50 text-warning-600 dark:bg-warning-950/20 dark:text-warning-400",
           ticket.status === 'Answered' && "bg-success-50 text-success-600 dark:bg-success-950/20 dark:text-success-400",
           ticket.status === 'Closed' && "bg-muted text-muted-foreground"
@@ -124,7 +124,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
               <div 
                 key={msg.id}
                 className={cn(
-                  "flex items-start gap-3 w-full max-w-[85%] md:max-w-[70%] text-right font-iran-sans",
+                  "flex items-start gap-3 w-full max-w-[85%] md:max-w-[70%] text-right font-iran-yekan",
                   isMyMsg ? "self-start flex-row" : "self-end flex-row-reverse"
                 )}
               >
@@ -168,7 +168,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
             );
           })
         ) : (
-          <span className="text-xs text-muted-foreground font-iran-sans py-4">پیامی ثبت نشده است.</span>
+          <span className="text-xs text-muted-foreground font-iran-yekan py-4">پیامی ثبت نشده است.</span>
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -180,7 +180,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
               {attachments.map((file, idx) => (
                 <div 
                   key={idx}
-                  className="h-8 px-2.5 rounded-lg border bg-muted/20 text-[9px] font-bold font-iran-sans text-foreground flex items-center gap-1.5 shrink-0 max-w-[120px]"
+                  className="h-8 px-2.5 rounded-lg border bg-muted/20 text-[9px] font-bold font-iran-yekan text-foreground flex items-center gap-1.5 shrink-0 max-w-[120px]"
                 >
                   <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate flex-1 text-right">{file.name}</span>

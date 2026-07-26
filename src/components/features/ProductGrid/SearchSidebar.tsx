@@ -140,7 +140,7 @@ export function SearchSidebar({
     <div className={cn("w-full flex flex-col gap-5 text-right", isMobile && "pb-24")}>
       <div className="flex flex-col gap-4 border-b pb-4">
         <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-sans text-foreground">فقط کالاهای موجود</span>
+          <span className="text-xs font-bold font-iran-yekan text-foreground">فقط کالاهای موجود</span>
           <Switch
             checked={!!filters.isProductInStock}
             onChange={(checked) => onFilterChange('inStock', checked ? true : undefined)}
@@ -148,7 +148,7 @@ export function SearchSidebar({
         </div>
 
         <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-sans text-foreground">فقط فروشنده‌های شهر من</span>
+          <span className="text-xs font-bold font-iran-yekan text-foreground">فقط فروشنده‌های شهر من</span>
           <Switch
             checked={!!filters.isSellerInUserCity}
             onChange={(checked) => onFilterChange('userCity', checked ? true : undefined)}
@@ -156,7 +156,7 @@ export function SearchSidebar({
         </div>
 
         <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-sans text-foreground">دارای تخفیف ویژه</span>
+          <span className="text-xs font-bold font-iran-yekan text-foreground">دارای تخفیف ویژه</span>
           <Switch
             checked={!!filters.hasDiscount}
             onChange={(checked) => onFilterChange('discount', checked ? true : undefined)}
@@ -256,7 +256,7 @@ export function SearchSidebar({
           {hasActiveFilters && (
             <button
               onClick={onClearAll}
-              className="text-xs font-bold font-iran-sans text-destructive hover:underline"
+              className="text-xs font-bold font-iran-yekan text-destructive hover:underline"
             >
               حذف فیلترها
             </button>
@@ -307,7 +307,7 @@ export function SearchSidebar({
                 onClearAll();
                 onClose();
               }}
-              className="flex-1 rounded-xl text-xs font-bold font-iran-sans text-destructive border-destructive/20 hover:bg-destructive/5 h-10"
+              className="flex-1 rounded-xl text-xs font-bold font-iran-yekan text-destructive border-destructive/20 hover:bg-destructive/5 h-10"
             >
               حذف فیلترها
             </Button>
@@ -316,7 +316,7 @@ export function SearchSidebar({
             variant="primary"
             size="sm"
             onClick={onClose}
-            className="flex-1 rounded-xl text-xs font-bold font-iran-sans h-10"
+            className="flex-1 rounded-xl text-xs font-bold font-iran-yekan h-10"
           >
             مشاهده نتایج
           </Button>

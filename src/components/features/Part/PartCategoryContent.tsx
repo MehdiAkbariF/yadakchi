@@ -58,7 +58,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
       >
         <button
           onClick={() => setIsMobileFiltersOpen(true)}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 h-9 shadow-sm outline-none"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-yekan text-foreground flex-1 h-9 shadow-sm outline-none"
         >
           <span className="truncate">فیلترها</span>
         </button>
@@ -69,7 +69,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           variant="trigger"
         />
 
-        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center">
+        <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center">
           {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
         </span>
       </div>
@@ -127,7 +127,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             <div className="flex flex-col items-center justify-center py-16 text-center select-none bg-background rounded-xl border border-dashed mx-4 md:mx-0">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] mb-4 animate-bounce" />
               <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">کالایی یافت نشد</Typography>
-              <p className="text-xs text-muted-foreground mt-2 font-iran-sans">لطفاً فیلترهای خود را تغییر داده یا مجدداً امتحان کنید.</p>
+              <p className="text-xs text-muted-foreground mt-2 font-iran-yekan">لطفاً فیلترهای خود را تغییر داده یا مجدداً امتحان کنید.</p>
             </div>
           )}
         </div>

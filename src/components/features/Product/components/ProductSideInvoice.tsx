@@ -61,7 +61,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
   return (
     <Card className="w-full flex flex-col overflow-hidden border bg-background rounded-2xl shadow-sm">
       {seller && seller.hasDiscount && discountPercentage > 0 && (
-        <div className="w-full bg-destructive text-white py-2 px-4 text-center text-xs font-black font-iran-sans animate-pulse shrink-0">
+        <div className="w-full bg-destructive text-white py-2 px-4 text-center text-xs font-black font-iran-yekan animate-pulse shrink-0">
           با تخفیف ویژه {formatPrice(discountPercentage)} درصد
         </div>
       )}
@@ -80,10 +80,10 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs md:text-sm font-bold text-foreground block truncate font-iran-sans">
+                  <span className="text-xs md:text-sm font-bold text-foreground block truncate font-iran-yekan">
                     {seller.shop.title}
                   </span>
-                  <span className="text-[10px] text-muted-foreground block mt-0.5 font-iran-sans">
+                  <span className="text-[10px] text-muted-foreground block mt-0.5 font-iran-yekan">
                     عملکرد عالی فروشنده
                   </span>
                 </div>
@@ -91,14 +91,14 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
 
               <button
                 type="button"
-                className="text-[10px] font-bold font-iran-sans text-primary border-b border-primary pb-0.5 hover:text-primary/80 transition-colors outline-none"
+                className="text-[10px] font-bold font-iran-yekan text-primary border-b border-primary pb-0.5 hover:text-primary/80 transition-colors outline-none"
               >
                 همه فروشندگان ({formatPrice(sellersCount)})
               </button>
             </div>
 
             {/* گارانتی و نحوه ارسال */}
-            <div className="flex flex-col gap-3 w-full border-b pb-3.5 text-xs text-muted-foreground font-iran-sans">
+            <div className="flex flex-col gap-3 w-full border-b pb-3.5 text-xs text-muted-foreground font-iran-yekan">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4.5 w-4.5 text-success-500 shrink-0" />
                 <span className="font-bold text-foreground">ضمانت اصل بودن کالا</span>
@@ -123,8 +123,8 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
             <div className="p-2.5 bg-destructive/10 text-destructive rounded-full">
               <AlertTriangle className="h-5 w-5" />
             </div>
-            <span className="text-sm font-black text-destructive font-iran-sans">کالا در حال حاضر ناموجود است</span>
-            <span className="text-[10px] text-muted-foreground font-iran-sans leading-relaxed">
+            <span className="text-sm font-black text-destructive font-iran-yekan">کالا در حال حاضر ناموجود است</span>
+            <span className="text-[10px] text-muted-foreground font-iran-yekan leading-relaxed">
               این قطعه فعلاً توسط هیچ فروشگاهی عرضه نشده است. با فعال شدن فروشندگان امکان خرید فراهم خواهد شد.
             </span>
           </div>
@@ -134,19 +134,19 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
         <div className="grid grid-cols-3 gap-2 py-3 border-b border-dashed w-full text-center shrink-0">
           <div className="flex flex-col items-center justify-center gap-1">
             <Info className="h-4.5 w-4.5 text-primary shrink-0" />
-            <span className="text-[10px] font-bold text-foreground font-iran-sans leading-none mt-1">
+            <span className="text-[10px] font-bold text-foreground font-iran-yekan leading-none mt-1">
               {product.salesCount || '۰'} خرید
             </span>
           </div>
           <div className="flex flex-col items-center justify-center gap-1 border-x dark:border-zinc-800">
             <Eye className="h-4.5 w-4.5 text-primary shrink-0" />
-            <span className="text-[10px] font-bold text-foreground font-iran-sans leading-none mt-1">
+            <span className="text-[10px] font-bold text-foreground font-iran-yekan leading-none mt-1">
               {product.views || '۰'} بازدید
             </span>
           </div>
           <div className="flex flex-col items-center justify-center gap-1">
             <Star className="h-4.5 w-4.5 fill-yellow-400 text-yellow-400 shrink-0" />
-            <span className="text-[10px] font-bold text-foreground font-iran-sans leading-none mt-1">
+            <span className="text-[10px] font-bold text-foreground font-iran-yekan leading-none mt-1">
               امتیاز {product.averageRate || '۵'}
             </span>
           </div>
@@ -156,13 +156,13 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
         {seller ? (
           <div className="w-full flex items-center justify-between pt-1">
             <div className="flex flex-col text-right">
-              <span className="text-[10px] text-muted-foreground font-iran-sans mb-0.5">قیمت فروشنده:</span>
+              <span className="text-[10px] text-muted-foreground font-iran-yekan mb-0.5">قیمت فروشنده:</span>
               {seller.hasDiscount && (
-                <span className="text-[10px] text-zinc-400 line-through leading-none mb-1 font-iran-sans">
+                <span className="text-[10px] text-zinc-400 line-through leading-none mb-1 font-iran-yekan">
                   {seller.retailPrice}
                 </span>
               )}
-              <span className="text-base md:text-lg font-black text-foreground font-iran-sans leading-none">
+              <span className="text-base md:text-lg font-black text-foreground font-iran-yekan leading-none">
                 {seller.finalPrice}
               </span>
             </div>
@@ -176,8 +176,8 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
           </div>
         ) : (
           <div className="w-full flex items-center justify-between pt-1 text-right">
-            <span className="text-xs font-bold text-muted-foreground font-iran-sans">وضعیت تامین قطعه:</span>
-            <span className="text-xs font-black text-destructive font-iran-sans">غیرفعال</span>
+            <span className="text-xs font-bold text-muted-foreground font-iran-yekan">وضعیت تامین قطعه:</span>
+            <span className="text-xs font-black text-destructive font-iran-yekan">غیرفعال</span>
           </div>
         )}
 
@@ -190,7 +190,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
           isLoading={isSubmitting || addToBasket.isPending}
           disabled={!seller}
           className={cn(
-            'rounded-xl font-iran-sans font-bold text-xs h-11 flex items-center justify-center gap-1.5 mt-1 transition-all',
+            'rounded-xl font-iran-yekan font-bold text-xs h-11 flex items-center justify-center gap-1.5 mt-1 transition-all',
             !seller && 'opacity-65 cursor-not-allowed bg-zinc-100 dark:bg-zinc-850 text-zinc-400 dark:text-zinc-650 border-zinc-200'
           )}
         >
@@ -217,14 +217,14 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
           {isChartLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-xs text-muted-foreground font-iran-sans">در حال لود نمودار قیمت...</span>
+              <span className="text-xs text-muted-foreground font-iran-yekan">در حال لود نمودار قیمت...</span>
             </div>
           ) : chartData && chartData.prices.length > 0 ? (
-            <div className="w-full py-4 font-iran-sans text-xs text-muted-foreground">
+            <div className="w-full py-4 font-iran-yekan text-xs text-muted-foreground">
               نمودار تغییرات قیمت به زودی در قالب چارت گرافیکی فعال خواهد شد.
             </div>
           ) : (
-            <div className="w-full py-12 font-iran-sans text-xs text-muted-foreground text-center">
+            <div className="w-full py-12 font-iran-yekan text-xs text-muted-foreground text-center">
               دیتای تغییرات قیمتی برای این فروشنده در بازار ثبت نشده است.
             </div>
           )}
@@ -232,7 +232,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
             variant="outline"
             fullWidth
             onClick={() => setIsChartOpen(false)}
-            className="rounded-xl mt-6 text-xs h-10 font-bold font-iran-sans"
+            className="rounded-xl mt-6 text-xs h-10 font-bold font-iran-yekan"
           >
             متوجه شدم
           </Button>

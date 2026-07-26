@@ -75,7 +75,7 @@ export function WalletDashboard() {
             <Wallet className="h-5 w-5 text-primary shrink-0" />
             <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">کیف پول</span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground font-iran-sans">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground font-iran-yekan">
             <span>موجودی کیف پول:</span>
             <span className="font-bold text-foreground text-sm mr-1">{wallet?.totalBalance}</span>
           </div>
@@ -86,7 +86,7 @@ export function WalletDashboard() {
             variant="outline"
             size="sm"
             onClick={() => router.push('/terms?section=wallet')}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 border-zinc-200 hover:bg-muted text-foreground flex items-center justify-center gap-1.5 shadow-sm"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 hover:bg-muted text-foreground flex items-center justify-center gap-1.5 shadow-sm"
           >
             <Scale className="h-4 w-4" />
             <span>قوانین</span>
@@ -96,7 +96,7 @@ export function WalletDashboard() {
             variant="primary"
             size="sm"
             onClick={() => setIsWithdrawModalOpen(true)}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 flex items-center justify-center gap-1.5 shadow-sm"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 flex items-center justify-center gap-1.5 shadow-sm"
           >
             <CreditCard className="h-4 w-4" />
             <span>برداشت موجودی</span>
@@ -147,7 +147,7 @@ export function WalletDashboard() {
                 {withdraws.map((w: any) => (
                   <Card key={w.id} className="w-full border rounded-xl p-5 bg-background shadow-sm hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors flex flex-col justify-between gap-4">
                     <div className="flex items-center justify-between border-b border-dashed pb-3 w-full">
-                      <span className="text-xs md:text-sm font-black text-foreground font-iran-sans">مبلغ برداشت: {w.amount}</span>
+                      <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan">مبلغ برداشت: {w.amount}</span>
                       <span className={cn(
                         "font-bold text-[10px] md:text-xs px-2.5 py-0.5 rounded-full",
                         w.statusColor === 'warning' && "bg-warning-50 text-warning-600 dark:bg-warning-950/20 dark:text-warning-400",
@@ -158,7 +158,7 @@ export function WalletDashboard() {
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2 text-xs text-muted-foreground font-iran-sans text-right">
+                    <div className="flex flex-col gap-2 text-xs text-muted-foreground font-iran-yekan text-right">
                       {w.cardNumber && (
                         <div className="flex items-center gap-2">
                           <CreditCard className="h-4 w-4 text-zinc-400" />
@@ -185,7 +185,7 @@ export function WalletDashboard() {
           ) : (
             <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
               <ArrowRightLeft className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-sans text-muted-foreground">هیچ درخواست برداشتی در این بخش یافت نشد.</span>
+              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ درخواست برداشتی در این بخش یافت نشد.</span>
             </div>
           )}
         </div>
@@ -205,7 +205,7 @@ export function WalletDashboard() {
                         ) : (
                           <ArrowUpRight className="h-5 w-5 text-destructive bg-destructive/10 p-1 rounded-full shrink-0" />
                         )}
-                        <span className="text-xs md:text-sm font-black text-foreground font-iran-sans">{t.typeLabel}</span>
+                        <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan">{t.typeLabel}</span>
                       </div>
                       <span className={cn(
                         "font-bold text-[10px] md:text-xs px-2.5 py-0.5 rounded-full",
@@ -215,7 +215,7 @@ export function WalletDashboard() {
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2.5 text-xs text-muted-foreground font-iran-sans text-right">
+                    <div className="flex flex-col gap-2.5 text-xs text-muted-foreground font-iran-yekan text-right">
                       <div className="flex items-center justify-between w-full">
                         <span>مبلغ تراکنش:</span>
                         <span className="font-bold text-foreground">{t.amount}</span>
@@ -244,7 +244,7 @@ export function WalletDashboard() {
           ) : (
             <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
               <ArrowRightLeft className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-sans text-muted-foreground">هیچ تراکنشی در حساب شما ثبت نشده است.</span>
+              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ تراکنشی در حساب شما ثبت نشده است.</span>
             </div>
           )}
         </div>

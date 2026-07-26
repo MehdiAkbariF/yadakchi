@@ -88,7 +88,7 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
       <ModalBody className="p-0 pt-4 text-right">
         {!isAddCardOpen ? (
           <div className="flex flex-col gap-4 w-full">
-            <span className="text-xs text-muted-foreground font-iran-sans block mb-1">
+            <span className="text-xs text-muted-foreground font-iran-yekan block mb-1">
               برای انتخاب حساب پیش‌فرض، روی کارت مورد نظر کلیک کنید.
             </span>
 
@@ -102,7 +102,7 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
                     b.isDefault ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" : ""
                   )}
                 >
-                  <div className="flex flex-col gap-1 font-iran-sans text-xs">
+                  <div className="flex flex-col gap-1 font-iran-yekan text-xs">
                     <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{b.cardNumber}</span>
                     {b.shebaNumber && (
                       <span className="text-[10px] text-muted-foreground mt-1 ltr:inline-block" dir="ltr">شبا: {b.shebaNumber}</span>
@@ -127,7 +127,7 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
               type="button"
               variant="outline"
               onClick={() => setIsAddCardOpen(true)}
-              className="rounded-xl font-iran-sans font-bold text-xs h-10 px-4 flex items-center justify-center gap-1.5 shadow-sm mt-2"
+              className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-4 flex items-center justify-center gap-1.5 shadow-sm mt-2"
             >
               <Plus className="h-4 w-4" />
               <span>اضافه کردن حساب جدید (کارت یا شبا)</span>
@@ -147,7 +147,7 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
               <span className="text-xs font-bold text-foreground font-iran-yekan">افزودن حساب جدید</span>
             </div>
 
-            <span className="text-xs text-muted-foreground font-iran-sans block mb-1">
+            <span className="text-xs text-muted-foreground font-iran-yekan block mb-1">
               برای افزودن حساب، <strong>یکی</strong> از دو کادر زیر را پر کنید.
             </span>
 
@@ -156,13 +156,13 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
                 label="شماره کارت"
                 placeholder="شماره کارت ۱۶ رقمی"
                 error={errors.cardNumber?.message ? String(errors.cardNumber.message) : undefined}
-                className="text-xs font-iran-sans text-left"
+                className="text-xs font-iran-yekan text-left"
                 dir="ltr"
                 {...register('cardNumber')}
               />
             </div>
 
-            <div className="text-center font-iran-sans font-bold text-xs text-muted-foreground py-1 select-none">
+            <div className="text-center font-iran-yekan font-bold text-xs text-muted-foreground py-1 select-none">
               یا
             </div>
 
@@ -171,7 +171,7 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
                 label="شماره شبا (بدون IR)"
                 placeholder="شماره شبا ۲۴ رقمی"
                 error={errors.shebaNumber?.message ? String(errors.shebaNumber.message) : undefined}
-                className="text-xs font-iran-sans text-left"
+                className="text-xs font-iran-yekan text-left"
                 dir="ltr"
                 {...register('shebaNumber')}
               />

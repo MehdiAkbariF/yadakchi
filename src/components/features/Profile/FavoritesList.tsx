@@ -52,7 +52,7 @@ export function FavoritesList() {
             <Heart className="h-5 w-5 text-primary shrink-0" />
             <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">کالاهای محبوب</span>
           </div>
-          <p className="text-xs text-muted-foreground font-iran-sans">
+          <p className="text-xs text-muted-foreground font-iran-yekan">
             لیست کالاهایی که با قلبی کردن در صفحات محصول، برای دسترسی سریع ذخیره کرده‌اید
           </p>
         </div>
@@ -74,7 +74,8 @@ export function FavoritesList() {
         <PageLoading message="در حال دریافت کالاهای محبوب شما..." />
       ) : favorites.length > 0 ? (
         <div className="flex flex-col gap-6 w-full animate-in fade-in duration-200">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
+          {/* گرید فوق حرفه‌ای با قابلیت لود ۵ کارت در دسکتاپ‌های عریض و روزآمد */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 w-full">
             {favorites.map((product) => (
               <ProductSearchCard key={product.id} product={product} />
             ))}
@@ -89,12 +90,12 @@ export function FavoritesList() {
       ) : (
         <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3.5">
           <Heart className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] animate-pulse" />
-          <span className="text-xs font-bold font-iran-sans text-muted-foreground">هنوز هیچ کالایی را به لیست محبوب‌های خود اضافه نکرده‌اید.</span>
+          <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز هیچ کالایی را به لیست محبوب‌های خود اضافه نکرده‌اید.</span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.push('/search')}
-            className="rounded-xl mt-2 text-xs font-bold font-iran-sans h-10 px-6 py-2 flex items-center justify-center gap-1.5"
+            className="rounded-xl mt-2 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1.5"
           >
             <ShoppingBag className="h-4 w-4" />
             <span>مشاهده و خرید کالاها</span>

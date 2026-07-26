@@ -19,7 +19,7 @@ export function PartHeaderCard({ partSlug, categorySlug, partName }: PartHeaderC
       <Card className="w-full border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
         <div className="flex items-center gap-4 text-right">
           <div className="w-16 h-16 shrink-0 rounded-2xl border border-zinc-150 dark:border-zinc-800 bg-muted/10 flex items-center justify-center overflow-hidden">
-            <span className="text-xs font-black text-primary font-iran-sans">یدک‌چی</span>
+            <span className="text-xs font-black text-primary font-iran-yekan">یدک‌چی</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-[10px] md:text-xs text-muted-foreground font-bold">قطعه انتخاب شده:</span>
@@ -33,7 +33,7 @@ export function PartHeaderCard({ partSlug, categorySlug, partName }: PartHeaderC
             variant="outline"
             size="sm"
             onClick={() => setIsSelectPartOpen(true)}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
           >
             تغییر قطعه
           </Button>

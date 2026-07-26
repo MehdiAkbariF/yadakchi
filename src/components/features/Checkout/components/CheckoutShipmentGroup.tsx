@@ -36,7 +36,7 @@ export function CheckoutShipmentGroup({
     <Card className="w-full overflow-hidden border rounded-xl shadow-sm bg-background text-right">
       <CardHeader className="border-b bg-muted/20 px-4 py-3.5 flex items-center justify-between">
         <span className="text-xs font-bold font-iran-yekan text-foreground">مرسوله {new Intl.NumberFormat('fa-IR').format(index + 1)} از {new Intl.NumberFormat('fa-IR').format(totalSubBaskets)}</span>
-        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground">ارسال از فروشگاه: {sub.shop.shopTitle}</span>
+        <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground">ارسال از فروشگاه: {sub.shop.shopTitle}</span>
       </CardHeader>
 
       <CardBody className="p-5 flex flex-col gap-5">
@@ -56,9 +56,9 @@ export function CheckoutShipmentGroup({
               >
                 <div className="flex items-center gap-2">
                   <Truck className="h-4.5 w-4.5 shrink-0" />
-                  <span className="text-xs font-iran-sans font-bold">ارسال با تیپاکس</span>
+                  <span className="text-xs font-iran-yekan font-bold">ارسال با تیپاکس</span>
                 </div>
-                <span className="text-xs font-iran-sans font-bold">{formatPrice(sub.tipaxShipmentPrice)}</span>
+                <span className="text-xs font-iran-yekan font-bold">{formatPrice(sub.tipaxShipmentPrice)}</span>
               </button>
             )}
 
@@ -75,9 +75,9 @@ export function CheckoutShipmentGroup({
               >
                 <div className="flex items-center gap-2">
                   <Truck className="h-4.5 w-4.5 shrink-0" />
-                  <span className="text-xs font-iran-sans font-bold">ارسال فروشنده</span>
+                  <span className="text-xs font-iran-yekan font-bold">ارسال فروشنده</span>
                 </div>
-                <span className="text-xs font-iran-sans font-bold">{formatPrice(sub.sellerShipmentPrice)}</span>
+                <span className="text-xs font-iran-yekan font-bold">{formatPrice(sub.sellerShipmentPrice)}</span>
               </button>
             )}
 
@@ -94,9 +94,9 @@ export function CheckoutShipmentGroup({
               >
                 <div className="flex items-center gap-2">
                   <Store className="h-4.5 w-4.5 shrink-0" />
-                  <span className="text-xs font-iran-sans font-bold">دریافت حضوری</span>
+                  <span className="text-xs font-iran-yekan font-bold">دریافت حضوری</span>
                 </div>
-                <span className="text-xs font-iran-sans font-bold text-success-500">رایگان</span>
+                <span className="text-xs font-iran-yekan font-bold text-success-500">رایگان</span>
               </button>
             )}
           </div>
@@ -113,8 +113,8 @@ export function CheckoutShipmentGroup({
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold font-iran-sans text-foreground truncate">{item.shopProduct.product.title}</h4>
-                <span className="text-[10px] font-bold font-iran-sans text-muted-foreground block mt-1.5">
+                <h4 className="text-xs font-bold font-iran-yekan text-foreground truncate">{item.shopProduct.product.title}</h4>
+                <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground block mt-1.5">
                   تعداد: {new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد
                 </span>
               </div>

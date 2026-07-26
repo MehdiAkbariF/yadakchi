@@ -22,7 +22,7 @@ export function Breadcrumb({ items = [], className }: BreadcrumbProps) {
     <nav 
       aria-label="Breadcrumb"
       className={cn(
-        "w-full flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans overflow-x-auto no-scrollbar py-1 select-none text-right",
+        "w-full flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan overflow-x-auto no-scrollbar py-1 select-none text-right",
         className
       )}
       dir="rtl"

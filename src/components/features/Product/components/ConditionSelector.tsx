@@ -26,7 +26,7 @@ export function ConditionSelector({ selectedCondition, onChangeCondition, seller
             type="button"
             onClick={() => onChangeCondition('New')}
             className={cn(
-              "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all outline-none",
+              "px-5 py-2 rounded-xl text-xs font-bold font-iran-yekan border transition-all outline-none",
               selectedCondition === 'New' 
                 ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
                 : "hover:border-primary/20 bg-background text-foreground"
@@ -41,7 +41,7 @@ export function ConditionSelector({ selectedCondition, onChangeCondition, seller
             type="button"
             onClick={() => onChangeCondition('Stock')}
             className={cn(
-              "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all outline-none",
+              "px-5 py-2 rounded-xl text-xs font-bold font-iran-yekan border transition-all outline-none",
               selectedCondition === 'Stock' 
                 ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
                 : "hover:border-primary/20 bg-background text-foreground"
@@ -56,7 +56,7 @@ export function ConditionSelector({ selectedCondition, onChangeCondition, seller
             type="button"
             onClick={() => onChangeCondition('TakeOff')}
             className={cn(
-              "px-5 py-2 rounded-xl text-xs font-bold font-iran-sans border transition-all outline-none",
+              "px-5 py-2 rounded-xl text-xs font-bold font-iran-yekan border transition-all outline-none",
               selectedCondition === 'TakeOff' 
                 ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" 
                 : "hover:border-primary/20 bg-background text-foreground"

@@ -67,7 +67,7 @@ export function SettingsForm() {
           <Settings className="h-5 w-5 text-primary shrink-0" />
           <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">اطلاعات حساب</span>
         </div>
-        <p className="text-xs text-muted-foreground font-iran-sans">
+        <p className="text-xs text-muted-foreground font-iran-yekan">
           مشاهده شناسنامه اطلاعات فردی، کارت تسویه، و فاکتور حقوقی شما (برای ویرایش روی هر کارت کلیک کنید)
         </p>
       </div>

@@ -58,7 +58,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
               setSearchQuery('');
               setIsChangeCarOpen(true);
             }}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
           >
             تغییر خودرو
           </Button>
@@ -66,7 +66,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
             variant="primary"
             size="sm"
             onClick={() => setIsSelectPartOpen(true)}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 shadow-sm"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 shadow-sm"
           >
             انتخاب قطعه
           </Button>
@@ -108,7 +108,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
-            className="w-full font-iran-sans"
+            className="w-full font-iran-yekan"
           />
         </div>
 
@@ -136,13 +136,13 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <span className="text-xs sm:text-sm font-bold font-iran-sans text-foreground">{car.model}</span>
+                  <span className="text-xs sm:text-sm font-bold font-iran-yekan text-foreground">{car.model}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="w-full py-12 text-center border border-dashed rounded-xl bg-card">
-              <span className="text-xs font-bold font-iran-sans text-muted-foreground">خودرویی یافت نشد.</span>
+              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">خودرویی یافت نشد.</span>
             </div>
           )}
         </ModalBody>

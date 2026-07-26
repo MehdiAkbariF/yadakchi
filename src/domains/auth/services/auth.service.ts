@@ -60,7 +60,7 @@ export class AuthService {
       const rawUser = response.data?.data || response.data;
       
       if (!rawUser || typeof rawUser !== 'object') {
-        throw new Error('ساختار داده کاربر دریافتی از سرور معتبر نیست.');
+        throw new Error('ساختار داده کاربر دریافت‌شده از سرور معتبر نیست.');
       }
 
       const user = AuthMapper.toDomain(rawUser);
@@ -88,7 +88,8 @@ export class AuthService {
 
   /**
    * دریافت پروفایل کاربری معتبر فعلی
-   * این متد قابلیت دریافت هدر (مثل کوکی) را دارد تا در سمت سرور (SSR) هم کار کند.
+   * اصلاح اساسی: فقط در صورت خطای ۴۰۱ یا ۴۰۳ مقدار null (کاربر مهمان) برمی‌گرداند.
+   * در صورت قطعی سرور (۵۰۲ یا ۵۰۳)، خطا را بالا می‌فرستد تا کاربر از پروفایل خود لاگ‌اوت نشود.
    */
   async getCurrentUser(reqHeaders?: Record<string, string>): Promise<User | null> {
     try {
@@ -97,7 +98,6 @@ export class AuthService {
       const response = await this.httpClient.get<any>(
         AUTH_ENDPOINTS.GET_USER,
         {
-          // اگر در سمت سرور هستیم، کوکی رو به بک‌اند پاس می‌دهیم
           headers: reqHeaders ? { Cookie: reqHeaders.cookie } : undefined,
         }
       );
@@ -107,9 +107,19 @@ export class AuthService {
       }
 
       return AuthMapper.toDomain(response.data);
-    } catch (error) {
-      // در صورت 401 بودن، مقدار null برمی‌گردد
-      return null;
+    } catch (error: any) {
+      // فقط در صورت خطای رسمی عدم دسترسی یا احراز هویت، کاربر به عنوان مهمان (null) علامت‌گذاری می‌شود
+      if (
+        error?.status === 401 || 
+        error?.status === 403 || 
+        error?.type === 'unauthorized' ||
+        error?.message?.includes('401')
+      ) {
+        return null;
+      }
+
+      // در خطاهای مربوط به درگاه یا سرور (نظیر ۵۰۲ یا ۵۰۳)، خطا پرتاب می‌شود تا کاربر به اشتباه بیرون انداخته نشود
+      throw errorManager.normalize(error);
     }
   }
 }

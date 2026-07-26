@@ -62,7 +62,7 @@ export function ProfileDashboard() {
             </div>
             <button 
               onClick={() => router.push('/profile/orders')}
-              className="text-xs font-bold font-iran-sans text-primary hover:underline flex items-center gap-0.5 outline-none"
+              className="text-xs font-bold font-iran-yekan text-primary hover:underline flex items-center gap-0.5 outline-none"
             >
               <span>مشاهده همه</span>
               <ChevronLeft className="h-4 w-4" />
@@ -79,8 +79,8 @@ export function ProfileDashboard() {
                   className="p-4 border rounded-xl bg-background hover:border-primary/25 transition-all text-center flex flex-col items-center justify-center gap-2 cursor-pointer"
                 >
                   <StatusIcon className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-[10px] md:text-xs font-bold text-foreground font-iran-sans">{status.label}</span>
-                  <span className="text-[10px] font-bold text-muted-foreground font-iran-sans bg-muted px-2.5 py-0.5 rounded-full mt-1">
+                  <span className="text-[10px] md:text-xs font-bold text-foreground font-iran-yekan">{status.label}</span>
+                  <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan bg-muted px-2.5 py-0.5 rounded-full mt-1">
                     {status.count} سفارش
                   </span>
                 </div>
@@ -99,7 +99,7 @@ export function ProfileDashboard() {
             </div>
             <button 
               onClick={() => router.push('/my-car')}
-              className="text-xs font-bold font-iran-sans text-primary hover:underline flex items-center gap-0.5 outline-none"
+              className="text-xs font-bold font-iran-yekan text-primary hover:underline flex items-center gap-0.5 outline-none"
             >
               <span>مدیریت گاراژ ({formatPrice(vehicles.length)} از ۱۰)</span>
               <ChevronLeft className="h-4 w-4" />
@@ -120,11 +120,11 @@ export function ProfileDashboard() {
                     </div>
                     <div className="flex-1 min-w-0 text-right flex flex-col gap-1">
                       <div className="flex items-center gap-2 w-full">
-                        <span className="text-xs md:text-sm font-bold text-foreground truncate font-iran-sans">{vehicle.carModel}</span>
-                        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-iran-sans">- {vehicle.title}</span>
+                        <span className="text-xs md:text-sm font-bold text-foreground truncate font-iran-yekan">{vehicle.carModel}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-iran-yekan">- {vehicle.title}</span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-2 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-2 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
                         <div className="flex items-center gap-1.5">
                           <Gauge className="h-4 w-4 text-zinc-400" />
                           <span>کارکرد خودرو: {vehicle.mileage}</span>
@@ -143,7 +143,7 @@ export function ProfileDashboard() {
 
                   <div className="flex flex-col items-end justify-between gap-3 shrink-0 border-t md:border-t-0 border-dashed pt-3 md:pt-0">
                     {vehicle.isDefault && (
-                      <span className="text-[9px] font-bold text-success-500 bg-success-50 dark:bg-success-950/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-iran-sans animate-in zoom-in duration-150">
+                      <span className="text-[9px] font-bold text-success-500 bg-success-50 dark:bg-success-950/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-iran-yekan animate-in zoom-in duration-150">
                         <Check className="h-3 w-3" />
                         خودروی پیش فرض
                       </span>
@@ -152,7 +152,7 @@ export function ProfileDashboard() {
                       variant="outline"
                       size="sm"
                       onClick={() => router.push('/my-car')}
-                      className="rounded-xl text-[10px] font-bold font-iran-sans h-8 w-full md:w-auto"
+                      className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 w-full md:w-auto"
                     >
                       بروزرسانی کارکرد
                     </Button>
@@ -162,12 +162,12 @@ export function ProfileDashboard() {
             </div>
           ) : (
             <div className="w-full py-8 text-center flex flex-col items-center justify-center">
-              <p className="text-xs text-muted-foreground font-iran-sans">هیچ خودرویی در گاراژ شما ثبت نشده است.</p>
+              <p className="text-xs text-muted-foreground font-iran-yekan">هیچ خودرویی در گاراژ شما ثبت نشده است.</p>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => router.push('/my-car/add')}
-                className="rounded-xl mt-4 text-xs font-bold font-iran-sans h-10 px-6 py-2 flex items-center justify-center gap-1"
+                className="rounded-xl mt-4 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1"
               >
                 <Plus className="h-4 w-4" />
                 <span>ثبت اولین خودرو در گاراژ</span>

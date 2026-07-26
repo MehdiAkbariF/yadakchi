@@ -76,7 +76,7 @@ export function MobileBottomAction({
           disabled={disabled}
           leftIcon={icon}
           className={cn(
-            "rounded-xl font-iran-sans font-bold text-xs h-11 transition-all duration-200",
+            "rounded-xl font-iran-yekan font-bold text-xs h-11 transition-all duration-200",
             disabled && "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700 opacity-85 cursor-not-allowed hover:bg-zinc-100 hover:text-zinc-400 dark:hover:bg-zinc-800"
           )}
         >

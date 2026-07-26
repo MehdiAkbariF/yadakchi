@@ -29,7 +29,7 @@ export function AuthButton() {
           ) : (
             <UserCheck className="h-4 w-4 text-primary shrink-0" />
           )}
-          <span className="text-xs font-bold font-iran-sans text-foreground max-w-[120px] truncate">
+          <span className="text-xs font-bold font-iran-yekan text-foreground max-w-[120px] truncate">
             {displayName}
           </span>
           <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform group-hover:rotate-180" />
@@ -38,7 +38,7 @@ export function AuthButton() {
         {/* منوی کشویی پروفایل و خروج سریع کاربر */}
         <div className="absolute top-full left-0 mt-1 w-44 bg-background border rounded-lg shadow-xl py-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50">
           <Link href="/profile">
-            <button className="flex items-center gap-2 w-full px-4 py-2.5 text-right text-xs hover:bg-muted text-foreground transition-colors font-iran-sans font-medium">
+            <button className="flex items-center gap-2 w-full px-4 py-2.5 text-right text-xs hover:bg-muted text-foreground transition-colors font-iran-yekan font-medium">
               <UserIcon className="h-4 w-4 text-muted-foreground" />
               پنل کاربری من
             </button>
@@ -46,7 +46,7 @@ export function AuthButton() {
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="flex items-center gap-2 w-full px-4 py-2.5 text-right text-xs hover:bg-destructive/10 text-destructive border-t transition-colors font-iran-sans font-bold"
+            className="flex items-center gap-2 w-full px-4 py-2.5 text-right text-xs hover:bg-destructive/10 text-destructive border-t transition-colors font-iran-yekan font-bold"
           >
             <LogOut className="h-4 w-4" />
             خروج از حساب
@@ -62,7 +62,7 @@ export function AuthButton() {
       <Button 
         variant="outline" 
         size="sm" 
-        className="font-iran-sans font-bold text-xs px-4 h-9 flex items-center gap-1 text-foreground hover:bg-muted"
+        className="font-iran-yekan font-bold text-xs px-4 h-9 flex items-center gap-1 text-foreground hover:bg-muted"
       >
         <UserIcon className="h-4 w-4 text-muted-foreground" />
         ورود / ثبت‌نام

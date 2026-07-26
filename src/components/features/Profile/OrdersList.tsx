@@ -40,7 +40,7 @@ function PayableTimer({ payableUntil }: PayableTimerProps) {
   }, [payableUntil]);
 
   return (
-    <div className="flex items-center gap-1 text-destructive font-bold font-iran-sans" dir="ltr">
+    <div className="flex items-center gap-1 text-destructive font-bold font-iran-yekan" dir="ltr">
       <span>{timeLeft}</span>
       {timeLeft !== 'پایان یافته' && (
         <Hourglass className="h-3.5 w-3.5 animate-spin shrink-0" style={{ animationDuration: '4s' }} />
@@ -116,9 +116,9 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
               )}
             >
               <TabIcon className={cn("h-5 w-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-              <span className="text-[10px] md:text-xs font-bold font-iran-sans leading-none truncate w-full">{tab.label}</span>
+              <span className="text-[10px] md:text-xs font-bold font-iran-yekan leading-none truncate w-full">{tab.label}</span>
               <span className={cn(
-                "text-[9px] md:text-[10px] font-bold font-iran-sans px-2 py-0.5 rounded-full shrink-0 mt-0.5",
+                "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full shrink-0 mt-0.5",
                 isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
               )}>
                 {tab.count} سفارش
@@ -138,7 +138,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
               <Card key={order.id} className="w-full border rounded-xl p-5 md:p-6 bg-background shadow-sm hover:border-primary/25 transition-all flex flex-col justify-between gap-4">
                 
                 <div className="flex items-center justify-between border-b border-dashed pb-3 w-full">
-                  <span className="text-xs md:text-sm font-black text-foreground font-iran-sans">کد سفارش: {order.orderNumber}</span>
+                  <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan">کد سفارش: {order.orderNumber}</span>
                   <span className={cn(
                     "font-bold text-[10px] md:text-xs",
                     order.status === 'WaitingForPayment' && "text-destructive",
@@ -150,7 +150,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
                   </span>
                 </div>
                 
-                <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground font-iran-sans gap-4 w-full">
+                <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground font-iran-yekan gap-4 w-full">
                   <div className="flex flex-col gap-1 text-right">
                     <span>تاریخ ثبت: {order.createDateFormatted}</span>
                     {order.status === 'WaitingForPayment' && (
@@ -207,7 +207,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
         </div>
       ) : (
         <div className="w-full py-16 text-center border border-dashed rounded-xl bg-background flex flex-col items-center justify-center">
-          <p className="text-xs text-muted-foreground font-iran-sans">هیچ سفارشی در این بخش یافت نشد.</p>
+          <p className="text-xs text-muted-foreground font-iran-yekan">هیچ سفارشی در این بخش یافت نشد.</p>
         </div>
       )}
 

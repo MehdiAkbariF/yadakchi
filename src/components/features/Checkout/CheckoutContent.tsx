@@ -149,8 +149,8 @@ export function CheckoutContent() {
 
   const leftPriceContent = (
     <div className="flex flex-col text-right">
-      <span className="text-[10px] text-muted-foreground font-iran-sans mb-0.5">مبلغ کل قابل پرداخت:</span>
-      <span className="text-sm font-black text-foreground font-iran-sans">
+      <span className="text-[10px] text-muted-foreground font-iran-yekan mb-0.5">مبلغ کل قابل پرداخت:</span>
+      <span className="text-sm font-black text-foreground font-iran-yekan">
         {new Intl.NumberFormat('fa-IR').format(finalPayablePrice / 10)} تومان
       </span>
     </div>

@@ -83,7 +83,7 @@ export function BottomNav() {
               
               <span
                 className={cn(
-                  "text-[9px] font-iran-sans font-bold transition-colors duration-200 truncate max-w-[65px] tracking-tight mt-1",
+                  "text-[9px] font-iran-yekan font-bold transition-colors duration-200 truncate max-w-[65px] tracking-tight mt-1",
                   isActive ? "text-primary font-black" : "text-muted-foreground/75"
                 )}
               >

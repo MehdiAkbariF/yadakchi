@@ -157,16 +157,16 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder, item }: ReturnRe
                 placeholder="لطفاً جزییات، عیوب یا مغایرت‌های فنی کالا را در این بخش بنویسید..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="h-24 text-xs font-iran-sans"
+                className="h-24 text-xs font-iran-yekan"
                 required
               />
             </div>
 
             {/* مدارک و آپلود عکس */}
             <div className="flex flex-col gap-2 w-full border-t border-dashed pt-4">
-              <span className="text-xs font-bold text-foreground font-iran-sans mb-1">تصاویر کالای معیوب یا مغایر (حداکثر ۵ تصویر)</span>
+              <span className="text-xs font-bold text-foreground font-iran-yekan mb-1">تصاویر کالای معیوب یا مغایر (حداکثر ۵ تصویر)</span>
               <div className="flex flex-wrap gap-2.5 items-center">
-                <label className="h-10 px-4 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold font-iran-sans flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
+                <label className="h-10 px-4 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold font-iran-yekan flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
                   <Paperclip className="h-4 w-4" />
                   <span>انتخاب عکس کالا</span>
                   <input
@@ -181,7 +181,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder, item }: ReturnRe
                 {attachments.map((file, idx) => (
                   <div 
                     key={idx}
-                    className="h-10 px-2.5 rounded-xl border bg-muted/20 text-[9px] font-bold font-iran-sans text-foreground flex items-center gap-1.5 max-w-[120px] shrink-0"
+                    className="h-10 px-2.5 rounded-xl border bg-muted/20 text-[9px] font-bold font-iran-yekan text-foreground flex items-center gap-1.5 max-w-[120px] shrink-0"
                   >
                     <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span className="truncate flex-1 text-right">{file.name}</span>
@@ -207,7 +207,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder, item }: ReturnRe
           type="button"
           variant="outline"
           onClick={onClose}
-          className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+          className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
         >
           انصراف
         </Button>
@@ -215,7 +215,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder, item }: ReturnRe
           type="submit"
           variant="primary"
           isLoading={submitReturn.isPending}
-          className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+          className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
           onClick={handleFormSubmit}
         >
           ثبت درخواست مرجوعی

@@ -66,7 +66,7 @@ export function JobModal({ isOpen, onClose, user }: JobModalProps) {
               label="شغل یا سمت خود را وارد کنید *"
               placeholder="شغل خود را انتخاب کنید"
               error={errors.job?.message ? String(errors.job.message) : undefined}
-              className="text-xs font-iran-sans"
+              className="text-xs font-iran-yekan"
               {...register('job')}
             />
           </div>

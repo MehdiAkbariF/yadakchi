@@ -22,7 +22,7 @@ export function AuthLayout({ children, title, className }: AuthLayoutProps) {
       {/* هدر کنترل‌ها: دکمه بازگشت و تغییر تم */}
       <div className="flex w-full max-w-5xl items-center justify-between shrink-0 mb-8 md:mb-0">
         <Link href="/">
-          <button className="flex items-center gap-1.5 text-xs font-bold font-iran-sans text-muted-foreground hover:text-primary transition-colors">
+          <button className="flex items-center gap-1.5 text-xs font-bold font-iran-yekan text-muted-foreground hover:text-primary transition-colors">
             <ArrowRight className="h-4 w-4" />
             <span>بازگشت به سایت</span>
           </button>
@@ -67,7 +67,7 @@ export function AuthLayout({ children, title, className }: AuthLayoutProps) {
       </div>
 
       {/* پاصفحه ثابت راهنما و تماس */}
-      <div className="flex items-center gap-2.5 text-xs text-muted-foreground/80 font-iran-sans shrink-0 mt-8 md:mt-0">
+      <div className="flex items-center gap-2.5 text-xs text-muted-foreground/80 font-iran-yekan shrink-0 mt-8 md:mt-0">
         <Link href="/help" className="hover:text-primary transition-colors">
           راهنمای ثبت نام
         </Link>

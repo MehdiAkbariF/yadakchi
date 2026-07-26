@@ -1,12 +1,20 @@
 /** @type {import('next').NextConfig} */
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public', // مسیر فایل‌های تولید شده سرویس‌ورکر
+  register: true, // ثبت خودکار سرویس‌ورکر
+  skipWaiting: true, // فعال‌سازی آنی آپدیت‌های جدید اپلیکیشن
+  disable: process.env.NODE_ENV === 'development', // غیرفعال بودن در لوکال دولوپمنت جهت جلوگیری از اختلال در کش کدها
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
 const nextConfig = {
   reactStrictMode: true,
-
 
   typescript: {
     ignoreBuildErrors: true,
   },
-
 
   eslint: {
     ignoreDuringBuilds: true,
@@ -44,7 +52,6 @@ const nextConfig = {
       {
         source: '/proxy-api/:path*',
         destination: `${apiBaseUrl}/:path*`,
-        // این ویژگی باعث میشه هدرهای ورودی (مثل Cookie) به مقصد ارسال بشن
         basePath: false, 
       },
     ];
@@ -69,4 +76,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);

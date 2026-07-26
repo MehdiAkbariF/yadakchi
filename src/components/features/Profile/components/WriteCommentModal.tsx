@@ -126,7 +126,7 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
         </div>
 
         <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full select-none">
-          <span className="text-xs font-bold text-muted-foreground font-iran-sans">امتیاز شما به کالا *</span>
+          <span className="text-xs font-bold text-muted-foreground font-iran-yekan">امتیاز شما به کالا *</span>
           <div className="flex items-center gap-1.5 mt-1" dir="ltr">
             {[1, 2, 3, 4, 5].map((starValue) => {
               const isHighlighted = (hoverRate || rate) >= starValue;
@@ -156,7 +156,7 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
             label="متن نظر *"
             placeholder="نظر خود را در مورد این کالا بنویسید..."
             error={errors.comment?.message ? String(errors.comment.message) : undefined}
-            className="h-28 text-xs font-iran-sans"
+            className="h-28 text-xs font-iran-yekan"
             disabled={!!editingComment}
             {...register('comment')}
           />
@@ -171,7 +171,7 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
               checked={isIncognito}
               onChange={(e) => setIsIncognito(e.target.checked)}
             />
-            <label htmlFor="comment_is_incognito" className="text-xs font-bold text-foreground font-iran-sans cursor-pointer">
+            <label htmlFor="comment_is_incognito" className="text-xs font-bold text-foreground font-iran-yekan cursor-pointer">
               ارسال به صورت ناشناس (نام شما به بقیه نشان داده نشود)
             </label>
           </div>
@@ -187,7 +187,7 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
       type="button"
       variant="outline"
       onClick={onClose}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
     >
       انصراف
     </Button>
@@ -195,7 +195,7 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
       type="submit"
       variant="primary"
       isLoading={createComment.isPending || updateComment.isPending}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
       onClick={handleSubmit(onCommentSubmit)}
     >
       {editingComment ? "ثبت تغییرات نظر" : "ثبت نهایی نظر"}

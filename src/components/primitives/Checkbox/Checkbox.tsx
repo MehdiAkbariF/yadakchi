@@ -19,7 +19,7 @@ export function Checkbox({ checked, onChange, label, className, disabled }: Chec
       className
     )}>
       {label && (
-        <span className="text-xs font-medium font-iran-sans text-muted-foreground group-hover:text-foreground transition-colors truncate pl-2">
+        <span className="text-xs font-medium font-iran-yekan text-muted-foreground group-hover:text-foreground transition-colors truncate pl-2">
           {label}
         </span>
       )}

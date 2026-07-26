@@ -106,7 +106,7 @@ export function SelectPartModal({ isOpen, onClose, slug, categoryName }: SelectP
             value={partSearch}
             onChange={(e) => setPartSearch(e.target.value)}
             leftIcon={<Search className="h-4 w-4 text-zinc-400" />}
-            className="w-full font-iran-sans"
+            className="w-full font-iran-yekan"
           />
         </div>
 
@@ -130,7 +130,7 @@ export function SelectPartModal({ isOpen, onClose, slug, categoryName }: SelectP
                       <Car className="h-6 w-6 text-muted-foreground" />
                     )}
                   </div>
-                  <span className="text-xs font-bold font-iran-sans text-foreground truncate w-full">{part.name}</span>
+                  <span className="text-xs font-bold font-iran-yekan text-foreground truncate w-full">{part.name}</span>
                 </Card>
               ))}
             </div>
@@ -138,7 +138,7 @@ export function SelectPartModal({ isOpen, onClose, slug, categoryName }: SelectP
             !isLoading && (
               <div className="w-full py-16 text-center flex flex-col items-center justify-center gap-2">
                 <Inbox className="h-8 w-8 text-muted-foreground/60" />
-                <span className="text-xs font-bold font-iran-sans text-muted-foreground">قطعه‌ای یافت نشد.</span>
+                <span className="text-xs font-bold font-iran-yekan text-muted-foreground">قطعه‌ای یافت نشد.</span>
               </div>
             )
           )}

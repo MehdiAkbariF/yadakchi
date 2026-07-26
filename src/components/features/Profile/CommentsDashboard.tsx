@@ -125,7 +125,7 @@ export function CommentsDashboard() {
           <MessageSquare className="h-5 w-5 text-primary shrink-0" />
           <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">نظرات و پرسش‌ها</span>
         </div>
-        <p className="text-xs text-muted-foreground font-iran-sans">
+        <p className="text-xs text-muted-foreground font-iran-yekan">
           مدیریت نظرات، امتیازها و پرسش‌های ثبت‌شده در مورد محصولات مختلف
         </p>
       </div>
@@ -141,9 +141,9 @@ export function CommentsDashboard() {
           )}
         >
           <Clock className={cn("h-5 w-5 shrink-0", isPendingActive ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] md:text-xs font-bold font-iran-sans">در انتظار ثبت نظر</span>
+          <span className="text-[10px] md:text-xs font-bold font-iran-yekan">در انتظار ثبت نظر</span>
           <span className={cn(
-            "text-[9px] md:text-[10px] font-bold font-iran-sans px-2.5 py-0.5 rounded-full mt-1",
+            "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2.5 py-0.5 rounded-full mt-1",
             isPendingActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
           )}>
             {pendingCount} کالا
@@ -160,9 +160,9 @@ export function CommentsDashboard() {
           )}
         >
           <MessageSquare className={cn("h-5 w-5 shrink-0", isCommentsActive ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] md:text-xs font-bold font-iran-sans">نظرات من</span>
+          <span className="text-[10px] md:text-xs font-bold font-iran-yekan">نظرات من</span>
           <span className={cn(
-            "text-[9px] md:text-[10px] font-bold font-iran-sans px-2.5 py-0.5 rounded-full mt-1",
+            "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2.5 py-0.5 rounded-full mt-1",
             isCommentsActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
           )}>
             {commentsCount} نظر
@@ -179,9 +179,9 @@ export function CommentsDashboard() {
           )}
         >
           <Search className={cn("h-5 w-5 shrink-0", isInquiriesActive ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] md:text-xs font-bold font-iran-sans">پرسش‌های من</span>
+          <span className="text-[10px] md:text-xs font-bold font-iran-yekan">پرسش‌های من</span>
           <span className={cn(
-            "text-[9px] md:text-[10px] font-bold font-iran-sans px-2.5 py-0.5 rounded-full mt-1",
+            "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2.5 py-0.5 rounded-full mt-1",
             isInquiriesActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
           )}>
             {inquiriesCount} پرسش
@@ -213,7 +213,7 @@ export function CommentsDashboard() {
                       variant="primary"
                       size="sm"
                       onClick={() => handleOpenWriteComment(item)}
-                      className="rounded-xl font-iran-sans font-bold text-[10px] h-9 px-4 shrink-0 shadow-sm"
+                      className="rounded-xl font-iran-yekan font-bold text-[10px] h-9 px-4 shrink-0 shadow-sm"
                     >
                       <Plus className="h-4 w-4" />
                       <span>ثبت نظر و امتیاز</span>
@@ -231,7 +231,7 @@ export function CommentsDashboard() {
           ) : (
             <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
               <Clock className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-sans text-muted-foreground">کالای در انتظار نظری یافت نشد.</span>
+              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">کالای در انتظار نظری یافت نشد.</span>
             </div>
           )}
         </div>
@@ -276,7 +276,7 @@ export function CommentsDashboard() {
                           />
                         ))}
                       </div>
-                      <p className="text-xs md:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-iran-sans break-words mt-1">{comment.comment}</p>
+                      <p className="text-xs md:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-iran-yekan break-words mt-1">{comment.comment}</p>
                     </div>
 
                     <div className="flex items-center justify-end gap-2.5 border-t border-dashed pt-3 mt-1.5">
@@ -309,7 +309,7 @@ export function CommentsDashboard() {
           ) : (
             <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
               <MessageSquare className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-sans text-muted-foreground">هنوز هیچ نظری ثبت نکرده‌اید.</span>
+              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز هیچ نظری ثبت نکرده‌اید.</span>
             </div>
           )}
         </div>
@@ -344,7 +344,7 @@ export function CommentsDashboard() {
 
                     <div className="text-right flex flex-col gap-1.5">
                       <span className="text-[10px] font-bold text-primary">سوال شما:</span>
-                      <p className="text-xs md:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-iran-sans break-words">{inquiry.comment}</p>
+                      <p className="text-xs md:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-iran-yekan break-words">{inquiry.comment}</p>
                       <span className="text-[10px] text-muted-foreground font-bold mt-1.5">{inquiry.replyCount} پاسخ ثبت شده</span>
                     </div>
 
@@ -371,7 +371,7 @@ export function CommentsDashboard() {
           ) : (
             <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
               <Search className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-sans text-muted-foreground">هنوز هیچ پرسشی ثبت نکرده‌اید.</span>
+              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز هیچ پرسشی ثبت نکرده‌اید.</span>
             </div>
           )}
         </div>

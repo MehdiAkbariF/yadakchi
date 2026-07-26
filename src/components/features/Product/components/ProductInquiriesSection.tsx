@@ -53,7 +53,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
 
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b pb-2.5">
         <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
-          <span className="text-xs font-bold text-muted-foreground font-iran-sans shrink-0">نمایش بر اساس:</span>
+          <span className="text-xs font-bold text-muted-foreground font-iran-yekan shrink-0">نمایش بر اساس:</span>
           {[
             { value: 'Latest', label: 'جدیدترین' },
             { value: 'Oldest', label: 'قدیمی‌ترین' },
@@ -64,7 +64,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
               key={opt.value}
               onClick={() => { setOrderBy(opt.value); setPage(1); }}
               className={cn(
-                "text-xs font-bold font-iran-sans pb-1 shrink-0 border-b-2 outline-none",
+                "text-xs font-bold font-iran-yekan pb-1 shrink-0 border-b-2 outline-none",
                 orderBy === opt.value ? "text-primary border-primary" : "text-muted-foreground border-transparent"
               )}
             >
@@ -77,7 +77,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
           variant="outline"
           size="sm"
           onClick={() => setIsWriteModalOpen(true)}
-          className="rounded-xl text-xs font-bold font-iran-sans h-9 border-primary/20 text-primary hover:bg-primary/5 flex items-center gap-1 shrink-0"
+          className="rounded-xl text-xs font-bold font-iran-yekan h-9 border-primary/20 text-primary hover:bg-primary/5 flex items-center gap-1 shrink-0"
         >
           <MessageSquare className="h-3.5 w-3.5" />
           <span>شما هم سوال خود را بپرسید</span>
@@ -86,7 +86,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
 
       <div className="flex flex-col gap-5">
         {isLoading ? (
-          <span className="text-xs text-muted-foreground font-iran-sans">در حال بارگذاری پرسش‌ها...</span>
+          <span className="text-xs text-muted-foreground font-iran-yekan">در حال بارگذاری پرسش‌ها...</span>
         ) : inquiries.length > 0 ? (
           inquiries.map((inquiry: any) => (
             <div key={inquiry.id} className="p-4 border rounded-xl bg-background flex flex-col gap-4 text-right">
@@ -96,10 +96,10 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-4">
-                    <span className="text-xs font-bold text-foreground font-iran-sans">{inquiry.creator}</span>
-                    <span className="text-[10px] text-muted-foreground font-iran-sans">{inquiry.createDateFormatted}</span>
+                    <span className="text-xs font-bold text-foreground font-iran-yekan">{inquiry.creator}</span>
+                    <span className="text-[10px] text-muted-foreground font-iran-yekan">{inquiry.createDateFormatted}</span>
                   </div>
-                  <p className="text-xs leading-relaxed text-zinc-700 dark:text-zinc-200 mt-2 font-iran-sans">
+                  <p className="text-xs leading-relaxed text-zinc-700 dark:text-zinc-200 mt-2 font-iran-yekan">
                     {inquiry.comment}
                   </p>
                 </div>
@@ -112,10 +112,10 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-xs font-bold text-primary font-iran-sans">{inquiry.bestReply.creator} (پاسخ برتر)</span>
-                      <span className="text-[10px] text-muted-foreground font-iran-sans">{inquiry.bestReply.createDateFormatted}</span>
+                      <span className="text-xs font-bold text-primary font-iran-yekan">{inquiry.bestReply.creator} (پاسخ برتر)</span>
+                      <span className="text-[10px] text-muted-foreground font-iran-yekan">{inquiry.bestReply.createDateFormatted}</span>
                     </div>
-                    <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-300 mt-1 font-iran-sans">
+                    <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-300 mt-1 font-iran-yekan">
                       {inquiry.bestReply.comment}
                     </p>
                   </div>
@@ -123,11 +123,11 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
               )}
 
               <div className="flex items-center justify-end gap-4 border-t border-dashed pt-2.5">
-                <button className="flex items-center gap-1 text-[10px] font-bold font-iran-sans text-muted-foreground hover:text-success-500 transition-colors">
+                <button className="flex items-center gap-1 text-[10px] font-bold font-iran-yekan text-muted-foreground hover:text-success-500 transition-colors">
                   <ThumbsUp className="h-3.5 w-3.5" />
                   <span>({inquiry.likes})</span>
                 </button>
-                <button className="flex items-center gap-1 text-[10px] font-bold font-iran-sans text-muted-foreground hover:text-destructive transition-colors">
+                <button className="flex items-center gap-1 text-[10px] font-bold font-iran-yekan text-muted-foreground hover:text-destructive transition-colors">
                   <ThumbsDown className="h-3.5 w-3.5" />
                   <span>({inquiry.dislikes})</span>
                 </button>
@@ -135,7 +135,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
             </div>
           ))
         ) : (
-          <span className="text-xs text-muted-foreground font-iran-sans py-4">هیچ پرسشی برای این کالا ثبت نشده است. اولین سوال خود را بپرسید!</span>
+          <span className="text-xs text-muted-foreground font-iran-yekan py-4">هیچ پرسشی برای این کالا ثبت نشده است. اولین سوال خود را بپرسید!</span>
         )}
       </div>
 <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full">
@@ -153,7 +153,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
         placeholder="پرسش خود را در مورد این کالا مطرح نمایید..."
         value={inquiryText}
         onChange={(e) => setInquiryText(e.target.value)}
-        className="h-28 text-xs font-iran-sans"
+        className="h-28 text-xs font-iran-yekan"
         required
       />
     </form>
@@ -165,7 +165,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
       type="button"
       variant="outline"
       onClick={() => setIsWriteModalOpen(false)}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
     >
       انصراف
     </Button>
@@ -173,7 +173,7 @@ export function ProductInquiriesSection({ productId }: ProductInquiriesSectionPr
       type="submit"
       variant="primary"
       isLoading={createInquiry.isPending}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
       onClick={handleInquirySubmit}
     >
       ثبت پرسش نهایی

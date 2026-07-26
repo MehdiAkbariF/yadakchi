@@ -107,7 +107,7 @@ export function CreateTicket() {
                 placeholder="مثال: عدم واریز موجودی کیف پول"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="text-xs font-iran-sans"
+                className="text-xs font-iran-yekan"
                 required
               />
             </div>
@@ -119,7 +119,7 @@ export function CreateTicket() {
                 type="number"
                 value={orderNumberStr}
                 onChange={(e) => setOrderNumberStr(e.target.value)}
-                className="text-xs font-iran-sans"
+                className="text-xs font-iran-yekan"
               />
             </div>
 
@@ -129,15 +129,15 @@ export function CreateTicket() {
                 placeholder="جزئیات کامل مشکل خود را همراه با اطلاعات کافی بنویسید..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="h-32 text-xs font-iran-sans"
+                className="h-32 text-xs font-iran-yekan"
                 required
               />
             </div>
 
             <div className="flex flex-col gap-2 w-full mt-1 border-t border-dashed pt-4">
-              <span className="text-xs font-bold text-foreground font-iran-sans mb-1">فایل‌های ضمیمه (حداکثر ۵ فایل)</span>
+              <span className="text-xs font-bold text-foreground font-iran-yekan mb-1">فایل‌های ضمیمه (حداکثر ۵ فایل)</span>
               <div className="flex flex-wrap gap-2.5 items-center">
-                <label className="h-10 px-5 py-2 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold font-iran-sans flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
+                <label className="h-10 px-5 py-2 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold font-iran-yekan flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
                   <Paperclip className="h-4 w-4" />
                   <span>انتخاب فایل ضمیمه</span>
                   <input
@@ -152,7 +152,7 @@ export function CreateTicket() {
                 {attachments.map((file, idx) => (
                   <div 
                     key={idx}
-                    className="h-10 px-3 rounded-xl border bg-muted/20 text-[10px] font-bold font-iran-sans text-foreground flex items-center gap-2 max-w-[150px] shrink-0"
+                    className="h-10 px-3 rounded-xl border bg-muted/20 text-[10px] font-bold font-iran-yekan text-foreground flex items-center gap-2 max-w-[150px] shrink-0"
                   >
                     <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span className="truncate flex-1 text-right">{file.name}</span>
@@ -173,7 +173,7 @@ export function CreateTicket() {
               variant="primary"
               fullWidth
               isLoading={createTicket.isPending}
-              className="rounded-xl font-iran-sans font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 px-5 py-3"
+              className="rounded-xl font-iran-yekan font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 px-5 py-3"
             >
               ثبت و ارسال تیکت
             </Button>

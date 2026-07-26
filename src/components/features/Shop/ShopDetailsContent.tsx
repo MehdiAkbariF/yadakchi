@@ -82,17 +82,17 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
       >
         <button
           onClick={() => setIsMobileFiltersOpen(true)}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm outline-none"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-yekan text-foreground flex-1 shadow-sm outline-none"
         >
           <span className="truncate">فیلترها</span>
         </button>
         <button
           onClick={() => setIsMobileSortOpen(true)}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 shadow-sm outline-none"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-yekan text-foreground flex-1 shadow-sm outline-none"
         >
           <span className="truncate">{activeSortLabel}</span>
         </button>
-        <span className="text-[10px] font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0">
+        <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0">
           {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
         </span>
       </div>
@@ -177,7 +177,7 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
         <div className="flex-1 flex flex-col items-stretch gap-6">
           
           <div className="hidden md:flex items-center gap-2 overflow-x-auto no-scrollbar py-1 border-b pb-3">
-            <span className="text-xs font-bold font-iran-sans text-muted-foreground whitespace-nowrap ml-2">
+            <span className="text-xs font-bold font-iran-yekan text-muted-foreground whitespace-nowrap ml-2">
               مرتب‌سازی محصولات فروشنده:
             </span>
             <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
                     key={opt.value}
                     onClick={() => setFilter('sort', opt.value)}
                     className={cn(
-                      "px-4 py-1.5 rounded-full text-xs font-bold font-iran-sans transition-all whitespace-nowrap outline-none",
+                      "px-4 py-1.5 rounded-full text-xs font-bold font-iran-yekan transition-all whitespace-nowrap outline-none",
                       isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -223,7 +223,7 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
             <div className="flex flex-col items-center justify-center py-16 text-center select-none bg-background rounded-xl border border-dashed mx-4 md:mx-0">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] mb-4 animate-bounce" />
               <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">کالایی یافت نشد</Typography>
-              <p className="text-xs text-muted-foreground mt-2 font-iran-sans">هنوز هیچ محصول فعالی برای این فروشگاه ثبت نشده است.</p>
+              <p className="text-xs text-muted-foreground mt-2 font-iran-yekan">هنوز هیچ محصول فعالی برای این فروشگاه ثبت نشده است.</p>
             </div>
           )}
         </div>

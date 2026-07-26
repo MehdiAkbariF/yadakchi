@@ -52,7 +52,7 @@ export function AddBankCardForm({ onCancel }: AddBankCardFormProps) {
           type="text"
           maxLength={16}
           error={errors.cardNumber?.message ? String(errors.cardNumber.message) : undefined}
-          className="text-xs font-iran-sans text-left"
+          className="text-xs font-iran-yekan text-left"
           dir="ltr"
           {...register('cardNumber')}
         />
@@ -65,7 +65,7 @@ export function AddBankCardForm({ onCancel }: AddBankCardFormProps) {
           type="text"
           maxLength={24}
           error={errors.shebaNumber?.message ? String(errors.shebaNumber.message) : undefined}
-          className="text-xs font-iran-sans text-left"
+          className="text-xs font-iran-yekan text-left"
           dir="ltr"
           {...register('shebaNumber')}
         />

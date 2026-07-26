@@ -2,61 +2,200 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   ۱. پیکربندی فونت اصلی: ایران‌یکان (IRANYekan)
+   پشتیبانی دوگانه از woff2 و woff جهت سازگاری کامل با تمامی سیستم‌عامل‌ها و سرورها
+   ========================================================================== */
+
+/* Thin 100 */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2');
-  font-weight: 400;
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Thin.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Thin.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff');
+  font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 
+/* Light 300 */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2');
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
+/* Regular 400 */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-ExtraBold.woff2') format('woff2');
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Medium 500 */
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold 700 */
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ExtraBold 800 */
+@font-face {
+  font-family: 'IRANYekan';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
 
+/* Black 900 */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Black.woff2') format('woff2');
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Black.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Black.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 
+
+/* ==========================================================================
+   ۲. نام مستعار ایران‌سنس (IRANSans / iran-sans) جهت ارجاع به فایل‌های ایران‌یکان
+   ========================================================================== */
+
+/* Thin 100 (Alias) */
 @font-face {
-  font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Thin.woff2') format('woff2');
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Thin.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Thin.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff');
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
+
+/* Light 300 (Alias) */
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Light.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Regular 400 (Alias) */
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Medium 500 (Alias) */
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold 700 (Alias) */
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ExtraBold 800 (Alias) */
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Black 900 (Alias) */
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Black.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn-Black.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* کلاس‌های تلویند با نام فرعی iran-sans */
+@font-face {
+  font-family: 'iran-sans';
+  src: url('/Font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanWebFn.woff') format('woff'),
+       url('/font/IranYekan/woff2/IRANYekanWebFn.woff2') format('woff2'),
+       url('/font/IranYekan/woff/IRANYekanWebFn.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* ==========================================================================
+   ۳. لایه متغیرهای تم و استایل اصلی
+   ========================================================================== */
 
 @layer base {
   :root {
@@ -74,7 +213,7 @@
     --secondary: 0 0% 94%;
     --secondary-foreground: 0 0% 12.5%;
     --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 38%; /* تیره کردن رنگ متن‌های خاکستری جهت برقراری کنتراست بالای ۴.۵ */
+    --muted-foreground: 0 0% 38%;
     --accent: 0 0% 94%;
     --accent-foreground: 0 0% 12.5%;
     --destructive: 0 84.2% 60.2%;

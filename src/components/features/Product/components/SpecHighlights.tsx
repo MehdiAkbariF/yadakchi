@@ -26,7 +26,7 @@ export function SpecHighlights({ specGroups }: SpecHighlightsProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
         {visibleSpecs.map((spec: any, idx: number) => (
           <div key={idx} className="rounded-xl p-3 bg-muted/40 dark:bg-zinc-900/50 flex flex-col gap-1 text-right border border-zinc-100 dark:border-zinc-800 animate-in fade-in duration-200">
-            <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">{spec.name}</span>
+            <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan">{spec.name}</span>
             <span className="text-xs font-black text-foreground mt-0.5">{toPersianDigits(spec.value)}</span>
           </div>
         ))}

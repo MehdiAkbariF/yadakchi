@@ -114,12 +114,12 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
               label="شماره همراه جدید *"
               placeholder="مثال: 09121234567"
               error={errors.phoneNumber?.message ? String(errors.phoneNumber.message) : undefined}
-              className="text-xs font-iran-sans text-left"
+              className="text-xs font-iran-yekan text-left"
               dir="ltr"
               {...register('phoneNumber')}
             />
 
-            <span className="text-[10px] text-muted-foreground font-iran-sans leading-relaxed mr-1 block">
+            <span className="text-[10px] text-muted-foreground font-iran-yekan leading-relaxed mr-1 block">
               برای ثبت شماره موبایل جدید، ابتدا شماره فعلی شما تایید می‌شود.
             </span>
 
@@ -146,7 +146,7 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
 
         {phoneStep === 2 && (
           <form onSubmit={onConfirmCurrentOTP} className="flex flex-col gap-5 w-full text-right">
-            <span className="text-xs text-muted-foreground font-iran-sans text-center block">
+            <span className="text-xs text-muted-foreground font-iran-yekan text-center block">
               کد تایید پیامک شده به شماره فعلی خود را وارد کنید
             </span>
 
@@ -179,7 +179,7 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
 
         {phoneStep === 3 && (
           <form onSubmit={onConfirmNewOTP} className="flex flex-col gap-5 w-full text-right">
-            <span className="text-xs text-muted-foreground font-iran-sans text-center block">
+            <span className="text-xs text-muted-foreground font-iran-yekan text-center block">
               کد تایید پیامک شده به شماره جدید <span className="font-bold text-foreground" dir="ltr">{targetPhone}</span> را وارد کنید
             </span>
 

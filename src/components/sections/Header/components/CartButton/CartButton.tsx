@@ -62,13 +62,13 @@ export function CartButton() {
             {!basket || basket.isEmpty ? (
               <div className="w-full py-8 flex flex-col items-center justify-center text-center">
                 <ShoppingCart className="h-10 w-10 text-muted-foreground/50 stroke-[1.5] mb-2 animate-bounce" />
-                <span className="text-xs font-bold font-iran-sans text-muted-foreground">سبد خرید شما خالی است</span>
+                <span className="text-xs font-bold font-iran-yekan text-muted-foreground">سبد خرید شما خالی است</span>
               </div>
             ) : (
               <>
                 <div className="w-full flex items-center justify-between border-b pb-2 mb-2">
                   <span className="text-xs font-bold font-iran-yekan text-foreground">اقلام سبد خرید</span>
-                  <span className="text-[10px] font-bold font-iran-sans text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                  <span className="text-[10px] font-bold font-iran-yekan text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
                     {new Intl.NumberFormat('fa-IR').format(itemCount)} کالا
                   </span>
                 </div>
@@ -88,7 +88,7 @@ export function CartButton() {
                           <div className="flex-1 min-w-0 text-right">
                             <h5 className="text-xs font-bold text-foreground truncate">{item.product.title}</h5>
                             <div className="flex items-center justify-between mt-1">
-                              <span className="text-[10px] text-muted-foreground font-iran-sans">{new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد</span>
+                              <span className="text-[10px] text-muted-foreground font-iran-yekan">{new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد</span>
                               <span className="text-xs font-black text-primary">{item.price.finalTotalPrice}</span>
                             </div>
                           </div>
@@ -113,11 +113,11 @@ export function CartButton() {
 
                 <div className="border-t pt-3 mt-2 flex flex-col gap-3">
                   <div className="flex items-center justify-between text-xs font-bold mb-1">
-                    <span className="text-muted-foreground font-iran-sans">مبلغ قابل پرداخت:</span>
+                    <span className="text-muted-foreground font-iran-yekan">مبلغ قابل پرداخت:</span>
                     <span className="text-sm font-black text-foreground">{basket.total.finalPrice}</span>
                   </div>
                   <Link href="/basket" className="w-full">
-                    <Button variant="primary" size="sm" fullWidth className="rounded-xl text-xs h-9 font-iran-sans font-bold shadow-md shadow-primary/10 flex items-center justify-center gap-1">
+                    <Button variant="primary" size="sm" fullWidth className="rounded-xl text-xs h-9 font-iran-yekan font-bold shadow-md shadow-primary/10 flex items-center justify-center gap-1">
                       <span>تسویه حساب</span>
                       <ArrowLeft className="h-3.5 w-3.5" />
                     </Button>

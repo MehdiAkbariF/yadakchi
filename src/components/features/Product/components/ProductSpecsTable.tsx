@@ -31,7 +31,7 @@ export function ProductSpecsTable({ specGroups }: ProductSpecsTableProps) {
               {(group.specs || []).map((spec: any, sIdx: number) => (
                 <div 
                   key={sIdx} 
-                  className="w-full flex items-center text-xs md:text-sm font-iran-sans py-3 border-b border-zinc-100 dark:border-zinc-800/50 last:border-b-0"
+                  className="w-full flex items-center text-xs md:text-sm font-iran-yekan py-3 border-b border-zinc-100 dark:border-zinc-800/50 last:border-b-0"
                 >
                   <div className="w-1/3 text-muted-foreground font-medium">
                     {spec.name}

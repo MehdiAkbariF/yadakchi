@@ -73,7 +73,7 @@ export function ProductSlider({
         
         <Link 
           href={viewAllLink} 
-          className="text-xs sm:text-sm font-bold font-iran-sans text-primary hover:underline transition-colors shrink-0"
+          className="text-xs sm:text-sm font-bold font-iran-yekan text-primary hover:underline transition-colors shrink-0"
         >
           مشاهده همه &lt;
         </Link>

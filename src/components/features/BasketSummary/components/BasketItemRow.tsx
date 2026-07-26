@@ -85,13 +85,13 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
           </div>
         )}
 
-        <h4 className="text-sm md:text-base font-extrabold text-foreground font-iran-sans leading-relaxed break-words">
+        <h4 className="text-sm md:text-base font-extrabold text-foreground font-iran-yekan leading-relaxed break-words">
           {item.product.title}
         </h4>
 
         {/* لیست اطلاعات با یک درجه فونت سایز بزرگتر (text-xs md:text-sm) */}
         <div className="flex flex-col gap-2.5">
-          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground font-iran-sans">
+          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground font-iran-yekan">
             {item.shop?.logo ? (
               <img 
                 src={getFullUrl(item.shop.logo)} 
@@ -104,7 +104,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             <span>{item.shop?.title || item.product?.shopName || 'پیروز یدک'}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground font-iran-sans">
+          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground font-iran-yekan">
             {item.warranty ? (
               <>
                 <ShieldCheck className="h-4.5 w-4.5 text-success-500 shrink-0" />
@@ -118,12 +118,12 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground font-iran-sans">
+          <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground font-iran-yekan">
             <Sparkles className="h-4.5 w-4.5 text-primary shrink-0" />
             <span>{item.type === 'New' || item.type === 'نو' ? 'قطعه نو' : 'قطعه استوک'}</span>
           </div>
 
-          <div className="flex flex-col gap-2 text-xs md:text-sm text-muted-foreground font-iran-sans">
+          <div className="flex flex-col gap-2 text-xs md:text-sm text-muted-foreground font-iran-yekan">
             {item.isTipaxShipping && (
               <div className="flex items-center gap-2">
                 <Truck className="h-4.5 w-4.5 text-zinc-500 shrink-0" />
@@ -161,11 +161,11 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
         {/* ۲. قیمت در زیر عکس قرار گرفته است */}
         <div className="flex flex-col items-center text-center gap-1.5">
           {item.price.hasDiscount && (
-            <span className="text-xs text-zinc-400 line-through font-iran-sans leading-none">
+            <span className="text-xs text-zinc-400 line-through font-iran-yekan leading-none">
               {item.price.unitPrice}
             </span>
           )}
-          <span className="text-base md:text-lg font-black text-foreground font-iran-sans leading-none">
+          <span className="text-base md:text-lg font-black text-foreground font-iran-yekan leading-none">
             {item.price.finalTotalPrice}
           </span>
         </div>
@@ -181,7 +181,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             >
               <Plus className="h-4.5 w-4.5" />
             </button>
-            <span className="w-8 text-center text-xs font-bold font-iran-sans text-primary">
+            <span className="w-8 text-center text-xs font-bold font-iran-yekan text-primary">
               {activeLoading ? (
                 <Loader2 className="h-4.5 w-4.5 animate-spin text-primary mx-auto" />
               ) : (
@@ -198,7 +198,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             </button>
           </div>
           
-          <span className="text-[10px] text-muted-foreground font-iran-sans font-bold">
+          <span className="text-[10px] text-muted-foreground font-iran-yekan font-bold">
             (حداکثر {formatPersianNumber(item.maxQuantity)} عدد)
           </span>
 
@@ -226,11 +226,11 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             </div>
             <div className="flex flex-col items-center text-center gap-1">
               {item.price.hasDiscount && (
-                <span className="text-[10px] text-zinc-400 line-through font-iran-sans">
+                <span className="text-[10px] text-zinc-400 line-through font-iran-yekan">
                   {item.price.unitPrice}
                 </span>
               )}
-              <span className="text-sm font-black text-foreground font-iran-sans">
+              <span className="text-sm font-black text-foreground font-iran-yekan">
                 {item.price.finalTotalPrice}
               </span>
             </div>
@@ -247,7 +247,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
               >
                 <Plus className="h-4 w-4" />
               </button>
-              <span className="text-xs font-bold font-iran-sans text-primary">
+              <span className="text-xs font-bold font-iran-yekan text-primary">
                 {activeLoading ? (
                   <Loader2 className="h-4.5 w-4.5 animate-spin text-primary mx-auto" />
                 ) : (
@@ -264,7 +264,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
               </button>
             </div>
             
-            <span className="text-[10px] text-muted-foreground font-iran-sans font-bold">
+            <span className="text-[10px] text-muted-foreground font-iran-yekan font-bold">
               (حداکثر {formatPersianNumber(item.maxQuantity)} عدد)
             </span>
 

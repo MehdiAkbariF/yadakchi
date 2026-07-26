@@ -111,7 +111,7 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
               <button
                 type="button"
                 onClick={() => setIsAddCardOpen(true)}
-                className="text-[10px] font-bold font-iran-sans text-primary hover:underline self-end flex items-center gap-1 mt-1 outline-none"
+                className="text-[10px] font-bold font-iran-yekan text-primary hover:underline self-end flex items-center gap-1 mt-1 outline-none"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>افزودن کارت بانکی جدید</span>
@@ -119,13 +119,13 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
             </div>
           ) : (
             <div className="w-full py-6 border border-dashed rounded-xl flex flex-col items-center justify-center gap-3 bg-muted/10">
-              <span className="text-xs font-bold text-muted-foreground font-iran-sans">هیچ کارت بانکی ثبت نکرده‌اید.</span>
+              <span className="text-xs font-bold text-muted-foreground font-iran-yekan">هیچ کارت بانکی ثبت نکرده‌اید.</span>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setIsAddCardOpen(true)}
-                className="rounded-xl font-iran-sans font-bold text-xs h-9 px-4 flex items-center justify-center gap-1 shadow-sm"
+                className="rounded-xl font-iran-yekan font-bold text-xs h-9 px-4 flex items-center justify-center gap-1 shadow-sm"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>ثبت اولین کارت بانکی</span>
@@ -140,13 +140,13 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
             placeholder="مبلغ مورد نظر خود را به تومان وارد کنید..."
             type="number"
             error={errors.amount?.message ? String(errors.amount.message) : undefined}
-            rightIcon={<span className="text-xs font-bold text-muted-foreground font-iran-sans">تومان</span>}
-            className="text-xs font-iran-sans text-left"
+            rightIcon={<span className="text-xs font-bold text-muted-foreground font-iran-yekan">تومان</span>}
+            className="text-xs font-iran-yekan text-left"
             dir="ltr"
             {...register('amount', { valueAsNumber: true })}
           />
           {watchAmount > 0 && (
-            <span className="text-[10px] font-bold text-muted-foreground font-iran-sans mt-1 block">
+            <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan mt-1 block">
               معادل {formatNumber(Number(watchAmount) * 10)} ریال به بانک مقصد ارسال خواهد شد.
             </span>
           )}
@@ -179,7 +179,7 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
         type="button"
         variant="outline"
         onClick={onClose}
-        className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+        className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
       >
         انصراف
       </Button>
@@ -188,7 +188,7 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
         variant="primary"
         disabled={bankAccounts.length === 0}
         isLoading={submitWithdraw.isPending}
-        className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+        className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
         onClick={handleSubmit(handleWithdrawSubmit)}
       >
         ثبت درخواست برداشت

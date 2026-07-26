@@ -80,8 +80,8 @@ export default function BasketPaymentContent() {
 
   const leftPriceContent = (
     <div className="flex flex-col text-right">
-      <span className="text-[10px] text-muted-foreground font-iran-sans mb-0.5">مبلغ نهایی قابل پرداخت:</span>
-      <span className="text-sm font-black text-foreground font-iran-sans">
+      <span className="text-[10px] text-muted-foreground font-iran-yekan mb-0.5">مبلغ نهایی قابل پرداخت:</span>
+      <span className="text-sm font-black text-foreground font-iran-yekan">
         {formatPrice(finalPriceRaw / 10)} تومان
       </span>
     </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Star, Hourglass } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { useImpression } from '@/shared/hooks/useImpression'; // وارد کردن هوک ثبت بازدید
 
 interface ProductDealCardProps {
   product: any;
@@ -42,6 +43,11 @@ export function ProductDealCard({
 
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
+
+  const shopProductId = product?.shopProductId || nominated?.id || null;
+  
+  // اتصال به سیستم ناظر هوشمند ثبت بازدید متمرکز
+  const impressionRef = useImpression(shopProductId);
 
   useEffect(() => {
     if (!hasExpiration) return;
@@ -132,7 +138,7 @@ export function ProductDealCard({
     return (
       <div className="flex items-center gap-1 select-none">
         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
-        <span className="text-[10px] sm:text-xs font-iran-sans text-muted-foreground font-medium">امتیاز {rating}</span>
+        <span className="text-[10px] sm:text-xs font-iran-yekan text-muted-foreground font-medium">امتیاز {rating}</span>
       </div>
     );
   };
@@ -150,7 +156,8 @@ export function ProductDealCard({
       onTouchMove={handleTouchMove}
       onClick={handleClick}
     >
-      <div className={cn(
+      {/* رفرنس کلاینتی جهت ثبت بازدید به المان نگهدارنده اصلی کارت اختصاص داده شد */}
+      <div ref={impressionRef} className={cn(
         "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
         className
       )}>
@@ -165,7 +172,7 @@ export function ProductDealCard({
         </div>
 
         <div className="w-full min-h-[2.6rem] mb-1 flex items-start justify-end select-none">
-          <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed w-full">
+          <h4 className="text-sm sm:text-sm font-bold font-iran-yekan text-foreground text-right line-clamp-2 leading-relaxed w-full">
             {product.title}
           </h4>
         </div>
@@ -179,7 +186,7 @@ export function ProductDealCard({
         <div className="w-full mt-auto pt-2 flex items-center justify-between">
           
           <div className={cn(
-            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
+            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-yekan px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
             {toPersianDigits(discountPercent)}٪
@@ -187,29 +194,29 @@ export function ProductDealCard({
 
           <div className="flex flex-col items-end min-w-0">
             {hasDiscount && originalPriceToman > 0 && (
-              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
+              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-yekan font-medium">
                 {formatPrice(originalPriceToman)}
               </span>
             )}
             <div className="flex items-center gap-0.5 mt-0.5">
-              <span className="text-base sm:text-lg font-black font-iran-sans text-foreground">
+              <span className="text-base sm:text-lg font-black font-iran-yekan text-foreground">
                 {formatPrice(finalPriceToman)}
               </span>
-              <span className="text-[10px] text-muted-foreground font-iran-sans">تومان</span>
+              <span className="text-[10px] text-muted-foreground font-iran-yekan">تومان</span>
             </div>
           </div>
 
         </div>
 
         {showTimer && hasExpiration && (
-          <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-sans border-t border-dashed">
+          <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-yekan border-t border-dashed">
             
             <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{formatPersianDigits(timeLeft.hours)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.hours)}</span>
               <span className="text-muted-foreground">:</span>
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{formatPersianDigits(timeLeft.minutes)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.minutes)}</span>
               <span className="text-muted-foreground">:</span>
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-sans">{formatPersianDigits(timeLeft.seconds)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.seconds)}</span>
             </div>
 
             <Hourglass className="h-3.5 w-3.5 text-primary shrink-0 animate-spin" />

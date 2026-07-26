@@ -136,24 +136,24 @@ export function ProductContent({ productCode }: ProductContentProps) {
 
   const leftPriceContent = currentSelectedSeller ? (
     <div className="flex flex-col text-right">
-      <span className="text-[10px] text-muted-foreground font-iran-sans">قیمت فروشنده:</span>
+      <span className="text-[10px] text-muted-foreground font-iran-yekan">قیمت فروشنده:</span>
       {currentSelectedSeller.hasDiscount && (
-        <span className="text-[10px] text-zinc-400 line-through leading-none mb-1 font-iran-sans">
+        <span className="text-[10px] text-zinc-400 line-through leading-none mb-1 font-iran-yekan">
           {currentSelectedSeller.retailPrice}
         </span>
       )}
-      <span className="text-xs md:text-sm font-black text-foreground font-iran-sans leading-none">
+      <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan leading-none">
         {currentSelectedSeller.finalPrice}
       </span>
     </div>
   ) : (
-    <span className="text-destructive font-bold text-xs font-iran-sans">ناموجود</span>
+    <span className="text-destructive font-bold text-xs font-iran-yekan">ناموجود</span>
   );
 
   return (
     <div className="w-full flex flex-col gap-1">
       {/* Breadcrumbs - تمام عرض */}
-      <div className="w-full flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans overflow-x-auto no-scrollbar py-1.5 select-none">
+      <div className="w-full flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan overflow-x-auto no-scrollbar py-1.5 select-none">
         <Link href="/" className="hover:text-primary transition-colors">
           خانه
         </Link>
@@ -222,7 +222,7 @@ export function ProductContent({ productCode }: ProductContentProps) {
             <button
               onClick={() => handleScrollToSection(introRef, 'intro')}
               className={cn(
-                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                'text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 shrink-0 transition-colors outline-none',
                 activeSection === 'intro' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
               )}
             >
@@ -231,7 +231,7 @@ export function ProductContent({ productCode }: ProductContentProps) {
             <button
               onClick={() => handleScrollToSection(specsRef, 'specs')}
               className={cn(
-                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                'text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 shrink-0 transition-colors outline-none',
                 activeSection === 'specs' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
               )}
             >
@@ -240,7 +240,7 @@ export function ProductContent({ productCode }: ProductContentProps) {
             <button
               onClick={() => handleScrollToSection(commentsRef, 'comments')}
               className={cn(
-                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                'text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 shrink-0 transition-colors outline-none',
                 activeSection === 'comments' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
               )}
             >
@@ -249,7 +249,7 @@ export function ProductContent({ productCode }: ProductContentProps) {
             <button
               onClick={() => handleScrollToSection(inquiriesRef, 'inquiries')}
               className={cn(
-                'text-xs md:text-sm font-bold font-iran-sans pb-2 border-b-2 shrink-0 transition-colors outline-none',
+                'text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 shrink-0 transition-colors outline-none',
                 activeSection === 'inquiries' ? 'text-primary border-primary' : 'text-muted-foreground border-transparent'
               )}
             >
@@ -262,7 +262,7 @@ export function ProductContent({ productCode }: ProductContentProps) {
   <div className="relative">
     <div 
       style={{ maxHeight: isIntroExpanded ? 'none' : '110px' }}
-      className="text-xs md:text-sm leading-relaxed text-muted-foreground text-justify font-iran-sans overflow-hidden transition-all duration-300"
+      className="text-xs md:text-sm leading-relaxed text-muted-foreground text-justify font-iran-yekan overflow-hidden transition-all duration-300"
       dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
     />
     {!isIntroExpanded && (

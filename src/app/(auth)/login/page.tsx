@@ -139,7 +139,7 @@ function LoginContent() {
             </Button>
           </form>
 
-          <Typography variant="small" color="muted" className="text-center font-iran-sans text-[10px] leading-relaxed text-muted-foreground/80 px-2 block">
+          <Typography variant="small" color="muted" className="text-center font-iran-yekan text-[10px] leading-relaxed text-muted-foreground/80 px-2 block">
             ورود | ثبت نام شما به معنای پذیرش{' '}
             <Link href="/terms" className="text-primary hover:underline font-bold">قوانین و مقررات</Link>{' '}
             و{' '}
@@ -173,7 +173,7 @@ function LoginContent() {
 
           <div className="flex flex-col items-center gap-3 pt-2">
             {isTimerActive ? (
-              <Typography variant="small" color="muted" className="flex items-center gap-2 font-iran-sans">
+              <Typography variant="small" color="muted" className="flex items-center gap-2 font-iran-yekan">
                 <RotateCcw className="h-3.5 w-3.5 text-muted-foreground/70" />
                 دریافت مجدد کد از طریق پیامک
                 <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{formatTime(countdown)}</span>
@@ -183,7 +183,7 @@ function LoginContent() {
                 type="button"
                 onClick={handleResendOTP}
                 disabled={requestLogin.isPending}
-                className="flex items-center gap-2 text-xs text-primary font-bold hover:underline transition-all font-iran-sans"
+                className="flex items-center gap-2 text-xs text-primary font-bold hover:underline transition-all font-iran-yekan"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 دریافت مجدد کد از طریق پیامک
@@ -194,7 +194,7 @@ function LoginContent() {
           <div className="flex justify-center border-t border-border pt-4">
             <button 
               onClick={() => setStep('phone')}
-              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-primary transition-colors font-iran-sans group"
+              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-primary transition-colors font-iran-yekan group"
             >
               <PencilLine className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
               ویرایش شماره &gt;

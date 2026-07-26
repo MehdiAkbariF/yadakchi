@@ -26,6 +26,26 @@ export class ErrorManager {
   }
 
   private registerDefaultHandlers(): void {
+    // ۱. هندلر متمرکز و با اولویت بالای خطاهای سروری ۵۰۲ و ۵۰۳ (هدایت امن به صفحه بروزرسانی بدون تخریب سشن کاربر)
+    this.registerHandler({
+      canHandle: (error) => 
+        error.status === 502 || 
+        error.status === 503 || 
+        error.type === ErrorType.SERVICE_UNAVAILABLE,
+      handle: (error) => {
+        logger.error('[ErrorManager] Server maintenance / Bad Gateway detected:', error.message);
+        
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          // انتقال امن به صفحه بروزرسانی بدون تغییر کوکی‌ها یا از بین بردن حالت ورود کاربر
+          if (currentPath !== '/maintenance') {
+            window.location.href = '/maintenance';
+          }
+        }
+      },
+      getPriority: () => 11, // بالاترین اولویت برای خطاهای حیاتی سرور
+    });
+
     this.registerHandler({
       canHandle: (error) => error.type === ErrorType.VALIDATION,
       handle: (error) => {
@@ -45,14 +65,12 @@ export class ErrorManager {
           const originalError = error.originalError as any;
           const requestUrl = originalError?.config?.url || '';
 
-          // چک کردن عدم ردایرکت روی متدهای پسیو کاربر مهمان
           const isPassiveAuthCheck = 
             requestUrl.includes('/User') || 
             requestUrl.includes('/Refresh') || 
             requestUrl.includes('/get-user');
 
-          // در صورتی که صفحه جاری لاگین نباشد و درخواست هم پسیو نباشد، هدایت به لاگین انجام شود
-          if (currentPath !== '/login' && !isPassiveAuthCheck) {
+          if (currentPath !== '/login' && !isPassiveAuthCheck && currentPath !== '/maintenance') {
             window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
           }
         }

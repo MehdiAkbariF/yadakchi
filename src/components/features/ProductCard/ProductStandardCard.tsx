@@ -6,6 +6,7 @@ import { Star, Store, BadgeCheck, Truck, Eye } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { useImpression } from '@/shared/hooks/useImpression'; // وارد کردن هوک جدید
 
 interface ProductStandardCardProps {
   product: any;
@@ -28,6 +29,10 @@ export function ProductStandardCard({
   }, []);
 
   const nominated = product?.nominatedShopProduct || {};
+  const shopProductId = product?.shopProductId || nominated?.id || null;
+
+  // اتصال به هوک هوشمند تشخیص ورود به ویوپورت و ارسال به صف تجمیع برای اسلایدرها
+  const impressionRef = useImpression(shopProductId);
   
   const shopName = nominated?.shopTitle || product?.shop?.name || product?.shopTitle || null;
   const isTipax = nominated?.isTipaxShipping || product?.isTipaxShipping || false;
@@ -48,7 +53,6 @@ export function ProductStandardCard({
     ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
     : (nominated.discountPercentage || product?.discount?.percent || 0);
 
-  // اصلاح و فارسی‌سازی اعداد داینامیک داخل چرخه اسلاید متنی کارت استاندارد
   const tickerItems = useMemo(() => {
     const items: { text: string; icon: any }[] = [];
     
@@ -134,7 +138,7 @@ export function ProductStandardCard({
     return (
       <div className="flex items-center gap-1 select-none">
         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
-        <span className="text-[10px] sm:text-[11px] font-iran-sans font-bold text-foreground">
+        <span className="text-[10px] sm:text-[11px] font-iran-yekan font-bold text-foreground">
           {formatPrice(rating)}
         </span>
       </div>
@@ -155,7 +159,8 @@ export function ProductStandardCard({
       onTouchMove={handleTouchMove}
       onClick={handleClick}
     >
-      <div className={cn(
+      {/* ارجاع رفرنس کلاینتی به تگ نگهدارنده بیرونی جهت شناسایی ورود به ویوپورت */}
+      <div ref={impressionRef} className={cn(
         "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
         className
       )}>
@@ -176,7 +181,7 @@ export function ProductStandardCard({
         </div>
 
         <div className="w-full h-9 mb-1 mt-2">
-          <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed">
+          <h4 className="text-sm sm:text-sm font-bold font-iran-yekan text-foreground text-right line-clamp-2 leading-relaxed">
             {product?.title || product?.name}
           </h4>
         </div>
@@ -184,7 +189,7 @@ export function ProductStandardCard({
         {shopName && (
           <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1">
             <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
-            <span className="font-iran-sans font-medium truncate">فروشگاه: {shopName}</span>
+            <span className="font-iran-yekan font-medium truncate">فروشگاه: {shopName}</span>
           </div>
         )}
 
@@ -198,7 +203,7 @@ export function ProductStandardCard({
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: -15, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1"
+                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-yekan truncate h-full py-1 justify-start"
                 >
                   <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                   <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
@@ -212,7 +217,7 @@ export function ProductStandardCard({
 
         <div className="w-full mt-auto pt-2 flex items-center justify-between">
           <div className={cn(
-            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
+            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-yekan px-2.5 py-1 rounded-lg transition-opacity",
             hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
             {toPersianDigits(discountPercent)}٪
@@ -220,21 +225,21 @@ export function ProductStandardCard({
 
           <div className="flex flex-col items-end min-w-0">
             {hasDiscount && originalPriceToman > 0 && (
-              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
+              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-yekan font-medium">
                 {formatPrice(originalPriceToman)}
               </span>
             )}
             <div className="flex items-center gap-0.5 mt-0.5">
               {isOutOfStock ? (
-                <span className="text-sm sm:text-base font-bold font-iran-sans text-destructive">
+                <span className="text-sm sm:text-base font-bold font-iran-yekan text-destructive">
                   ناموجود
                 </span>
               ) : (
                 <>
-                  <span className="text-base sm:text-lg font-black font-iran-sans text-foreground">
+                  <span className="text-base sm:text-lg font-black font-iran-yekan text-foreground">
                     {formatPrice(finalPriceToman)}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-iran-sans">تومان</span>
+                  <span className="text-[10px] text-muted-foreground font-iran-yekan">تومان</span>
                 </>
               )}
             </div>

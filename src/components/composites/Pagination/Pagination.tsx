@@ -51,7 +51,7 @@ export function Pagination({
           key={`page-${page}`}
           onClick={() => onPageChange(page)}
           className={cn(
-            "w-9 h-9 rounded-xl border flex items-center justify-center text-xs font-iran-sans font-bold transition-all select-none shrink-0",
+            "w-9 h-9 rounded-xl border flex items-center justify-center text-xs font-iran-yekan font-bold transition-all select-none shrink-0",
             isActive 
               ? "bg-primary border-primary text-white shadow-md scale-105" 
               : "bg-background text-foreground hover:border-primary/30 hover:bg-primary/5"

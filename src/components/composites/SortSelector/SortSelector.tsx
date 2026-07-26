@@ -54,7 +54,7 @@ export function SortSelector({
       >
         <div className="flex items-center gap-2 text-muted-foreground shrink-0 select-none mr-2">
           <ArrowUpDown className="h-4 w-4 text-primary" />
-          <span className="text-xs font-bold font-iran-sans">{label}</span>
+          <span className="text-xs font-bold font-iran-yekan">{label}</span>
         </div>
 
         <div className="flex items-center gap-1.5 relative">
@@ -66,7 +66,7 @@ export function SortSelector({
                 type="button"
                 onClick={() => onChange(opt.value)}
                 className={cn(
-                  "relative px-4 py-1.5 rounded-full text-xs font-bold font-iran-sans transition-colors select-none whitespace-nowrap outline-none shrink-0 border-0",
+                  "relative px-4 py-1.5 rounded-full text-xs font-bold font-iran-yekan transition-colors select-none whitespace-nowrap outline-none shrink-0 border-0",
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -92,7 +92,7 @@ export function SortSelector({
             type="button"
             onClick={() => setIsMobileSheetOpen(true)}
             className="w-full h-9 flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3
-             bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground
+             bg-background hover:bg-muted text-xs font-bold font-iran-yekan text-foreground
               select-none outline-none"
           >
             <ArrowUpDown className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -103,7 +103,7 @@ export function SortSelector({
           <button
             type="button"
             onClick={() => setIsMobileSheetOpen(true)}
-            className="w-full h-11 flex items-center justify-between bg-secondary rounded-2xl px-4 py-3 text-xs font-bold font-iran-sans text-foreground shadow-sm select-none outline-none border-0"
+            className="w-full h-11 flex items-center justify-between bg-secondary rounded-2xl px-4 py-3 text-xs font-bold font-iran-yekan text-foreground shadow-sm select-none outline-none border-0"
           >
             <div className="flex items-center gap-2">
               <ArrowUpDown className="h-4 w-4 text-primary shrink-0" />
@@ -132,7 +132,7 @@ export function SortSelector({
                     setIsMobileSheetOpen(false);
                   }}
                   className={cn(
-                    "flex items-center justify-between w-full py-4 text-sm font-bold font-iran-sans transition-colors border-0 bg-transparent outline-none",
+                    "flex items-center justify-between w-full py-4 text-sm font-bold font-iran-yekan transition-colors border-0 bg-transparent outline-none",
                     isActive ? "text-primary" : "text-foreground"
                   )}
                 >

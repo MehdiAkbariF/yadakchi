@@ -35,7 +35,7 @@ export function ReferralCard() {
         </div>
       </CardHeader>
       <CardBody className="p-5 flex flex-col gap-3">
-        <p className="text-xs text-muted-foreground font-iran-sans leading-relaxed">
+        <p className="text-xs text-muted-foreground font-iran-yekan leading-relaxed">
           با وارد کردن کد معرف، هم دوستت و هم خودت (۱,۰۰۰,۰۰۰ ریال) اعتبار خرید دریافت می‌کنید.
         </p>
         <div className="flex gap-2 w-full mt-1">
@@ -43,13 +43,13 @@ export function ReferralCard() {
             placeholder="کد معرف را وارد کنید"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="flex-1 font-iran-sans text-xs h-10 w-full"
+            className="flex-1 font-iran-yekan text-xs h-10 w-full"
           />
           <Button
             variant="outline"
             onClick={handleApply}
             isLoading={applyReferral.isPending}
-            className="px-5 text-xs font-bold font-iran-sans h-10 rounded-xl"
+            className="px-5 text-xs font-bold font-iran-yekan h-10 rounded-xl"
           >
             ثبت معرف
           </Button>

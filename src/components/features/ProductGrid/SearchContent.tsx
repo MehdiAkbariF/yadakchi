@@ -108,7 +108,7 @@ export function SearchContent() {
             <div className="flex flex-col items-center justify-center py-16 text-center select-none bg-background rounded-xl border border-dashed mx-4 md:mx-0">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] mb-4 animate-bounce" />
               <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">قطعه‌ای یافت نشد</Typography>
-              <p className="text-xs text-muted-foreground mt-2 font-iran-sans">لطفاً عبارات جستجو را تغییر داده یا از دکمه حذف فیلترها استفاده کنید.</p>
+              <p className="text-xs text-muted-foreground mt-2 font-iran-yekan">لطفاً عبارات جستجو را تغییر داده یا از دکمه حذف فیلترها استفاده کنید.</p>
             </div>
           )}
         </div>
@@ -128,7 +128,7 @@ export function SearchContent() {
                 key={opt.value}
                 onClick={() => handleMobileSortSelect(opt.value)}
                 className={cn(
-                  "flex items-center justify-between w-full py-4 text-sm font-bold font-iran-sans transition-colors outline-none",
+                  "flex items-center justify-between w-full py-4 text-sm font-bold font-iran-yekan transition-colors outline-none",
                   isActive ? "text-primary" : "text-foreground"
                 )}
               >

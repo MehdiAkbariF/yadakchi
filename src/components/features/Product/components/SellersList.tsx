@@ -128,7 +128,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-sans">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
               <span className="font-bold text-success-500">عملکرد عالی</span>
               <span className="text-zinc-300">|</span>
               <span className="flex items-center gap-1">
@@ -143,7 +143,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
             </div>
 
             {!isOnline && (
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-iran-sans mt-1.5">
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-iran-yekan mt-1.5">
                 <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                 <span className="truncate">{seller.shop.address}</span>
               </div>
@@ -158,7 +158,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               size="sm"
               onClick={(e) => handleAddOnlineToBasket(e, seller)}
               disabled={loadingSellerId === seller.id}
-              className="rounded-xl text-xs font-bold font-iran-sans h-10 px-5 w-auto min-w-[110px] md:min-w-[130px] shrink-0 flex items-center justify-center gap-1.5 shadow-sm"
+              className="rounded-xl text-xs font-bold font-iran-yekan h-10 px-5 w-auto min-w-[110px] md:min-w-[130px] shrink-0 flex items-center justify-center gap-1.5 shadow-sm"
             >
               {loadingSellerId === seller.id ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -174,7 +174,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               variant="outline"
               size="sm"
               onClick={(e) => handleOpenMapWithSeller(e, seller)}
-              className="rounded-xl text-xs font-bold font-iran-sans h-10 px-5 w-auto min-w-[110px] md:min-w-[130px] border-zinc-200 hover:bg-muted text-foreground shrink-0 flex items-center justify-center gap-1.5 shadow-sm"
+              className="rounded-xl text-xs font-bold font-iran-yekan h-10 px-5 w-auto min-w-[110px] md:min-w-[130px] border-zinc-200 hover:bg-muted text-foreground shrink-0 flex items-center justify-center gap-1.5 shadow-sm"
             >
               <Phone className="h-3.5 w-3.5" />
               <span>اطلاعات تماس</span>
@@ -182,7 +182,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
           )}
 
           <div className="flex flex-col items-end text-right mt-1">
-            <span className="text-sm md:text-base font-black text-foreground font-iran-sans leading-none">{seller.finalPrice}</span>
+            <span className="text-sm md:text-base font-black text-foreground font-iran-yekan leading-none">{seller.finalPrice}</span>
             <button
               type="button"
               onClick={(e) => {
@@ -190,7 +190,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 e.stopPropagation();
                 setReportShop(seller);
               }}
-              className="text-[9px] md:text-[10px] font-bold font-iran-sans text-muted-foreground hover:text-destructive flex items-center gap-0.5 mt-2.5 outline-none"
+              className="text-[9px] md:text-[10px] font-bold font-iran-yekan text-muted-foreground hover:text-destructive flex items-center gap-0.5 mt-2.5 outline-none"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
               <span>گزارش خطای قیمت</span>
@@ -230,14 +230,14 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
           onlineList.length > 0 ? (
             onlineList.map((s: any) => renderSellerRow(s))
           ) : (
-            <span className="text-xs text-muted-foreground font-iran-sans py-4">فروشگاه اینترنتی فعالی برای این قطعه موجود نیست.</span>
+            <span className="text-xs text-muted-foreground font-iran-yekan py-4">فروشگاه اینترنتی فعالی برای این قطعه موجود نیست.</span>
           )
         ) : (
           <>
             {localList.length > 0 ? (
               localList.map((s: any) => renderSellerRow(s))
             ) : (
-              <span className="text-xs text-muted-foreground font-iran-sans py-4">فروشگاه حضوری فعالی برای این قطعه ثبت نشده است.</span>
+              <span className="text-xs text-muted-foreground font-iran-yekan py-4">فروشگاه حضوری فعالی برای این قطعه ثبت نشده است.</span>
             )}
             {localList.length > 0 && (
               <div 
@@ -248,10 +248,10 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 <div className="p-3 bg-primary/10 rounded-full border border-primary/20 text-primary group-hover:scale-105 transition-transform duration-300 z-10 shrink-0">
                   <MapPin className="h-6 w-6 stroke-[2]" />
                 </div>
-                <span className="text-xs md:text-sm font-black font-iran-sans text-foreground z-10">مشاهده تمام فروشگاه‌های حضوری روی نقشه</span>
+                <span className="text-xs md:text-sm font-black font-iran-yekan text-foreground z-10">مشاهده تمام فروشگاه‌های حضوری روی نقشه</span>
                 <button
                   type="button"
-                  className="text-[10px] font-bold font-iran-sans border-b border-primary text-primary pb-0.5 hover:text-primary/80 transition-colors z-10 outline-none"
+                  className="text-[10px] font-bold font-iran-yekan border-b border-primary text-primary pb-0.5 hover:text-primary/80 transition-colors z-10 outline-none"
                 >
                   مشاهده نقشه
                 </button>
@@ -300,7 +300,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 setSelectedSubjectId('');
                 setReportDescription('');
               }}
-              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
+              className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
             >
               انصراف
             </Button>
@@ -308,7 +308,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               variant="destructive"
               onClick={handleReportSubmit}
               isLoading={submitReport.isPending}
-              className="rounded-xl text-xs h-10 font-bold font-iran-sans"
+              className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
             >
               ثبت گزارش خطا
             </Button>

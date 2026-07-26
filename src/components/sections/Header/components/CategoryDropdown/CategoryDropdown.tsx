@@ -51,14 +51,14 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
       {isLoading && (
         <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <span className="text-sm font-medium font-iran-sans">در حال بارگذاری دسته‌بندی‌ها...</span>
+          <span className="text-sm font-medium font-iran-yekan">در حال بارگذاری دسته‌بندی‌ها...</span>
         </div>
       )}
 
       {isError && (
         <div className="flex flex-1 items-center justify-center gap-2 text-destructive p-4">
           <AlertCircle className="h-5 w-5" />
-          <span className="text-sm font-medium font-iran-sans">خطا در بارگذاری اطلاعات. لطفاً دوباره تلاش کنید.</span>
+          <span className="text-sm font-medium font-iran-yekan">خطا در بارگذاری اطلاعات. لطفاً دوباره تلاش کنید.</span>
         </div>
       )}
 
@@ -74,7 +74,7 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                 <button
                   key={category.id}
                   className={cn(
-                    "flex items-center justify-between w-full px-4 py-3 text-right text-sm transition-colors font-iran-sans font-medium",
+                    "flex items-center justify-between w-full px-4 py-3 text-right text-sm transition-colors font-iran-yekan font-medium",
                     isActive 
                       ? "bg-background text-primary" 
                       : "text-foreground hover:bg-muted/50"
@@ -122,7 +122,7 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                   </span>
                   <Link 
                     href={activeCategory.href}
-                    className="text-xs text-primary hover:underline font-iran-sans flex items-center gap-1"
+                    className="text-xs text-primary hover:underline font-iran-yekan flex items-center gap-1"
                   >
                     مشاهده همه قطعات این گروه
                     <ChevronLeft className="h-3 w-3" />
@@ -135,20 +135,20 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                       <Link
                         key={part.id}
                         href={part.href}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors py-1 truncate font-iran-sans font-medium hover:translate-x-1 duration-150 inline-block"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors py-1 truncate font-iran-yekan font-medium hover:translate-x-1 duration-150 inline-block"
                       >
                         {part.name}
                       </Link>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground font-iran-sans py-4">
+                  <div className="text-sm text-muted-foreground font-iran-yekan py-4">
                     هیچ قطعه‌ای برای این دسته‌بندی یافت نشد.
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground text-sm font-iran-sans">
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm font-iran-yekan">
                 یک دسته‌بندی را از سمت راست انتخاب کنید.
               </div>
             )}

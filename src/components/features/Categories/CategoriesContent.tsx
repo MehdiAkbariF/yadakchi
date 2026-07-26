@@ -51,7 +51,7 @@ export function CategoriesContent() {
             placeholder="جستجو در دسته‌بندی قطعات یدک‌چی..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-muted/20 pl-4 pr-10 text-xs font-iran-sans text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            className="w-full h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-muted/20 pl-4 pr-10 text-xs font-iran-yekan text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
           <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         </form>
@@ -84,7 +84,7 @@ export function CategoriesContent() {
                     <Settings className="h-5 w-5 text-muted-foreground/80" />
                   )}
                 </div>
-                <span className="text-[10px] md:text-xs leading-relaxed font-iran-sans font-bold block max-w-full truncate">{cat.name}</span>
+                <span className="text-[10px] md:text-xs leading-relaxed font-iran-yekan font-bold block max-w-full truncate">{cat.name}</span>
               </button>
             );
           })}
@@ -99,7 +99,7 @@ export function CategoriesContent() {
                 <Link 
                   href={activeCategory.href}
                   className="text-[10px] md:text-xs text-primary font-bold
-                   font-iran-sans flex items-center gap-0.5 hover:underline"
+                   font-iran-yekan flex items-center gap-0.5 hover:underline"
                 >
                   <span>مشاهده همه</span>
                   <ArrowLeft className="h-3 w-3" />
@@ -125,17 +125,17 @@ export function CategoriesContent() {
                           <Settings className="h-5 w-5 text-muted-foreground" />
                         )}
                       </div>
-                      <span className="text-[10px] md:text-xs font-bold font-iran-sans text-foreground leading-relaxed line-clamp-2 w-full">{part.name}</span>
+                      <span className="text-[10px] md:text-xs font-bold font-iran-yekan text-foreground leading-relaxed line-clamp-2 w-full">{part.name}</span>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <span className="text-xs text-muted-foreground font-iran-sans py-4">قطعه‌ای برای این دسته‌بندی ثبت نشده است.</span>
+                <span className="text-xs text-muted-foreground font-iran-yekan py-4">قطعه‌ای برای این دسته‌بندی ثبت نشده است.</span>
               )}
 
             </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground font-iran-sans">
+            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground font-iran-yekan">
               یک دسته‌بندی را انتخاب کنید
             </div>
           )}

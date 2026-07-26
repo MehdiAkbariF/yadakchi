@@ -19,14 +19,14 @@ export function TrackingDetailsModal({ isOpen, onClose }: TrackingDetailsModalPr
         </ModalTitle>
       </ModalHeader>
       <ModalBody className="p-0 pt-4 text-right">
-        <p className="text-xs leading-relaxed text-muted-foreground font-iran-sans">
+        <p className="text-xs leading-relaxed text-muted-foreground font-iran-yekan">
           تمام قطعات خریداری شده در کوتاه‌ترین زمان ممکن از طریق روش ارسال انتخابی جمع‌آوری، بسته‌بندی و تحویل می‌گردند. پس از ارسال، کد رهگیری مرسوله پستی یا تیپاکس از طریق پیامک برای شما ارسال خواهد شد و می‌توانید وضعیت آن را لحظه به لحظه رصد نمایید.
         </p>
         <Button
           variant="outline"
           fullWidth
           onClick={onClose}
-          className="rounded-xl mt-6 text-xs h-10 font-bold font-iran-sans"
+          className="rounded-xl mt-6 text-xs h-10 font-bold font-iran-yekan"
         >
           متوجه شدم
         </Button>

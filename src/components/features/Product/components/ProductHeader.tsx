@@ -134,11 +134,11 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
       
       <div className="flex items-center justify-between w-full border-b pb-3">
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-muted-foreground font-iran-sans">کد کالا: {toPersianDigits(product.code)}</span>
+          <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan">کد کالا: {toPersianDigits(product.code)}</span>
           <span className="text-zinc-300 text-[10px]">|</span>
           <button
             onClick={() => setIsReportModalOpen(true)}
-            className="text-[10px] font-bold font-iran-sans text-muted-foreground hover:text-destructive flex items-center gap-0.5 outline-none"
+            className="text-[10px] font-bold font-iran-yekan text-muted-foreground hover:text-destructive flex items-center gap-0.5 outline-none"
           >
             <AlertTriangle className="h-3.5 w-3.5" />
             <span>گزارش کالا</span>
@@ -173,7 +173,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         {toPersianDigits(product.title)}
       </Typography>
 
-      <div className="flex flex-wrap items-center gap-4 text-xs font-iran-sans text-muted-foreground mt-1">
+      <div className="flex flex-wrap items-center gap-4 text-xs font-iran-yekan text-muted-foreground mt-1">
         <div className="flex items-center gap-1 cursor-pointer" onClick={onScrollToComments}>
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0" />
           <span className="font-bold text-foreground">{toPersianDigits(product.averageRate)}</span>
@@ -211,7 +211,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
               placeholder="جزییات مشکل را بنویسید..."
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
-              className="h-24 text-xs font-iran-sans"
+              className="h-24 text-xs font-iran-yekan"
             />
           </div>
         </ModalBody>
@@ -225,7 +225,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
               setSelectedSubjectId('');
               setReportDescription('');
             }}
-            className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
+            className="rounded-xl text-xs h-10 font-bold font-iran-yekan flex-1"
           >
             انصراف
           </Button>
@@ -234,7 +234,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
             variant="destructive"
             onClick={handleReportSubmit}
             isLoading={submitProductReport.isPending}
-            className="rounded-xl text-xs h-10 font-bold font-iran-sans flex-1"
+            className="rounded-xl text-xs h-10 font-bold font-iran-yekan flex-1"
           >
             ثبت گزارش خطا
           </Button>

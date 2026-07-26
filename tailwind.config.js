@@ -1,5 +1,3 @@
-// tailwind.config.js
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ['class'],
@@ -112,9 +110,12 @@ module.exports = {
         '3xl': '1.5rem',
         full: '9999px',
       },
-        fontFamily: {
+      fontFamily: {
         sans: ['IRANYekan', 'system-ui', 'sans-serif'],
         yekan: ['IRANYekan', 'system-ui', 'sans-serif'],
+        // ایجاد و ثبت بومی کلاس‌های اختصاصی پروژه در تلویند جهت اعمال خودکار ایران‌یکان بر روی کلاس‌های font-iran-sans و font-iran-yekan
+        'iran-sans': ['IRANYekan', 'system-ui', 'sans-serif'],
+        'iran-yekan': ['IRANYekan', 'system-ui', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {

@@ -92,7 +92,7 @@ export function Footer({ className }: FooterProps) {
             variant="outline"
             size="sm"
             onClick={handleScrollToTop}
-            className="flex items-center gap-1.5 h-10 px-4 rounded-xl border font-iran-sans font-bold text-xs"
+            className="flex items-center gap-1.5 h-10 px-4 rounded-xl border font-iran-yekan font-bold text-xs"
           >
             <span>بازگشت به بالا</span>
             <ChevronUp className="h-4 w-4 text-primary" />
@@ -107,7 +107,7 @@ export function Footer({ className }: FooterProps) {
                   <li key={page.id} className="text-right">
                     <Link 
                       href={page.url} 
-                      className="text-xs font-medium font-iran-sans text-muted-foreground hover:text-primary transition-colors block py-2" // افزایش فضای تاچ به py-2
+                      className="text-xs font-medium font-iran-yekan text-muted-foreground hover:text-primary transition-colors block py-2" // افزایش فضای تاچ به py-2
                     >
                       {page.title}
                     </Link>
@@ -129,7 +129,7 @@ export function Footer({ className }: FooterProps) {
                   <li key={page.id} className="text-right">
                     <Link 
                       href={page.url} 
-                      className="text-xs font-medium font-iran-sans text-muted-foreground hover:text-primary transition-colors block py-2" // افزایش فضای تاچ به py-2
+                      className="text-xs font-medium font-iran-yekan text-muted-foreground hover:text-primary transition-colors block py-2" // افزایش فضای تاچ به py-2
                     >
                       {page.title}
                     </Link>
@@ -144,11 +144,11 @@ export function Footer({ className }: FooterProps) {
               ارتباط با یدک‌چی
             </Typography>
             <div className="space-y-3.5 w-full">
-              <div className="flex items-center gap-2 text-xs font-iran-sans text-muted-foreground justify-start">
+              <div className="flex items-center gap-2 text-xs font-iran-yekan text-muted-foreground justify-start">
                 <Phone className="h-4 w-4 text-primary shrink-0" />
                 <span dir="ltr" className="font-medium">تماس: ۰۲۱-۱۲۳۴۵۶۷۸</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-iran-sans text-muted-foreground justify-start">
+              <div className="flex items-center gap-2 text-xs font-iran-yekan text-muted-foreground justify-start">
                 <Mail className="h-4 w-4 text-primary shrink-0" />
                 <span className="font-medium">ایمیل: yadakchi@info.com</span>
               </div>
@@ -190,11 +190,11 @@ export function Footer({ className }: FooterProps) {
             ارتباط با یدک‌چی
           </Typography>
           <div className="space-y-3.5 w-full">
-            <div className="flex items-center gap-2 text-xs font-iran-sans text-muted-foreground justify-start">
+            <div className="flex items-center gap-2 text-xs font-iran-yekan text-muted-foreground justify-start">
               <Phone className="h-4 w-4 text-primary shrink-0" />
               <span dir="ltr" className="font-medium">تماس: ۰۲۱-۱۲۳۴۵۶۷۸</span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-iran-sans text-muted-foreground justify-start">
+            <div className="flex items-center gap-2 text-xs font-iran-yekan text-muted-foreground justify-start">
               <Mail className="h-4 w-4 text-primary shrink-0" />
               <span className="font-medium">ایمیل: yadakchi@info.com</span>
             </div>
@@ -249,7 +249,7 @@ export function Footer({ className }: FooterProps) {
                 type="submit" 
                 variant="primary" 
                 size="md" 
-                className="rounded-xl px-5 font-iran-sans font-bold text-xs shrink-0"
+                className="rounded-xl px-5 font-iran-yekan font-bold text-xs shrink-0"
                 isLoading={subscribeNewsletter.isPending}
               >
                 ثبت ایمیل
@@ -258,14 +258,14 @@ export function Footer({ className }: FooterProps) {
           </div>
 
           <div className="flex items-center gap-4 bg-background rounded-2xl border p-4 shadow-sm shrink-0">
-            <div className="w-16 h-16 bg-muted/40 rounded-xl flex items-center justify-center text-[10px] text-muted-foreground font-iran-sans font-bold">رسانه</div>
-            <div className="w-16 h-16 bg-muted/40 rounded-xl flex items-center justify-center text-[10px] text-muted-foreground font-iran-sans font-bold">نماد</div>
-            <div className="w-16 h-16 bg-muted/40 rounded-xl flex items-center justify-center text-[10px] text-muted-foreground font-iran-sans font-bold">اتحادیه</div>
+            <div className="w-16 h-16 bg-muted/40 rounded-xl flex items-center justify-center text-[10px] text-muted-foreground font-iran-yekan font-bold">رسانه</div>
+            <div className="w-16 h-16 bg-muted/40 rounded-xl flex items-center justify-center text-[10px] text-muted-foreground font-iran-yekan font-bold">نماد</div>
+            <div className="w-16 h-16 bg-muted/40 rounded-xl flex items-center justify-center text-[10px] text-muted-foreground font-iran-yekan font-bold">اتحادیه</div>
           </div>
         </div>
 
         <div className="mt-8 border-t pt-6 text-center">
-          <p className="text-[11px] leading-relaxed text-muted-foreground/80 font-iran-sans max-w-5xl mx-auto text-center">
+          <p className="text-[11px] leading-relaxed text-muted-foreground/80 font-iran-yekan max-w-5xl mx-auto text-center">
             استفاده از مطالب یدک‌چی برای «استفاده غیرتجاری» و با «ذکر منبع» بلامانع است، تمامی حقوق مادی و معنوی این وب سایت متعلق به شرکت تامین اندیشان نوین خودرو می‌باشد.
           </p>
         </div>

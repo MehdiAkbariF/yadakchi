@@ -27,11 +27,11 @@ export function BasketSummary() {
       <div className="w-full flex flex-col items-center justify-center py-20 text-center select-none bg-background rounded-2xl border border-dashed px-4">
         <ShoppingCart className="h-16 w-16 text-muted-foreground/60 stroke-[1.5] mb-4 animate-bounce" />
         <Typography variant="h3" className="font-iran-yekan font-extrabold text-foreground">سبد خرید شما خالی است</Typography>
-        <p className="text-xs text-muted-foreground mt-2 font-iran-sans max-w-sm leading-relaxed">
+        <p className="text-xs text-muted-foreground mt-2 font-iran-yekan max-w-sm leading-relaxed">
           هیچ قطعه‌ای در سبد خرید شما وجود ندارد. می‌توانید برای جستجوی لوازم یدکی موردنیاز خود به صفحه قطعات مراجعه کنید.
         </p>
         <Link href="/search" className="mt-6">
-          <Button variant="primary" className="rounded-xl font-iran-sans font-bold text-xs h-10 px-6">
+          <Button variant="primary" className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-6">
             شروع خرید قطعات
           </Button>
         </Link>
@@ -52,8 +52,8 @@ export function BasketSummary() {
 
   const leftPriceContent = (
     <div className="flex flex-col text-right">
-      <span className="text-[10px] text-muted-foreground font-iran-sans mb-0.5">جمع کل سبد خرید:</span>
-      <span className="text-sm font-black text-foreground font-iran-sans">{basket.total.finalPrice}</span>
+      <span className="text-[10px] text-muted-foreground font-iran-yekan mb-0.5">جمع کل سبد خرید:</span>
+      <span className="text-sm font-black text-foreground font-iran-yekan">{basket.total.finalPrice}</span>
     </div>
   );
 

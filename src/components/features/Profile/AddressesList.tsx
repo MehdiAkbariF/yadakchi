@@ -222,7 +222,7 @@ export function AddressesList() {
             <MapPin className="h-5 w-5 text-primary shrink-0" />
             <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">آدرس‌های من</span>
           </div>
-          <p className="text-xs text-muted-foreground font-iran-sans">
+          <p className="text-xs text-muted-foreground font-iran-yekan">
             آدرس‌های ذخیره‌شده جهت تسریع روند ثبت نهایی سفارشات و محاسبه هزینه‌های ارسال
           </p>
         </div>
@@ -243,7 +243,7 @@ export function AddressesList() {
           {locations.map((loc: any) => (
             <Card key={loc.id} className="w-full border rounded-2xl bg-card shadow-sm hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors flex flex-col justify-between gap-4 p-5">
               <div className="flex items-center justify-between border-b border-dashed pb-3.5 w-full">
-                <span className="text-xs md:text-sm font-black text-foreground font-iran-sans">{loc.title}</span>
+                <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan">{loc.title}</span>
                 <button
                   onClick={() => handleSetDefault(loc.id)}
                   disabled={changeLocation.isPending}
@@ -258,7 +258,7 @@ export function AddressesList() {
                 </button>
               </div>
 
-              <div className="flex flex-col gap-2.5 text-xs text-muted-foreground font-iran-sans text-right">
+              <div className="flex flex-col gap-2.5 text-xs text-muted-foreground font-iran-yekan text-right">
                 <p className="font-bold text-foreground leading-relaxed">{loc.province}، {loc.city}، {loc.address}</p>
                 <div className="flex flex-wrap gap-x-5 gap-y-2 mt-1">
                   <span>پلاک: {loc.plaque}</span>
@@ -309,12 +309,12 @@ export function AddressesList() {
       ) : (
         <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3">
           <MapPinOff className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] animate-bounce" />
-          <span className="text-xs font-bold font-iran-sans text-muted-foreground">هیچ آدرسی در حساب کاربری شما ثبت نشده است.</span>
+          <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ آدرسی در حساب کاربری شما ثبت نشده است.</span>
           <Button
             variant="outline"
             size="sm"
             onClick={handleOpenNewAddressMap}
-            className="rounded-xl mt-4 text-xs font-bold font-iran-sans h-10 px-6 py-2 flex items-center justify-center gap-1"
+            className="rounded-xl mt-4 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1"
           >
             <Plus className="h-4 w-4" />
             <span>ثبت اولین آدرس روی نقشه</span>
@@ -345,7 +345,7 @@ export function AddressesList() {
                   label="عنوان آدرس *"
                   placeholder="مثال: خانه، محل کار، باغ"
                   error={errors.title?.message ? String(errors.title.message) : undefined}
-                  className="text-xs font-iran-sans"
+                  className="text-xs font-iran-yekan"
                   {...register('title')}
                 />
               </div>
@@ -357,7 +357,7 @@ export function AddressesList() {
                   type="text"
                   maxLength={10}
                   error={errors.postalCode?.message ? String(errors.postalCode.message) : undefined}
-                  className="text-xs font-iran-sans text-left"
+                  className="text-xs font-iran-yekan text-left"
                   dir="ltr"
                   {...register('postalCode')}
                 />
@@ -368,14 +368,14 @@ export function AddressesList() {
                   label="پلاک *"
                   placeholder="شماره پلاک..."
                   error={errors.plaque?.message ? String(errors.plaque.message) : undefined}
-                  className="text-xs font-iran-sans"
+                  className="text-xs font-iran-yekan"
                   {...register('plaque')}
                 />
                 <Input
                   label="واحد *"
                   placeholder="شماره واحد..."
                   error={errors.unit?.message ? String(errors.unit.message) : undefined}
-                  className="text-xs font-iran-sans"
+                  className="text-xs font-iran-yekan"
                   {...register('unit')}
                 />
               </div>
@@ -392,7 +392,7 @@ export function AddressesList() {
                   className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary cursor-pointer"
                   {...register('isUserReceiver')}
                 />
-                <label htmlFor="user_is_receiver" className="text-xs font-bold text-foreground font-iran-sans cursor-pointer">
+                <label htmlFor="user_is_receiver" className="text-xs font-bold text-foreground font-iran-yekan cursor-pointer">
                   تحویل‌گیرنده سفارش خودم هستم
                 </label>
               </div>
@@ -404,7 +404,7 @@ export function AddressesList() {
                       label="نام و نام خانوادگی گیرنده *"
                       placeholder="نام کامل گیرنده را وارد کنید..."
                       error={errors.receiverFullName?.message ? String(errors.receiverFullName.message) : undefined}
-                      className="text-xs font-iran-sans"
+                      className="text-xs font-iran-yekan"
                       {...register('receiverFullName')}
                     />
                   </div>
@@ -415,7 +415,7 @@ export function AddressesList() {
                       type="text"
                       maxLength={11}
                       error={errors.receiverMobile?.message ? String(errors.receiverMobile.message) : undefined}
-                      className="text-xs font-iran-sans text-left"
+                      className="text-xs font-iran-yekan text-left"
                       dir="ltr"
                       {...register('receiverMobile')}
                     />

@@ -109,7 +109,7 @@ export function NotificationsList() {
           <Bell className="h-5 w-5 text-primary shrink-0" />
           <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">پیام‌ها و اطلاعیه‌ها</span>
         </div>
-        <p className="text-xs text-muted-foreground font-iran-sans">
+        <p className="text-xs text-muted-foreground font-iran-yekan">
           آخرین اطلاعیه‌ها، کدهای تخفیف، اخبار و پیام‌های سیستمی حساب کاربری شما
         </p>
       </div>
@@ -125,7 +125,7 @@ export function NotificationsList() {
           >
             <span>همه پیام‌ها</span>
             <span className={cn(
-              "text-[9px] md:text-[10px] font-bold font-iran-sans px-2 py-0.5 rounded-full shrink-0",
+              "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full shrink-0",
               activeTab === 'all' ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
             )}>
               {totalCount}
@@ -141,7 +141,7 @@ export function NotificationsList() {
           >
             <span>تخفیف‌ها</span>
             <span className={cn(
-              "text-[9px] md:text-[10px] font-bold font-iran-sans px-2 py-0.5 rounded-full shrink-0",
+              "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full shrink-0",
               activeTab === 'discounts' ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
             )}>
               {discountCount}
@@ -197,13 +197,13 @@ export function NotificationsList() {
                   <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                     <div className="flex items-center justify-between gap-4 w-full">
                       <span className="text-xs md:text-sm font-black text-foreground block truncate">{notif.title}</span>
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground shrink-0 font-iran-sans">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground shrink-0 font-iran-yekan">
                         <Clock className="h-3.5 w-3.5" />
                         <span>{notif.createDateFormatted}</span>
                       </div>
                     </div>
 
-                    <p className="text-xs md:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-iran-sans whitespace-pre-wrap break-words">{notif.body}</p>
+                    <p className="text-xs md:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-iran-yekan whitespace-pre-wrap break-words">{notif.body}</p>
 
                     {notif.linkType && notif.linkText && (
                       <div className="flex justify-start mt-2">
@@ -211,7 +211,7 @@ export function NotificationsList() {
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(notif.linkType as string)}
-                          className="rounded-xl text-[10px] font-bold font-iran-sans h-8 px-4"
+                          className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 px-4"
                         >
                           {notif.linkText}
                         </Button>
@@ -232,7 +232,7 @@ export function NotificationsList() {
       ) : (
         <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
           <MailWarning className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-          <span className="text-xs font-bold font-iran-sans text-muted-foreground">هیچ پیامی در این بخش یافت نشد.</span>
+          <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ پیامی در این بخش یافت نشد.</span>
         </div>
       )}
 

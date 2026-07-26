@@ -128,24 +128,35 @@ export class BannerMapper {
     };
   }
 
+  // مپ کردن کامپوننت فوتر به همراه سیستم ایمن‌سازی دفاعی در برابر داده‌های تهی/غایب سرور
   static toViewFooter(dto: FrontFooterApiDto): FrontFooterViewModel {
+    if (!dto) {
+      return {
+        title: '',
+        description: '',
+        links: [],
+        socialMedia: [],
+        contactInfo: [],
+      };
+    }
+
     return {
-      title: dto.title,
-      description: dto.description,
-      links: dto.links.map(link => ({
+      title: dto.title || '',
+      description: dto.description || '',
+      links: (dto.links || []).map(link => ({
         id: link.id,
         title: link.title,
         link: link.link,
         order: link.order,
       })),
-      socialMedia: dto.socialMedia.map(sm => ({
+      socialMedia: (dto.socialMedia || []).map(sm => ({
         id: sm.id,
         name: sm.name,
         icon: sm.icon,
         link: sm.link,
         order: sm.order,
       })),
-      contactInfo: dto.contactInfo.map(ci => ({
+      contactInfo: (dto.contactInfo || []).map(ci => ({
         id: ci.id,
         type: ci.type,
         value: ci.value,

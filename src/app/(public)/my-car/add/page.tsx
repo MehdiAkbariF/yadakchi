@@ -135,36 +135,36 @@ export default function AddCarPage() {
         <div className="w-full flex items-center justify-center gap-1.5 sm:gap-6 border rounded-2xl bg-muted/10 px-4 py-4 select-none mb-2">
           <div className="flex items-center gap-2">
             <div className={cn(
-              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-iran-sans border",
+              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-iran-yekan border",
               step === 1 ? "bg-primary border-primary text-white" : step > 1 ? "bg-success-500/10 border-success-500 text-success-500" : "border-zinc-300 text-muted-foreground"
             )}>
               {step > 1 ? <CheckCircle2 className="h-4 w-4" /> : "۱"}
             </div>
-            <span className={cn("text-xs font-bold font-iran-sans", step === 1 ? "text-primary" : "text-muted-foreground")}>سازنده</span>
+            <span className={cn("text-xs font-bold font-iran-yekan", step === 1 ? "text-primary" : "text-muted-foreground")}>سازنده</span>
           </div>
 
           <div className="h-px w-8 sm:w-16 bg-zinc-300 dark:bg-zinc-800" />
 
           <div className="flex items-center gap-2">
             <div className={cn(
-              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-iran-sans border",
+              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-iran-yekan border",
               step === 2 ? "bg-primary border-primary text-white" : step > 2 ? "bg-success-500/10 border-success-500 text-success-500" : "border-zinc-300 text-muted-foreground"
             )}>
               {step > 2 ? <CheckCircle2 className="h-4 w-4" /> : "۲"}
             </div>
-            <span className={cn("text-xs font-bold font-iran-sans", step === 2 ? "text-primary" : "text-muted-foreground")}>مدل</span>
+            <span className={cn("text-xs font-bold font-iran-yekan", step === 2 ? "text-primary" : "text-muted-foreground")}>مدل</span>
           </div>
 
           <div className="h-px w-8 sm:w-16 bg-zinc-300 dark:bg-zinc-800" />
 
           <div className="flex items-center gap-2">
             <div className={cn(
-              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-iran-sans border",
+              "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-iran-yekan border",
               step === 3 ? "bg-primary border-primary text-white" : "border-zinc-300 text-muted-foreground"
             )}>
               ۳
             </div>
-            <span className={cn("text-xs font-bold font-iran-sans", step === 3 ? "text-primary" : "text-muted-foreground")}>پایان</span>
+            <span className={cn("text-xs font-bold font-iran-yekan", step === 3 ? "text-primary" : "text-muted-foreground")}>پایان</span>
           </div>
         </div>
 
@@ -172,7 +172,7 @@ export default function AddCarPage() {
           <div className="w-full flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <h3 className="text-sm md:text-base font-black text-foreground font-iran-yekan">انتخاب شرکت سازنده</h3>
-              <p className="text-xs text-muted-foreground font-iran-sans leading-relaxed">
+              <p className="text-xs text-muted-foreground font-iran-yekan leading-relaxed">
                 برند خودروی خود را از لیست زیر انتخاب کنید یا نام آن را جستجو نمایید.
               </p>
             </div>
@@ -183,7 +183,7 @@ export default function AddCarPage() {
               value={brandSearch}
               onChange={(e) => setBrandSearch(e.target.value)}
               leftIcon={<Search className="h-4 w-4 text-zinc-400" />}
-              className="w-full font-iran-sans"
+              className="w-full font-iran-yekan"
             />
 
             {isManufacturersLoading ? (
@@ -203,13 +203,13 @@ export default function AddCarPage() {
                         <Car className="h-6 w-6 text-muted-foreground" />
                       )}
                     </div>
-                    <span className="text-xs font-bold font-iran-sans text-foreground">{brand.name}</span>
+                    <span className="text-xs font-bold font-iran-yekan text-foreground">{brand.name}</span>
                   </Card>
                 ))}
               </div>
             ) : (
               <div className="w-full py-12 text-center border border-dashed rounded-xl bg-card">
-                <span className="text-xs font-bold font-iran-sans text-muted-foreground">برندی پیدا نشد.</span>
+                <span className="text-xs font-bold font-iran-yekan text-muted-foreground">برندی پیدا نشد.</span>
               </div>
             )}
           </div>
@@ -219,13 +219,13 @@ export default function AddCarPage() {
           <div className="w-full flex flex-col gap-5">
             <div className="flex flex-col gap-1.5 border-b pb-4">
               <div className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground font-iran-sans">برند انتخاب شده:</span>
-                <span className="text-xs font-bold text-foreground font-iran-sans bg-muted px-2.5 py-1 rounded-lg">
+                <span className="text-xs text-muted-foreground font-iran-yekan">برند انتخاب شده:</span>
+                <span className="text-xs font-bold text-foreground font-iran-yekan bg-muted px-2.5 py-1 rounded-lg">
                   {selectedBrand.name}
                 </span>
                 <button 
                   onClick={handleBackToBrands}
-                  className="text-xs font-bold font-iran-sans text-primary hover:underline"
+                  className="text-xs font-bold font-iran-yekan text-primary hover:underline"
                 >
                   (تغییر)
                 </button>
@@ -234,7 +234,7 @@ export default function AddCarPage() {
 
             <div className="flex flex-col gap-1.5">
               <h3 className="text-sm md:text-base font-black text-foreground font-iran-yekan">انتخاب مدل خودرو</h3>
-              <p className="text-xs text-muted-foreground font-iran-sans leading-relaxed">
+              <p className="text-xs text-muted-foreground font-iran-yekan leading-relaxed">
                 مدل دقیق خودروی خود را انتخاب کنید یا نام آن را در کادر زیر جستجو نمایید.
               </p>
             </div>
@@ -245,7 +245,7 @@ export default function AddCarPage() {
               value={modelSearch}
               onChange={(e) => setModelSearch(e.target.value)}
               leftIcon={<Search className="h-4 w-4 text-zinc-400" />}
-              className="w-full font-iran-sans"
+              className="w-full font-iran-yekan"
             />
 
             {isCarsLoading ? (
@@ -265,13 +265,13 @@ export default function AddCarPage() {
                         <Car className="h-6 w-6 text-muted-foreground" />
                       )}
                     </div>
-                    <span className="text-xs font-bold font-iran-sans text-foreground mt-1 line-clamp-1">{model.model}</span>
+                    <span className="text-xs font-bold font-iran-yekan text-foreground mt-1 line-clamp-1">{model.model}</span>
                   </Card>
                 ))}
               </div>
             ) : (
               <div className="w-full py-12 text-center border border-dashed rounded-xl bg-card">
-                <span className="text-xs font-bold font-iran-sans text-muted-foreground">مدلی پیدا نشد.</span>
+                <span className="text-xs font-bold font-iran-yekan text-muted-foreground">مدلی پیدا نشد.</span>
               </div>
             )}
           </div>
@@ -281,7 +281,7 @@ export default function AddCarPage() {
           <div className="w-full flex flex-col gap-5">
             <div className="flex flex-col gap-1.5 border-b pb-4">
               <h3 className="text-sm md:text-base font-black text-foreground font-iran-yekan">ثبت نهایی خودرو در گاراژ</h3>
-              <p className="text-xs text-muted-foreground font-iran-sans leading-relaxed">
+              <p className="text-xs text-muted-foreground font-iran-yekan leading-relaxed">
                 عنوان دلخواهی برای شناسایی این خودرو وارد کنید تا فرآیند افزودن تکمیل شود.
               </p>
             </div>
@@ -295,8 +295,8 @@ export default function AddCarPage() {
                 )}
               </div>
               <div className="flex flex-col text-right">
-                <span className="text-xs font-bold text-foreground font-iran-sans">{selectedModel.model}</span>
-                <span className="text-[10px] text-muted-foreground font-iran-sans mt-0.5">کمپانی {selectedBrand.name}</span>
+                <span className="text-xs font-bold text-foreground font-iran-yekan">{selectedModel.model}</span>
+                <span className="text-[10px] text-muted-foreground font-iran-yekan mt-0.5">کمپانی {selectedBrand.name}</span>
               </div>
             </div>
 
@@ -306,7 +306,7 @@ export default function AddCarPage() {
                   label="عنوان دلخواه خودرو *"
                   placeholder="مثال: ماشین شخصی، آژانس، سی"
                   error={errors.title?.message ? String(errors.title.message) : undefined}
-                  className="text-xs font-iran-sans"
+                  className="text-xs font-iran-yekan"
                   {...register('title')}
                 />
               </div>
@@ -318,7 +318,7 @@ export default function AddCarPage() {
                   className="h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary cursor-pointer"
                   {...register('isDefault')}
                 />
-                <label htmlFor="final_default_car" className="text-xs font-bold text-foreground font-iran-sans cursor-pointer">
+                <label htmlFor="final_default_car" className="text-xs font-bold text-foreground font-iran-yekan cursor-pointer">
                   به عنوان خودروی پیش‌فرض من در سیستم ثبت شود
                 </label>
               </div>

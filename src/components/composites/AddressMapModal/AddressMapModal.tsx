@@ -280,7 +280,7 @@ export function AddressMapModal({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               leftIcon={isSearching ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <Search className="h-4 w-4 text-zinc-400" />}
-              className="flex-1 text-xs font-iran-sans"
+              className="flex-1 text-xs font-iran-yekan"
               dir="rtl"
             />
             {searchQuery.trim() && searchResults.length > 0 && (
@@ -290,7 +290,7 @@ export function AddressMapModal({
                     key={idx}
                     type="button"
                     onClick={() => handleSelectSuggestion(item)}
-                    className="w-full px-4 py-3 text-right text-xs font-medium font-iran-sans text-foreground transition-colors hover:bg-muted truncate block"
+                    className="w-full px-4 py-3 text-right text-xs font-medium font-iran-yekan text-foreground transition-colors hover:bg-muted truncate block"
                   >
                     {item.display_name}
                   </button>
@@ -304,7 +304,7 @@ export function AddressMapModal({
           {!mapLoaded && (
             <div className="absolute inset-0 z-50 bg-background/80 flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-7 w-7 animate-spin text-primary" />
-              <span className="text-xs font-iran-sans text-muted-foreground">در حال بارگذاری نقشه...</span>
+              <span className="text-xs font-iran-yekan text-muted-foreground">در حال بارگذاری نقشه...</span>
             </div>
           )}
           <div ref={mapContainerRef} className="w-full h-full z-0" />
@@ -322,10 +322,10 @@ export function AddressMapModal({
               {isGeocoding ? (
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
-                  <span className="text-xs font-iran-sans">در حال استخراج آدرس پستی...</span>
+                  <span className="text-xs font-iran-yekan">در حال استخراج آدرس پستی...</span>
                 </div>
               ) : (
-                <p className="text-xs font-bold font-iran-sans text-foreground leading-relaxed truncate">{addressText || 'نقشه را جابه جا کنید تا آدرس استخراج شود.'}</p>
+                <p className="text-xs font-bold font-iran-yekan text-foreground leading-relaxed truncate">{addressText || 'نقشه را جابه جا کنید تا آدرس استخراج شود.'}</p>
               )}
             </div>
           </div>
@@ -337,7 +337,7 @@ export function AddressMapModal({
             fullWidth
             onClick={handleConfirm}
             disabled={!addressText.trim() || isGeocoding}
-            className="rounded-xl font-iran-sans font-bold text-xs h-11 shadow-md px-5 py-2.5"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-11 shadow-md px-5 py-2.5"
           >
             تایید موقعیت و ادامه
           </Button>

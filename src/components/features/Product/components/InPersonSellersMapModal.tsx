@@ -282,11 +282,11 @@ export function InPersonSellersMapModal({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs font-bold text-foreground block truncate font-iran-sans">{seller.shop.title}</span>
+                      <span className="text-xs font-bold text-foreground block truncate font-iran-yekan">{seller.shop.title}</span>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-muted-foreground font-iran-sans">شهر ری</span>
+                        <span className="text-[10px] text-muted-foreground font-iran-yekan">شهر ری</span>
                         <span className="text-zinc-300">|</span>
-                        <span className="text-[10px] text-success-500 font-bold font-iran-sans">عملکرد عالی</span>
+                        <span className="text-[10px] text-success-500 font-bold font-iran-yekan">عملکرد عالی</span>
                       </div>
                     </div>
                   </div>
@@ -294,11 +294,11 @@ export function InPersonSellersMapModal({
                   <div className="flex items-center justify-between border-t border-dashed pt-3 mt-2.5 w-full">
                     <div className="flex flex-col text-right">
                       {seller.hasDiscount && (
-                        <span className="text-[9px] text-zinc-400 line-through leading-none mb-1 font-iran-sans">
+                        <span className="text-[9px] text-zinc-400 line-through leading-none mb-1 font-iran-yekan">
                           {formatPrice(seller.retailPriceRaw / 10)}
                         </span>
                       )}
-                      <span className="text-xs md:text-sm font-black text-foreground font-iran-sans leading-none">{seller.finalPrice}</span>
+                      <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan leading-none">{seller.finalPrice}</span>
                     </div>
                     
                     {seller.hasDiscount && (
@@ -310,7 +310,7 @@ export function InPersonSellersMapModal({
                     <Button
                       variant={isSelected ? "primary" : "outline"}
                       size="sm"
-                      className="rounded-xl text-[10px] font-bold font-iran-sans h-8 px-3.5"
+                      className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 px-3.5"
                     >
                       {isSelected ? "نمایش اطلاعات" : "مشاهده جزئیات"}
                     </Button>
@@ -326,15 +326,15 @@ export function InPersonSellersMapModal({
                         className="overflow-hidden border-t border-dashed pt-3 mt-1 flex flex-col gap-3.5 text-right w-full"
                       >
                         <div className="flex flex-col gap-1 w-full">
-                          <span className="text-[9px] font-bold text-muted-foreground font-iran-sans">آدرس فروشگاه:</span>
-                          <p className="text-[11px] font-bold text-foreground font-iran-sans leading-relaxed">{seller.shop.address}</p>
+                          <span className="text-[9px] font-bold text-muted-foreground font-iran-yekan">آدرس فروشگاه:</span>
+                          <p className="text-[11px] font-bold text-foreground font-iran-yekan leading-relaxed">{seller.shop.address}</p>
                         </div>
                         
                         <div className="flex gap-2 w-full">
                           <a
                             href={`tel:${seller.shop.tell}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex-1 h-9 rounded-xl border border-zinc-200 hover:bg-muted text-foreground text-[10px] font-bold font-iran-sans flex items-center justify-center gap-1 shadow-sm transition-all"
+                            className="flex-1 h-9 rounded-xl border border-zinc-200 hover:bg-muted text-foreground text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
                           >
                             <Phone className="h-3.5 w-3.5 shrink-0" />
                             <span>تماس با فروشگاه</span>
@@ -344,7 +344,7 @@ export function InPersonSellersMapModal({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="flex-1 h-9 rounded-xl bg-primary text-white text-[10px] font-bold font-iran-sans flex items-center justify-center gap-1 shadow-sm transition-all"
+                            className="flex-1 h-9 rounded-xl bg-primary text-white text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
                           >
                             <Navigation className="h-3.5 w-3.5 shrink-0" />
                             <span>مسیریابی روی نقشه</span>
@@ -362,7 +362,7 @@ export function InPersonSellersMapModal({
             {!mapLoaded && (
               <div className="absolute inset-0 z-50 bg-background/80 flex flex-col items-center justify-center gap-2">
                 <Loader2 className="h-7 w-7 animate-spin text-primary" />
-                <span className="text-xs font-iran-sans text-muted-foreground">در حال بارگذاری نقشه...</span>
+                <span className="text-xs font-iran-yekan text-muted-foreground">در حال بارگذاری نقشه...</span>
               </div>
             )}
             <div ref={mapContainerRef} className="w-full h-full" />
@@ -390,11 +390,11 @@ export function InPersonSellersMapModal({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs font-bold text-foreground block truncate font-iran-sans">{seller.shop.title}</span>
+                      <span className="text-xs font-bold text-foreground block truncate font-iran-yekan">{seller.shop.title}</span>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[10px] text-muted-foreground font-iran-sans">شهر ری</span>
+                        <span className="text-[10px] text-muted-foreground font-iran-yekan">شهر ری</span>
                         <span className="text-zinc-300">|</span>
-                        <span className="text-[10px] text-success-500 font-bold font-iran-sans">عملکرد عالی</span>
+                        <span className="text-[10px] text-success-500 font-bold font-iran-yekan">عملکرد عالی</span>
                       </div>
                     </div>
                   </div>
@@ -402,17 +402,17 @@ export function InPersonSellersMapModal({
                   <div className="flex items-center justify-between border-t border-dashed pt-3 mt-2.5 w-full">
                     <div className="flex flex-col text-right">
                       {seller.hasDiscount && (
-                        <span className="text-[9px] text-zinc-400 line-through leading-none mb-1 font-iran-sans">
+                        <span className="text-[9px] text-zinc-400 line-through leading-none mb-1 font-iran-yekan">
                           {formatPrice(seller.retailPriceRaw / 10)}
                         </span>
                       )}
-                      <span className="text-xs md:text-sm font-black text-foreground font-iran-sans leading-none">{seller.finalPrice}</span>
+                      <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan leading-none">{seller.finalPrice}</span>
                     </div>
 
                     <Button
                       variant={isSelected ? "primary" : "outline"}
                       size="sm"
-                      className="rounded-xl text-[10px] font-bold font-iran-sans h-8 px-3.5"
+                      className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 px-3.5"
                     >
                       {isSelected ? "نمایش اطلاعات" : "مشاهده جزئیات"}
                     </Button>
@@ -421,15 +421,15 @@ export function InPersonSellersMapModal({
                   {isSelected && (
                     <div className="border-t border-dashed pt-3 mt-1 flex flex-col gap-3 text-right w-full animate-in slide-in-from-bottom duration-200">
                       <div className="flex flex-col gap-1 w-full">
-                        <span className="text-[9px] font-bold text-muted-foreground font-iran-sans">آدرس فروشگاه:</span>
-                        <p className="text-[11px] font-bold text-foreground font-iran-sans leading-relaxed">{seller.shop.address}</p>
+                        <span className="text-[9px] font-bold text-muted-foreground font-iran-yekan">آدرس فروشگاه:</span>
+                        <p className="text-[11px] font-bold text-foreground font-iran-yekan leading-relaxed">{seller.shop.address}</p>
                       </div>
                       
                       <div className="flex gap-2 w-full">
                         <a
                           href={`tel:${seller.shop.tell}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="flex-1 h-9 rounded-xl border border-zinc-200 bg-background text-foreground text-[10px] font-bold font-iran-sans flex items-center justify-center gap-1 shadow-sm transition-all"
+                          className="flex-1 h-9 rounded-xl border border-zinc-200 bg-background text-foreground text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
                         >
                           <Phone className="h-3.5 w-3.5 shrink-0" />
                           <span>تماس</span>
@@ -439,7 +439,7 @@ export function InPersonSellersMapModal({
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="flex-1 h-9 rounded-xl bg-primary text-white text-[10px] font-bold font-iran-sans flex items-center justify-center gap-1 shadow-sm transition-all"
+                          className="flex-1 h-9 rounded-xl bg-primary text-white text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
                         >
                           <Navigation className="h-3.5 w-3.5 shrink-0" />
                           <span>مسیریابی</span>
@@ -493,7 +493,7 @@ export function InPersonSellersMapModal({
                   setSelectedSubjectId('');
                   setReportDescription('');
                 }}
-                className="rounded-xl text-xs h-10 font-bold font-iran-sans"
+                className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
               >
                 انصراف
               </Button>
@@ -501,7 +501,7 @@ export function InPersonSellersMapModal({
                 variant="destructive"
                 onClick={handleReportSubmit}
                 isLoading={submitReport.isPending}
-                className="rounded-xl text-xs h-10 font-bold font-iran-sans"
+                className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
               >
                 ثبت گزارش خطا
               </Button>

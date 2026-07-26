@@ -79,7 +79,7 @@ export function HomeCategories() {
 
   if (isError) {
     return (
-      <div className="text-center py-6 text-xs text-destructive font-iran-sans">
+      <div className="text-center py-6 text-xs text-destructive font-iran-yekan">
         خطا در دریافت اطلاعات دسته‌بندی قطعات از سرور اصلی.
       </div>
     );
@@ -152,7 +152,7 @@ export function HomeCategories() {
                       )}
                     </div>
 
-                    <span className="text-xs sm:text-sm font-bold font-iran-sans text-foreground/85 group-hover:text-primary transition-colors mt-3.5 leading-relaxed line-clamp-2">
+                    <span className="text-xs sm:text-sm font-bold font-iran-yekan text-foreground/85 group-hover:text-primary transition-colors mt-3.5 leading-relaxed line-clamp-2">
                       {cat.name}
                     </span>
                   </Link>

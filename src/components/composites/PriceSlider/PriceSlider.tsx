@@ -78,7 +78,7 @@ export function PriceSlider({ min, max, value, onChange, onApply }: PriceSliderP
         />
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-iran-sans font-bold px-1 mt-1">
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-iran-yekan font-bold px-1 mt-1">
         <span>از {formatPrice(minVal)} تومان</span>
         <span>تا {formatPrice(maxVal)} تومان</span>
       </div>
@@ -89,7 +89,7 @@ export function PriceSlider({ min, max, value, onChange, onApply }: PriceSliderP
         size="sm"
         onClick={onApply}
         fullWidth
-        className="rounded-xl font-iran-sans font-bold text-xs h-9 mt-1"
+        className="rounded-xl font-iran-yekan font-bold text-xs h-9 mt-1"
       >
         اعمال محدوده قیمت
       </Button>

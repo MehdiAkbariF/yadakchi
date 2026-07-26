@@ -88,7 +88,7 @@ export function FilterList({
           {activeSelectedItems.map(item => (
             <div
               key={`selected-${item.id}`}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold font-iran-sans"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[10px] font-bold font-iran-yekan"
             >
               <span className="truncate max-w-[80px]">{item.name}</span>
               <button
@@ -119,7 +119,7 @@ export function FilterList({
         ) : (
           <div className="w-full flex flex-col items-center justify-center py-6 text-center select-none">
             <Inbox className="h-6 w-6 text-muted-foreground/50 stroke-[1.5] mb-2" />
-            <span className="text-[10px] text-muted-foreground font-iran-sans">موردی یافت نشد</span>
+            <span className="text-[10px] text-muted-foreground font-iran-yekan">موردی یافت نشد</span>
           </div>
         )}
 

@@ -113,7 +113,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
               </button>
             )
           }
-          className="w-full font-iran-sans"
+          className="w-full font-iran-yekan"
           dir="rtl"
         />
       </div>
@@ -122,7 +122,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
         {isLoading ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-2">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <span className="text-xs text-muted-foreground font-iran-sans">در حال دریافت لیست شهرها...</span>
+            <span className="text-xs text-muted-foreground font-iran-yekan">در حال دریافت لیست شهرها...</span>
           </div>
         ) : searchQuery.trim() ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -131,7 +131,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
                 <button
                   key={city.id}
                   onClick={() => handleSelectCity(city.id, city.name)}
-                  className="flex items-center justify-between w-full p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 text-right transition-all font-iran-sans"
+                  className="flex items-center justify-between w-full p-3 rounded-lg border hover:border-primary/40 hover:bg-primary/5 text-right transition-all font-iran-yekan"
                 >
                   <span className="text-sm font-medium text-foreground">{city.name}</span>
                   <span className="text-xs text-muted-foreground">استان {city.provinceName}</span>
@@ -140,7 +140,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
                 <MapPinOff className="h-8 w-8 text-muted-foreground/60" />
-                <span className="text-sm font-iran-sans">شهرستی با این نام یافت نشد.</span>
+                <span className="text-sm font-iran-yekan">شهرستی با این نام یافت نشد.</span>
               </div>
             )}
           </div>
@@ -154,7 +154,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
                     key={province.id}
                     onClick={() => setActiveProvinceId(province.id)}
                     className={cn(
-                      "w-full px-4 py-3 text-right text-sm font-medium transition-colors font-iran-sans truncate",
+                      "w-full px-4 py-3 text-right text-sm font-medium transition-colors font-iran-yekan truncate",
                       isActive 
                         ? "bg-background text-primary border-r-2 border-primary" 
                         : "text-foreground hover:bg-muted/40"
@@ -169,7 +169,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
             <div className="flex-1 overflow-y-auto p-4 bg-background">
               {activeProvince ? (
                 <div className="space-y-1">
-                  <span className="text-xs text-muted-foreground font-iran-sans font-bold block mb-3 pb-2 border-b">
+                  <span className="text-xs text-muted-foreground font-iran-yekan font-bold block mb-3 pb-2 border-b">
                     شهرهای استان {activeProvince.name} ({activeProvince.cities.length} شهر)
                   </span>
                   <div className="grid grid-cols-2 gap-2">
@@ -178,7 +178,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
                         key={city.id}
                         onClick={() => handleSelectCity(city.id, city.name)}
                         className={cn(
-                          "px-3 py-2 rounded-lg border text-right text-sm transition-all font-iran-sans truncate hover:border-primary/30",
+                          "px-3 py-2 rounded-lg border text-right text-sm transition-all font-iran-yekan truncate hover:border-primary/30",
                           selectedCity?.id === city.id 
                             ? "bg-primary/5 border-primary text-primary font-bold" 
                             : "hover:bg-muted/30 text-foreground"
@@ -190,7 +190,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
                   </div>
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground font-iran-sans p-4">
+                <div className="text-sm text-muted-foreground font-iran-yekan p-4">
                   استان مورد نظر را انتخاب کنید.
                 </div>
               )}
@@ -206,7 +206,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
       <>
         <div
           onClick={handleOpenModal}
-          className="flex items-center justify-between w-full py-2.5 px-1 cursor-pointer hover:text-primary transition-colors text-xs text-muted-foreground font-iran-sans font-medium"
+          className="flex items-center justify-between w-full py-2.5 px-1 cursor-pointer hover:text-primary transition-colors text-xs text-muted-foreground font-iran-yekan font-medium"
         >
           <div className="flex items-center gap-2">
             <MapPin className="h-4.5 w-4.5 text-primary shrink-0" />
@@ -242,7 +242,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
         aria-label="Select Location"
       >
         <MapPin className="h-3.5 w-3.5 xl:h-4 xl:w-4 text-primary" />
-        <span className="font-iran-sans font-medium text-foreground">
+        <span className="font-iran-yekan font-medium text-foreground">
           {selectedCity ? selectedCity.name : 'انتخاب شهر'}
         </span>
         {selectedCity ? (

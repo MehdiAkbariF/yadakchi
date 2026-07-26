@@ -83,7 +83,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
   
   <ModalBody className="p-5 pt-4 text-right">
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
-      <span className="text-xs text-muted-foreground font-iran-sans block mb-2 leading-relaxed">
+      <span className="text-xs text-muted-foreground font-iran-yekan block mb-2 leading-relaxed">
         لطفاً اطلاعات شرکت خود را جهت ثبت در فاکتور رسمی وارد کنید.
       </span>
 
@@ -92,7 +92,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
           label="نام سازمان *"
           placeholder="نام شرکت را وارد کنید"
           error={errors.organizationName?.message ? String(errors.organizationName.message) : undefined}
-          className="text-xs font-iran-sans"
+          className="text-xs font-iran-yekan"
           {...register('organizationName')}
         />
       </div>
@@ -102,7 +102,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
           label="نوع سازمان / نوع صنف *"
           placeholder="نوع شرکت را وارد کنید"
           error={errors.organizationType?.message ? String(errors.organizationType.message) : undefined}
-          className="text-xs font-iran-sans"
+          className="text-xs font-iran-yekan"
           {...register('organizationType')}
         />
       </div>
@@ -112,7 +112,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
           label="شناسه ملی *"
           placeholder="ثبت نشده"
           error={errors.organizationNationalCode?.message ? String(errors.organizationNationalCode.message) : undefined}
-          className="text-xs font-iran-sans text-left"
+          className="text-xs font-iran-yekan text-left"
           dir="ltr"
           {...register('organizationNationalCode')}
         />
@@ -120,7 +120,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
           label="شناسه ثبت *"
           placeholder="ثبت نشده"
           error={errors.organizationRegisterationCode?.message ? String(errors.organizationRegisterationCode.message) : undefined}
-          className="text-xs font-iran-sans text-left"
+          className="text-xs font-iran-yekan text-left"
           dir="ltr"
           {...register('organizationRegisterationCode')}
         />
@@ -131,7 +131,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
           label="کد اقتصادی *"
           placeholder="ثبت نشده"
           error={errors.organizationEconomicCode?.message ? String(errors.organizationEconomicCode.message) : undefined}
-          className="text-xs font-iran-sans text-left"
+          className="text-xs font-iran-yekan text-left"
           dir="ltr"
           {...register('organizationEconomicCode')}
         />
@@ -142,7 +142,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
           label="تلفن ثابت دفتر مرکزی *"
           placeholder="ثبت نشده"
           error={errors.organizationHeadOfficeTel?.message ? String(errors.organizationHeadOfficeTel.message) : undefined}
-          className="text-xs font-iran-sans text-left"
+          className="text-xs font-iran-yekan text-left"
           dir="ltr"
           {...register('organizationHeadOfficeTel')}
         />
@@ -157,7 +157,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
       type="button"
       variant="outline"
       onClick={onClose}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
     >
       انصراف
     </Button>
@@ -165,7 +165,7 @@ export function LegalInfoModal({ isOpen, onClose, user }: LegalInfoModalProps) {
       type="submit"
       variant="primary"
       isLoading={updateProfile.isPending}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-sans"
+      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
       onClick={handleSubmit(onSubmit)}
     >
       ثبت اطلاعات

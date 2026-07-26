@@ -42,7 +42,7 @@ export function PartCategoryHeaderCard({ slug, categoryName, thumbnail }: PartCa
             variant="outline"
             size="sm"
             onClick={() => setIsChangeCatOpen(true)}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
           >
             تغییر دسته‌بندی
           </Button>
@@ -50,7 +50,7 @@ export function PartCategoryHeaderCard({ slug, categoryName, thumbnail }: PartCa
             variant="primary"
             size="sm"
             onClick={() => setIsSelectPartOpen(true)}
-            className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 shadow-sm"
+            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 shadow-sm"
           >
             انتخاب قطعه
           </Button>

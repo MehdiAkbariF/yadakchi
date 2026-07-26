@@ -159,7 +159,7 @@ export function SearchBar({
             
             {carsList.length > 0 && (
               <div className="space-y-2 shrink-0">
-                <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b text-right">
+                <span className="text-[11px] text-muted-foreground font-iran-yekan font-bold block pb-2 border-b text-right">
                   خودروها
                 </span>
                 <div className="flex flex-wrap gap-2 justify-start">
@@ -172,7 +172,7 @@ export function SearchBar({
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-medium font-iran-sans hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-medium font-iran-yekan hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
                     >
                       <Car className="h-3.5 w-3.5" />
                       همه کالا‌های خودرو {car.model}
@@ -184,7 +184,7 @@ export function SearchBar({
 
             {uniqueCategories.length > 0 && (
               <div className="space-y-2 shrink-0">
-                <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b text-right">
+                <span className="text-[11px] text-muted-foreground font-iran-yekan font-bold block pb-2 border-b text-right">
                   دسته‌بندی‌های مرتبط
                 </span>
                 <div className="flex flex-wrap gap-2 justify-start">
@@ -197,7 +197,7 @@ export function SearchBar({
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium font-iran-sans hover:bg-primary/10 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium font-iran-yekan hover:bg-primary/10 transition-colors"
                     >
                       <FolderKanban className="h-3.5 w-3.5" />
                       همه کالا‌های دسته {cat.partCategoryName}
@@ -208,14 +208,14 @@ export function SearchBar({
             )}
 
             <div className="space-y-2 shrink-0">
-              <span className="text-[11px] text-muted-foreground font-iran-sans font-bold block pb-2 border-b text-right">
+              <span className="text-[11px] text-muted-foreground font-iran-yekan font-bold block pb-2 border-b text-right">
                 عبارات پیشنهادی
               </span>
               
               {isKeywordsLoading ? (
                 <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span className="text-xs font-iran-sans">در حال لود عبارات کلیدی...</span>
+                  <span className="text-xs font-iran-yekan">در حال لود عبارات کلیدی...</span>
                 </div>
               ) : keywordsList.length > 0 ? (
                 <div className="space-y-1">
@@ -223,7 +223,7 @@ export function SearchBar({
                     <button
                       key={index}
                       onClick={() => handleSearchSubmit(kw.suggestion)}
-                      className="flex items-center justify-between w-full text-right p-2 rounded-md hover:bg-muted/50 transition-colors font-iran-sans"
+                      className="flex items-center justify-between w-full text-right p-2 rounded-md hover:bg-muted/50 transition-colors font-iran-yekan"
                     >
                       <div className="flex flex-col min-w-0 text-right">
                         <span className="text-sm text-foreground truncate">
@@ -240,7 +240,7 @@ export function SearchBar({
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground font-iran-sans py-4 text-center">
+                <div className="text-sm text-muted-foreground font-iran-yekan py-4 text-center">
                   نتیجه مناسبی یافت نشد.
                 </div>
               )}
@@ -268,11 +268,11 @@ export function SearchBar({
             {history.length > 0 && (
               <div className="space-y-2 shrink-0">
                 <div className="flex items-center justify-between pb-1 border-b">
-                  <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground font-iran-yekan font-bold flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
                     جستجو‌های اخیر شما
                   </span>
-                  <button onClick={handleClearAllHistory} className="text-xs text-destructive hover:underline font-iran-sans flex items-center gap-0.5">
+                  <button onClick={handleClearAllHistory} className="text-xs text-destructive hover:underline font-iran-yekan flex items-center gap-0.5">
                     <Trash2 className="h-3 w-3" />
                     پاک کردن همه
                   </button>
@@ -284,7 +284,7 @@ export function SearchBar({
                     const itemId = isObject ? (item as any).id : String(idx);
 
                     return (
-                      <div key={itemId} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium font-iran-sans text-foreground border hover:border-primary/20 transition-all cursor-pointer" onClick={() => handleSearchSubmit(wordValue)}>
+                      <div key={itemId} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium font-iran-yekan text-foreground border hover:border-primary/20 transition-all cursor-pointer" onClick={() => handleSearchSubmit(wordValue)}>
                         <span>{wordValue}</span>
                         <button onClick={(e) => handleRemoveHistoryItem(wordValue, e)} className="p-0.5 hover:bg-muted-foreground/20 rounded-full flex items-center justify-center transition-colors" aria-label="Remove">
                           <X className="h-3 w-3 text-muted-foreground" />
@@ -298,13 +298,13 @@ export function SearchBar({
 
             {suggestions.length > 0 && (
               <div className="space-y-2 shrink-0">
-                <span className="text-xs text-muted-foreground font-iran-sans font-bold flex items-center gap-1.5 pb-1 border-b justify-start">
+                <span className="text-xs text-muted-foreground font-iran-yekan font-bold flex items-center gap-1.5 pb-1 border-b justify-start">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
                   جستجو‌های پرطرفدار
                 </span>
                 <div className="flex flex-wrap gap-2 pt-1 justify-start">
                   {suggestions.map((suggest: any, idx: number) => (
-                    <button key={idx} onClick={() => handleSearchSubmit(suggest)} className="px-3 py-1.5 rounded-lg border border-input hover:border-primary/40 hover:bg-primary/5 text-xs font-medium font-iran-sans text-foreground transition-all">
+                    <button key={idx} onClick={() => handleSearchSubmit(suggest)} className="px-3 py-1.5 rounded-lg border border-input hover:border-primary/40 hover:bg-primary/5 text-xs font-medium font-iran-yekan text-foreground transition-all">
                       {suggest}
                     </button>
                   ))}
@@ -338,7 +338,7 @@ export function SearchBar({
       <div className={cn("relative w-full", className)}>
         <div onClick={handleOpenMobileSearch} className="flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground min-w-0">
           <Search className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-iran-sans font-medium mr-2 truncate whitespace-nowrap flex-1 text-right">
+          <span className="text-sm font-iran-yekan font-medium mr-2 truncate whitespace-nowrap flex-1 text-right">
             {query || placeholder}
           </span>
         </div>
@@ -361,7 +361,7 @@ export function SearchBar({
                     <X className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 )}
-                className="w-full font-iran-sans"
+                className="w-full font-iran-yekan"
                 dir="rtl"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(query)}
               />
@@ -390,7 +390,7 @@ export function SearchBar({
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           )}
-          className="w-full font-iran-sans"
+          className="w-full font-iran-yekan"
           dir="rtl"
         />
       </form>
