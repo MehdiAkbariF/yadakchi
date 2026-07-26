@@ -1,3 +1,5 @@
+// src/domains/front/reference/car/hooks/car.hooks.ts
+
 import { UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
 import { getCarService } from '../services/car.service';
@@ -6,12 +8,14 @@ import { PaginatedResult } from '@/shared/types/common.types';
 
 const carService = getCarService();
 
-export function useGetCarListFlat(pageNumber: number = 1, pageSize: number = 200) {
+// ارتقای هوک برای پذیرش پارامترهای اختیاری نظیر فعال‌سازی شرطی کوئری (enabled)
+export function useGetCarListFlat(pageNumber: number = 1, pageSize: number = 200, options?: any) {
   return useTypedQuery<any[]>(
     ['reference', 'cars', 'flat-list', pageNumber, pageSize],
     () => carService.getCarListFlat(pageNumber, pageSize),
     {
       staleTime: 10 * 60 * 1000,
+      ...options
     }
   );
 }

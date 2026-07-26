@@ -4,6 +4,11 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   register: true, // ثبت خودکار سرویس‌ورکر
   skipWaiting: true, // فعال‌سازی آنی آپدیت‌های جدید اپلیکیشن
   disable: process.env.NODE_ENV === 'development', // غیرفعال بودن در لوکال دولوپمنت جهت جلوگیری از اختلال در کش کدها
+  /* 
+    بهینه‌سازی طلایی PWA:
+    جلوگیری از پیش‌دانلود (Precache) کردن بیش از ۱۵ مگابایت فونت‌های سنگین ایران‌سنس و ایران‌یکان در اولین رندر صفحه اصلی
+  */
+  publicExcludes: ['!Font/**/*'], 
   workboxOptions: {
     disableDevLogs: true,
   },
@@ -67,7 +72,13 @@ const nextConfig = {
     ];
   },
 
-  output: 'standalone',
+  /* 
+    نکته بسیار مهم:
+    اگر می‌خواهید روی سیستم خود دستور "npm run start" یا "next start" را اجرا کنید، 
+    خط زیر حتماً باید کامنت باشد. هر زمان خواستید پروژه را روی سرور لینوکس با Docker بالا بیاورید، 
+    کافیست خط زیر را از حالت کامنت خارج کنید.
+  */
+  // output: 'standalone',
 
   logging: {
     fetches: {

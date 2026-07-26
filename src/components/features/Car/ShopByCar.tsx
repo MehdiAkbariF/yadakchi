@@ -25,7 +25,12 @@ export function ShopByCar() {
   const [selectedCar, setSelectedCar] = useState<CarItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: cars = [], isLoading } = useGetCarListFlat(1, 200);
+  /* 
+    بهینه‌سازی بزرگ:
+    دانلود حجیم اطلاعات ۲۰۰ خودرو و تصاویر آن‌ها فقط و فقط زمانی آغاز می‌شود 
+    که کاربر روی دکمه کلیک کرده و مودال پاپ‌آپ باز شود (enabled: isOpen)
+  */
+  const { data: cars = [], isLoading } = useGetCarListFlat(1, 200, { enabled: isOpen });
 
   const getFullUrl = (path: string) => {
     if (!path) return '/placeholder.png';
@@ -66,10 +71,10 @@ export function ShopByCar() {
                 alt={selectedCar.model}
                 className="w-10 h-7 object-contain rounded-md"
               />
-              <span className="text-sm font-bold font-iran-yekan text-foreground">{selectedCar.model}</span>
+              <span className="text-sm font-bold font-iran-sans text-foreground">{selectedCar.model}</span>
             </div>
           ) : (
-            <span className="text-sm font-medium font-iran-yekan text-muted-foreground">مدل خودروی خود را انتخاب کنید...</span>
+            <span className="text-sm font-medium font-iran-sans text-muted-foreground">مدل خودروی خود را انتخاب کنید...</span>
           )}
           <Car className="h-4 w-4 text-muted-foreground shrink-0 mr-2" />
         </button>
@@ -78,7 +83,7 @@ export function ShopByCar() {
           variant="primary"
           onClick={handleSearchSubmit}
           disabled={!selectedCar}
-          className="px-8 font-iran-yekan font-bold text-sm h-12 rounded-xl shrink-0 shadow-sm"
+          className="px-8 font-iran-sans font-bold text-sm h-12 rounded-xl shrink-0 shadow-sm"
           leftIcon={<Search className="h-4 w-4" />}
         >
           جستجوی قطعات
@@ -120,7 +125,7 @@ export function ShopByCar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
-            className="w-full font-iran-yekan"
+            className="w-full font-iran-sans"
           />
         </div>
 
@@ -128,7 +133,7 @@ export function ShopByCar() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
               <Loader2 className="h-7 w-7 animate-spin text-primary" />
-              <Typography variant="small" color="muted" className="font-iran-yekan">در حال لود لیست خودروها...</Typography>
+              <Typography variant="small" color="muted" className="font-iran-sans">در حال لود لیست خودروها...</Typography>
             </div>
           ) : filteredCars.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -151,13 +156,13 @@ export function ShopByCar() {
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <span className="text-xs sm:text-sm font-bold font-iran-yekan text-foreground">{car.model}</span>
+                  <span className="text-xs sm:text-sm font-bold font-iran-sans text-foreground">{car.model}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-12">
-              <Typography variant="small" color="muted" className="font-iran-yekan">خودرویی با مشخصات مدنظر یافت نشد.</Typography>
+              <Typography variant="small" color="muted" className="font-iran-sans">خودرویی با مشخصات مدنظر یافت نشد.</Typography>
             </div>
           )}
         </ModalBody>
