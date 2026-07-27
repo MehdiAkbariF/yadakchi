@@ -1,5 +1,4 @@
-// src/app/(public)/search/page.tsx
-
+import { Metadata } from 'next';
 import { getServerCurrentUser } from '@/domains/auth/server.auth';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
@@ -9,6 +8,31 @@ import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { SearchContent } from '@/components/features/ProductGrid/SearchContent';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { getHttpClient } from '@/core/http/client';
+
+export const metadata: Metadata = {
+  title: 'جستجوی قطعات یدکی و لوازم خودرو | یدک‌چی',
+  description: 'جستجو، مقایسه قیمت و خرید آنلاین انواع قطعات یدکی خودرو، ابزارآلات کارگاهی و لوازم بدنه از معتبرترین فروشگاه‌های قطعات کشور در یدک‌چی.',
+  alternates: {
+    canonical: 'https://www.yadakchi.com/search',
+  },
+  openGraph: {
+    title: 'جستجوی قطعات یدکی و لوازم خودرو | یدک‌چی',
+    description: 'بازارگاه تخصصی و جامع خرید آنلاین انواع قطعات و لوازم یدکی خودرو در ایران',
+    url: 'https://www.yadakchi.com/search',
+    siteName: 'یدک‌چی',
+    locale: 'fa_IR',
+    type: 'website',
+    images: [
+      {
+        url: 'https://api.yadakchi.com/Logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'یدک‌چی جستجوی قطعات',
+      },
+    ],
+  },
+};
 
 interface SearchPageProps {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -64,14 +88,35 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'parts', 'categories-flat', 'all'],
-        queryFn: () => partService.getPartCategories(''),
+        queryFn: async () => {
+          const client = getHttpClient();
+          const response = await client.get<any[]>('/api/Front/PartCategories', {
+            params: { CarId: '' }
+          });
+          return Array.isArray(response.data) ? response.data : [];
+        },
       }),
     ]);
   } catch (error) {}
 
+  const schemaJson = {
+    "@context": "https://schema.org",
+    "@type": "SearchResultsPage",
+    "@id": "https://www.yadakchi.com/search/#webpage",
+    "url": "https://www.yadakchi.com/search",
+    "name": "نتایج جستجوی قطعات یدکی خودرو | یدک‌چی",
+    "description": "صفحه نمایش نتایج جستجو و فیلترینگ قطعات خودرو بر اساس برند، مدل خودرو و دسته‌بندی قطعه",
+    "isPartOf": {
+      "@id": "https://www.yadakchi.com/#website"
+    }
+  };
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+      />
       <SearchContent />
     </HydrationBoundary>
   );

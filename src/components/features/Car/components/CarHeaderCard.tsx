@@ -1,14 +1,17 @@
+// src/components/features/Car/components/CarHeaderCard.tsx
+
 'use client';
 
 import { useState } from 'react';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
+import { ChangeCategoryModal } from '@/components/features/Part/components/ChangeCategoryModal';
+import { SelectPartModal } from '@/components/features/Part/components/SelectPartModal';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { Input } from '@/components/primitives/Input/Input';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
-import { SelectPartModal } from '@/components/features/Part/components/SelectPartModal';
-import { Car as CarIcon, Search, ArrowRight, X, ChevronLeft } from 'lucide-react';
+import { Car as CarIcon, Search, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { getCarUrl } from '@/core/utils/formatters';
 
@@ -81,13 +84,6 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
       >
         <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setIsChangeCarOpen(false)}
-              className="md:hidden p-1 -mr-1 hover:bg-muted rounded-full"
-              aria-label="Back"
-            >
-              <ArrowRight className="h-5 w-5" />
-            </button>
             <span className="text-sm font-bold font-iran-yekan flex items-center gap-1.5 text-foreground">
               <CarIcon className="h-4 w-4 text-primary" />
               تغییر خودرو فعال
@@ -95,7 +91,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
           </div>
           <button 
             onClick={() => setIsChangeCarOpen(false)}
-            className="hidden md:flex p-1.5 hover:bg-muted rounded-full transition-colors"
+            className="p-1.5 hover:bg-muted rounded-full transition-colors"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -153,6 +149,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
         onClose={() => setIsSelectPartOpen(false)}
         slug="Fuel-System"
         categoryName={carName}
+        carSlug={slug}
       />
     </div>
   );

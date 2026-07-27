@@ -1,3 +1,5 @@
+// src/components/features/Part/components/SelectPartModal.tsx
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -14,9 +16,10 @@ interface SelectPartModalProps {
   onClose: () => void;
   slug: string;
   categoryName: string;
+  carSlug?: string;
 }
 
-export function SelectPartModal({ isOpen, onClose, slug, categoryName }: SelectPartModalProps) {
+export function SelectPartModal({ isOpen, onClose, slug, categoryName, carSlug }: SelectPartModalProps) {
   const [partSearch, setPartSearch] = useState('');
   const debouncedSearch = useDebounce(partSearch, 400);
   const [page, setPage] = useState(1);
@@ -79,6 +82,21 @@ export function SelectPartModal({ isOpen, onClose, slug, categoryName }: SelectP
   };
 
   const handleSelectPart = (part: any) => {
+    let resolvedCarSlug = carSlug;
+
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      if (path.includes('/car/')) {
+        const segments = path.split('/');
+        resolvedCarSlug = segments[segments.length - 1];
+      }
+    }
+
+    if (resolvedCarSlug) {
+      window.location.href = `/car-parts/${part.englishTitle}/${resolvedCarSlug}`;
+      return;
+    }
+
     window.location.href = `/parts/${slug}/${part.englishTitle}`;
   };
 

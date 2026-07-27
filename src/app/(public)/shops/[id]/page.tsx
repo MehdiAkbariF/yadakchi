@@ -6,8 +6,8 @@ import { getBrandService } from '@/domains/front/reference/brand/services/brand.
 import { getCarService } from '@/domains/front/reference/car/services/car.service';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { ShopDetailsContent } from '@/components/features/Shop/ShopDetailsContent';
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { getFullUrl } from '@/core/utils/formatters';
 
 interface ShopPageProps {
   params: { id: string };
@@ -24,6 +24,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return {
       title: seo.title || `فروشگاه ${response.data?.shopTitle || 'یدک‌چی'}`,
       description: seo.description || '',
+      alternates: {
+        canonical: `https://www.yadakchi.com/shops/${params.id}`,
+      },
     };
   } catch {
     return { title: 'یدک‌چی' };
@@ -36,6 +39,12 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   const productService = getProductService();
   const brandService = getBrandService();
   const carService = getCarService();
+
+  const shopData = await shopService.getShopPage(params.id);
+
+  if (shopData) {
+    queryClient.setQueryData(['front', 'shop', 'page', params.id], shopData);
+  }
 
   const filters: SearchProductsRequest = {
     shopId: params.id,
@@ -54,10 +63,6 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   try {
     await Promise.all([
       queryClient.prefetchQuery({
-        queryKey: ['front', 'shop', 'page', params.id],
-        queryFn: () => shopService.getShopPage(params.id),
-      }),
-      queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'search', filters],
         queryFn: () => productService.searchProducts(filters),
       }),
@@ -69,14 +74,44 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
         queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
         queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
       }),
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'parts', 'categories-flat', 'all'],
+        queryFn: async () => {
+          const client = getHttpClient();
+          const response = await client.get<any[]>('/api/Front/PartCategories', {
+            params: { CarId: '' }
+          });
+          return Array.isArray(response.data) ? response.data : [];
+        },
+      }),
     ]);
   } catch (error) {}
 
+  const schemaJson = shopData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "AutoPartsStore",
+        "@id": `https://www.yadakchi.com/shops/${params.id}/#organization`,
+        "name": shopData.shopTitle,
+        "image": getFullUrl(shopData.logo),
+        "url": `https://www.yadakchi.com/shops/${params.id}`,
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": shopData.address,
+          "addressCountry": "IR"
+        }
+      }
+    : null;
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      
-        <ShopDetailsContent id={params.id} />
-      
+      {schemaJson && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+        />
+      )}
+      <ShopDetailsContent id={params.id} />
     </HydrationBoundary>
   );
 }

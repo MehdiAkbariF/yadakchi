@@ -1,30 +1,38 @@
 import { Metadata } from 'next';
-import { getHttpClient } from '@/core/http/client';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
 import { getPartService } from '@/domains/front/part/services/part.service';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
-import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { getHttpClient } from '@/core/http/client';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { PartCategoryContent } from '@/components/features/Part/PartCategoryContent';
+import { CarPartsContent } from '@/components/features/CarParts/CarPartsContent';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 
-interface PartCategoryPageProps {
-  params: { slug: string };
+
+interface CarPartsPageProps {
+  params: { partSlug: string; carSlug: string };
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const client = getHttpClient();
+export async function generateMetadata({ params }: CarPartsPageProps): Promise<Metadata> {
+  const decodedCarModel = decodeURIComponent(params.carSlug).replace(/-/g, ' ');
+  const carService = getCarService();
+  const partService = getPartService();
+
   try {
-    const response = await client.get<any>('/api/Front/PartCategoryPage', {
-      params: { PartCategoryEnglishTitle: params.slug }
-    });
-    const seo = response.data?.seoInformation || {};
+    const [carData, categoryData] = await Promise.all([
+      carService.getCarPage(decodedCarModel),
+      partService.getPartCategoryPage(params.partSlug)
+    ]);
+
+    const carName = carData?.model || decodedCarModel;
+    const partName = categoryData?.category?.name || params.partSlug;
+
     return {
-      title: seo.title || response.data?.name || 'یدک‌چی',
-      description: seo.description || response.data?.description || '',
+      title: `خرید لوازم یدکی و قطعات ${partName} ${carName} | یدک‌چی`,
+      description: `خرید، مقایسه قیمت و سفارش آنلاین قطعات گروه ${partName} مخصوص خودروی ${carName} با ضمانت اصالت کالا و ارسال سریع در یدک‌چی.`,
       alternates: {
-        canonical: `https://www.yadakchi.com/part-category/${params.slug}`,
+        canonical: `https://www.yadakchi.com/car-parts/${params.partSlug}/${params.carSlug}`,
       },
     };
   } catch {
@@ -32,21 +40,30 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
 }
 
-export default async function PartCategoryPage({ params, searchParams }: PartCategoryPageProps) {
+export default async function CarPartsPage({ params, searchParams }: CarPartsPageProps) {
   const queryClient = new QueryClient();
+  const carService = getCarService();
   const partService = getPartService();
   const productService = getProductService();
   const brandService = getBrandService();
-  const carService = getCarService();
 
-  const categoryData = await partService.getPartCategoryPage(params.slug);
+  const decodedCarModel = decodeURIComponent(params.carSlug).replace(/-/g, ' ');
 
+  const [carData, categoryData] = await Promise.all([
+    carService.getCarPage(decodedCarModel).catch(() => null),
+    partService.getPartCategoryPage(params.partSlug).catch(() => null)
+  ]);
+
+  if (carData) {
+    queryClient.setQueryData(['reference', 'cars', 'page', decodedCarModel], carData);
+  }
   if (categoryData) {
-    queryClient.setQueryData(['front', 'parts', 'category-page', params.slug], categoryData);
+    queryClient.setQueryData(['front', 'parts', 'category-page', params.partSlug], categoryData);
   }
 
   const filters: SearchProductsRequest = {
-    partCategoryEnglishTitle: params.slug,
+    carModel: decodedCarModel,
+    partCategoryEnglishTitle: params.partSlug,
     isProductInStock: searchParams.inStock === 'true' ? true : undefined,
     isSellerInUserCity: searchParams.userCity === 'true' ? true : undefined,
     fromPrice: searchParams.fromPrice ? Number(searchParams.fromPrice) : undefined,
@@ -86,14 +103,14 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
     ]);
   } catch (error) {}
 
-  const schemaJson = categoryData
+  const schemaJson = carData && categoryData
     ? {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
-        "@id": `https://www.yadakchi.com/part-category/${params.slug}/#webpage`,
-        "url": `https://www.yadakchi.com/part-category/${params.slug}`,
-        "name": categoryData.category.name,
-        "description": categoryData.category.description,
+        "@id": `https://www.yadakchi.com/car-parts/${params.partSlug}/${params.carSlug}/#webpage`,
+        "url": `https://www.yadakchi.com/car-parts/${params.partSlug}/${params.carSlug}`,
+        "name": `خرید قطعات ${categoryData.category.name} ${carData.model}`,
+        "description": `آرشیو کامل و لیست قیمت قطعات گروه ${categoryData.category.name} مخصوص خودروی ${carData.model}`,
         "isPartOf": {
           "@id": "https://www.yadakchi.com/#website"
         }
@@ -108,7 +125,10 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
         />
       )}
-      <PartCategoryContent slug={params.slug} />
+      <CarPartsContent 
+        partSlug={params.partSlug} 
+        carSlug={params.carSlug} 
+      />
     </HydrationBoundary>
   );
 }

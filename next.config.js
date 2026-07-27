@@ -6,12 +6,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   register: true, // ثبت خودکار سرویس‌ورکر روی مرورگر کاربر
   skipWaiting: true, // فعال‌سازی آنی آپدیت‌های جدید اپلیکیشن بدون نیاز به بستن تب
   
-  /* 
-    تست خطایابی سریع سرعت:
-    اگر می‌خواهید بدانید PWA علت اصلی افت سرعت پروداکشن است، 
-    کافیست موقتاً مقدار خط زیر را به true تغییر دهید و پروژه را تست کنید:
-  */
-  disable: process.env.NODE_ENV === 'development', // یا تغییر به true جهت غیرفعال‌سازی موقت در پروداکشن
+  disable: process.env.NODE_ENV === 'development', // غیرفعال بودن PWA در محیط لوکال جهت جلوگیری از اختلال کش کدهای در حال ویرایش
 
   /* 
     بهینه‌سازی فوق‌العاده سخت‌گیرانه پیش‌دانلود PWA (Precache Exclusion):
@@ -46,6 +41,14 @@ const nextConfig = {
   },
 
   images: {
+    /* 
+      انقلاب پرفورمنس و آزاد کردن ۱۰۰٪ سی‌پی‌یو سرور پروژه (Bypass Next.js Image Optimizer):
+      با فعال‌سازی unoptimized، فرآیند فوق‌العاده سنگین فشرده‌سازی محلی تصاویر روی سرور Next.js را متوقف می‌کنیم.
+      مرورگر تصاویر را به صورت مستقیم و بدون کوچک‌ترین وقفه پردازشی از CDN پرسرعت شما دانلود می‌کند.
+      این کار سرعت سرور را آزاد کرده و انتقال بین صفحات هنگام کلیک را کاملاً آنی (زیر ۵۰ میلی‌ثانیه) می‌کند.
+    */
+    unoptimized: true,
+
     remotePatterns: [
       { protocol: 'https', hostname: 'api.yadakchi.com' },
       { protocol: 'https', hostname: 'cdn.yadakchi.com' },

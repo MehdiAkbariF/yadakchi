@@ -6,7 +6,6 @@ import { getBrandService } from '@/domains/front/reference/brand/services/brand.
 import { getCarService } from '@/domains/front/reference/car/services/car.service';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { PartDetailsContent } from '@/components/features/Part/PartDetailsContent';
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 
 interface PartPageProps {
@@ -26,6 +25,9 @@ export async function generateMetadata({ params }: { params: { categorySlug: str
     return {
       title,
       description,
+      alternates: {
+        canonical: `https://www.yadakchi.com/parts/${params.categorySlug}/${params.partSlug}`,
+      },
     };
   } catch {
     return { title: 'یدک‌چی' };
@@ -38,6 +40,12 @@ export default async function PartPage({ params, searchParams }: PartPageProps) 
   const productService = getProductService();
   const brandService = getBrandService();
   const carService = getCarService();
+
+  const partData = await partService.getPartPage(params.partSlug);
+
+  if (partData) {
+    queryClient.setQueryData(['front', 'parts', 'page', params.partSlug, undefined], partData);
+  }
 
   const filters: SearchProductsRequest = {
     partCategoryEnglishTitle: params.categorySlug,
@@ -57,10 +65,6 @@ export default async function PartPage({ params, searchParams }: PartPageProps) 
   try {
     await Promise.all([
       queryClient.prefetchQuery({
-        queryKey: ['front', 'parts', 'page', params.partSlug, undefined],
-        queryFn: () => partService.getPartPage(params.partSlug),
-      }),
-      queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'search', filters],
         queryFn: () => productService.searchProducts(filters),
       }),
@@ -72,14 +76,42 @@ export default async function PartPage({ params, searchParams }: PartPageProps) 
         queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
         queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
       }),
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'parts', 'categories-flat', 'all'],
+        queryFn: async () => {
+          const client = getHttpClient();
+          const response = await client.get<any[]>('/api/Front/PartCategories', {
+            params: { CarId: '' }
+          });
+          return Array.isArray(response.data) ? response.data : [];
+        },
+      }),
     ]);
   } catch (error) {}
 
+  const schemaJson = partData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "@id": `https://www.yadakchi.com/parts/${params.categorySlug}/${params.partSlug}/#webpage`,
+        "url": `https://www.yadakchi.com/parts/${params.categorySlug}/${params.partSlug}`,
+        "name": partData.name,
+        "description": partData.description,
+        "isPartOf": {
+          "@id": "https://www.yadakchi.com/#website"
+        }
+      }
+    : null;
+
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      
-        <PartDetailsContent categorySlug={params.categorySlug} partSlug={params.partSlug} />
-      
+      {schemaJson && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+        />
+      )}
+      <PartDetailsContent categorySlug={params.categorySlug} partSlug={params.partSlug} />
     </HydrationBoundary>
   );
 }

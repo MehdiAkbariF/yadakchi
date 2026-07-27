@@ -1,48 +1,58 @@
+// src/components/features/CarParts/CarPartsContent.tsx
+
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
 import { useGetCarPage, useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
+import { useGetPartCategoryPage, useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
 import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
 import { SearchSidebar } from '@/components/features/ProductGrid/SearchSidebar';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
 import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
-import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
-import { CarHeaderCard } from './components/CarHeaderCard';
+import { Card, CardBody } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button/Button';
+import { Input } from '@/components/primitives/Input/Input';
 import { Typography } from '@/components/primitives/Typography';
 import { useAppStore } from '@/shared/store/useAppStore';
 import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
 import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
-import { SelectPartModal } from '@/components/features/Part/components/SelectPartModal';
-import { Input } from '@/components/primitives/Input/Input';
+import { ChangeCategoryModal } from '@/components/features/Part/components/ChangeCategoryModal';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
-import { ShoppingBag, Car as CarIcon, Search, ChevronLeft, Settings, X } from 'lucide-react';
+import { ShoppingBag, Car as CarIcon, Settings, Search, ArrowRight, X, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { getCarUrl } from '@/core/utils/formatters';
+import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
 
-interface CarDetailsContentProps {
-  slug: string;
+interface CarPartsContentProps {
+  partSlug: string;
+  carSlug: string;
 }
 
-export function CarDetailsContent({ slug }: CarDetailsContentProps) {
+export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
   const router = useRouter();
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
 
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [isChangeCarOpen, setIsChangeCarOpen] = useState(false);
-  const [isSelectPartOpen, setIsSelectPartOpen] = useState(false);
+  const [isChangeCatOpen, setIsChangeCatOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const decodedCarModel = decodeURIComponent(slug).replace(/-/g, ' ');
+  const decodedCarModel = decodeURIComponent(carSlug).replace(/-/g, ' ');
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
-  const currentFilters = { ...filters, carModel: decodedCarModel };
+  const currentFilters = { 
+    ...filters, 
+    carModel: decodedCarModel,
+    partCategoryEnglishTitle: partSlug
+  };
 
   const { data: carData } = useGetCarPage(decodedCarModel);
+  const { data: categoryData } = useGetPartCategoryPage(partSlug);
   const { data: productsResponse, isLoading: isProductsLoading } = useSearchProducts(currentFilters);
   const { data: cars = [], isLoading: isCarsLoading } = useGetCarListFlat(1, 200);
 
@@ -50,14 +60,10 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
 
-  const rawBreadcrumbs = (carData as any)?.breadCrumbs || [];
   const breadcrumbItems = [
     { id: 'cars-root', title: 'خودروها', href: '/search' },
-    ...rawBreadcrumbs.map((b: any) => ({
-      id: b.id,
-      title: b.title,
-      href: undefined
-    }))
+    { id: 'car-active', title: carData?.model || decodedCarModel, href: getCarUrl(carSlug) },
+    { id: 'part-active', title: categoryData?.category?.name || partSlug }
   ];
 
   const getFullUrl = (path: string | null | undefined) => {
@@ -87,7 +93,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
               <img src={getFullUrl(carData?.cover)} className="w-full h-full object-contain" alt="" />
             </div>
             <div className="flex flex-col min-w-0 text-right">
-              <span className="text-[9px] text-muted-foreground font-bold leading-none">خودرو انتخابی</span>
+              <span className="text-[9px] text-muted-foreground font-bold leading-none">{categoryData?.category?.name || 'قطعات'}</span>
               <span className="text-xs font-black text-foreground truncate mt-1 leading-none">{carData?.model || 'خودرو'}</span>
             </div>
           </div>
@@ -100,10 +106,10 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
               تغییر خودرو
             </button>
             <button
-              onClick={() => setIsSelectPartOpen(true)}
+              onClick={() => setIsChangeCatOpen(true)}
               className="text-[10px] font-black text-foreground bg-secondary px-2.5 py-1.5 rounded-lg outline-none"
             >
-              انتخاب قطعه
+              تغییر قطعه
             </button>
           </div>
         </div>
@@ -130,6 +136,57 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
 
       <Breadcrumb items={breadcrumbItems} className="hidden md:flex px-4 md:px-0" />
 
+      <div className="hidden md:block">
+        <Card className="w-full border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-card p-4 flex items-center justify-between gap-5 shadow-sm">
+          <div className="flex items-center gap-6 text-right">
+            <div className="flex items-center gap-3.5">
+              <div className="w-16 h-16 shrink-0 rounded-2xl border border-zinc-150 dark:border-zinc-800 bg-muted/10 flex items-center justify-center overflow-hidden">
+                <img src={getFullUrl(carData?.cover)} className="w-full h-full object-contain" alt="" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-muted-foreground font-bold">خودرو انتخابی:</span>
+                <h2 className="text-sm md:text-base font-black text-foreground font-iran-yekan">{carData?.model || decodedCarModel}</h2>
+              </div>
+            </div>
+
+            <div className="h-10 w-px bg-zinc-200 dark:bg-zinc-800" />
+
+            <div className="flex items-center gap-3.5">
+              <div className="w-16 h-16 shrink-0 rounded-2xl border border-zinc-150 dark:border-zinc-800 bg-muted/10 flex items-center justify-center overflow-hidden p-3">
+                {categoryData?.category?.thumbnail ? (
+                  <img src={getFullUrl(categoryData.category.thumbnail)} className="w-full h-full object-contain filter dark:invert" alt="" />
+                ) : (
+                  <Settings className="h-6 w-6 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-muted-foreground font-bold">دسته قطعات:</span>
+                <h2 className="text-sm md:text-base font-black text-foreground font-iran-yekan">{categoryData?.category?.name || partSlug}</h2>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setSearchQuery(''); setIsChangeCarOpen(true); }}
+              className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
+            >
+              تغییر خودرو
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsChangeCatOpen(true)}
+              className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 shadow-sm"
+            >
+              تغییر قطعه
+            </Button>
+          </div>
+        </Card>
+      </div>
+
       <div className="w-full flex items-start gap-6 md:gap-8">
         
         <SearchSidebar
@@ -138,22 +195,17 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
           onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}
           onClose={() => setIsMobileFiltersOpen(false)}
-          hidePartFilter={true}
           carId={carData?.id}
+          partCategoryId={categoryData?.category?.id}
         />
 
         <div className="flex-1 flex flex-col items-stretch gap-6">
           
-          <div className="hidden md:block">
-            <CarHeaderCard 
-              slug={slug}
-              carName={carData?.model || 'خودرو انتخاب شده'}
-              carCover={carData?.cover || null}
+          <div className="w-full">
+            <ShopProductAdBanner 
+              carId={carData?.id} 
+              partCategoryId={categoryData?.category?.id} 
             />
-          </div>
-
-          <div className="block lg:hidden w-full">
-            <ShopProductAdBanner carId={carData?.id} />
           </div>
 
           <div className="hidden md:block">
@@ -188,17 +240,17 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
             <div className="flex flex-col items-center justify-center py-16 text-center select-none bg-background rounded-xl border border-dashed mx-4 md:mx-0">
               <ShoppingBag className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] mb-4 animate-bounce" />
               <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">کالایی یافت نشد</Typography>
-              <p className="text-xs text-muted-foreground mt-2 font-iran-sans">هنوز هیچ محصول فعالی برای این خودرو ثبت نشده است.</p>
+              <p className="text-xs text-muted-foreground mt-2 font-iran-sans">هنوز هیچ محصول فعال و موجودی برای این ترکیب خودرو و قطعه یافت نشد.</p>
             </div>
           )}
         </div>
 
       </div>
 
-      {carData?.description && (
+      {categoryData?.category?.description && (
         <PageDescription 
-          htmlContent={carData.description} 
-          title={`راهنمای خرید و شناخت قطعات ${carData.model}`}
+          htmlContent={categoryData.category.description} 
+          title={`راهنمای خرید و شناخت قطعات ${categoryData.category.name} مخصوص ${carData?.model || decodedCarModel}`}
         />
       )}
 
@@ -243,12 +295,12 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
                 <div
                   key={car.id}
                   onClick={() => {
-                    window.location.href = getCarUrl(car.englishTitle);
+                    window.location.href = `/car-parts/${partSlug}/${car.englishTitle}`;
                     setIsChangeCarOpen(false);
                   }}
                   className={cn(
                     "flex flex-col items-center gap-3 p-4 rounded-xl border cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all text-center group",
-                    slug === car.englishTitle ? "border-primary bg-primary/5 ring-1 ring-primary" : ""
+                    carSlug === car.englishTitle ? "border-primary bg-primary/5 ring-1 ring-primary" : ""
                   )}
                 >
                   <div className="w-full aspect-[4/3] relative overflow-hidden rounded-lg">
@@ -270,12 +322,9 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
         </ModalBody>
       </Modal>
 
-      <SelectPartModal
-        isOpen={isSelectPartOpen}
-        onClose={() => setIsSelectPartOpen(false)}
-        slug="Fuel-System"
-        categoryName={carData?.model || 'خودرو'}
-        carSlug={slug}
+      <ChangeCategoryModal
+        isOpen={isChangeCatOpen}
+        onClose={() => setIsChangeCatOpen(false)}
       />
 
     </div>
