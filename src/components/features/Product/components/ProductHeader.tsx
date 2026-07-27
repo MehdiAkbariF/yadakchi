@@ -25,7 +25,6 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
   const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
   
-  // دریافت وضعیت علاقه‌مندی خام از سرور
   const { data: rawIsFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
   
   const addFavorite = useAddFavorite(product.code);
@@ -37,17 +36,15 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [reportDescription, setReportDescription] = useState('');
 
-  // استیت محلی خوش‌بینانه برای وضعیت قلب
   const [localIsFavorite, setLocalIsFavorite] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // اصلاح وارونگی منطقی API در کلاینت: مقدار خام سرور نقیض (!) می‌شود تا منطق لایک/دیسلایک درست کار کند
   useEffect(() => {
     if (rawIsFavorite !== undefined) {
-      setLocalIsFavorite(!rawIsFavorite);
+      setLocalIsFavorite(rawIsFavorite);
     }
   }, [rawIsFavorite]);
 
@@ -55,21 +52,17 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
     const previousState = localIsFavorite;
     const nextState = !previousState;
 
-    // ۱. به‌روزرسانی آنی قلب در رابط کاربری جهت بازخورد سریع به کاربر
     setLocalIsFavorite(nextState);
 
     try {
       if (previousState) {
-        // اگر قبلاً لایک شده بود (قرمز بود)، حالا حذفش می‌کنیم
         await deleteFavorite.mutateAsync(product.id);
         showToast.success('از علاقه‌مندی‌ها حذف شد');
       } else {
-        // اگر لایک نشده بود (خاکستری بود)، حالا اضافه‌اش می‌کنیم
         await addFavorite.mutateAsync(product.id);
         showToast.success('به علاقه‌مندی‌ها اضافه شد');
       }
     } catch (err: any) {
-      // ۲. در صورت ناموفق بودن درخواست سرور، وضعیت به حالت قبل بازمی‌گردد
       setLocalIsFavorite(previousState);
 
       if (
@@ -77,7 +70,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         err?.userMessage?.includes('قبلا ثبت شده است')
       ) {
         setLocalIsFavorite(true);
-        queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], false); // متناسب با منطق معکوس API
+        queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], true);
         return;
       }
       showToast.error(err.userMessage || 'خطا در انجام عملیات علاقه‌مندی');

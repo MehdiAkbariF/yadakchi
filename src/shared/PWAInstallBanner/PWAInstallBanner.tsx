@@ -13,25 +13,20 @@ export function PWAInstallBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  
-  // استیت راهنمای نصب دستی در صورت آماده نبودن رویداد بومی مرورگر (یا لوکال هاست)
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
 
-    // ۱. بررسی اینکه آیا کاربر قبلاً اپلیکیشن را نصب کرده است (حالت Standalone)
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
     if (isStandalone) return;
 
-    // ۲. بررسی سیاست عدم مزاحمت (سیاست ۱۴ روز انصراف)
     const dismissedAt = localStorage.getItem('pwa_install_dismissed_at');
     if (dismissedAt) {
       const daysDiff = (Date.now() - Number(dismissedAt)) / (1000 * 60 * 60 * 24);
       if (daysDiff < 14) return; 
     }
 
-    // ۳. تشخیص آیفون و سافاری اپل
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIphoneOrIpad = /iphone|ipad|ipod/.test(userAgent);
     const isSafari = /safari/.test(userAgent) && !/crios|fxios|optios|edgios/.test(userAgent);
@@ -40,12 +35,10 @@ export function PWAInstallBanner() {
       setIsIOS(true);
     }
 
-    // ۴. نمایش بنر به صورت تضمینی پس از ۲ ثانیه از لود اولیه صفحه برای کاربران واجد شرایط
     const timer = setTimeout(() => {
       setShowBanner(true);
     }, 2000);
 
-    // ۵. شنود رویداد نصب رسمی سیستم‌عامل
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -60,10 +53,8 @@ export function PWAInstallBanner() {
   }, []);
 
   const handleInstallClick = async () => {
-    // الف) اگر کاربر روی آیفون/سافاری باشد، نیازی به پرامپت نیست و راهنما در بنر نوشته شده است
     if (isIOS) return;
 
-    // ب) اگر رویداد رسمی مرورگر صادر و آماده شده باشد
     if (deferredPrompt) {
       try {
         deferredPrompt.prompt();
@@ -78,7 +69,6 @@ export function PWAInstallBanner() {
         setDeferredPrompt(null);
       }
     } else {
-      // ج) در صورتی که رویداد هنوز صادر نشده باشد (مثل لوکال هاست)، راهنمای نصب دستی را نشان بده
       setIsGuideOpen(true);
     }
   };
@@ -99,7 +89,7 @@ export function PWAInstallBanner() {
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
           className={cn(
-            "fixed left-4 right-4 z-40 bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto text-right select-none",
+            "fixed left-4 right-4 z-[100] bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto text-right select-none",
             "bottom-[78px] lg:bottom-5"
           )}
           dir="rtl"
@@ -147,7 +137,6 @@ export function PWAInstallBanner() {
         </motion.div>
       </AnimatePresence>
 
-      {/* مودال راهنمای نصب دستی شیک و سازگار با دارک مود (در صورتی که پرامپت اتوماتیک آماده نباشد) */}
       <Modal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} className="max-w-sm w-full animate-none">
         <ModalHeader onClose={() => setIsGuideOpen(false)}>
           <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">

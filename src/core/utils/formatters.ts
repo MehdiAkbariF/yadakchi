@@ -99,10 +99,6 @@ export function throttle<T extends (...args: any[]) => any>(
   };
 }
 
-/*
-  اصلاح رفرنس رگکس به کدهای امن یونیکد (\u0600-\u06FF):
-  این عبارت شامل حروف الفبای فارسی/عربی و همچنین اعداد فارسی/عربی به طور استاندارد می‌شود.
-*/
 export function getProductUrl(code: number, title: string): string {
   const safeTitle = typeof title === 'string' ? title : '';
   const cleanTitle = safeTitle
@@ -178,12 +174,13 @@ export function toPersianDigits(value: string | number | undefined | null): stri
   return str.replace(/[0-9]/g, (w) => persianDigits[parseInt(w)]);
 }
 
-/*
-  تابع متمرکز تبدیل آدرس عکس بک‌اند (حل مشکل نقض DRY در سراسر پروژه):
-*/
-export function getFullUrl(path: string | null): string {
-  if (!path) return '/placeholder.png';
-  if (path.startsWith('http')) return path;
+export function getFullUrl(path: any): string {
+  if (!path || typeof path !== 'string') {
+    return '/placeholder.png';
+  }
+  if (path.startsWith('http')) {
+    return path;
+  }
   const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   return `${base}${cleanPath}`;

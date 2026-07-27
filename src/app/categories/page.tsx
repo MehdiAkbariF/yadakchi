@@ -1,4 +1,3 @@
-
 import { getBannerService } from '@/domains/front/banner/services/banner.service';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { CategoriesContent } from '@/components/features/Categories/CategoriesContent';
@@ -16,9 +15,7 @@ export default async function CategoriesPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-     
-        <CategoriesContent />
-      
+      <CategoriesContent />
     </HydrationBoundary>
   );
 }

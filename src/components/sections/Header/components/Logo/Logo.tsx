@@ -1,5 +1,3 @@
-// src/components/sections/Header/components/Logo/Logo.tsx
-
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/design-system/utils/cn';
@@ -12,7 +10,6 @@ interface LogoProps {
 export function Logo({ hideTitle = false, className }: LogoProps) {
   return (
     <Link href="/" className={cn("flex flex-col items-center shrink-0", className)}>
-      {/* 🚨 ابعاد لوگو بزرگتر شد */}
       <div className="relative w-20 h-10 md:w-24 md:h-12 leading-none">
         <Image
           src="/Logo.svg"
@@ -25,10 +22,10 @@ export function Logo({ hideTitle = false, className }: LogoProps) {
       </div>
       
       <span className={cn(
-        "text-[8px] sm:text-[10px] text-muted-foreground text-center block",
+        "text-[10px] sm:text-[11px] font-bold text-muted-foreground text-center block",
         "leading-none",
         "mt-0 pt-0",
-        hideTitle ? "hidden" : "" // در موبایل متن زیرین مخفی باشه
+        hideTitle ? "hidden" : ""
       )}>
         انتخاب هوشمند قطعات خودرو
       </span>

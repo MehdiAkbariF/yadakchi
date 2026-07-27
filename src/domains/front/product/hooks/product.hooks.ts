@@ -1,5 +1,3 @@
-// src/domains/front/product/hooks/product.hooks.ts
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -32,11 +30,6 @@ export function useGetNominatedProducts() {
   );
 }
 
-/*
-  اصلاح هوک جهت پشتیبانی از آرگومان دوم تنظیمات کوئری (مانند فعال‌ساز لود تنبل - enabled):
-  با این تغییر، هوک قادر است به شکل استاندارد پارامترهای پیش‌فرض یا انتخابی React Query را 
-  پذیرفته و آن‌ها را در تابع useTypedQuery ادغام (Merge) کند.
-*/
 export function useGetNominatedProductsByCategory(
   categoryEnglishTitle: string,
   options?: Omit<UseQueryOptions<any, any>, 'queryKey' | 'queryFn'>
@@ -269,7 +262,6 @@ export function useAddFavorite(productCode: number) {
     {
       onSuccess: () => {
         queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], true);
-        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
       }
     }
   );
@@ -282,7 +274,6 @@ export function useDeleteFavorite(productCode: number) {
     {
       onSuccess: () => {
         queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], false);
-        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
       }
     }
   );

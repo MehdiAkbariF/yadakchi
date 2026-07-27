@@ -1,4 +1,7 @@
+// src/app/(public)/part-category/[slug]/page.tsx
+
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getHttpClient } from '@/core/http/client';
 import { getPartService } from '@/domains/front/part/services/part.service';
 import { getProductService } from '@/domains/front/product/services/product.service';
@@ -39,11 +42,21 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
   const brandService = getBrandService();
   const carService = getCarService();
 
-  const categoryData = await partService.getPartCategoryPage(params.slug);
+  let categoryData = null;
 
-  if (categoryData) {
-    queryClient.setQueryData(['front', 'parts', 'category-page', params.slug], categoryData);
+  try {
+    categoryData = await partService.getPartCategoryPage(params.slug);
+  } catch (error: any) {
+    if (error?.status === 404) {
+      notFound();
+    }
   }
+
+  if (!categoryData) {
+    notFound();
+  }
+
+  queryClient.setQueryData(['front', 'parts', 'category-page', params.slug], categoryData);
 
   const filters: SearchProductsRequest = {
     partCategoryEnglishTitle: params.slug,
@@ -86,28 +99,24 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
     ]);
   } catch (error) {}
 
-  const schemaJson = categoryData
-    ? {
-        "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        "@id": `https://www.yadakchi.com/part-category/${params.slug}/#webpage`,
-        "url": `https://www.yadakchi.com/part-category/${params.slug}`,
-        "name": categoryData.category.name,
-        "description": categoryData.category.description,
-        "isPartOf": {
-          "@id": "https://www.yadakchi.com/#website"
-        }
-      }
-    : null;
+  const schemaJson = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `https://www.yadakchi.com/part-category/${params.slug}/#webpage`,
+    "url": `https://www.yadakchi.com/part-category/${params.slug}`,
+    "name": categoryData.category.name,
+    "description": categoryData.category.description,
+    "isPartOf": {
+      "@id": "https://www.yadakchi.com/#website"
+    }
+  };
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      {schemaJson && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
-        />
-      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+      />
       <PartCategoryContent slug={params.slug} />
     </HydrationBoundary>
   );

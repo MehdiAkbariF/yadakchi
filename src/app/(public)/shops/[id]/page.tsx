@@ -1,4 +1,7 @@
+// src/app/(public)/shops/[id]/page.tsx
+
 import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 import { getHttpClient } from '@/core/http/client';
 import { getShopService } from '@/domains/front/shop/services/shop.service';
 import { getProductService } from '@/domains/front/product/services/product.service';
@@ -40,11 +43,21 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
   const brandService = getBrandService();
   const carService = getCarService();
 
-  const shopData = await shopService.getShopPage(params.id);
+  let shopData = null;
 
-  if (shopData) {
-    queryClient.setQueryData(['front', 'shop', 'page', params.id], shopData);
+  try {
+    shopData = await shopService.getShopPage(params.id);
+  } catch (error: any) {
+    if (error?.status === 404) {
+      notFound();
+    }
   }
+
+  if (!shopData) {
+    notFound();
+  }
+
+  queryClient.setQueryData(['front', 'shop', 'page', params.id], shopData);
 
   const filters: SearchProductsRequest = {
     shopId: params.id,
@@ -87,21 +100,19 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
     ]);
   } catch (error) {}
 
-  const schemaJson = shopData
-    ? {
-        "@context": "https://schema.org",
-        "@type": "AutoPartsStore",
-        "@id": `https://www.yadakchi.com/shops/${params.id}/#organization`,
-        "name": shopData.shopTitle,
-        "image": getFullUrl(shopData.logo),
-        "url": `https://www.yadakchi.com/shops/${params.id}`,
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": shopData.address,
-          "addressCountry": "IR"
-        }
-      }
-    : null;
+  const schemaJson = {
+    "@context": "https://schema.org",
+    "@type": "AutoPartsStore",
+    "@id": `https://www.yadakchi.com/shops/${params.id}/#organization`,
+    "name": shopData.shopTitle,
+    "image": getFullUrl(shopData.logo),
+    "url": `https://www.yadakchi.com/shops/${params.id}`,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": shopData.address,
+      "addressCountry": "IR"
+    }
+  };
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

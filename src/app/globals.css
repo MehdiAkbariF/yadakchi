@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ==========================================================================
-   ۱. پیکربندی فونت اصلی: ایران‌یکان (IRANYekan)
-   انطباق کامل آدرس‌ها با آدرس‌های فیزیکی واقعی موجود در دیسک شما (کشف شده از فایل مانیفست)
-   ========================================================================== */
-
-/* Thin 100 (موجود در پوشه woff) */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff2') format('woff2'),
@@ -19,7 +13,6 @@
   font-display: swap;
 }
 
-/* Light 300 (موجود در پوشه woff) */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff2') format('woff2'),
@@ -31,7 +24,6 @@
   font-display: swap;
 }
 
-/* Regular 400 (مغایرت کلیدی: این فایل برخلاف بقیه در پوشه woff ذخیره شده است) */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
@@ -43,7 +35,6 @@
   font-display: swap;
 }
 
-/* Medium 500 (مستقر در هر دو پوشه woff و woff2) */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2'),
@@ -55,7 +46,6 @@
   font-display: swap;
 }
 
-/* Bold 700 (مستقر در هر دو پوشه woff و woff2) */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2'),
@@ -67,7 +57,6 @@
   font-display: swap;
 }
 
-/* ExtraBold 800 (موجود در پوشه woff) */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
@@ -79,7 +68,6 @@
   font-display: swap;
 }
 
-/* Black 900 (موجود در پوشه woff) */
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff2') format('woff2'),
@@ -91,12 +79,6 @@
   font-display: swap;
 }
 
-
-/* ==========================================================================
-   ۲. نام مستعار ایران‌سنس (IRANSans / iran-sans) جهت ارجاع به فایل‌های ایران‌یکان
-   ========================================================================== */
-
-/* Thin 100 (Alias) */
 @font-face {
   font-family: 'IRANSans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff2') format('woff2'),
@@ -108,7 +90,6 @@
   font-display: swap;
 }
 
-/* Light 300 (Alias) */
 @font-face {
   font-family: 'IRANSans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff2') format('woff2'),
@@ -120,7 +101,6 @@
   font-display: swap;
 }
 
-/* Regular 400 (Alias) */
 @font-face {
   font-family: 'IRANSans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
@@ -132,7 +112,6 @@
   font-display: swap;
 }
 
-/* Medium 500 (Alias) */
 @font-face {
   font-family: 'IRANSans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Medium.woff2') format('woff2'),
@@ -144,7 +123,6 @@
   font-display: swap;
 }
 
-/* Bold 700 (Alias) */
 @font-face {
   font-family: 'IRANSans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Bold.woff2') format('woff2'),
@@ -156,7 +134,6 @@
   font-display: swap;
 }
 
-/* ExtraBold 800 (Alias) */
 @font-face {
   font-family: 'IRANSans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
@@ -168,7 +145,6 @@
   font-display: swap;
 }
 
-/* Black 900 (Alias) */
 @font-face {
   font-family: 'IRANSans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff2') format('woff2'),
@@ -180,7 +156,6 @@
   font-display: swap;
 }
 
-/* کلاس‌های تلویند با نام فرعی iran-sans */
 @font-face {
   font-family: 'iran-sans';
   src: url('/Font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
@@ -191,11 +166,6 @@
   font-style: normal;
   font-display: swap;
 }
-
-
-/* ==========================================================================
-   ۳. لایه متغیرهای تم و استایل اصلی
-   ========================================================================== */
 
 @layer base {
   :root {
@@ -274,4 +244,35 @@
     @apply bg-background text-foreground;
     font-family: 'IRANYekan', system-ui, sans-serif !important;
   }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    #f0f0f1 25%,
+    #e0e0e1 50%,
+    #f0f0f1 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+.dark .shimmer-effect {
+  background: linear-gradient(
+    90deg,
+    #18181b 25%,
+    #27272a 50%,
+    #18181b 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
 }
