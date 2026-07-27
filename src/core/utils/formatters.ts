@@ -1,3 +1,5 @@
+// src/core/utils/formatters.ts
+
 export function formatDate(date: Date | string, format: 'full' | 'short' | 'relative' = 'full'): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   
@@ -97,18 +99,20 @@ export function throttle<T extends (...args: any[]) => any>(
   };
 }
 
-// ایمن‌سازی کامل متد درگاه لینک کالا در برابر فیلدهای خالی یا نامعتبر ارسالی از API
+/*
+  اصلاح رفرنس رگکس به کدهای امن یونیکد (\u0600-\u06FF):
+  این عبارت شامل حروف الفبای فارسی/عربی و همچنین اعداد فارسی/عربی به طور استاندارد می‌شود.
+*/
 export function getProductUrl(code: number, title: string): string {
   const safeTitle = typeof title === 'string' ? title : '';
   const cleanTitle = safeTitle
     .trim()
-    .replace(/[^a-zA-Z0-9Ø¢-ÛŒÛ°-Û¹\s-]/g, '')
+    .replace(/[^a-zA-Z0-9\u0600-\u06FF\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
   return `/product/ykp-${code || 0}/${encodeURIComponent(cleanTitle || 'product')}`;
 }
 
-// ایمن‌سازی کامل متد درگاه لینک خودرو در برابر فیلدهای خالی یا نامعتبر ارسالی از API
 export function getCarUrl(englishTitle: string): string {
   const safeTitle = typeof englishTitle === 'string' ? englishTitle : '';
   const slug = safeTitle
@@ -172,4 +176,15 @@ export function toPersianDigits(value: string | number | undefined | null): stri
   const str = String(value);
   const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
   return str.replace(/[0-9]/g, (w) => persianDigits[parseInt(w)]);
+}
+
+/*
+  تابع متمرکز تبدیل آدرس عکس بک‌اند (حل مشکل نقض DRY در سراسر پروژه):
+*/
+export function getFullUrl(path: string | null): string {
+  if (!path) return '/placeholder.png';
+  if (path.startsWith('http')) return path;
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${cleanPath}`;
 }

@@ -78,9 +78,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <MainLayout>
+      
         <ProductContent productCode={productCode} />
-      </MainLayout>
+      
     </HydrationBoundary>
   );
 }

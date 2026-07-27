@@ -1,3 +1,5 @@
+// src/components/features/Home/HomeContent.tsx
+
 'use client';
 
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
@@ -10,17 +12,18 @@ import { ShopByCar } from '@/components/features/Car/ShopByCar';
 import { HomeCategories } from '@/components/features/Part/HomeCategories';
 import { DealsSlider } from '@/components/features/ProductCard/DealsSlider';
 import { ProductSlider } from '../ProductCard/ProductSlider';
-import { BrandSlider } from '@/components/features/Brand/BrandSlider';
-import { ShopSlider } from '@/components/features/Shop/ShopSlider';
+import { BrandSlider } from '@/components/features/Brand/BrandSlider'; // ایمپورت استاتیک جهت مچ شدن کامل هیدریشن
+import { ShopSlider } from '@/components/features/Shop/ShopSlider'; // ایمپورت استاتیک جهت مچ شدن کامل هیدریشن
 import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
-import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { useAppStore } from '@/shared/store/useAppStore';
 
 export function HomeContent() {
-  const { data: rawBanners = [], isLoading: isBannersLoading } = useGetBanners('Home');
+  const { data: rawBanners = [] } = useGetBanners('Home');
+
+  // استفاده مستقیم از دیتای پیش‌دانلود شده در سرور بدون لرزش هیدراته کلاینت
   const { data: toolsData, isLoading: isToolsLoading, isError: isToolsError } = useGetNominatedProductsByCategory('car-tools');
   const { data: audioData, isLoading: isAudioLoading, isError: isAudioError } = useGetNominatedProductsByCategory('audio-video-multimedia-system');
   const { data: exhaustData, isLoading: isExhaustLoading, isError: isExhaustError } = useGetNominatedProductsByCategory('Exhaust');
-  
   const { data: heaterData, isLoading: isHeaterLoading, isError: isHeaterError } = useGetNominatedProductsByCategory('heater');
   const { data: doorData, isLoading: isDoorLoading, isError: isDoorError } = useGetNominatedProductsByCategory('door-handles-locks-and-safety');
   const { data: bodyData, isLoading: isBodyLoading, isError: isBodyError } = useGetNominatedProductsByCategory('body-and-weatherstrips');
@@ -64,92 +67,6 @@ export function HomeContent() {
   const doorProducts = doorData?.products?.items || [];
   const bodyProducts = bodyData?.products?.items || [];
 
-  if (isBannersLoading) {
-    return (
-      <div className="w-full space-y-4 md:space-y-6 py-0 animate-in fade-in duration-300">
-        <div className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-10 gap-4 md:gap-6 items-stretch w-full h-[180px] sm:h-[240px] md:h-[300px] lg:h-[350px] xl:h-[400px] 2xl:h-[440px]">
-            <div className="md:col-span-7 h-full w-full">
-              <Skeleton className="w-full h-full rounded-2xl" />
-            </div>
-            <div className="hidden md:block md:col-span-3 h-full w-full">
-              <Skeleton className="w-full h-full rounded-2xl" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="w-full space-y-4 md:space-y-6 py-2 md:py-3">
-          <ShopByCar />
-          <HomeCategories />
-          <DealsSlider />
-          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
-          <ProductSlider title="ابزارآلات خودرو" products={[]} isLoading={true} isError={false} />
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
-            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
-            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
-            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
-            <Skeleton className="w-full aspect-[16/10] rounded-2xl" />
-          </div>
-
-          <ProductSlider title="تیونینگ و تقویت خودرو" products={[]} isLoading={true} isError={false} />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full pt-2">
-            <Skeleton className="w-full aspect-[16/9] md:aspect-[16/5.5] rounded-2xl" />
-            <Skeleton className="w-full aspect-[16/9] md:aspect-[16/5.5] rounded-2xl" />
-          </div>
-
-          <div className="w-full space-y-4 py-4">
-            <div className="flex items-center gap-2 px-1">
-              <Skeleton className="w-5 h-5" variant="circle" />
-              <Skeleton className="w-32 h-5" />
-            </div>
-            <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
-              {[...Array(8)].map((_, index) => (
-                <Skeleton key={index} className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl" />
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 w-full pt-2">
-            <Skeleton className="col-span-1 aspect-[1:1] md:aspect-[16/11] rounded-2xl" />
-            <Skeleton className="col-span-1 aspect-[1:1] md:aspect-[16/11] rounded-2xl" />
-            <Skeleton className="col-span-2 aspect-[16/7.5] md:aspect-[16/5.5] rounded-2xl" />
-          </div>
-
-          <ProductSlider title="اگزوز" products={[]} isLoading={true} isError={false} />
-
-          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
-
-          <div className="w-full space-y-4 py-4">
-            <div className="flex items-center gap-2 px-1">
-              <Skeleton className="w-5 h-5" variant="circle" />
-              <Skeleton className="w-32 h-5" />
-            </div>
-            <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
-              {[...Array(8)].map((_, index) => (
-                <Skeleton key={index} className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 rounded-xl" />
-              ))}
-            </div>
-          </div>
-
-          <Skeleton className="w-full aspect-[16/5.5] md:aspect-[16/3.5] lg:aspect-[16/2.6] rounded-2xl" />
-
-          <ProductSlider title="بخاری" products={[]} isLoading={true} isError={false} />
-          <ProductSlider title="دستگیره و قفل درب" products={[]} isLoading={true} isError={false} />
-          <ProductSlider title="تجهیزات بدنه" products={[]} isLoading={true} isError={false} />
-
-          <div className="w-full bg-background border rounded-xl p-6 mt-6 space-y-3">
-            <Skeleton className="w-1/3 h-5 rounded" />
-            <Skeleton className="w-full h-4 rounded" />
-            <Skeleton className="w-full h-4 rounded" />
-            <Skeleton className="w-1/2 h-4 rounded" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full space-y-4 md:space-y-6 py-0">
       
@@ -162,7 +79,6 @@ export function HomeContent() {
 
           {hasLeftBanner && (
             <div className="hidden md:block md:col-span-3 h-full w-full">
-              {/* اولویت بالا (priority={true}) برای بنر لود شونده در صفحه اصلی */}
               <Banner group={a1BannerGroup} aspectRatio="h-full" priority={true} />
             </div>
           )}
@@ -193,7 +109,6 @@ export function HomeContent() {
           isLoading={isToolsLoading}
           isError={isToolsError}
           viewAllLink="/part-category/car-tools"
-          showTimer={false}
         />
 
         {(a3BannerGroup || a4BannerGroup || a5BannerGroup || a6BannerGroup) && (
@@ -219,7 +134,6 @@ export function HomeContent() {
           isLoading={isAudioLoading}
           isError={isAudioError}
           viewAllLink="/part-category/audio-video-multimedia-system"
-          showTimer={false}
         />
 
         {(a7BannerGroup || a8BannerGroup) && (
@@ -233,6 +147,7 @@ export function HomeContent() {
           </div>
         )}
 
+        {/* لود استاتیک و فوری برندهای محبوب (اطلاعات از پیش‌دانلود سرور هیدراته می‌شود) */}
         <BrandSlider />
 
         {(a9BannerGroup || a10BannerGroup || a11BannerGroup) && (
@@ -261,7 +176,6 @@ export function HomeContent() {
           isLoading={isExhaustLoading}
           isError={isExhaustError}
           viewAllLink="/part-category/Exhaust"
-          showTimer={false}
         />
 
         {a12BannerGroup && (
@@ -273,6 +187,7 @@ export function HomeContent() {
           </div>
         )}
 
+        {/* لود استاتیک و فوری فروشگاه‌های منتخب (اطلاعات از پیش‌دانلود سرور هیدراته می‌شود) */}
         <ShopSlider />
 
         {a13BannerGroup && (
@@ -290,7 +205,6 @@ export function HomeContent() {
           isLoading={isHeaterLoading}
           isError={isHeaterError}
           viewAllLink="/part-category/heater"
-          showTimer={false}
         />
 
         <ProductSlider
@@ -299,7 +213,6 @@ export function HomeContent() {
           isLoading={isDoorLoading}
           isError={isDoorError}
           viewAllLink="/part-category/door-handles-locks-and-safety"
-          showTimer={false}
         />
 
         <ProductSlider
@@ -308,7 +221,6 @@ export function HomeContent() {
           isLoading={isBodyLoading}
           isError={isBodyError}
           viewAllLink="/part-category/body-and-weatherstrips"
-          showTimer={false}
         />
 
         <PageDescription htmlContent={homePageData?.description} />

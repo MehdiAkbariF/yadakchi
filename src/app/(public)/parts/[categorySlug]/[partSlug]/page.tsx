@@ -77,9 +77,9 @@ export default async function PartPage({ params, searchParams }: PartPageProps) 
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <MainLayout>
+      
         <PartDetailsContent categorySlug={params.categorySlug} partSlug={params.partSlug} />
-      </MainLayout>
+      
     </HydrationBoundary>
   );
 }

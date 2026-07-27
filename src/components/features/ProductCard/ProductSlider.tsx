@@ -1,3 +1,5 @@
+// src/components/features/ProductCard/ProductSlider.tsx
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -26,13 +28,14 @@ export function ProductSlider({
   isError,
   viewAllLink = '#',
   className,
-  showTimer = false,
 }: ProductSliderProps) {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [dragWidth, setWidth] = useState(0);
   const x = useMotionValue(0);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     if (carouselRef.current) {
       setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
     }
@@ -71,28 +74,30 @@ export function ProductSlider({
           </Typography>
         </div>
         
+        {/* غیرفعال کردن prefetch برای جلوگیری از شلوغی شبکه */}
         <Link 
           href={viewAllLink} 
+          prefetch={false}
           className="text-xs sm:text-sm font-bold font-iran-yekan text-primary hover:underline transition-colors shrink-0"
         >
           مشاهده همه &lt;
         </Link>
       </div>
 
-      <div className="w-full bg-background rounded-xl border p-4 relative group overflow-hidden">
-        
+      {/* ۱. نمایش مخصوص دسکتاپ با انیمیشن درگ افکت زیبای Framer Motion */}
+      <div className="hidden md:block w-full bg-background rounded-xl border p-4 relative group overflow-hidden">
         {products.length > 4 && (
           <>
             <button
               onClick={() => handleScroll('right')}
-              className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
               aria-label="Previous"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
               onClick={() => handleScroll('left')}
-              className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
               aria-label="Next"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -113,14 +118,25 @@ export function ProductSlider({
             className="flex gap-4 py-1 cursor-grab active:cursor-grabbing"
           >
             {products.map((prod: any) => (
-              <div key={prod.id} className="w-[190px] sm:w-[250px] shrink-0">
+              <div key={prod.id} className="w-[250px] shrink-0">
                 <ProductStandardCard product={prod} />
               </div>
             ))}
           </motion.div>
         </div>
-
       </div>
+
+      {/* ۲. نمایش مخصوص موبایل با اسکرول بومی سخت‌افزاری و فوق‌العاده نرم با مصرف باتری و پردازنده صفر درصد */}
+      <div className="block md:hidden w-full overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory px-1 py-1">
+        <div className="flex gap-3.5 w-max">
+          {products.map((prod: any) => (
+            <div key={prod.id} className="w-[195px] shrink-0 snap-start">
+              <ProductStandardCard product={prod} />
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 }

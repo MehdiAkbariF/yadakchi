@@ -1,4 +1,5 @@
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+// src/app/(public)/search/page.tsx
+
 import { getServerCurrentUser } from '@/domains/auth/server.auth';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
@@ -70,9 +71,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <MainLayout>
-        <SearchContent />
-      </MainLayout>
+      
+      <SearchContent />
     </HydrationBoundary>
   );
 }

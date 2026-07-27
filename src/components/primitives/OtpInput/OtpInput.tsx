@@ -21,18 +21,21 @@ export const OtpInput = ({
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
   const handleChange = (index: number, val: string) => {
+    // فیلتر کردن مقادیر غیر عددی جهت جلوگیری از ورود حروف متفرقه
     if (!/^[0-9]?$/.test(val)) return;
 
     const newValue = [...value];
     newValue[index] = val;
     onChange(newValue);
 
+    // پرش خودکار به اینپوت بعدی پس از وارد کردن عدد بدون لرزش کیبورد
     if (val && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    // بازگشت خودکار به اینپوت قبلی در صورت فشردن دکمه پاک کردن (Backspace)
     if (e.key === 'Backspace' && !value[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -44,7 +47,10 @@ export const OtpInput = ({
         <input
           key={index}
           ref={(el) => { if (el) inputRefs.current[index] = el; }}
-          type="text"
+          type="tel" // مرورگرهای موبایل را مجبور به نمایش دائمی کیبورد عددی می‌کند
+          inputMode="numeric" // فعال‌سازی لایه عددی اختصاصی کیبورد در اندروید و iOS
+          pattern="[0-9]*" // هماهنگی کامل با گوشی‌های آیفون و سافاری
+          autoComplete="one-time-code" // فعال‌سازی قابلیت ورود خودکار کدهای پیامک شده (SMS Auto-fill)
           maxLength={1}
           value={value[index] || ''}
           onChange={(e) => handleChange(index, e.target.value)}

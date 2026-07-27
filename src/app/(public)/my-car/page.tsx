@@ -1,16 +1,19 @@
+// src/app/(public)/my-car/page.tsx
+
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { 
   useGetUserVehicles, 
   useUpdateUserVehicle, 
   useDeleteUserVehicle 
 } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { userPanelValidators } from '@/domains/userpanel/validation/userpanel.validation';
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+import { MainLayout } from '@/components/shared/Layouts/MainLayout'; // ایمپورت لایوت اصلی جهت نمایش هدر و فوتر
 import { Card, CardBody } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { Input } from '@/components/primitives/Input/Input';
@@ -43,6 +46,7 @@ interface UpdateVehicleFormValues {
 
 export default function MyCarPage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   
   const { data: vehicles = [], isLoading: isVehiclesLoading } = useGetUserVehicles();
 
@@ -95,6 +99,15 @@ export default function MyCarPage() {
     const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     return `${base}${cleanPath}`;
+  };
+
+  const handleAddCarClick = () => {
+    if (!isAuthenticated) {
+      showToast.error('برای ثبت خودرو ابتدا وارد حساب کاربری خود شوید');
+      router.push('/login?redirect=/my-car/add');
+      return;
+    }
+    router.push('/my-car/add');
   };
 
   const handleOpenUpdateModal = (vehicle: any) => {
@@ -167,7 +180,7 @@ export default function MyCarPage() {
   }
 
   return (
-    <MainLayout>
+    
       <div className="w-full flex flex-col gap-6 select-none text-right" dir="rtl">
         
         <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
@@ -179,13 +192,13 @@ export default function MyCarPage() {
               </span>
             </div>
             <p className="text-xs md:text-sm text-muted-foreground font-iran-yekan leading-relaxed">
-              با وارد کردن مقدار کیلومتر کارکرد خودرو، یدکچی زمان سرویس دوره ای رو بهت یادآوری میکنه
+              با وارد کردن مقدار کیلومتر کارکرد خودرو، یدک‌چی زمان سرویس دوره ای رو بهت یادآوری میکنه
             </p>
           </div>
 
           <Button
             variant="primary"
-            onClick={() => router.push('/my-car/add')}
+            onClick={handleAddCarClick}
             className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 flex items-center justify-center gap-2 self-start md:self-auto shadow-sm"
           >
             <Plus className="h-4 w-4" />
@@ -259,190 +272,190 @@ export default function MyCarPage() {
                         vehicle.isDefault 
                           ? "bg-success-500/10 text-success-500 border border-success-500/20 hover:bg-success-500/20" 
                           : "border border-zinc-200 hover:border-primary/20 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                    )}
+                  >
+                    {vehicle.isDefault ? (
+                      <>
+                        <Check className="h-4 w-4 stroke-[2.5]" />
+                        <span>خودروی پیش‌فرض</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="h-4 w-4 rounded-full border-2 border-current shrink-0" />
+                        <span>انتخاب به عنوان پیش‌فرض</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenUpdateModal(vehicle)}
+                      className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-4 flex items-center justify-center gap-1 shadow-sm"
+                    >
+                      <span>افزودن کارکرد خودرو</span>
+                    </Button>
+
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => router.push(`/search?carIds=${vehicle.car?.id}`)}
+                      className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-4 flex items-center justify-center gap-1 shadow-sm"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span>جستجوی قطعات</span>
+                    </Button>
+                  </div>
+                </div>
+
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3">
+          <Car className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] animate-bounce" />
+          <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ خودرویی در گاراژ شما ثبت نشده است.</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddCarClick}
+            className="rounded-xl mt-4 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            <span>ثبت اولین خودرو</span>
+          </Button>
+        </div>
+      )}
+
+      <Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
+        <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
+          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+            <Gauge className="h-5 w-5 text-primary" />
+            بروزرسانی کارکرد خودرو
+          </ModalTitle>
+        </ModalHeader>
+        
+        <ModalBody className="p-5 pt-4 text-right">
+          {selectedVehicle && (
+            <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full text-right">
+              
+              <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                <div className="w-10 h-10 shrink-0 rounded-lg border bg-background flex items-center justify-center overflow-hidden p-0.5">
+                  <img src={getFullUrl(selectedVehicle.carCover)} className="w-full h-full object-contain" alt="" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>برند:</span>
+                    <span className="font-bold text-foreground">{selectedVehicle.carManufacturerName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs font-bold text-foreground">{selectedVehicle.carModel}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">- {selectedVehicle.title}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full">
+                <Input
+                  label="کیلومتر حدودی یا دقیق خودرو *"
+                  placeholder="کیلومتر کارکرد فعلی را وارد کنید..."
+                  type="number"
+                  error={errorsUpdate.mileage?.message ? String(errorsUpdate.mileage.message) : undefined}
+                  rightIcon={<span className="text-xs font-bold text-muted-foreground font-iran-yekan">km</span>}
+                  className="text-xs font-iran-yekan text-left"
+                  dir="ltr"
+                  {...registerUpdate('mileage', { valueAsNumber: true })}
+                />
+              </div>
+
+              <div className="w-full flex flex-col gap-2">
+                <label className="text-xs md:text-sm font-medium leading-none text-foreground">
+                  تاریخ حدودی سرویس خودرو (تعویض روغن یا فیلترها) *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Select
+                    placeholder="روز"
+                    value={String(updateDay)}
+                    onChange={(e) => setUpdateDay(Number(e.target.value))}
+                    options={days}
+                  />
+                  <Select
+                    placeholder="ماه"
+                    value={String(updateMonth)}
+                    onChange={(e) => setUpdateMonth(Number(e.target.value))}
+                    options={months}
+                  />
+                  <Select
+                    placeholder="سال"
+                    value={String(updateYear)}
+                    onChange={(e) => setUpdateYear(Number(e.target.value))}
+                    options={years}
+                  />
+                </div>
+              </div>
+
+              <div className="w-full flex flex-col gap-2">
+                <label className="text-xs md:text-sm font-medium leading-none text-foreground">
+                  کیلومتر مفید روغن استفاده شده در زمان سرویس *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[5000, 7500, 10000].map((limit) => (
+                    <button
+                      key={limit}
+                      type="button"
+                      onClick={() => setUpdateOilLimit(limit)}
+                      className={cn(
+                        "py-2 rounded-xl border text-xs font-bold font-iran-yekan transition-all outline-none",
+                        updateOilLimit === limit
+                          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
+                          : "bg-background text-foreground hover:border-zinc-300"
                       )}
                     >
-                      {vehicle.isDefault ? (
-                        <>
-                          <Check className="h-4 w-4 stroke-[2.5]" />
-                          <span>خودروی پیشفرض</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="h-4 w-4 rounded-full border-2 border-current shrink-0" />
-                          <span>انتخاب به عنوان پیشفرض</span>
-                        </>
-                      )}
+                      {new Intl.NumberFormat('fa-IR').format(limit)} کیلومتر
                     </button>
+                  ))}
+                </div>
+              </div>
 
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenUpdateModal(vehicle)}
-                        className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-4 flex items-center justify-center gap-1 shadow-sm"
-                      >
-                        <span>افزودن کارکرد خودرو</span>
-                      </Button>
+              <div className="w-full bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between text-right">
+                <div className="flex items-center gap-2 text-primary">
+                  <Wrench className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-bold font-iran-yekan">کیلومتر سرویس بعدی شما:</span>
+                </div>
+                <div className="flex items-center gap-1 text-primary font-black font-iran-yekan" dir="ltr">
+                  <span>{new Intl.NumberFormat('fa-IR').format((Number(watchMileage) || 0) + updateOilLimit)}</span>
+                  <span className="text-[10px] font-bold">km</span>
+                </div>
+              </div>
 
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => router.push(`/search?carIds=${vehicle.car?.id}`)}
-                        className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-4 flex items-center justify-center gap-1 shadow-sm"
-                      >
-                        <Search className="h-4 w-4" />
-                        <span>جستجوی قطعات</span>
-                      </Button>
-                    </div>
-                  </div>
+            </form>
+          )}
+        </ModalBody>
 
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3">
-            <Car className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] animate-bounce" />
-            <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ خودرویی در گاراژ شما ثبت نشده است.</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/my-car/add')}
-              className="rounded-xl mt-4 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1"
-            >
-              <Plus className="h-4 w-4" />
-              <span>ثبت اولین خودرو</span>
-            </Button>
-          </div>
-        )}
-<Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
-  <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
-    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
-      <Gauge className="h-5 w-5 text-primary" />
-      بروزرسانی کارکرد خودرو
-    </ModalTitle>
-  </ModalHeader>
-  
-  <ModalBody className="p-5 pt-4 text-right">
-    {selectedVehicle && (
-      <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full text-right">
-        
-        <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
-          <div className="w-10 h-10 shrink-0 rounded-lg border bg-background flex items-center justify-center overflow-hidden p-0.5">
-            <img src={getFullUrl(selectedVehicle.carCover)} className="w-full h-full object-contain" alt="" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>برند:</span>
-              <span className="font-bold text-foreground">{selectedVehicle.carManufacturerName}</span>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs font-bold text-foreground">{selectedVehicle.carModel}</span>
-              <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">- {selectedVehicle.title}</span>
-            </div>
-          </div>
+        <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsUpdateModalOpen(false)}
+            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={updateVehicle.isPending}
+            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+            onClick={handleSubmitUpdate(onUpdateSubmit)}
+          >
+            ثبت تغییرات
+          </Button>
         </div>
-
-        <div className="w-full">
-          <Input
-            label="کیلومتر حدودی یا دقیق خودرو *"
-            placeholder="کیلومتر کارکرد فعلی را وارد کنید..."
-            type="number"
-            error={errorsUpdate.mileage?.message ? String(errorsUpdate.mileage.message) : undefined}
-            rightIcon={<span className="text-xs font-bold text-muted-foreground font-iran-yekan">km</span>}
-            className="text-xs font-iran-yekan text-left"
-            dir="ltr"
-            {...registerUpdate('mileage', { valueAsNumber: true })}
-          />
-        </div>
-
-        <div className="w-full flex flex-col gap-2">
-          <label className="text-xs md:text-sm font-medium leading-none text-foreground">
-            تاریخ حدودی سرویس خودرو (تعویض روغن یا فیلترها) *
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            <Select
-              placeholder="روز"
-              value={String(updateDay)}
-              onChange={(e) => setUpdateDay(Number(e.target.value))}
-              options={days}
-            />
-            <Select
-              placeholder="ماه"
-              value={String(updateMonth)}
-              onChange={(e) => setUpdateMonth(Number(e.target.value))}
-              options={months}
-            />
-            <Select
-              placeholder="سال"
-              value={String(updateYear)}
-              onChange={(e) => setUpdateYear(Number(e.target.value))}
-              options={years}
-            />
-          </div>
-        </div>
-
-        <div className="w-full flex flex-col gap-2">
-          <label className="text-xs md:text-sm font-medium leading-none text-foreground">
-            کیلومتر مفید روغن استفاده شده در زمان سرویس *
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {[5000, 7500, 10000].map((limit) => (
-              <button
-                key={limit}
-                type="button"
-                onClick={() => setUpdateOilLimit(limit)}
-                className={cn(
-                  "py-2 rounded-xl border text-xs font-bold font-iran-yekan transition-all outline-none",
-                  updateOilLimit === limit
-                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                    : "bg-background text-foreground hover:border-zinc-300"
-                )}
-              >
-                {new Intl.NumberFormat('fa-IR').format(limit)} کیلومتر
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between text-right">
-          <div className="flex items-center gap-2 text-primary">
-            <Wrench className="h-4 w-4 shrink-0" />
-            <span className="text-xs font-bold font-iran-yekan">کیلومتر سرویس بعدی شما:</span>
-          </div>
-          <div className="flex items-center gap-1 text-primary font-black font-iran-yekan" dir="ltr">
-            <span>{new Intl.NumberFormat('fa-IR').format((Number(watchMileage) || 0) + updateOilLimit)}</span>
-            <span className="text-[10px] font-bold">km</span>
-          </div>
-        </div>
-
-      </form>
-    )}
-  </ModalBody>
-
-  {/* فوتر با دکمه‌های تمام عرض */}
-  <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
-    <Button
-      type="button"
-      variant="outline"
-      onClick={() => setIsUpdateModalOpen(false)}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
-    >
-      انصراف
-    </Button>
-    <Button
-      type="submit"
-      variant="primary"
-      isLoading={updateVehicle.isPending}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
-      onClick={handleSubmitUpdate(onUpdateSubmit)}
-    >
-      ثبت تغییرات
-    </Button>
-  </div>
-</Modal>
+      </Modal>
 
       </div>
-    </MainLayout>
+    
   );
 }

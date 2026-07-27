@@ -1,3 +1,5 @@
+// src/domains/ticket/services/ticket.service.ts
+
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
@@ -23,13 +25,24 @@ import { PaginatedResult } from '@/shared/types/common.types';
 export class TicketService {
   private readonly httpClient = getHttpClient();
 
+  /*
+    متد عمومی دریافت دسته‌بندی‌های تیکت (بدون نیاز به هدرهای اضافی سمت سرور):
+  */
   async getTicketCategories(type: 'User' | 'Seller' | 'ReturnRequest' | 'DamageReport' = 'User'): Promise<TicketCategoryViewModel[]> {
     try {
       const response = await this.httpClient.get<TicketCategoryDto[]>(
         TICKET_ENDPOINTS.GET_CATEGORIES,
         { params: { Type: type } }
       );
-      return (response.data || []).map(dto => TicketMapper.toViewCategory(TicketMapper.toDomainCategory(dto)));
+      
+      const rawData = response.data as any;
+      const categoriesArray = Array.isArray(rawData) 
+        ? rawData 
+        : (Array.isArray(rawData?.data) ? rawData.data : []);
+
+      return categoriesArray.map((dto: any) => 
+        TicketMapper.toViewCategory(TicketMapper.toDomainCategory(dto))
+      );
     } catch (error) {
       logger.error('[TicketService] Get ticket categories failed:', error);
       return [];
@@ -90,7 +103,11 @@ export class TicketService {
         TICKET_ENDPOINTS.GET_TICKET,
         { params: { Id: id } }
       );
-      return TicketMapper.toViewDetails(TicketMapper.toDomainDetails(response.data), currentUserId);
+      
+      const rawData = response.data as any;
+      const details = rawData?.data || rawData;
+
+      return TicketMapper.toViewDetails(TicketMapper.toDomainDetails(details), currentUserId);
     } catch (error) {
       logger.error('[TicketService] Get ticket details failed:', error);
       throw errorManager.normalize(error);

@@ -74,9 +74,9 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <MainLayout>
+      
         <ShopDetailsContent id={params.id} />
-      </MainLayout>
+      
     </HydrationBoundary>
   );
 }

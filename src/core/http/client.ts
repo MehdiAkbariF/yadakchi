@@ -1,9 +1,27 @@
+// src/core/http/client.ts
+
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { env } from '../config/env';
 import { logger } from '../utils/logger';
 import { errorManager } from '../errors/error-manager';
 import { ApiError } from '../errors/api-error';
 import { HttpResponse, RequestOptions, HttpMethod } from './types';
+import http from 'http'; // ماژول بومی اتصال شبکه سرور
+import https from 'https'; // ماژول بومی اتصال امن سرور
+
+/*
+  بهینه‌سازی شبکه فوق حرفه‌ای در لایه سرور (Connection Pooling & Keep-Alive):
+  ایجاد مأمورهای اتصال زنده و مستمر در سمت سرور Node.js. با این تکنیک، کانکشن‌های فیزیکی 
+  TCP/SSL بین سرور فرانت‌اند و بک‌اند باز نگه‌داشته می‌شوند تا تاخیر دست‌دادن امن (SSL Handshake)
+  برای همیشه برطرف شده و انتقال بین صفحات در کسری از ثانیه انجام شود.
+*/
+const keepAliveHttpAgent = typeof window === 'undefined'
+  ? new http.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 10, timeout: 60000 })
+  : null;
+
+const keepAliveHttpsAgent = typeof window === 'undefined'
+  ? new https.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 10, timeout: 60000 })
+  : null;
 
 export class HttpClient {
   private readonly axiosInstance: AxiosInstance;
@@ -26,6 +44,9 @@ export class HttpClient {
         'Accept': 'application/json',
         'X-App-Version': env.appVersion,
       },
+      // اعمال اتصال‌های زنده در سمت سرور جهت بهینه‌سازی سرعت پاسخ‌دهی
+      httpAgent: keepAliveHttpAgent,
+      httpsAgent: keepAliveHttpsAgent,
     });
 
     this.setupInterceptors();
@@ -80,28 +101,27 @@ export class HttpClient {
           const currentPath = window.location.pathname;
           const requestUrl = originalRequest.url || '';
 
-          // ۱. اگر در صفحه لاگین هستیم، هرگز نباید ریدایرکت مجدد کنیم (جلوگیری از لوپ بی‌نهایت)
           if (currentPath === '/login') {
             return Promise.reject(errorManager.normalize(error));
           }
 
-          // ۲. نادیده گرفتن ریدایرکت خودکار روی متدهای بررسی اولیه نشست کاربر
           const isPassiveAuthCheck = 
             requestUrl.includes('/User') || 
             requestUrl.includes('/Refresh') || 
-            requestUrl.includes('/get-user');
+            requestUrl.includes('/get-user') ||
+            requestUrl.includes('/GetFrontBasket') ||
+            requestUrl.includes('/IsUserFavoriteProduct') ||
+            requestUrl.includes('/UserVehicle');
 
           if (isPassiveAuthCheck) {
             return Promise.reject(errorManager.normalize(error));
           }
 
-          // ۳. برای تمام درخواست‌های فعال دیگر کاربر روی هر صفحه‌ای، در صورت دریافت ۴۰۱ هدایت انجام می‌شود
           if (originalRequest._retry) {
             window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
             return Promise.reject(errorManager.normalize(error));
           }
 
-          // اگر در حال تمدید توکن توسط درخواستی دیگر هستیم
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
@@ -123,8 +143,6 @@ export class HttpClient {
               .catch((refreshError) => {
                 this.failedQueue.forEach((prom) => prom.reject(refreshError));
                 this.failedQueue = [];
-                
-                // در صورت شکست در تمدید توکن، انتقال مستقیم به صفحه لاگین
                 window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
                 reject(refreshError);
               })
@@ -243,15 +261,7 @@ export class HttpClient {
     return this.makeRequest<T>('DELETE', url, data, options);
   }
 
-  async patch<T = unknown>(
-    url: string,
-    data?: unknown,
-    options?: RequestOptions
-  ): Promise<HttpResponse<T>> {
-    return this.makeRequest<T>('PATCH', url, data, options);
-  }
-
-  cancelRequest(requestId: string): void {
+  async cancelRequest(requestId: string): Promise<void> {
     const controller = this.abortControllers.get(requestId);
     if (controller) {
       controller.abort();
@@ -276,6 +286,9 @@ export class HttpClient {
 let httpClientInstance: HttpClient | null = null;
 
 export function getHttpClient(): HttpClient {
+  if (typeof window === 'undefined') {
+    return new HttpClient();
+  }
   if (!httpClientInstance) {
     httpClientInstance = new HttpClient();
   }

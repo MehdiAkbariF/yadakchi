@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+
 import dynamic from 'next/dynamic';
 
 const CheckoutContent = dynamic(
@@ -8,8 +8,8 @@ const CheckoutContent = dynamic(
 
 export default async function CheckoutPage() {
   return (
-    <MainLayout>
+    
       <CheckoutContent />
-    </MainLayout>
+    
   );
 }

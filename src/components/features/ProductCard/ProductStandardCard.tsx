@@ -1,7 +1,10 @@
+// src/components/features/ProductCard/ProductStandardCard.tsx
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, Store, BadgeCheck, Truck, Eye } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -150,6 +153,7 @@ export function ProductStandardCard({
   return (
     <Link 
       href={productCardUrl} 
+      prefetch={false}
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}
@@ -164,11 +168,13 @@ export function ProductStandardCard({
       )}>
         
         <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
-          <img
+          <Image
             src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
             alt={product?.imageAlt || product?.title || product?.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+            className="object-contain rounded-lg select-none"
             draggable={false}
-            className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
           />
           
           {showRating && (
@@ -179,7 +185,7 @@ export function ProductStandardCard({
         </div>
 
         <div className="w-full h-9 mb-1 mt-2">
-          <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground text-right line-clamp-2 leading-relaxed">
+          <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed text-right w-full">
             {product?.title || product?.name}
           </h4>
         </div>
@@ -191,26 +197,37 @@ export function ProductStandardCard({
           </div>
         )}
 
-        {/* فیکس تداخل هیدریشن: لود همگن تگ ساختاری فضا پر کن در حالت SSR و کلاینت */}
+        {/* بهینه‌سازی رندر تیکر بر اساس نوع دستگاه جهت رفع افت فریم موبایل */}
         <div className="w-full flex flex-col items-stretch select-none">
           {isMounted && tickerLength > 0 ? (
             <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={tickerIndex}
-                  initial={{ y: 15, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -15, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
-                >
-                  <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
-                </motion.span>
-              </AnimatePresence>
+              
+              {/* انیمیشن تیکر فقط برای دسکتاپ */}
+              <div className="hidden md:block w-full h-full relative">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={tickerIndex}
+                    initial={{ y: 15, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -15, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                    className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
+                  >
+                    <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+
+              {/* رندر تیکر ایستا بدون بار انیمیشنی جاوا اسکریپت روی موبایل */}
+              <div className="flex md:hidden items-center gap-1.5 font-iran-sans truncate w-full justify-start h-full">
+                <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>
+              </div>
+
             </div>
           ) : (
-            <div className="h-6 mt-0.5 w-full shrink-0" /> // تگ همگن لود شونده در سرور و کلاینت
+            <div className="h-6 mt-0.5 w-full shrink-0" />
           )}
         </div>
 

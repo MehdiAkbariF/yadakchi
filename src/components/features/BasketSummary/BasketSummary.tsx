@@ -1,3 +1,5 @@
+// src/components/features/BasketSummary/BasketSummary.tsx
+
 'use client';
 
 import { useGetBasket, useCheckoutBasket } from '@/domains/front/basket/hooks/basket.hooks';
@@ -30,7 +32,7 @@ export function BasketSummary() {
         <p className="text-xs text-muted-foreground mt-2 font-iran-yekan max-w-sm leading-relaxed">
           هیچ قطعه‌ای در سبد خرید شما وجود ندارد. می‌توانید برای جستجوی لوازم یدکی موردنیاز خود به صفحه قطعات مراجعه کنید.
         </p>
-        <Link href="/search" className="mt-6">
+        <Link href="/search" prefetch={false}>
           <Button variant="primary" className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-6">
             شروع خرید قطعات
           </Button>
@@ -46,6 +48,15 @@ export function BasketSummary() {
       await checkoutBasket.mutateAsync(undefined);
       router.push('/checkout');
     } catch (err: any) {
+      /* 
+        بهینه‌سازی و اصلاح خطای ۴۰۱ در موبایل:
+        اگر خطای برگشتی از سمت سرور به دلیل عدم احراز هویت (401) باشد، 
+        پیام خطای متفرقه نشان نداده و کاربر موبایل را مستقیماً به صفحه لاگین هدایت می‌کنیم.
+      */
+      if (err?.status === 401 || err?.type === 'unauthorized') {
+        router.push(`/login?redirect=${encodeURIComponent('/basket')}`);
+        return;
+      }
       showToast.error('خطا در فرآیند آماده‌سازی فاکتور خرید');
     }
   };

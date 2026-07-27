@@ -1,7 +1,10 @@
+// src/components/features/ProductCard/ProductSearchCard.tsx
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, Store, BadgeCheck, Truck, Eye, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
@@ -200,15 +203,18 @@ export function ProductSearchCard({
       {/* دسکتاپ کارت محصول */}
       <Link 
         href={productCardUrl}
+        prefetch={false}
         className="hidden md:flex w-full h-full flex-col bg-background rounded-xl border hover:border-primary/40 hover:shadow-md p-3 sm:p-3.5 relative select-none"
         draggable={false}
       >
         <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
-          <img
+          <Image
             src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
             alt={product?.imageAlt || product?.title || product?.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+            className="object-contain rounded-lg select-none"
             draggable={false}
-            className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
           />
           
           {showRating && (
@@ -231,26 +237,37 @@ export function ProductSearchCard({
           </div>
         )}
 
-        {/* فیکس تداخل هیدریشن: لود همگن تگ ساختاری فضا پر کن در حالت SSR و کلاینت */}
+        {/* بهینه‌سازی رندر تیکر بر اساس نوع دستگاه جهت رفع افت فریم موبایل */}
         <div className="w-full flex flex-col items-stretch select-none">
           {isMounted && tickerLength > 0 ? (
             <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={tickerIndex}
-                  initial={{ y: 15, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -15, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                  className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
-                >
-                  <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
-                </motion.span>
-              </AnimatePresence>
+              
+              {/* انیمیشن چرخش تیکر فقط برای دسکتاپ فعال است */}
+              <div className="hidden md:block w-full h-full relative">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={tickerIndex}
+                    initial={{ y: 15, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -15, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                    className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
+                  >
+                    <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
+                  </motion.span>
+                </AnimatePresence>
+              </div>
+
+              {/* در موبایل متن تیکر برای حفظ پردازنده، کاملاً ثابت (Static) رندر می‌شود */}
+              <div className="flex md:hidden items-center gap-1.5 font-iran-sans truncate w-full justify-start h-full">
+                <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>
+              </div>
+
             </div>
           ) : (
-            <div className="h-6 mt-0.5 w-full shrink-0" /> // تگ همگن لود شونده در سرور و کلاینت
+            <div className="h-6 mt-0.5 w-full shrink-0" />
           )}
         </div>
 
@@ -334,16 +351,19 @@ export function ProductSearchCard({
       {/* موبایل کارت محصول */}
       <Link
         href={productCardUrl}
+        prefetch={false}
         className="md:hidden flex flex-col w-full bg-background border-b border-zinc-100 dark:border-zinc-800/80 py-4 px-0 relative select-none"
         draggable={false}
       >
         <div className="flex w-full items-stretch gap-3">
           <div className="w-[100px] h-[100px] shrink-0 relative rounded-lg overflow-hidden bg-muted/10">
-            <img
+            <Image
               src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
               alt={product?.imageAlt || product?.title || product?.name}
+              fill
+              sizes="100px"
+              className="object-contain rounded-lg select-none"
               draggable={false}
-              className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
             />
             {showRating && (
               <div className="absolute top-1 left-1 dark:bg-zinc-900/85 backdrop-blur-sm px-1.5 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
@@ -370,22 +390,13 @@ export function ProductSearchCard({
 
               {isMounted && tickerLength > 0 ? (
                 <div className="h-5 overflow-hidden relative w-full flex items-center justify-start text-[9px] sm:text-[10px] text-muted-foreground mt-1 select-none shrink-0">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={tickerIndex}
-                      initial={{ y: 15, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -15, opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                      className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
-                    >
-                      <CurrentTickerIcon className="h-3 w-3 text-primary shrink-0" />
-                      <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
-                    </motion.span>
-                  </AnimatePresence>
+                  <div className="flex items-center gap-1.5 font-iran-sans truncate w-full justify-start h-full">
+                    <CurrentTickerIcon className="h-3 w-3 text-primary shrink-0" />
+                    <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>
+                  </div>
                 </div>
               ) : (
-                <div className="h-5 mt-1 w-full shrink-0" /> // تگ همگن لود شونده در سرور و کلاینت
+                <div className="h-5 mt-1 w-full shrink-0" />
               )}
             </div>
 

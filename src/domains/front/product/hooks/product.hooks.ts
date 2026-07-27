@@ -1,3 +1,5 @@
+// src/domains/front/product/hooks/product.hooks.ts
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,7 +21,6 @@ export function useGetNominatedProducts() {
     setMounted(true);
   }, []);
 
-  // در رندر اول کلاینت مقدار null داده می‌شود تا با رندر سرور تطابق کامل داشته باشد
   const cityId = mounted ? selectedCity?.id : null;
 
   return useTypedQuery<any>(
@@ -31,7 +32,15 @@ export function useGetNominatedProducts() {
   );
 }
 
-export function useGetNominatedProductsByCategory(categoryEnglishTitle: string) {
+/*
+  اصلاح هوک جهت پشتیبانی از آرگومان دوم تنظیمات کوئری (مانند فعال‌ساز لود تنبل - enabled):
+  با این تغییر، هوک قادر است به شکل استاندارد پارامترهای پیش‌فرض یا انتخابی React Query را 
+  پذیرفته و آن‌ها را در تابع useTypedQuery ادغام (Merge) کند.
+*/
+export function useGetNominatedProductsByCategory(
+  categoryEnglishTitle: string,
+  options?: Omit<UseQueryOptions<any, any>, 'queryKey' | 'queryFn'>
+) {
   const selectedCity = useAppStore((state) => state.selectedCity);
   const [mounted, setMounted] = useState(false);
 
@@ -46,7 +55,8 @@ export function useGetNominatedProductsByCategory(categoryEnglishTitle: string) 
     () => productService.getNominatedProductsByCategory(categoryEnglishTitle, cityId || undefined),
     {
       staleTime: 5 * 60 * 1000,
-      enabled: !!categoryEnglishTitle,
+      ...options,
+      enabled: !!categoryEnglishTitle && (options?.enabled !== false),
     }
   );
 }
@@ -108,7 +118,7 @@ export function useInfiniteSearchProducts(
 
 export function useGetProductDetails(
   productCode: number,
-  options?: Omit<UseQueryOptions<ProductViewModel>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<ProductViewModel, any>, 'queryKey' | 'queryFn'>
 ) {
   return useTypedQuery(
     queryKeys.front.products.details(productCode),
@@ -123,7 +133,7 @@ export function useGetProductDetails(
 
 export function useGetRelatedProducts(
   productCode: number,
-  options?: Omit<UseQueryOptions<ProductViewModel[]>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<ProductViewModel[], any>, 'queryKey' | 'queryFn'>
 ) {
   return useTypedQuery(
     ['front', 'products', 'related', productCode],
@@ -139,7 +149,7 @@ export function useGetRelatedProducts(
 export function useGetProductPriceChart(
   productId: string,
   shopProductType: 'New' | 'Stock' | 'TakeOff',
-  options?: Omit<UseQueryOptions<ProductPriceChartViewModel>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<ProductPriceChartViewModel, any>, 'queryKey' | 'queryFn'>
 ) {
   return useTypedQuery(
     ['front', 'products', 'price-chart', productId, shopProductType],

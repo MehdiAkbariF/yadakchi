@@ -1,11 +1,14 @@
+// src/components/features/ProductCard/ProductDealCard.tsx
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, Hourglass } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
-import { useImpression } from '@/shared/hooks/useImpression'; // وارد کردن هوک ثبت بازدید
+import { useImpression } from '@/shared/hooks/useImpression';
 
 interface ProductDealCardProps {
   product: any;
@@ -46,7 +49,6 @@ export function ProductDealCard({
 
   const shopProductId = product?.shopProductId || nominated?.id || null;
   
-  // اتصال به سیستم ناظر هوشمند ثبت بازدید متمرکز
   const impressionRef = useImpression(shopProductId);
 
   useEffect(() => {
@@ -148,6 +150,7 @@ export function ProductDealCard({
   return (
     <Link 
       href={productCardUrl} 
+      prefetch={false} // غیرفعال کردن پیش‌دانلود کدهای فرعی برای آزادسازی ترافیک شبکه موبایل
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}
@@ -156,18 +159,19 @@ export function ProductDealCard({
       onTouchMove={handleTouchMove}
       onClick={handleClick}
     >
-      {/* رفرنس کلاینتی جهت ثبت بازدید به المان نگهدارنده اصلی کارت اختصاص داده شد */}
       <div ref={impressionRef} className={cn(
         "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
         className
       )}>
         
         <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
-          <img
+          <Image
             src={getFullUrl(product.image)}
             alt={product.imageAlt || product.title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+            className="object-contain rounded-lg select-none"
             draggable={false}
-            className="w-full h-full object-contain rounded-lg absolute inset-0 select-none"
           />
         </div>
 

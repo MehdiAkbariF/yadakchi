@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+
 import dynamic from 'next/dynamic';
 
 const BasketSummary = dynamic(
@@ -8,8 +8,8 @@ const BasketSummary = dynamic(
 
 export default async function BasketPage() {
   return (
-    <MainLayout>
+    
       <BasketSummary />
-    </MainLayout>
+ 
   );
 }
