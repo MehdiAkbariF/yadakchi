@@ -42,7 +42,7 @@ export function CategoriesContent() {
   };
 
   return (
-    <div className="w-full flex flex-col h-[calc(100vh-64px)] pb-safe select-none text-right overflow-hidden bg-background" dir="rtl">
+    <div className="w-full flex flex-col h-screen select-none text-right overflow-hidden bg-background" dir="rtl">
       
       <div className="w-full p-4 border-b bg-background shrink-0 z-10">
         <form onSubmit={handleSearchSubmit} className="relative w-full">
@@ -78,7 +78,10 @@ export function CategoriesContent() {
                     <img
                       src={getFullUrl(cat.icon)}
                       alt={cat.name}
-                      className="w-full h-full object-contain filter dark:invert"
+                      className={cn(
+                        "w-full h-full object-contain",
+                        cat.icon.toLowerCase().endsWith('.svg') && "filter dark:invert"
+                      )}
                     />
                   ) : (
                     <Settings className="h-5 w-5 text-muted-foreground/80" />
@@ -94,12 +97,12 @@ export function CategoriesContent() {
           {activeCategory ? (
             <div className="flex flex-col gap-5 w-full">
               
-              <div className="flex items-center justify-between  pb-2 w-full">
+              <div className="flex items-center justify-between pb-2 w-full">
                 <span className="text-xs font-black text-foreground font-iran-yekan">همه قطعات {activeCategory.name}</span>
                 <Link 
                   href={activeCategory.href}
-                  className="text-[10px] md:text-xs text-primary font-bold
-                   font-iran-yekan flex items-center gap-0.5 hover:underline"
+                  prefetch={false}
+                  className="text-[10px] md:text-xs text-primary font-bold font-iran-yekan flex items-center gap-0.5 hover:underline"
                 >
                   <span>مشاهده همه</span>
                   <ArrowLeft className="h-3 w-3" />
@@ -112,13 +115,17 @@ export function CategoriesContent() {
                     <Link
                       key={part.id}
                       href={part.href}
+                      prefetch={false}
                       className="flex flex-col items-center justify-center text-center p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800/80 bg-background hover:border-primary/20 transition-all select-none gap-2.5 h-28"
                     >
                       <div className="w-10 h-10 rounded-lg bg-muted/15 flex items-center justify-center overflow-hidden shrink-0">
                         {part.icon ? (
                           <img 
                             src={getFullUrl(part.icon)} 
-                            className="w-full h-full object-contain filter dark:invert" 
+                            className={cn(
+                              "w-full h-full object-contain",
+                              part.icon.toLowerCase().endsWith('.svg') && "filter dark:invert"
+                            )} 
                             alt="" 
                           />
                         ) : (

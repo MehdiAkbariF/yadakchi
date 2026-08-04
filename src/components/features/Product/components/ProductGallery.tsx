@@ -4,13 +4,16 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZoomIn, ZoomOut, RotateCcw, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+import { toPersianDigits } from '@/core/utils/formatters';
 
 interface ProductGalleryProps {
   images: any[];
   title: string;
+  hasDiscount?: boolean;
+  discountPercent?: number;
 }
 
-export function ProductGallery({ images = [], title }: ProductGalleryProps) {
+export function ProductGallery({ images = [], title, hasDiscount, discountPercent }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
@@ -70,7 +73,7 @@ export function ProductGallery({ images = [], title }: ProductGalleryProps) {
     if (cleanPath.startsWith('http')) return cleanPath;
 
     const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${path}`;
     return `${base}${normalizedPath}`;
   };
 
@@ -80,6 +83,13 @@ export function ProductGallery({ images = [], title }: ProductGalleryProps) {
     <div className="w-full flex flex-col gap-4 select-none">
       
       <div className="relative w-full aspect-[4/3] rounded-2xl border p-4 bg-background flex items-center justify-center overflow-hidden shadow-sm group">
+        
+        {hasDiscount && (
+          <div className="lg:hidden absolute top-3 right-3 bg-destructive text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm z-10 select-none animate-pulse">
+            تخفیف ویژه {toPersianDigits(discountPercent || 0)}٪
+          </div>
+        )}
+
         <img
           src={getFullUrl(images[activeIndex])}
           alt={`${title} - ${activeIndex + 1}`}
@@ -193,21 +203,21 @@ export function ProductGallery({ images = [], title }: ProductGalleryProps) {
               <button
                 onClick={handleZoomIn}
                 disabled={zoomScale >= 4}
-                className="p-2.5 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all disabled:opacity-30 outline-none"
+                className="p-2.5 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all disabled:opacity-30"
               >
                 <ZoomIn className="h-4.5 w-4.5" />
               </button>
               <button
                 onClick={handleZoomOut}
                 disabled={zoomScale === 1}
-                className="p-2.5 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all disabled:opacity-30 outline-none"
+                className="p-2.5 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all disabled:opacity-30"
               >
                 <ZoomOut className="h-4.5 w-4.5" />
               </button>
               <button
                 onClick={handleResetZoom}
                 disabled={zoomScale === 1 && panOffset.x === 0 && panOffset.y === 0}
-                className="p-2.5 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all disabled:opacity-30 outline-none"
+                className="p-2.5 border rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-all disabled:opacity-30"
               >
                 <RotateCcw className="h-4.5 w-4.5" />
               </button>

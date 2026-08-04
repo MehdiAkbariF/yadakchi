@@ -88,9 +88,13 @@ export function PWAInstallBanner() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+          style={{
+            bottom: typeof window !== 'undefined' && window.innerWidth < 1024 
+              ? 'calc(84px + env(safe-area-inset-bottom))' 
+              : '1.25rem'
+          }}
           className={cn(
-            "fixed left-4 right-4 z-[100] bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto text-right select-none",
-            "bottom-[78px] lg:bottom-5"
+            "fixed left-4 right-4 z-[100] bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto text-right select-none"
           )}
           dir="rtl"
         >
@@ -128,7 +132,7 @@ export function PWAInstallBanner() {
               variant="primary"
               size="sm"
               onClick={handleInstallClick}
-              className="rounded-xl font-iran-sans font-bold text-xs h-9 px-4.5 shrink-0 shadow-sm flex items-center justify-center gap-1.5 w-full md:w-auto"
+              className="rounded-xl font-iran-sans font-bold text-xs h-9 px-4 shrink-0 shadow-sm flex items-center justify-center gap-1.5 w-full md:w-auto"
             >
               <Download className="h-3.5 w-3.5" />
               <span>نصب سریع اپلیکیشن</span>

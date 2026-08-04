@@ -182,7 +182,8 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
           )}
 
           <div className="flex flex-col items-end text-right mt-1">
-            <span className="text-sm md:text-base font-black text-foreground font-iran-yekan leading-none">{seller.finalPrice}</span>
+            <span className="text-sm md:text-base font-black text-foreground 
+            font-iran-yekan leading-none">{seller.finalPrice}</span>
             <button
               type="button"
               onClick={(e) => {
@@ -190,7 +191,9 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 e.stopPropagation();
                 setReportShop(seller);
               }}
-              className="text-[9px] md:text-[10px] font-bold font-iran-yekan text-muted-foreground hover:text-destructive flex items-center gap-0.5 mt-2.5 outline-none"
+              className="text-[9px] md:text-[10px] font-bold font-iran-yekan 
+              text-muted-foreground hover:text-destructive flex items-center
+               gap-0.5 mt-2.5 outline-none p-1 rounded-md"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
               <span>گزارش خطای قیمت</span>

@@ -1,12 +1,10 @@
-// src/providers/root.provider.tsx
-
 'use client';
 
 import { QueryProvider } from './query.provider';
 import { ThemeProvider } from './theme.provider';
 import { Toaster } from 'react-hot-toast';
 import NextTopLoader from 'nextjs-toploader';
-import { PWAInstallBanner } from '@/shared/PWAInstallBanner/PWAInstallBanner';// وارد کردن بنر نصب PWA جدید
+import { PWAInstallBanner } from '@/shared/PWAInstallBanner/PWAInstallBanner';
 
 interface RootProviderProps {
   children: React.ReactNode;
@@ -16,7 +14,6 @@ export function RootProvider({ children }: RootProviderProps) {
   return (
     <QueryProvider>
       <ThemeProvider>
-        {/* کانفیگ نوار لودینگ بالای صفحه */}
         <NextTopLoader 
           color="#F56D3C" 
           initialPosition={0.08}
@@ -28,13 +25,8 @@ export function RootProvider({ children }: RootProviderProps) {
           speed={200}
           shadow="0 0 10px #F56D3C,0 0 5px #F56D3C"
         />
-        
         {children}
-        
-        {/* فعال‌سازی بنر نصب هوشمند و متمرکز وب‌اپلیکیشن (PWA) در کل وب‌سایت */}
         <PWAInstallBanner />
-        
-        {/* کانفیگ Toast سراسری */}
         <Toaster 
           position="top-center"
           toastOptions={{

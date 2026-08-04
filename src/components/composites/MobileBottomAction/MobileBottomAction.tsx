@@ -13,6 +13,7 @@ interface MobileBottomActionProps {
   leftContent?: ReactNode;
   icon?: ReactNode;
   className?: string;
+  forceShowKey?: any;
 }
 
 export function MobileBottomAction({
@@ -23,6 +24,7 @@ export function MobileBottomAction({
   leftContent,
   icon,
   className,
+  forceShowKey,
 }: MobileBottomActionProps) {
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -47,6 +49,10 @@ export function MobileBottomAction({
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    setIsVisible(true);
+  }, [forceShowKey]);
 
   return (
     <motion.div

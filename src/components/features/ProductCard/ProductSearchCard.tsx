@@ -1,5 +1,3 @@
-// src/components/features/ProductCard/ProductSearchCard.tsx
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -182,25 +180,16 @@ export function ProductSearchCard({
     }
   };
 
-  const renderStars = () => {
-    const rating = product?.averageRate || product?.rating?.average || 5;
-    return (
-      <div className="flex items-center gap-1 select-none">
-        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
-        <span className="text-[10px] sm:text-[11px] font-iran-sans font-bold text-foreground">
-          {formatPrice(rating)}
-        </span>
-      </div>
-    );
-  };
+  const ratingValue = product?.averageRate || product?.rating?.average || 5;
+  const ratingCount = product?.rateCount || product?.rating?.count || 0;
 
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
+
   const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
 
   return (
     <div ref={impressionRef} className={cn("w-full transition-all select-none", className)}>
       
-      {/* دسکتاپ کارت محصول */}
       <Link 
         href={productCardUrl}
         prefetch={false}
@@ -216,12 +205,6 @@ export function ProductSearchCard({
             className="object-contain rounded-lg select-none"
             draggable={false}
           />
-          
-          {showRating && (
-            <div className="absolute top-2 left-2 dark:bg-zinc-900/85 backdrop-blur-sm px-2 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
-              {renderStars()}
-            </div>
-          )}
         </div>
 
         <div className="w-full h-9 mb-1 mt-2 text-right">
@@ -230,19 +213,31 @@ export function ProductSearchCard({
           </h4>
         </div>
 
+        {showRating && (
+          <div className="w-full flex items-center gap-1 mt-1 justify-start select-none">
+            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 shrink-0" />
+            <span className="text-[10px] sm:text-[11px] font-iran-sans font-bold text-foreground">
+              {formatPrice(ratingValue)}
+            </span>
+            {ratingCount > 0 && (
+              <span className="text-[9px] text-muted-foreground font-iran-sans">
+                ({toPersianDigits(ratingCount)})
+              </span>
+            )}
+          </div>
+        )}
+
         {shopName && (
-          <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1 justify-start">
+          <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1.5 justify-start">
             <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
             <span className="font-iran-sans font-medium truncate">فروشگاه: {shopName}</span>
           </div>
         )}
 
-        {/* بهینه‌سازی رندر تیکر بر اساس نوع دستگاه جهت رفع افت فریم موبایل */}
         <div className="w-full flex flex-col items-stretch select-none">
           {isMounted && tickerLength > 0 ? (
             <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
               
-              {/* انیمیشن چرخش تیکر فقط برای دسکتاپ فعال است */}
               <div className="hidden md:block w-full h-full relative">
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -254,12 +249,11 @@ export function ProductSearchCard({
                     className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
                   >
                     <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
+                    <span className="truncate font-medium text-right text-foreground">{tickerItems[tickerIndex]?.text}</span>
                   </motion.span>
                 </AnimatePresence>
               </div>
 
-              {/* در موبایل متن تیکر برای حفظ پردازنده، کاملاً ثابت (Static) رندر می‌شود */}
               <div className="flex md:hidden items-center gap-1.5 font-iran-sans truncate w-full justify-start h-full">
                 <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>
@@ -348,7 +342,6 @@ export function ProductSearchCard({
         )}
       </Link>
 
-      {/* موبایل کارت محصول */}
       <Link
         href={productCardUrl}
         prefetch={false}
@@ -365,14 +358,6 @@ export function ProductSearchCard({
               className="object-contain rounded-lg select-none"
               draggable={false}
             />
-            {showRating && (
-              <div className="absolute top-1 left-1 dark:bg-zinc-900/85 backdrop-blur-sm px-1.5 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
-                <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400 shrink-0" />
-                <span className="text-[9px] font-iran-sans font-bold text-foreground mr-0.5">
-                  {formatPrice(product.averageRate || 5)}
-                </span>
-              </div>
-            )}
           </div>
 
           <div className="flex-1 flex flex-col justify-between min-w-0 text-right">
@@ -380,6 +365,20 @@ export function ProductSearchCard({
               <h4 className="text-xs font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed">
                 {product?.title || product?.name}
               </h4>
+
+              {showRating && (
+                <div className="flex items-center gap-1 mt-1 justify-start select-none">
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
+                  <span className="text-[10px] font-iran-sans font-bold text-foreground">
+                    {formatPrice(ratingValue)}
+                  </span>
+                  {ratingCount > 0 && (
+                    <span className="text-[9px] text-muted-foreground font-iran-sans">
+                      ({toPersianDigits(ratingCount)})
+                    </span>
+                  )}
+                </div>
+              )}
               
               {shopName && (
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1.5 justify-start">

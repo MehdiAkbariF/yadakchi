@@ -178,7 +178,9 @@ export function ProductStandardCard({
           />
           
           {showRating && (
-            <div className="absolute top-2 left-2 dark:bg-zinc-900/85 backdrop-blur-sm px-2 py-0.5 rounded-lg shadow-sm border border-border/20 z-10 flex items-center justify-center">
+            <div className="absolute top-2 left-2
+             dark:bg-zinc-900/85  px-2 py-0.5 rounded-lg 
+              z-10 flex items-center justify-center">
               {renderStars()}
             </div>
           )}
