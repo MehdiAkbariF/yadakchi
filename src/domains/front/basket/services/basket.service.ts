@@ -1,11 +1,22 @@
+// src/domains/front/basket/services/basket.service.ts
+
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { BASKET_ENDPOINTS } from '../endpoints/basket.endpoints';
 import { BasketMapper } from '../mappers/basket.mapper';
 import { BasketApiDto } from '../types/dto.types';
-import { BasketViewModel } from '../types/view.types';
-import { AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
+import { BasketViewModel, AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
+
+export interface UserDiscountCodeItem {
+  id: string;
+  code: string;
+  minSum: number;
+  amount: number;
+  startDate: string;
+  expiretDate: string;
+  count: number;
+}
 
 export class BasketService {
   private readonly httpClient = getHttpClient();
@@ -168,27 +179,41 @@ export class BasketService {
     }
   }
 
-  async changeBasketLocation(locationId: string): Promise<void> {
+  async setBasketLocationAndPrice(locationId: string): Promise<any> {
     try {
-      await this.httpClient.post(BASKET_ENDPOINTS.CHANGE_LOCATION, { locationId });
-    } catch (error) {
-      throw errorManager.normalize(error);
-    }
-  }
-
-  async setBasketShipment(locationId: string, methods: any[]): Promise<void> {
-    try {
-      await this.httpClient.post(BASKET_ENDPOINTS.BASKET_SHIPMENT, { locationId, methods });
-    } catch (error) {
-      throw errorManager.normalize(error);
-    }
-  }
-
-  async initiatePayment(isLegalReceipt: boolean): Promise<any> {
-    try {
-      const response = await this.httpClient.post(BASKET_ENDPOINTS.BASKET_PAYMENT, { isLegalReceipt });
+      const response = await this.httpClient.post(
+        BASKET_ENDPOINTS.BASKET_SHIPMENT_PRICE,
+        { locationId }
+      );
       return response.data;
     } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async setBasketShipment(
+    locationId: string, 
+    methods: Array<{ subBasketId: string; shipmentMethod: string }>
+  ): Promise<any> {
+    try {
+      const response = await this.httpClient.post(
+        BASKET_ENDPOINTS.BASKET_SHIPMENT, 
+        { locationId, methods }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async initiatePayment(isLegalReceipt: boolean = false): Promise<{ link?: string; paymentUrl?: string }> {
+    try {
+      const response = await this.httpClient.post<{ link?: string; paymentUrl?: string }>(
+        BASKET_ENDPOINTS.BASKET_PAYMENT,
+        { isLegalReceipt: Boolean(isLegalReceipt) }
+      );
+      return response.data;
+    } catch (error: any) {
       throw errorManager.normalize(error);
     }
   }
@@ -198,7 +223,7 @@ export class BasketService {
       const formData = new FormData();
       formData.append('DiscountCode', code);
       const response = await this.httpClient.put(
-        '/api/UserPanel/ApplyDiscountCodeToBasket',
+        BASKET_ENDPOINTS.APPLY_DISCOUNT,
         formData,
         {
           headers: {
@@ -217,7 +242,7 @@ export class BasketService {
       const formData = new FormData();
       formData.append('ReferralCode', code);
       const response = await this.httpClient.post(
-        '/api/UserPanel/ApplyReferalCodeToBasket',
+        BASKET_ENDPOINTS.APPLY_REFERRAL,
         formData,
         {
           headers: {
@@ -231,13 +256,19 @@ export class BasketService {
     }
   }
 
-  async checkoutBasket(): Promise<any> {
+  async getUserDiscountCodes(): Promise<UserDiscountCodeItem[]> {
     try {
-      const response = await this.httpClient.post(BASKET_ENDPOINTS.CHECKOUT_BASKET);
-      return response.data;
+      const response = await this.httpClient.get<UserDiscountCodeItem[]>(
+        BASKET_ENDPOINTS.GET_DISCOUNT_CODES
+      );
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       throw errorManager.normalize(error);
     }
+  }
+
+  async checkoutBasket(): Promise<any> {
+    return this.getCheckoutBasket();
   }
 }
 

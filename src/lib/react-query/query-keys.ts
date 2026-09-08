@@ -6,7 +6,13 @@ export const queryKeys = {
     user: ['auth', 'user'] as const,
     session: ['auth', 'session'] as const,
   },
-
+  blog: {
+    categories: ['blog', 'categories'] as const,
+    filters: (params: any) => ['blog', 'filters', params] as const,
+    posts: (params: any) => ['blog', 'posts', params] as const,
+    detail: (slug: string) => ['blog', 'post', slug] as const,
+    comments: (postId: string, page: number) => ['blog', 'comments', postId, page] as const,
+  },
   // Front
   front: {
     // Products
@@ -96,6 +102,7 @@ export const queryKeys = {
       list: (params: any) => ['user', 'orders', 'list', params] as const,
       details: (orderId: string) => ['user', 'orders', 'details', orderId] as const,
     },
+    blogComments: (page: number) => ['user', 'blog-comments', page] as const,
     favorites: {
       list: (params: any) => ['user', 'favorites', 'list', params] as const,
     },

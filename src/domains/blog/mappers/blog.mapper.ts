@@ -3,13 +3,21 @@
 import { 
   BlogCategoryDto, 
   BlogPostListItemDto, 
-  BlogPostDetailDto 
+  BlogPostDetailDto,
+  BlogPostCommentDto,
+  UserBlogPostCommentDto,
+  CreateBlogPostCommentRequestDto
 } from '../types/dto.types';
 import { 
   BlogCategory, 
   BlogPostItem, 
   BlogPostDetail 
 } from '../types/domain.types';
+import { 
+  BlogPostCommentViewModel, 
+  UserBlogPostCommentViewModel,
+  CreateBlogPostCommentRequest 
+} from '../types/view.types';
 
 export class BlogMapper {
   static toDomainCategory(dto: BlogCategoryDto): BlogCategory {
@@ -59,6 +67,42 @@ export class BlogMapper {
         description: dto.seoInformation.description,
         canonicalUrl: dto.seoInformation.canonicalUrl,
       } : null,
+    };
+  }
+
+  static toViewComment(dto: BlogPostCommentDto): BlogPostCommentViewModel {
+    const rawDate = dto.createDate || dto.createdAt || new Date().toISOString();
+    return {
+      id: dto.id,
+      blogPostId: dto.blogPostId,
+      comment: dto.comment,
+      creatorName: dto.isIncognito ? 'کاربر ناشناس' : (dto.creatorName || dto.creator || 'کاربر یدک‌چی'),
+      createDateFormatted: new Date(rawDate).toLocaleDateString('fa-IR'),
+      isIncognito: !!dto.isIncognito,
+      likes: dto.likes || 0,
+      dislikes: dto.dislikes || 0,
+    };
+  }
+
+  static toViewUserComment(dto: UserBlogPostCommentDto): UserBlogPostCommentViewModel {
+    return {
+      id: dto.id,
+      blogPostId: dto.blogPostId,
+      blogPostTitle: dto.blogPostTitle || 'مقاله وبلاگ',
+      blogPostEnglishTitle: dto.blogPostEnglishTitle || '',
+      blogPostImage: dto.blogPostImage || null,
+      comment: dto.comment,
+      isConfirmed: dto.isConfirmed !== undefined ? dto.isConfirmed : true,
+      isIncognito: !!dto.isIncognito,
+      createDateFormatted: new Date(dto.createDate).toLocaleDateString('fa-IR'),
+    };
+  }
+
+  static toCreateCommentDto(request: CreateBlogPostCommentRequest): CreateBlogPostCommentRequestDto {
+    return {
+      blogPostId: request.blogPostId,
+      comment: request.comment,
+      isIncognito: request.isIncognito,
     };
   }
 }

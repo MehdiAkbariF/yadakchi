@@ -2,9 +2,10 @@
 
 'use client';
 
-import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getBlogService } from '../services/blog.service';
-import { BlogFiltersRequest } from '../types/view.types';
+import { BlogFiltersRequest, CreateBlogPostCommentRequest } from '../types/view.types';
 
 const blogService = getBlogService();
 
@@ -57,6 +58,33 @@ export function useGetBlogPostComments(blogPostId: string, pageNumber: number = 
     {
       staleTime: 60 * 1000,
       enabled: !!blogPostId,
+    }
+  );
+}
+
+export function useCreateBlogPostComment() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (request: CreateBlogPostCommentRequest) => blogService.createComment(request),
+    {
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: ['blog', 'comments', variables.blogPostId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['user', 'blog-comments'],
+        });
+      },
+    }
+  );
+}
+
+export function useGetUserBlogPostComments(pageNumber: number = 1, pageSize: number = 30) {
+  return useTypedQuery(
+    ['user', 'blog-comments', pageNumber, pageSize],
+    () => blogService.getUserBlogComments(pageNumber, pageSize),
+    {
+      staleTime: 30 * 1000,
     }
   );
 }

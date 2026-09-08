@@ -7,20 +7,17 @@ import Link from 'next/link';
 import { 
   Clock, 
   User, 
-  Calendar, 
   Share2, 
   HelpCircle, 
   Layers, 
   Wrench, 
-  ChevronDown, 
-  ArrowLeft,
-  Search,
-  MessageSquare
+  ArrowLeft 
 } from 'lucide-react';
 import { BlogPostDetailViewModel } from '@/domains/blog/types/view.types';
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
 import { Accordion } from '@/components/composites/Accordion/Accordion';
 import { Button } from '@/components/primitives/Button/Button';
+import { BlogCommentsSection } from './BlogCommentsSection';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { showToast } from '@/core/utils/toast';
 
@@ -114,13 +111,13 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             </div>
           )}
 
-          {/* محتوای کامل HTML مقاله با تایپوگرافی خوانا */}
+          {/* محتوای کامل HTML مقاله */}
           <div 
             className="text-xs sm:text-sm md:text-base leading-loose text-justify text-foreground font-iran-yekan space-y-4 [&_h2]:text-lg [&_h2]:md:text-xl [&_h2]:font-black [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:text-primary [&_h3]:text-base [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:leading-loose [&_img]:rounded-2xl [&_img]:my-4 [&_ul]:list-disc [&_ul]:pr-5 [&_ol]:list-decimal [&_ol]:pr-5"
             dangerouslySetInnerHTML={{ __html: post.description }}
           />
 
-          {/* سوالات متداول (FAQ) انتهای مقاله */}
+          {/* سوالات متداول (FAQ) */}
           {post.faqs.length > 0 && (
             <div className="flex flex-col gap-3.5 border-t border-dashed pt-8 mt-4">
               <span className="text-base font-black text-foreground font-iran-yekan flex items-center gap-2">
@@ -140,12 +137,15 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             </div>
           )}
 
+          {/* بخش دیدگاه‌ها و نظرات کاربران */}
+          <BlogCommentsSection blogPostId={post.id} />
+
         </article>
 
-        {/* سایدبار کناری جزئیات مقاله */}
+        {/* سایدبار کناری */}
         <aside className="lg:col-span-4 flex flex-col gap-6">
           
-          {/* قطعات و لوازم یدکی مرتبط ذکر شده در مقاله */}
+          {/* قطعات و لوازم یدکی مرتبط */}
           {post.parts.length > 0 && (
             <div className="w-full bg-card border rounded-2xl p-5 shadow-sm flex flex-col gap-4">
               <span className="text-sm font-black text-foreground font-iran-yekan flex items-center gap-2 border-b pb-3">
@@ -168,7 +168,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             </div>
           )}
 
-          {/* خودروهای مرتبط با مقاله */}
+          {/* خودروهای مرتبط */}
           {post.carTypes.length > 0 && (
             <div className="w-full bg-card border rounded-2xl p-5 shadow-sm flex flex-col gap-4">
               <span className="text-sm font-black text-foreground font-iran-yekan flex items-center gap-2 border-b pb-3">
@@ -190,7 +190,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             </div>
           )}
 
-          {/* دعوت به مطالعه سایر مقالات */}
+          {/* کارت لینک مجله */}
           <div className="w-full bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-6 flex flex-col gap-3 text-right">
             <span className="text-sm font-black text-foreground font-iran-yekan">علاقه‌مند به مطالب بیشتر هستید؟</span>
             <p className="text-xs text-muted-foreground leading-relaxed font-iran-yekan">

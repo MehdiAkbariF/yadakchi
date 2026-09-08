@@ -3,26 +3,19 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { queryKeys } from '@/lib/react-query/query-keys';
-import { getBasketService } from '../services/basket.service';
+import { getBasketService, UserDiscountCodeItem } from '../services/basket.service';
 import { AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
 
 const basketService = getBasketService();
 
-/*
-  بهینه‌سازی فوق‌پیشرفته و هوشمند کش سبد خرید (Layout-Wide Cache Optimization):
-  مقدار staleTime به ۵ دقیقه افزایش یافته و refetchOnWindowFocus غیرفعال شده است.
-  این کار باعث می‌شود در زمان تغییر مسیر یا گشت‌وگذار کاربر در سایت، هیچ درخواست پس‌زمینه‌ای
-  برای سبد خرید ارسال نشود و جابجایی بین صفحات به صورت کاملاً آنی و ۶۰ فریم انجام شود.
-  بروزرسانی واقعی کماکان هنگام افزودن/حذف کالا به صورت خودکار انجام خواهد شد.
-*/
 export function useGetBasket() {
   return useTypedQuery(
     queryKeys.front.basket.current,
     () => basketService.getBasket(),
     {
-      staleTime: 5 * 60 * 1000, // ۵ دقیقه معتبر بودن داده‌ها برای جلوگیری از ریکوئست‌های تکراری مکرر
-      refetchOnWindowFocus: false, // غیرفعال کردن ریکوئست مجدد هنگام تغییر فوکوس مرورگر
-      refetchOnReconnect: false, // غیرفعال کردن ریکوئست مجدد هنگام قطع و وصل اینترنت
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     }
   );
 }
@@ -34,11 +27,8 @@ export function useAddToBasket() {
     (request: AddToBasketRequest) => basketService.addToBasket(request),
     {
       onSuccess: (data) => {
-        // بروزرسانی آنی کش سبد خرید پس از افزودن کالا بدون نیاز به لود کل صفحه
         queryClient.setQueryData(queryKeys.front.basket.current, data);
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.front.basket.current,
-        });
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
   );
@@ -51,11 +41,8 @@ export function useDeleteFromBasket() {
     (request: DeleteFromBasketRequest) => basketService.deleteFromBasket(request),
     {
       onSuccess: (data) => {
-        // بروزرسانی آنی کش سبد خرید پس از حذف کالا بدون نیاز به لود کل صفحه
         queryClient.setQueryData(queryKeys.front.basket.current, data);
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.front.basket.current,
-        });
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
   );
@@ -118,14 +105,13 @@ export function useGetCheckoutBasket() {
   );
 }
 
-export function useChangeBasketLocation() {
+export function useSetBasketLocationAndPrice() {
   const queryClient = useQueryClient();
   return useTypedMutation(
-    (locationId: string) => basketService.changeBasketLocation(locationId),
+    (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
-        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
     }
   );
@@ -134,7 +120,7 @@ export function useChangeBasketLocation() {
 export function useSetBasketShipment() {
   const queryClient = useQueryClient();
   return useTypedMutation(
-    ({ locationId, methods }: { locationId: string; methods: any[] }) =>
+    ({ locationId, methods }: { locationId: string; methods: Array<{ subBasketId: string; shipmentMethod: string }> }) =>
       basketService.setBasketShipment(locationId, methods),
     {
       onSuccess: () => {
@@ -157,7 +143,6 @@ export function useApplyDiscountCode() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
-        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
     }
   );
@@ -170,8 +155,17 @@ export function useApplyReferralCode() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
-        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
+    }
+  );
+}
+
+export function useGetUserDiscountCodes() {
+  return useTypedQuery<UserDiscountCodeItem[]>(
+    ['user', 'discount-codes'],
+    () => basketService.getUserDiscountCodes(),
+    {
+      staleTime: 5 * 60 * 1000,
     }
   );
 }
@@ -183,7 +177,6 @@ export function useCheckoutBasket() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
-        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
     }
   );

@@ -1,3 +1,5 @@
+// src/components/features/Checkout/components/AddressModal.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -5,7 +7,7 @@ import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateUserLocation, useChangeBasketLocation } from '@/domains/front/basket/hooks/basket.hooks';
+import { useCreateUserLocation, useSetBasketLocationAndPrice } from '@/domains/front/basket/hooks/basket.hooks';
 import { Input } from '@/components/primitives/Input/Input';
 import { Button } from '@/components/primitives/Button/Button';
 import { MapPin, X, Plus, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
@@ -51,7 +53,7 @@ export function AddressModal({
   setIsNewAddressOpen
 }: AddressModalProps) {
   const [mounted, setMounted] = useState(false);
-  const changeLocation = useChangeBasketLocation();
+  const setBasketLocation = useSetBasketLocationAndPrice();
   const createLocation = useCreateUserLocation();
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<AddressFormData>({
@@ -123,10 +125,14 @@ export function AddressModal({
 
   const handleSelectLocation = async (id: string) => {
     try {
-      await changeLocation.mutateAsync(id);
-      showToast.success('آدرس تحویل سفارش تغییر یافت');
+      // ارسال آدرس انتخابی به اندپوینت رسمی /api/UserPanel/BasketShipmentPrice
+      await setBasketLocation.mutateAsync(id);
+      showToast.success('آدرس تحویل سفارش با موفقیت انتخاب شد');
+    } catch (err: any) {
+      console.warn('استعلام قیمت ارسال برای آدرس با اخطار مواجه شد:', err);
+    } finally {
       onClose();
-    } catch (err: any) {}
+    }
   };
 
   const handleClose = () => {

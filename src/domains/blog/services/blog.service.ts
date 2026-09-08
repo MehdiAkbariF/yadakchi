@@ -10,14 +10,18 @@ import {
   BlogPostFiltersResponseDto, 
   BlogPostsResponseDto, 
   BlogPostDetailDto,
-  BlogPostCommentsResponseDto
+  BlogPostCommentsResponseDto,
+  UserBlogPostCommentsResponseDto
 } from '../types/dto.types';
 import { 
   BlogCategoryViewModel, 
   BlogPostItemViewModel, 
   BlogPostDetailViewModel, 
   BlogFiltersRequest,
-  BlogPostFiltersAvailable 
+  BlogPostFiltersAvailable,
+  BlogPostCommentViewModel,
+  CreateBlogPostCommentRequest,
+  UserBlogPostCommentViewModel
 } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 
@@ -110,7 +114,7 @@ export class BlogService {
     }
   }
 
-  async getComments(blogPostId: string, pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<any>> {
+  async getComments(blogPostId: string, pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<BlogPostCommentViewModel>> {
     try {
       const response = await this.httpClient.get<BlogPostCommentsResponseDto>(
         BLOG_ENDPOINTS.GET_COMMENTS,
@@ -123,8 +127,10 @@ export class BlogService {
         }
       );
 
+      const items = (response.data?.items || []).map(dto => BlogMapper.toViewComment(dto));
+
       return {
-        items: response.data?.items || [],
+        items,
         pageNumber: response.data?.currentPage || 1,
         pageSize: response.data?.pageSize || pageSize,
         totalCount: response.data?.totalCount || 0,
@@ -137,6 +143,59 @@ export class BlogService {
       };
     } catch (error) {
       logger.error('[BlogService] Get comments failed:', error);
+      return {
+        items: [],
+        pageNumber: 1,
+        pageSize,
+        totalCount: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+        hasMore: false,
+        from: 1,
+        to: 0,
+      };
+    }
+  }
+
+  async createComment(request: CreateBlogPostCommentRequest): Promise<void> {
+    try {
+      const dto = BlogMapper.toCreateCommentDto(request);
+      await this.httpClient.post(BLOG_ENDPOINTS.POST_COMMENT, dto);
+    } catch (error) {
+      logger.error('[BlogService] Create comment failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getUserBlogComments(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<UserBlogPostCommentViewModel>> {
+    try {
+      const response = await this.httpClient.get<UserBlogPostCommentsResponseDto>(
+        BLOG_ENDPOINTS.GET_USER_COMMENTS,
+        {
+          params: {
+            PageNumber: pageNumber,
+            PageSize: pageSize,
+          }
+        }
+      );
+
+      const items = (response.data?.items || []).map(dto => BlogMapper.toViewUserComment(dto));
+
+      return {
+        items,
+        pageNumber: response.data?.currentPage || 1,
+        pageSize: response.data?.pageSize || pageSize,
+        totalCount: response.data?.totalCount || 0,
+        totalPages: response.data?.totalPages || 1,
+        hasNextPage: (response.data?.currentPage || 1) < (response.data?.totalPages || 1),
+        hasPreviousPage: (response.data?.currentPage || 1) > 1,
+        hasMore: (response.data?.currentPage || 1) < (response.data?.totalPages || 1),
+        from: ((response.data?.currentPage || 1) - 1) * pageSize + 1,
+        to: Math.min((response.data?.currentPage || 1) * pageSize, response.data?.totalCount || 0),
+      };
+    } catch (error) {
+      logger.error('[BlogService] Get user blog comments failed:', error);
       return {
         items: [],
         pageNumber: 1,

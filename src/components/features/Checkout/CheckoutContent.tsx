@@ -1,8 +1,15 @@
+// src/components/features/Checkout/CheckoutContent.tsx
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useGetCheckoutBasket, useGetUserLocations, useChangeBasketLocation, useSetBasketShipment } from '@/domains/front/basket/hooks/basket.hooks';
+import { 
+  useGetCheckoutBasket, 
+  useGetUserLocations, 
+  useSetBasketShipment,
+  useSetBasketLocationAndPrice 
+} from '@/domains/front/basket/hooks/basket.hooks';
 import { CheckoutAddress } from './components/CheckoutAddress';
 import { CheckoutShipmentGroup } from './components/CheckoutShipmentGroup';
 import { CheckoutInvoice } from './components/CheckoutInvoice';
@@ -22,7 +29,7 @@ export function CheckoutContent() {
   const { data: rawBasket, isLoading: isBasketLoading } = useGetCheckoutBasket();
   const { data: locations = [], isLoading: isLocationsLoading } = useGetUserLocations();
   
-  const changeLocation = useChangeBasketLocation();
+  const setBasketLocation = useSetBasketLocationAndPrice();
   const setBasketShipment = useSetBasketShipment();
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -49,12 +56,19 @@ export function CheckoutContent() {
 
   const basket = rawBasket as any;
 
+  // مقداردهی اولیه شیوه‌های ارسال
   useEffect(() => {
     if (basket?.subBaskets) {
       const initial: Record<string, string> = {};
       basket.subBaskets.forEach((sub: any) => {
         if (sub.shipmentMethod) {
           initial[sub.id] = sub.shipmentMethod;
+        } else if (sub.tipaxShipmentPrice > 0) {
+          initial[sub.id] = 'Tipax';
+        } else if (sub.sellerShipmentPrice > 0) {
+          initial[sub.id] = 'Seller';
+        } else if (sub.isLocalShipmentAvailable) {
+          initial[sub.id] = 'Local';
         }
       });
       setSelectedMethods(initial);
@@ -62,18 +76,18 @@ export function CheckoutContent() {
   }, [basket]);
 
   if (isAuthLoading || isBasketLoading || isLocationsLoading) {
-    return <PageLoading message="در حال بارگذاری اطلاعات تسویه حساب..." />;
+    return <PageLoading message="در حال بارگذاری اطلاعات فاکتور و آدرس‌ها..." />;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !basket || !basket.subBaskets?.length) {
     return null;
   }
 
-  if (!basket || basket.isEmpty) {
-    return null;
-  }
-
-  const activeAddress = locations.find((l: any) => l.id === basket.userLocationId) || locations.find((l: any) => l.isDefault) || locations[0];
+  // پیدا کردن آدرس فعال
+  const activeAddress = 
+    locations.find((l: any) => l.id === basket.userLocationId) || 
+    locations.find((l: any) => l.isDefault) || 
+    locations[0];
 
   const handleSelectShipment = (subBasketId: string, method: string) => {
     setSelectedMethods(prev => ({
@@ -84,35 +98,42 @@ export function CheckoutContent() {
 
   const handlePayment = async () => {
     if (!activeAddress) {
-      showToast.error('لطفاً ابتدا آدرس تحویل سفارش خود را ثبت کنید');
+      showToast.error('لطفاً ابتدا آدرس تحویل سفارش خود را انتخاب کنید');
+      setIsAddressModalOpen(true);
       return;
     }
 
     const unselectedSubBasket = basket.subBaskets.find((sub: any) => !selectedMethods[sub.id]);
     if (unselectedSubBasket) {
-      showToast.error(`لطفاً شیوه ارسال مرسوله فروشگاه ${unselectedSubBasket.shop.shopTitle} را انتخاب کنید`);
+      showToast.error(`لطفاً شیوه ارسال مرسوله فروشگاه «${unselectedSubBasket.shop?.shopTitle || ''}» را انتخاب کنید`);
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const methodsPayload = basket.subBaskets.map((sub: any) => {
-        const methodStr = selectedMethods[sub.id];
-        return {
-          subBasketId: sub.id,
-          shipmentMethod: methodStr,
-        };
-      });
+      // ۱. ارسال لوکیشن برای استعلام و ذخیره در دیتابیس سرور
+      try {
+        await setBasketLocation.mutateAsync(activeAddress.id);
+      } catch (locErr: any) {
+        console.warn('[Checkout] Shipment price query warning:', locErr);
+      }
 
+      // ۲. آماده‌سازی بدنه روش‌های ارسال
+      const methodsPayload = basket.subBaskets.map((sub: any) => ({
+        subBasketId: sub.id,
+        shipmentMethod: selectedMethods[sub.id] || 'Tipax',
+      }));
+
+      // ۳. ثبت نهایی روش‌های ارسال در سرور
       await setBasketShipment.mutateAsync({
         locationId: activeAddress.id,
         methods: methodsPayload,
       });
 
-      showToast.success('اطلاعات مرسوله‌ها با موفقیت ثبت شد');
+      showToast.success('اطلاعات نحوه ارسال با موفقیت تایید شد');
       router.push('/basket-payment');
     } catch (err: any) {
-      showToast.error('خطا در ثبت نهایی اطلاعات ارسال');
+      showToast.error(err.userMessage || 'خطا در ثبت نهایی شیوه ارسال');
     } finally {
       setIsSubmitting(false);
     }
@@ -145,7 +166,7 @@ export function CheckoutContent() {
   };
 
   const totalShipment = calculateShipmentTotals();
-  const finalPayablePrice = basket.totalFinalPrice + totalShipment;
+  const finalPayablePrice = (basket.totalFinalPrice || 0) + totalShipment;
 
   const leftPriceContent = (
     <div className="flex flex-col text-right">
@@ -157,8 +178,7 @@ export function CheckoutContent() {
   );
 
   return (
-    <div className="w-full flex flex-col lg:flex-row items-start gap-6 md:gap-8 select-none text-right">
-      
+    <div className="w-full flex flex-col lg:flex-row items-start gap-6 md:gap-8 select-none text-right" dir="rtl">
       <div className="flex-1 flex flex-col gap-6 w-full">
         <CheckoutAddress
           activeAddress={activeAddress}
@@ -212,7 +232,6 @@ export function CheckoutContent() {
         onClose={() => setIsMapModalOpen(false)}
         onConfirmAddress={handleConfirmMapAddress}
       />
-
     </div>
   );
 }

@@ -89,8 +89,11 @@ export interface BlogPostCommentDto {
   id: string;
   blogPostId: string;
   comment: string;
+  creator?: string;
   creatorName?: string;
   createDate?: string;
+  createdAt?: string;
+  isIncognito?: boolean;
   likes?: number;
   dislikes?: number;
 }
@@ -101,4 +104,30 @@ export interface BlogPostCommentsResponseDto {
   pageSize: number;
   totalCount: number;
   items: BlogPostCommentDto[];
+}
+
+export interface CreateBlogPostCommentRequestDto {
+  blogPostId: string;
+  comment: string;
+  isIncognito: boolean;
+}
+
+export interface UserBlogPostCommentDto {
+  id: string;
+  blogPostId: string;
+  blogPostTitle?: string;
+  blogPostEnglishTitle?: string;
+  blogPostImage?: string | null;
+  comment: string;
+  isConfirmed?: boolean;
+  isIncognito?: boolean;
+  createDate: string;
+}
+
+export interface UserBlogPostCommentsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: UserBlogPostCommentDto[];
 }
