@@ -13,18 +13,18 @@ export function useImpression(shopProductId: string | null) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // اگر حداقل ۲۰ درصد از کارت کالا در ویوپورت کاربر نمایان شد
+        
         if (entry.isIntersecting) {
           impressionTracker.track(shopProductId);
           
-          // قطع ناظر برای این کارت خاص تا در اسکرول‌های مجدد تکراری ثبت نشود
+          
           if (elementRef.current) {
             observer.unobserve(elementRef.current);
           }
         }
       },
       {
-        threshold: 0.2, // حساسیت ورود به صفحه ۲۰٪
+        threshold: 0.2, 
       }
     );
 

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MessageSquare, User, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MessageSquare, User, Send } from 'lucide-react';
 import { useGetBlogPostComments, useCreateBlogPostComment } from '@/domains/blog/hooks/blog.hooks';
 import { blogValidators } from '@/domains/blog/validation/blog.validation';
 import { CreateBlogPostCommentRequest } from '@/domains/blog/types/view.types';
@@ -55,70 +55,72 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
 
     try {
       await createComment.mutateAsync(data);
-      showToast.success('دیدگاه شما با موفقیت ثبت شد و پس از بازبینی نمایش داده خواهد شد');
+      showToast.success('دیدگاه شما ثبت شد و پس از بازبینی منتشر خواهد شد');
       reset({
         blogPostId,
         comment: '',
         isIncognito: false,
       });
     } catch (err: any) {
-      showToast.error(err.userMessage || 'خطا در ثبت دیدگاه. لطفاً دوباره تلاش کنید.');
+      showToast.error(err.userMessage || 'خطا در ثبت دیدگاه. لطفاً مجدداً تلاش کنید.');
     }
   };
 
   return (
-    <div className="w-full flex flex-col gap-6 text-right select-none border-t border-dashed pt-8 mt-6" dir="rtl">
+    <section aria-labelledby="comments-heading" className="w-full flex flex-col gap-6 border-t border-dashed border-border/80 pt-8 mt-6">
       
       {/* عنوان بخش نظرات */}
-      <div className="flex items-center justify-between border-b pb-3">
+      <div className="flex items-center justify-between border-b border-border/60 pb-3">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary" />
-          <h3 className="text-base sm:text-lg font-black text-foreground font-iran-yekan">
+          <MessageSquare className="h-5 w-5 text-primary shrink-0" />
+          <h2 id="comments-heading" className="text-base sm:text-lg font-black text-foreground">
             دیدگاه‌ها و نظرات کاربران
-          </h3>
+          </h2>
         </div>
-        <span className="text-xs font-bold text-muted-foreground font-iran-yekan bg-muted px-2.5 py-1 rounded-lg">
+        <span className="text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
           {toPersianDigits(totalCount)} نظر
         </span>
       </div>
 
       {/* فرم ثبت دیدگاه جدید */}
-      <div className="w-full bg-card border rounded-2xl p-5 md:p-6 shadow-sm">
-        <h4 className="text-sm font-black text-foreground font-iran-yekan mb-1">
+      <div className="w-full bg-card border border-border/70 rounded-2xl p-4 sm:p-6 shadow-2xs">
+        <h3 className="text-xs sm:text-sm font-bold text-foreground mb-1">
           دیدگاه یا پرسش خود را درباره این مقاله بنویسید
-        </h4>
-        <p className="text-xs text-muted-foreground font-iran-yekan mb-4">
-          نظرات شما پس از تایید توسط تحریریه، در سایت نمایش داده خواهد شد.
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          دیدگاه شما پس از تایید مدیریت در سایت نمایش داده خواهد شد.
         </p>
 
-        <form onSubmit={handleSubmit(onCommentSubmit)} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onCommentSubmit)} className="flex flex-col gap-3.5">
           <TextArea
-            placeholder="متن دیدگاه خود را وارد کنید..."
+            placeholder="متن دیدگاه خود را بنویسید..."
             rows={4}
             error={errors.comment?.message}
-            className="text-xs md:text-sm font-iran-yekan leading-relaxed"
+            className="text-xs sm:text-sm leading-relaxed"
             {...register('comment')}
           />
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-            <div className="flex items-center gap-2 select-none">
+            {/* چک‌باکس با رویکرد ارگونومیک (برچسب قابل لمس و کلیک) */}
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
               <Checkbox
                 checked={watchIncognito}
                 onChange={(checked) => setValue('isIncognito', checked)}
               />
-              <span className="text-xs font-medium font-iran-yekan text-foreground">
+              <span className="text-xs font-medium text-foreground">
                 ارسال دیدگاه به صورت ناشناس
               </span>
-            </div>
+            </label>
 
             <Button
               type="submit"
               variant="primary"
               size="sm"
               isLoading={createComment.isPending}
-              className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-6 shadow-sm flex items-center justify-center gap-2 self-start sm:self-auto"
+              className="h-10 px-6 rounded-xl text-xs font-bold shadow-xs inline-flex items-center justify-center gap-2 self-start sm:self-auto active:scale-95 transition-transform"
             >
-              <Send className="h-3.5 w-3.5 transform rotate-180" />
+              {/* آیکون Send بدون باگ برعکس‌شدن عمودی؛ اصلاح شده برای RTL */}
+              <Send className="h-3.5 w-3.5 rtl:-scale-x-100" />
               <span>ارسال دیدگاه</span>
             </Button>
           </div>
@@ -128,49 +130,75 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
       {/* لیست دیدگاه‌ها */}
       <div className="flex flex-col gap-4 mt-2">
         {isLoading ? (
-          <div className="w-full py-8 text-center text-xs text-muted-foreground font-iran-yekan">
-            در حال دریافت دیدگاه‌ها...
+          /* اسکلتون لودینگ برای جلوگیری از پرش چیدمان */
+          <div className="flex flex-col gap-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="p-4 sm:p-5 border border-border/50 rounded-2xl bg-card space-y-3 animate-pulse">
+                <div className="flex justify-between items-center pb-2 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-muted" />
+                    <div className="w-24 h-3 bg-muted rounded-md" />
+                  </div>
+                  <div className="w-16 h-3 bg-muted rounded-md" />
+                </div>
+                <div className="w-full h-3 bg-muted rounded-md" />
+                <div className="w-2/3 h-3 bg-muted rounded-md" />
+              </div>
+            ))}
           </div>
         ) : comments.length > 0 ? (
           <>
-            {comments.map((c) => (
-              <div key={c.id} className="p-4 md:p-5 border rounded-2xl bg-card flex flex-col gap-3 text-right">
-                <div className="flex items-center justify-between border-b pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-black">
-                      <User className="h-4 w-4" />
+            <ol className="flex flex-col gap-3.5 list-none p-0 m-0">
+              {comments.map((c) => (
+                <li key={c.id}>
+                  <article className="p-4 sm:p-5 border border-border/60 rounded-2xl bg-card flex flex-col gap-3 shadow-2xs">
+                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <span className="text-xs font-bold text-foreground">
+                          {c.creatorName}
+                        </span>
+                      </div>
+                      <time className="text-[11px] text-muted-foreground font-medium">
+                        {c.createDateFormatted}
+                      </time>
                     </div>
-                    <span className="text-xs font-bold text-foreground font-iran-yekan">
-                      {c.creatorName}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground font-iran-yekan">
-                    {c.createDateFormatted}
-                  </span>
-                </div>
 
-                <p className="text-xs md:text-sm text-foreground leading-relaxed font-iran-yekan whitespace-pre-wrap">
-                  {c.comment}
-                </p>
+                    <p className="text-xs sm:text-sm text-foreground/90 leading-loose whitespace-pre-wrap">
+                      {c.comment}
+                    </p>
+                  </article>
+                </li>
+              ))}
+            </ol>
+
+            {totalPages > 1 && (
+              <div className="pt-2">
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={(p) => setPage(p)}
+                />
               </div>
-            ))}
-
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={(p) => setPage(p)}
-            />
+            )}
           </>
         ) : (
-          <div className="w-full py-12 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
-            <MessageSquare className="h-8 w-8 text-muted-foreground/50 stroke-[1.5]" />
-            <span className="text-xs font-bold font-iran-yekan text-muted-foreground">
-              هنوز دیدگاهی برای این مقاله ثبت نشده است. اولین نفری باشید که دیدگاه می‌نویسد!
+          <div className="w-full py-12 text-center border border-dashed border-border/80 rounded-2xl bg-card flex flex-col items-center justify-center gap-2 px-4">
+            <div className="p-3 bg-muted rounded-full text-muted-foreground">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+            <p className="text-xs sm:text-sm font-bold text-foreground mt-1">
+              هنوز دیدگاهی برای این مقاله ثبت نشده است
+            </p>
+            <span className="text-xs text-muted-foreground">
+              اولین نفری باشید که تجربه یا نظر خود را به اشتراک می‌گذارد.
             </span>
           </div>
         )}
       </div>
 
-    </div>
+    </section>
   );
 }

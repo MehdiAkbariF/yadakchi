@@ -26,7 +26,7 @@ export function BlogListContent() {
   const carTypeIds = searchParams.getAll('carTypeIds');
   const partIds = searchParams.getAll('partIds');
 
-  const { data: categories = [], isLoading: isCategoriesLoading } = useGetBlogCategories();
+  const { data: categories = [] } = useGetBlogCategories();
   const { data: availableFilters } = useGetBlogPostFilters({
     blogCategoryId: selectedCategory,
     carTypeIds: carTypeIds.length ? carTypeIds : undefined,
@@ -49,34 +49,25 @@ export function BlogListContent() {
   const handleFilterChange = (name: string, value: any) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (name === 'category') {
+    if (name === 'category' || name === 'blogCategoryId') {
       if (value) params.set('category', value);
       else params.delete('category');
     } else if (name === 'title') {
       if (value) params.set('q', value);
       else params.delete('q');
-    } else if (name === 'blogCategoryId') {
-      if (value) params.set('category', value);
-      else params.delete('category');
     } else if (name === 'carTypeIds') {
       params.delete('carTypeIds');
-      if (Array.isArray(value)) {
-        value.forEach((v) => params.append('carTypeIds', v));
-      }
+      if (Array.isArray(value)) value.forEach((v) => params.append('carTypeIds', v));
     } else if (name === 'partIds') {
       params.delete('partIds');
-      if (Array.isArray(value)) {
-        value.forEach((v) => params.append('partIds', v));
-      }
+      if (Array.isArray(value)) value.forEach((v) => params.append('partIds', v));
     }
 
     params.delete('page');
     router.push(`/blog?${params.toString()}`);
   };
 
-  const handleClearAll = () => {
-    router.push('/blog');
-  };
+  const handleClearAll = () => router.push('/blog');
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -85,51 +76,58 @@ export function BlogListContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const breadcrumbItems = [
-    { id: 'blog-root', title: 'مجله تخصصی یدک‌چی' },
-  ];
+  const breadcrumbItems = [{ id: 'blog-root', title: 'مجله تخصصی یدک‌چی' }];
 
   return (
-    <div className="w-full flex flex-col gap-6 text-right select-none" dir="rtl">
+    <main className="w-full flex flex-col gap-6 sm:gap-8 pb-12" dir="rtl">
       
-      <Breadcrumb items={breadcrumbItems} />
+      {/* ناوبری مسیر (Breadcrumb) */}
+      <nav aria-label="مسیر جاری">
+        <Breadcrumb items={breadcrumbItems} />
+      </nav>
 
-      {/* بنر هدر مجله */}
-      <div className="w-full bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/10 rounded-2xl p-6 sm:p-8 flex items-center justify-between relative overflow-hidden">
-        <div className="flex flex-col gap-2 z-10">
-          <div className="flex items-center gap-2 text-primary font-black">
-            <BookOpen className="h-5 w-5 shrink-0" />
-            <span className="text-xs sm:text-sm font-black font-iran-yekan">مجله تخصصی خودرو و قطعات یدکی</span>
+      {/* بنر هدر مجله: بهینه‌سازی شده در موبایل با پدینگ و تایپوگرافی تطبیقی */}
+      <header className="relative w-full rounded-2xl sm:rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-5 sm:p-8 md:p-10 overflow-hidden shadow-xs">
+        <div className="relative z-10 flex flex-col items-start gap-2 max-w-3xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
+            <BookOpen className="h-4 w-4 shrink-0" />
+            <span className="text-xs font-bold">مجله خودرو و قطعات یدکی</span>
           </div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-foreground font-iran-yekan mt-1">
+
+          <h1 className="text-xl sm:text-2xl md:text-4xl font-black text-foreground tracking-tight mt-1 leading-tight sm:leading-snug">
             دانشنامه فنی و اخبار دنیای قطعات یدک‌چی
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground font-iran-yekan max-w-xl leading-relaxed mt-1">
-            راهنمای جامع خرید، معرفی و عیب‌یابی قطعات انواع خودروهای ایرانی و وارداتی به قلم کارشناسان خبره
+
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed mt-1">
+            راهنمای جامع خرید، معرفی و عیب‌یابی قطعات انواع خودروها به قلم کارشناسان خبره
           </p>
         </div>
-      </div>
 
-      {/* کنترلر موبایل فیلترها */}
-      <div className="lg:hidden flex items-center justify-between border-b pb-3 pt-1">
+        {/* پترن پس‌زمینه برای جلوه بصری */}
+        <div className="absolute -left-10 -bottom-10 w-44 h-44 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+      </header>
+
+      {/* کنترلر و اکشن‌بار موبایل */}
+      <div className="lg:hidden flex items-center justify-between gap-3 p-1">
         <button
+          type="button"
           onClick={() => setIsMobileFiltersOpen(true)}
-          className="flex items-center justify-center gap-2 border rounded-xl py-2.5 px-4 bg-background text-xs font-bold font-iran-yekan text-foreground shadow-sm"
+          className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-input bg-background shadow-xs text-xs font-bold text-foreground hover:bg-accent active:scale-95 transition-transform"
         >
-          <SlidersHorizontal className="h-4 w-4 text-primary" />
+          <SlidersHorizontal className="h-4 w-4 text-primary shrink-0" />
           <span>فیلتر و دسته‌بندی‌ها</span>
         </button>
 
-        <span className="text-xs font-bold text-muted-foreground font-iran-yekan bg-muted px-3 py-1.5 rounded-xl">
+        <span className="text-xs font-semibold text-muted-foreground bg-muted/60 px-3 py-2 rounded-xl border border-border/40">
           {toPersianDigits(totalCount)} مقاله
         </span>
       </div>
 
-      {/* محتوای گرید و سایدبار */}
+      {/* چیدمان اصلی ۲ ستونه */}
       <div className="w-full flex items-start gap-8">
         
-        {/* سایدبار دسکتاپ */}
-        <div className="hidden lg:block w-[300px] shrink-0 sticky top-[132px]">
+        {/* سایدبار فیلترها (دسکتاپ) */}
+        <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-28">
           <BlogSidebar
             categories={categories}
             availableFilters={availableFilters}
@@ -140,59 +138,76 @@ export function BlogListContent() {
             onFilterChange={handleFilterChange}
             onClearAll={handleClearAll}
           />
-        </div>
+        </aside>
 
-        {/* لیست مقالات */}
-        <div className="flex-1 flex flex-col gap-6 min-w-0">
+        {/* گرید مقالات و وضعیت‌ها */}
+        <section className="flex-1 min-w-0 flex flex-col gap-6">
           
-          <div className="hidden lg:flex items-center justify-between border-b pb-3">
-            <span className="text-sm font-black text-foreground font-iran-yekan">آخرین مطالب منتشر شده</span>
-            <span className="text-xs font-bold text-muted-foreground font-iran-yekan bg-muted px-3 py-1 rounded-lg">
+          {/* هدر بالایی لیست در دسکتاپ */}
+          <div className="hidden lg:flex items-center justify-between pb-3 border-b border-border/60">
+            <h2 className="text-base font-bold text-foreground">آخرین مطالب منتشر شده</h2>
+            <span className="text-xs font-bold text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/30">
               {toPersianDigits(totalCount)} مقاله تخصصی
             </span>
           </div>
 
           {isPostsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
               {Array.from({ length: 6 }).map((_, i) => (
                 <BlogCardSkeleton key={i} />
               ))}
             </div>
           ) : posts.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                 {posts.map((post) => (
                   <BlogCard key={post.id} post={post} />
                 ))}
               </div>
 
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
+              {totalPages > 1 && (
+                <div className="pt-6">
+                  <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )}
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-card rounded-2xl border border-dashed gap-3">
-              <Inbox className="h-12 w-12 text-muted-foreground/50 stroke-[1.5]" />
-              <span className="text-sm font-bold font-iran-yekan text-foreground">مقاله‌ای با این مشخصات یافت نشد</span>
-              <p className="text-xs text-muted-foreground font-iran-yekan">لطفاً فیلترها را تغییر دهید یا عبارت دیگری را جستجو نمایید.</p>
+            /* حالت خالی (Empty State) مهندسی شده */
+            <div className="flex flex-col items-center justify-center p-8 sm:p-14 text-center bg-card rounded-2xl border border-dashed border-border/80 gap-3">
+              <div className="p-3 bg-muted rounded-full">
+                <Inbox className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-sm sm:text-base font-bold text-foreground">مقاله‌ای با این مشخصات یافت نشد</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
+                لطفاً کلمات کلیدی دیگری را جستجو کنید یا فیلترهای فعال را پاک نمایید.
+              </p>
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="mt-2 text-xs font-bold text-primary hover:underline"
+              >
+                پاک کردن همه فیلترها
+              </button>
             </div>
           )}
 
-        </div>
+        </section>
 
       </div>
 
-      {/* مودال فیلترهای موبایل */}
+      {/* مودال فیلتر موبایل */}
       <Modal isOpen={isMobileFiltersOpen} onClose={() => setIsMobileFiltersOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsMobileFiltersOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+          <ModalTitle className="text-sm font-bold text-foreground flex items-center gap-2">
             <SlidersHorizontal className="h-4 w-4 text-primary" />
             فیلتر مقالات
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="p-5 pt-4 text-right">
+        <ModalBody className="p-4 sm:p-5 max-h-[75vh] overflow-y-auto">
           <BlogSidebar
             categories={categories}
             availableFilters={availableFilters}
@@ -213,7 +228,6 @@ export function BlogListContent() {
         </ModalBody>
       </Modal>
 
-    </div>
+    </main>
   );
 }
-

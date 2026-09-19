@@ -1,3 +1,4 @@
+// src/components/features/Product/components/SellersList.tsx
 'use client';
 
 import { useState } from 'react';
@@ -11,6 +12,7 @@ import { useGetReportSubjects, useSubmitShopReport } from '@/domains/front/shop/
 import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
+import { toPersianDigits } from '@/core/utils/formatters';
 
 interface SellersListProps {
   activeSellers: any;
@@ -100,6 +102,20 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
     const isOnline = activeTab === 'online';
     const isSelected = isOnline && selectedSellerId === seller.id;
 
+    // محاسبه وضعیت تخفیف و درصد تخفیف فروشنده
+    const originalPriceRaw = seller.retailPriceRaw || 0;
+    const finalPriceRaw = seller.finalPriceRaw || 0;
+    const calculatedPercent =
+      originalPriceRaw > finalPriceRaw && originalPriceRaw > 0
+        ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+        : 0;
+
+    const discountPercent = seller.discountPercentage || calculatedPercent || 0;
+    const hasDiscount = !!(
+      (seller.hasDiscount || (originalPriceRaw > 0 && finalPriceRaw > 0 && originalPriceRaw > finalPriceRaw)) &&
+      discountPercent > 0
+    );
+
     return (
       <div
         key={seller.id}
@@ -181,9 +197,23 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
             </Button>
           )}
 
+          {/* بخش نمایش قیمت اصلی، بج تخفیف و قیمت نهایی */}
           <div className="flex flex-col items-end text-right mt-1">
-            <span className="text-sm md:text-base font-black text-foreground 
-            font-iran-yekan leading-none">{seller.finalPrice}</span>
+            {hasDiscount && (
+              <div className="flex items-center gap-1.5 mb-1 select-none">
+                <span className="bg-destructive/10 text-destructive text-[10px] md:text-[11px] font-black font-iran-yekan px-1.5 py-0.5 rounded-full leading-none">
+                  ٪{toPersianDigits(discountPercent)}
+                </span>
+                <span className="text-[10px] md:text-xs text-muted-foreground/70 line-through font-iran-yekan leading-none">
+                  {seller.retailPrice}
+                </span>
+              </div>
+            )}
+
+            <span className="text-sm md:text-base font-black text-foreground font-iran-yekan leading-none">
+              {seller.finalPrice}
+            </span>
+
             <button
               type="button"
               onClick={(e) => {
@@ -193,7 +223,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               }}
               className="text-[9px] md:text-[10px] font-bold font-iran-yekan 
               text-muted-foreground hover:text-destructive flex items-center
-               gap-0.5 mt-2.5 outline-none p-1 rounded-md"
+               gap-0.5 mt-2 outline-none p-1 rounded-md transition-colors"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
               <span>گزارش خطای قیمت</span>

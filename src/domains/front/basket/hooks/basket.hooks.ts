@@ -117,6 +117,22 @@ export function useSetBasketLocationAndPrice() {
   );
 }
 
+/*
+  هوک سازگار برای سایر کامپوننت‌ها (مانند AddressesList در پروفایل)
+  که بدون نیاز به تغییر در آن‌ها، آدرس را مستقیماً به سبد خرید وصل می‌کند
+*/
+export function useChangeBasketLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
 export function useSetBasketShipment() {
   const queryClient = useQueryClient();
   return useTypedMutation(
@@ -143,6 +159,7 @@ export function useApplyDiscountCode() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
     }
   );
@@ -155,6 +172,7 @@ export function useApplyReferralCode() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
     }
   );

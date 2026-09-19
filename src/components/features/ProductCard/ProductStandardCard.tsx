@@ -10,6 +10,7 @@ import { cn } from '@/design-system/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
 import { useImpression } from '@/shared/hooks/useImpression';
+import { trackShopProductClick } from '@/core/utils/impression-tracker';
 
 interface ProductStandardCardProps {
   product: any;
@@ -132,6 +133,11 @@ export function ProductStandardCard({
     if (isDragging) {
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+    // ثبت کلیک فروشنده برگزیده کالا
+    if (shopProductId) {
+      trackShopProductClick(shopProductId);
     }
   };
 
@@ -178,9 +184,7 @@ export function ProductStandardCard({
           />
           
           {showRating && (
-            <div className="absolute top-2 left-2
-             dark:bg-zinc-900/85  px-2 py-0.5 rounded-lg 
-              z-10 flex items-center justify-center">
+            <div className="absolute top-2 left-2 dark:bg-zinc-900/85 px-2 py-0.5 rounded-lg z-10 flex items-center justify-center">
               {renderStars()}
             </div>
           )}
@@ -199,12 +203,10 @@ export function ProductStandardCard({
           </div>
         )}
 
-        {/* بهینه‌سازی رندر تیکر بر اساس نوع دستگاه جهت رفع افت فریم موبایل */}
         <div className="w-full flex flex-col items-stretch select-none">
           {isMounted && tickerLength > 0 ? (
             <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
               
-              {/* انیمیشن تیکر فقط برای دسکتاپ */}
               <div className="hidden md:block w-full h-full relative">
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -221,7 +223,6 @@ export function ProductStandardCard({
                 </AnimatePresence>
               </div>
 
-              {/* رندر تیکر ایستا بدون بار انیمیشنی جاوا اسکریپت روی موبایل */}
               <div className="flex md:hidden items-center gap-1.5 font-iran-sans truncate w-full justify-start h-full">
                 <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>

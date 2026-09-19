@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, Trash2, Loader2, Store } from 'lucide-react';
+import { ShoppingCart, Trash2, Loader2, Store, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/primitives/Button';
 import { Badge } from '@/components/primitives/Badge';
-import { useGetBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
 
 export function CartButton() {
   const [mounted, setMounted] = useState(false);
   const { data: rawBasket } = useGetBasket();
+  const addToBasket = useAddToBasket();
   const deleteFromBasket = useDeleteFromBasket();
   const [activeLoadingId, setActiveLoadingId] = useState<string | null>(null);
 
@@ -22,6 +23,38 @@ export function CartButton() {
   const basket = mounted ? (rawBasket as any) : null;
   const itemCount = basket?.summary?.itemCount || 0;
 
+  // افزایش تعداد کالا (+)
+  const handleIncrease = async (e: React.MouseEvent, shopProductId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveLoadingId(shopProductId);
+    try {
+      await addToBasket.mutateAsync({ shopProductId, quantity: 1 });
+    } catch (err: any) {
+      showToast.error(err.userMessage || 'خطا در افزایش تعداد');
+    } finally {
+      setActiveLoadingId(null);
+    }
+  };
+
+  // کاهش تعداد کالا (-) یا حذف در صورت رسیدن به ۱
+  const handleDecrease = async (e: React.MouseEvent, shopProductId: string, currentQuantity: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveLoadingId(shopProductId);
+    try {
+      await deleteFromBasket.mutateAsync({ shopProductId, quantity: 1 });
+      if (currentQuantity === 1) {
+        showToast.success('قطعه از سبد خرید حذف شد');
+      }
+    } catch (err: any) {
+      showToast.error(err.userMessage || 'خطا در کاهش تعداد');
+    } finally {
+      setActiveLoadingId(null);
+    }
+  };
+
+  // حذف کامل مستقیم
   const handleRemove = async (e: React.MouseEvent, shopProductId: string, quantity: number) => {
     e.preventDefault();
     e.stopPropagation();
@@ -30,6 +63,7 @@ export function CartButton() {
       await deleteFromBasket.mutateAsync({ shopProductId, quantity });
       showToast.success('قطعه از سبد خرید حذف شد');
     } catch (err: any) {
+      showToast.error(err.userMessage || 'خطا در حذف قطعه');
     } finally {
       setActiveLoadingId(null);
     }
@@ -49,7 +83,11 @@ export function CartButton() {
         <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-xl" aria-label="سبد خرید">
           <ShoppingCart className="h-5 w-5 text-foreground" />
           {mounted && itemCount > 0 && (
-            <Badge variant="destructive" size="sm" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] font-bold rounded-full animate-in zoom-in duration-200">
+            <Badge
+              variant="destructive"
+              size="sm"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] font-bold rounded-full animate-in zoom-in duration-200"
+            >
               {itemCount}
             </Badge>
           )}
@@ -57,7 +95,7 @@ export function CartButton() {
       </Link>
 
       {mounted && (
-        <div className="absolute left-0 top-full pt-3 w-[360px] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex flex-col text-right origin-top-left">
+        <div className="absolute left-0 top-full pt-3 w-[380px] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex flex-col text-right origin-top-left">
           <div className="w-full bg-background border rounded-2xl shadow-2xl p-4 flex flex-col">
             {!basket || basket.isEmpty ? (
               <div className="w-full py-8 flex flex-col items-center justify-center text-center">
@@ -80,31 +118,64 @@ export function CartButton() {
                         <Store className="h-3.5 w-3.5 text-primary shrink-0" />
                         <span className="truncate">{sub.shop.title}</span>
                       </div>
+
                       {sub.items.map((item: any) => (
-                        <div key={item.id} className="flex items-center gap-3 py-2">
-                          <div className="w-11 h-11 rounded-lg border overflow-hidden shrink-0 bg-muted/10">
-                            <img src={getFullUrl(item.product.image)} className="w-full h-full object-contain" alt="" />
+                        <div key={item.id} className="flex items-center gap-3 py-2.5">
+                          <div className="w-12 h-12 rounded-lg border overflow-hidden shrink-0 bg-muted/10">
+                            <img
+                              src={getFullUrl(item.product.image)}
+                              className="w-full h-full object-contain"
+                              alt={item.product.title}
+                            />
                           </div>
+
                           <div className="flex-1 min-w-0 text-right">
                             <h5 className="text-xs font-bold text-foreground truncate">{item.product.title}</h5>
-                            <div className="flex items-center justify-between mt-1">
-                              <span className="text-[10px] text-muted-foreground font-iran-yekan">{new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد</span>
-                              <span className="text-xs font-black text-primary">{item.price.finalTotalPrice}</span>
-                            </div>
+                            <span className="text-xs font-black text-primary block mt-1">
+                              {item.price.finalTotalPrice}
+                            </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={(e) => handleRemove(e, item.shopProductId, item.quantity)}
-                            disabled={activeLoadingId === item.shopProductId}
-                            className="p-1.5 border hover:border-destructive/20 hover:bg-destructive/5 text-muted-foreground hover:text-destructive rounded-lg transition-all"
-                            aria-label="Remove"
+
+                          {/* کنترلرهای تعداد (+ / - / حذف) */}
+                          <div
+                            className="flex items-center gap-1 border rounded-lg p-0.5 bg-muted/20 shrink-0"
+                            dir="ltr"
                           >
-                            {activeLoadingId === item.shopProductId ? (
-                              <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                            ) : (
-                              <Trash2 className="h-3.5 w-3.5" />
-                            )}
-                          </button>
+                            {/* دکمه کاهش (-) یا حذف */}
+                            <button
+                              type="button"
+                              onClick={(e) => handleDecrease(e, item.shopProductId, item.quantity)}
+                              disabled={activeLoadingId === item.shopProductId}
+                              className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-background text-foreground hover:text-destructive transition-all disabled:opacity-40"
+                              title={item.quantity === 1 ? 'حذف' : 'کاهش'}
+                            >
+                              {item.quantity === 1 ? (
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              ) : (
+                                <Minus className="h-3 w-3" />
+                              )}
+                            </button>
+
+                            {/* نمایش تعداد یا لودینگ */}
+                            <span className="text-xs font-bold font-iran-yekan min-w-[22px] text-center">
+                              {activeLoadingId === item.shopProductId ? (
+                                <Loader2 className="h-3 w-3 animate-spin text-primary mx-auto" />
+                              ) : (
+                                new Intl.NumberFormat('fa-IR').format(item.quantity)
+                              )}
+                            </span>
+
+                            {/* دکمه افزایش (+) */}
+                            <button
+                              type="button"
+                              onClick={(e) => handleIncrease(e, item.shopProductId)}
+                              disabled={activeLoadingId === item.shopProductId || !item.canIncrease}
+                              className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-background text-foreground hover:text-primary transition-all disabled:opacity-40 disabled:hover:bg-transparent"
+                              title="افزایش"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -117,7 +188,12 @@ export function CartButton() {
                     <span className="text-sm font-black text-foreground">{basket.total.finalPrice}</span>
                   </div>
                   <Link href="/basket" className="w-full">
-                    <Button variant="primary" size="sm" fullWidth className="rounded-xl text-xs h-9 font-iran-yekan font-bold shadow-md shadow-primary/10 flex items-center justify-center gap-1">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      fullWidth
+                      className="rounded-xl text-xs h-9 font-iran-yekan font-bold shadow-md shadow-primary/10 flex items-center justify-center gap-1"
+                    >
                       <span>تسویه حساب</span>
                       <ArrowLeft className="h-3.5 w-3.5" />
                     </Button>
@@ -137,7 +213,7 @@ interface ArrowLeftProps extends React.SVGProps<SVGSVGElement> {}
 function ArrowLeft({ className, ...props }: ArrowLeftProps) {
   return (
     <svg
-      className={cn("h-3.5 w-3.5 text-white", className)}
+      className={cn('h-3.5 w-3.5 text-white', className)}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"

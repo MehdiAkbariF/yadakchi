@@ -1,5 +1,3 @@
-// src/components/features/Checkout/CheckoutContent.tsx
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -56,17 +54,22 @@ export function CheckoutContent() {
 
   const basket = rawBasket as any;
 
-  // مقداردهی اولیه شیوه‌های ارسال
+  // مقداردهی اولیه شیوه‌های ارسال مطابق با تمام گزینه‌های فعال (Tipax, DirectShipment, SnappBox, Local)
   useEffect(() => {
     if (basket?.subBaskets) {
       const initial: Record<string, string> = {};
       basket.subBaskets.forEach((sub: any) => {
+        const directPrice = sub.directShipmentPrice ?? sub.sellerShipmentPrice ?? 0;
+        const snappPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+
         if (sub.shipmentMethod) {
-          initial[sub.id] = sub.shipmentMethod;
+          initial[sub.id] = sub.shipmentMethod === 'Seller' ? 'DirectShipment' : sub.shipmentMethod;
         } else if (sub.tipaxShipmentPrice > 0) {
           initial[sub.id] = 'Tipax';
-        } else if (sub.sellerShipmentPrice > 0) {
-          initial[sub.id] = 'Seller';
+        } else if (directPrice > 0) {
+          initial[sub.id] = 'DirectShipment';
+        } else if (snappPrice > 0) {
+          initial[sub.id] = 'SnappBox';
         } else if (sub.isLocalShipmentAvailable) {
           initial[sub.id] = 'Local';
         }
@@ -111,20 +114,20 @@ export function CheckoutContent() {
 
     setIsSubmitting(true);
     try {
-      // ۱. ارسال لوکیشن برای استعلام و ذخیره در دیتابیس سرور
+      // ۱. ثبت لوکیشن در سرور
       try {
         await setBasketLocation.mutateAsync(activeAddress.id);
       } catch (locErr: any) {
         console.warn('[Checkout] Shipment price query warning:', locErr);
       }
 
-      // ۲. آماده‌سازی بدنه روش‌های ارسال
+      // ۲. آماده‌سازی پلود مطابق انوم دقیق سرور
       const methodsPayload = basket.subBaskets.map((sub: any) => ({
         subBasketId: sub.id,
         shipmentMethod: selectedMethods[sub.id] || 'Tipax',
       }));
 
-      // ۳. ثبت نهایی روش‌های ارسال در سرور
+      // ۳. ثبت نهایی روش‌های ارسال
       await setBasketShipment.mutateAsync({
         locationId: activeAddress.id,
         methods: methodsPayload,
@@ -139,14 +142,20 @@ export function CheckoutContent() {
     }
   };
 
+  // محاسبه هزینه کل ارسال بر اساس شیوه انتخاب‌شده
   const calculateShipmentTotals = () => {
     let total = 0;
     basket.subBaskets.forEach((sub: any) => {
       const method = selectedMethods[sub.id];
+      const directPrice = sub.directShipmentPrice ?? sub.sellerShipmentPrice ?? 0;
+      const snappPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+
       if (method === 'Tipax') {
         total += sub.tipaxShipmentPrice || 0;
-      } else if (method === 'Seller') {
-        total += sub.sellerShipmentPrice || 0;
+      } else if (method === 'DirectShipment' || method === 'Seller') {
+        total += directPrice;
+      } else if (method === 'SnappBox') {
+        total += snappPrice;
       }
     });
     return total;

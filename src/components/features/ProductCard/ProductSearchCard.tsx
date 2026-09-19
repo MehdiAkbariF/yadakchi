@@ -1,3 +1,5 @@
+// src/components/features/ProductCard/ProductSearchCard.tsx
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -11,6 +13,7 @@ import { showToast } from '@/core/utils/toast';
 import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useImpression } from '@/shared/hooks/useImpression';
+import { trackShopProductClick } from '@/core/utils/impression-tracker';
 
 interface ProductSearchCardProps {
   product: any;
@@ -180,19 +183,26 @@ export function ProductSearchCard({
     }
   };
 
+  const handleCardClick = () => {
+    if (shopProductId) {
+      trackShopProductClick(shopProductId);
+    }
+  };
+
   const ratingValue = product?.averageRate || product?.rating?.average || 5;
   const ratingCount = product?.rateCount || product?.rating?.count || 0;
 
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
-
   const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
 
   return (
     <div ref={impressionRef} className={cn("w-full transition-all select-none", className)}>
       
+      {/* نسخه دسکتاپ */}
       <Link 
         href={productCardUrl}
         prefetch={false}
+        onClick={handleCardClick}
         className="hidden md:flex w-full h-full flex-col bg-background rounded-xl border hover:border-primary/40 hover:shadow-md p-3 sm:p-3.5 relative select-none"
         draggable={false}
       >
@@ -342,9 +352,11 @@ export function ProductSearchCard({
         )}
       </Link>
 
+      {/* نسخه موبایل */}
       <Link
         href={productCardUrl}
         prefetch={false}
+        onClick={handleCardClick}
         className="md:hidden flex flex-col w-full bg-background border-b border-zinc-100 dark:border-zinc-800/80 py-4 px-0 relative select-none"
         draggable={false}
       >

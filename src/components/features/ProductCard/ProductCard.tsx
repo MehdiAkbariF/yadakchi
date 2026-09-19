@@ -1,187 +1,240 @@
-// src/components/features/ProductCard/ProductCard.tsx
+// src/components/features/ProductCard/ProductDealCard.tsx
 
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Heart, ShoppingCart, Star } from 'lucide-react';
+import Image from 'next/image';
+import { Star, Hourglass } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { Card, CardBody } from '@/components/composites/Card';
-import { Button } from '@/components/primitives/Button';
-import { Badge } from '@/components/primitives/Badge';
-import { Typography } from '@/components/primitives/Typography';
-import { ProductViewModel } from '@/domains/front/product/types/view.types';
+import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { useImpression } from '@/shared/hooks/useImpression';
+import { trackShopProductClick } from '@/core/utils/impression-tracker';
 
-export interface ProductCardProps {
-  product: ProductViewModel;
-  variant?: 'default' | 'compact' | 'horizontal';
-  onFavoriteToggle?: (productId: string) => void;
-  onAddToBasket?: (productId: string) => void;
+interface ProductDealCardProps {
+  product: any;
+  serverTime?: string | Date;
+  showTimer?: boolean;
+  showRating?: boolean;
   className?: string;
 }
 
-export function ProductCard({
+export function ProductDealCard({
   product,
-  variant = 'default',
-  onFavoriteToggle,
-  onAddToBasket,
-  className,
-}: ProductCardProps) {
-  const [isFavorite, setIsFavorite] = useState(product.isFavorite);
-  const [isLoading, setIsLoading] = useState(false);
+  serverTime,
+  showTimer = true,
+  showRating = true,
+  className
+}: ProductDealCardProps) {
+  const nominated = product?.nominatedShopProduct || {};
+  
+  const originalPriceRaw = nominated.rialRetailPrice || product.price || nominated.price || 0;
+  const finalPriceRaw = nominated.rialFinalPrice || product.discountPrice || nominated.discountPrice || 0;
 
-  const handleFavoriteToggle = () => {
-    setIsFavorite(!isFavorite);
-    onFavoriteToggle?.(product.id);
+  const originalPriceToman = Math.round(originalPriceRaw / 10);
+  const finalPriceToman = Math.round(finalPriceRaw / 10);
+
+  const hasDiscount = originalPriceRaw > finalPriceRaw;
+
+  const discountPercent = hasDiscount
+    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+    : (nominated.discountPercentage || 0);
+
+  const expirationStr = nominated.discountUntil || nominated.discountExpiration || product.discountExpiration;
+  const hasExpiration = !!expirationStr;
+
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+
+  const shopProductId = product?.shopProductId || nominated?.id || null;
+  
+  const impressionRef = useImpression(shopProductId);
+
+  useEffect(() => {
+    if (!hasExpiration) return;
+
+    const calculateTime = () => {
+      const serverDate = serverTime ? new Date(serverTime) : new Date();
+      const clientDate = new Date();
+      const timeOffset = serverDate.getTime() - clientDate.getTime();
+
+      const syncedNow = new Date(Date.now() + timeOffset);
+      const diff = +new Date(expirationStr) - +syncedNow;
+
+      if (diff > 0) {
+        setTimeLeft({
+          hours: Math.floor(diff / (1000 * 60 * 60)),
+          minutes: Math.floor((diff / 1000 / 60) % 60),
+          seconds: Math.floor((diff / 1000) % 60)
+        });
+      } else {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [expirationStr, serverTime, hasExpiration]);
+
+  const formatPersianDigits = (num: number) => {
+    return new Intl.NumberFormat('fa-IR', { useGrouping: false })
+      .format(num)
+      .padStart(2, '۰');
   };
 
-  const handleAddToBasket = () => {
-    setIsLoading(true);
-    onAddToBasket?.(product.id);
-    setTimeout(() => setIsLoading(false), 500);
+  const getFullUrl = (path: string | null) => {
+    if (!path) return '/placeholder.png';
+    if (path.startsWith('http')) return path;
+    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
   };
 
-  const isCompact = variant === 'compact';
-  const isHorizontal = variant === 'horizontal';
+  const formatPrice = (value: number) => {
+    return new Intl.NumberFormat('fa-IR').format(value);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const dx = Math.abs(e.clientX - dragStart.current.x);
+    const dy = Math.abs(e.clientY - dragStart.current.y);
+    if (dx > 6 || dy > 6) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      dragStart.current = { x: touch.clientX, y: touch.clientY };
+      setIsDragging(false);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      const dx = Math.abs(touch.clientX - dragStart.current.x);
+      const dy = Math.abs(touch.clientY - dragStart.current.y);
+      if (dx > 6 || dy > 6) {
+        setIsDragging(true);
+      }
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    // ثبت کلیک فروشنده برگزیده کالا
+    if (shopProductId) {
+      trackShopProductClick(shopProductId);
+    }
+  };
+
+  const renderStars = () => {
+    const rating = product.averageRate || 5;
+    return (
+      <div className="flex items-center gap-1 select-none">
+        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
+        <span className="text-[10px] sm:text-xs font-iran-yekan text-muted-foreground font-medium">امتیاز {rating}</span>
+      </div>
+    );
+  };
+
+  const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
 
   return (
-    <Card
-      className={cn(
-        'overflow-hidden transition-all hover:shadow-lg',
-        isHorizontal && 'flex flex-row',
-        className
-      )}
+    <Link 
+      href={productCardUrl} 
+      prefetch={false}
+      className="block w-full h-full select-none" 
+      draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onClick={handleClick}
     >
-      {/* Image Section */}
-      <div className={cn(
-        'relative',
-        isHorizontal ? 'w-1/3' : 'aspect-square w-full'
+      <div ref={impressionRef} className={cn(
+        "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
+        className
       )}>
-        <Link href={`/product/${product.code}`}>
-          <Image
-            src={product.images[0]?.medium || '/placeholder.png'}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        </Link>
         
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {product.discount.hasDiscount && (
-            <Badge variant="warning" size="sm">
-              {product.discount.percent}% تخفیف
-            </Badge>
-          )}
-          {product.metadata.isNew && (
-            <Badge variant="success" size="sm">
-              جدید
-            </Badge>
-          )}
-          {!product.inventory.isInStock && (
-            <Badge variant="destructive" size="sm">
-              ناموجود
-            </Badge>
-          )}
-        </div>
-
-        {/* Favorite Button */}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm hover:bg-white"
-          onClick={handleFavoriteToggle}
-        >
-          <Heart
-            className={cn(
-              'h-4 w-4 transition-colors',
-              isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'
-            )}
+        <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
+          <Image
+            src={getFullUrl(product.image)}
+            alt={product.imageAlt || product.title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+            className="object-contain rounded-lg select-none"
+            draggable={false}
           />
-        </Button>
-      </div>
+        </div>
 
-      {/* Content Section */}
-      <CardBody className={cn(
-        'flex flex-col gap-2',
-        isHorizontal ? 'w-2/3' : 'p-4'
-      )}>
-        {/* Shop Name */}
-        <Link
-          href={`/shops/${product.shop.id}`}
-          className="text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          {product.shop.name}
-        </Link>
+        <div className="w-full min-h-[2.6rem] mb-1 flex items-start justify-end select-none">
+          <h4 className="text-sm sm:text-sm font-bold font-iran-yekan text-foreground text-right line-clamp-2 leading-relaxed w-full">
+            {product.title}
+          </h4>
+        </div>
 
-        {/* Product Name */}
-        <Link href={`/product/${product.code}`}>
-          <Typography
-            variant={isCompact ? 'small' : 'h4'}
-            className={cn(
-              'line-clamp-2 hover:text-primary transition-colors',
-              isCompact && 'text-sm'
-            )}
-          >
-            {product.name}
-          </Typography>
-        </Link>
-
-        {/* Rating */}
-        <div className="flex items-center gap-1">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={cn(
-                  'h-3 w-3',
-                  i < product.rating.stars
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
-                )}
-              />
-            ))}
+        {showRating && (
+          <div className="w-full flex justify-start mb-3 mt-1.5 select-none">
+            {renderStars()}
           </div>
-          <span className="text-xs text-muted-foreground">
-            ({product.rating.count})
-          </span>
-        </div>
-
-        {/* Price */}
-        <div className="flex items-end gap-2 mt-auto">
-          {product.discount.hasDiscount ? (
-            <>
-              <Typography variant="h4" color="destructive">
-                {product.discount.discountedPrice}
-              </Typography>
-              <Typography variant="small" color="muted" className="line-through">
-                {product.discount.originalPrice}
-              </Typography>
-            </>
-          ) : (
-            <Typography variant="h4">
-              {product.price.formattedToman}
-            </Typography>
-          )}
-        </div>
-
-        {/* Actions */}
-        {!isCompact && (
-          <Button
-            variant="primary"
-            size="sm"
-            className="w-full mt-2"
-            onClick={handleAddToBasket}
-            isLoading={isLoading}
-            disabled={!product.inventory.isInStock}
-          >
-            <ShoppingCart className="ml-2 h-4 w-4" />
-            {product.inventory.isInStock ? 'افزودن به سبد' : 'ناموجود'}
-          </Button>
         )}
-      </CardBody>
-    </Card>
+
+        <div className="w-full mt-auto pt-2 flex items-center justify-between">
+          
+          <div className={cn(
+            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-yekan px-2.5 py-1 rounded-lg transition-opacity",
+            hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}>
+            {toPersianDigits(discountPercent)}٪
+          </div>
+
+          <div className="flex flex-col items-end min-w-0">
+            {hasDiscount && originalPriceToman > 0 && (
+              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-yekan font-medium">
+                {formatPrice(originalPriceToman)}
+              </span>
+            )}
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <span className="text-base sm:text-lg font-black font-iran-yekan text-foreground">
+                {formatPrice(finalPriceToman)}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-iran-yekan">تومان</span>
+            </div>
+          </div>
+
+        </div>
+
+        {showTimer && hasExpiration && (
+          <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-yekan border-t border-dashed">
+            
+            <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.hours)}</span>
+              <span className="text-muted-foreground">:</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.minutes)}</span>
+              <span className="text-muted-foreground">:</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.seconds)}</span>
+            </div>
+
+            <Hourglass className="h-3.5 w-3.5 text-primary shrink-0 animate-spin" />
+
+          </div>
+        )}
+
+      </div>
+    </Link>
   );
 }
