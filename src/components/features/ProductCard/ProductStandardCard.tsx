@@ -33,28 +33,61 @@ export function ProductStandardCard({
   }, []);
 
   const nominated = product?.nominatedShopProduct || {};
-  const shopProductId = product?.shopProductId || nominated?.id || null;
-
+  
+  // ✅ استخراج شناسه فروشگاه کالا (مستقیم از OpenSearch یا ساختار قدیمی)
+  const shopProductId = product?.shopProductId || nominated?.id || product?.id || null;
   const impressionRef = useImpression(shopProductId);
   
-  const shopName = nominated?.shopTitle || product?.shop?.name || product?.shopTitle || null;
-  const isTipax = nominated?.isTipaxShipping || product?.isTipaxShipping || false;
-  const isDirect = nominated?.isDirectShipping || product?.isDirectShipping || false;
+  // ✅ عنوان کالا
+  const title = product?.productTitle || product?.title || product?.name?.value || product?.name || '';
+
+  // ✅ نام فروشگاه
+  const shopName = product?.shopTitle || nominated?.shopTitle || product?.shop?.name || null;
+
+  const isTipax = product?.isTipaxShipping || nominated?.isTipaxShipping || false;
+  const isDirect = product?.isDirectShipping || nominated?.isDirectShipping || false;
   const salesCount = product?.totalSalesCount || product?.salesCount || 0;
   const views = product?.viewsAndClicks || product?.views || 0;
 
-  const originalPriceRaw = nominated.rialRetailPrice || product?.price?.raw || product?.price || nominated.price || 0;
-  const finalPriceRaw = nominated.rialFinalPrice || product?.discount?.discountedPriceRaw || product?.discountPrice || nominated.discountPrice || 0;
+  // ✅ استخراج هوشمند قیمت‌ها (پشتیبانی مستقیم از rialRetailPrice و rialFinalPrice در OpenSearch)
+  const originalPriceRaw = Number(
+    product?.rialRetailPrice ?? 
+    nominated?.rialRetailPrice ?? 
+    product?.price?.raw ?? 
+    (typeof product?.price === 'number' ? product.price : 0) ?? 
+    nominated?.price ?? 
+    0
+  );
+
+  const finalPriceRaw = Number(
+    product?.rialFinalPrice ?? 
+    nominated?.rialFinalPrice ?? 
+    product?.discount?.discountedPriceRaw ?? 
+    product?.discountPrice ?? 
+    nominated?.discountPrice ?? 
+    product?.price?.raw ?? 
+    (typeof product?.price === 'number' ? product.price : 0) ?? 
+    originalPriceRaw
+  );
 
   const originalPriceToman = Math.round(originalPriceRaw / 10);
   const finalPriceToman = Math.round(finalPriceRaw / 10);
   
-  const isOutOfStock = finalPriceRaw === 0;
-  const hasDiscount = originalPriceRaw > finalPriceRaw && !isOutOfStock;
+  // وضعیت موجودی انبار
+  const isOutOfStock = finalPriceRaw === 0 || (product?.quantity !== undefined && product.quantity === 0);
 
-  const discountPercent = hasDiscount
-    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
-    : (nominated.discountPercentage || product?.discount?.percent || 0);
+  // وضعیت تخفیف
+  const hasDiscount = 
+    product?.isDiscountApplied !== undefined 
+      ? product.isDiscountApplied 
+      : (originalPriceRaw > finalPriceRaw && !isOutOfStock);
+
+  // درصد تخفیف
+  const discountPercent = 
+    product?.discountPercentage ?? 
+    (hasDiscount && originalPriceRaw > 0 
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100) 
+      : (nominated?.discountPercentage || product?.discount?.percent || 0));
 
   const tickerItems = useMemo(() => {
     const items: { text: string; icon: any }[] = [];
@@ -154,7 +187,13 @@ export function ProductStandardCard({
   };
 
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
-  const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
+
+  // ✅ لینک‌دهی مطمئن با اولویت کد کالا و در صورت عدم وجود، استفاده از آیدی محصول OpenSearch
+  const codeOrId = product?.productCode || product?.code || product?.productId || product?.id;
+  const productCardUrl = getProductUrl(codeOrId, title);
+
+  // استخراج تصویر
+  const imageSource = product?.image || product?.images?.[0]?.medium || product?.images?.[0]?.url || product?.images?.[0] || null;
 
   return (
     <Link 
@@ -173,10 +212,11 @@ export function ProductStandardCard({
         className
       )}>
         
+        {/* تصویر کالا */}
         <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
           <Image
-            src={getFullUrl(product?.image || product?.images?.[0]?.medium)}
-            alt={product?.imageAlt || product?.title || product?.name}
+            src={getFullUrl(imageSource)}
+            alt={product?.imageAlt || title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
             className="object-contain rounded-lg select-none"
@@ -190,12 +230,14 @@ export function ProductStandardCard({
           )}
         </div>
 
+        {/* عنوان کالا */}
         <div className="w-full h-9 mb-1 mt-2">
           <h4 className="text-sm sm:text-sm font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed text-right w-full">
-            {product?.title || product?.name}
+            {title}
           </h4>
         </div>
 
+        {/* نام فروشگاه */}
         {shopName && (
           <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1">
             <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
@@ -203,10 +245,10 @@ export function ProductStandardCard({
           </div>
         )}
 
+        {/* تیکر اطلاعات تکمیلی (فروش موفق / تیپاکس و...) */}
         <div className="w-full flex flex-col items-stretch select-none">
           {isMounted && tickerLength > 0 ? (
             <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
-              
               <div className="hidden md:block w-full h-full relative">
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -218,7 +260,7 @@ export function ProductStandardCard({
                     className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
                   >
                     <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate font-medium text-right">{tickerItems[tickerIndex]?.text}</span>
+                    <span className="truncate font-medium text-right text-foreground">{tickerItems[tickerIndex]?.text}</span>
                   </motion.span>
                 </AnimatePresence>
               </div>
@@ -227,23 +269,23 @@ export function ProductStandardCard({
                 <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>
               </div>
-
             </div>
           ) : (
             <div className="h-6 mt-0.5 w-full shrink-0" />
           )}
         </div>
 
+        {/* باکس قیمت و تخفیف */}
         <div className="w-full mt-auto pt-2 flex items-center justify-between">
           <div className={cn(
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
-            hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
+            hasDiscount && discountPercent > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
             {toPersianDigits(discountPercent)}٪
           </div>
 
           <div className="flex flex-col items-end min-w-0">
-            {hasDiscount && originalPriceToman > 0 && (
+            {hasDiscount && originalPriceToman > finalPriceToman && (
               <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
                 {formatPrice(originalPriceToman)}
               </span>

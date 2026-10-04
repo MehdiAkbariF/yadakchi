@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ZoomIn, ZoomOut, RotateCcw, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, X, ChevronLeft, ChevronRight, Maximize2, ImageOff } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { toPersianDigits } from '@/core/utils/formatters';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 
 interface ProductGalleryProps {
   images: any[];
@@ -18,6 +18,10 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+
+  // فیلتر کردن مقادیر خالی یا undefined
+  const validImages = (images || []).filter(Boolean);
+  const safeIndex = activeIndex < validImages.length ? activeIndex : 0;
 
   useEffect(() => {
     if (!isFullscreenOpen) return;
@@ -59,25 +63,31 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
     }
   };
 
-  const getFullUrl = (path: any) => {
-    if (!path) return '/placeholder.png';
+  // ساخت آدرس استاندارد با تابع اصلی formatters
+  const resolveImageUrl = (item: any): string => {
+    if (!item) return '';
+    const rawPath = typeof item === 'string' ? item : item.url || item.image || '';
+    if (!rawPath) return '';
+    if (rawPath.startsWith('http')) return rawPath;
     
-    let cleanPath = '';
-    if (typeof path === 'string') {
-      cleanPath = path;
-    } else if (typeof path === 'object' && path !== null) {
-      cleanPath = path.image || path.url || path.imageUrl || path.medium || path.large || '';
+    // استفاده از getFullUrl رسمی پروژه
+    try {
+      return getFullUrl(rawPath);
+    } catch {
+      return `https://api.yadakchi.com${rawPath.startsWith('/') ? rawPath : `/${rawPath}`}`;
     }
-
-    if (!cleanPath) return '/placeholder.png';
-    if (cleanPath.startsWith('http')) return cleanPath;
-
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${path}`;
-    return `${base}${normalizedPath}`;
   };
 
-  if (images.length === 0) return null;
+  const currentImageUrl = resolveImageUrl(validImages[safeIndex]);
+
+  if (validImages.length === 0 || !currentImageUrl) {
+    return (
+      <div className="w-full aspect-[4/3] rounded-2xl border p-4 bg-muted/20 flex flex-col items-center justify-center text-muted-foreground gap-2">
+        <ImageOff className="h-10 w-10 opacity-40" />
+        <span className="text-xs font-iran-yekan">تصویری برای این کالا ثبت نشده است</span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-4 select-none">
@@ -91,8 +101,8 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
         )}
 
         <img
-          src={getFullUrl(images[activeIndex])}
-          alt={`${title} - ${activeIndex + 1}`}
+          src={currentImageUrl}
+          alt={`${title} - ${safeIndex + 1}`}
           onClick={() => setIsFullscreenOpen(true)}
           className="w-full h-full object-contain cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.01]"
         />
@@ -104,24 +114,29 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
         </button>
       </div>
 
-      {images.length > 1 && (
+      {validImages.length > 1 && (
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-          {images.map((img, idx) => (
-            <button
-              key={idx}
-              onClick={() => setActiveIndex(idx)}
-              className={cn(
-                "w-16 h-16 shrink-0 rounded-xl border p-1 bg-background overflow-hidden transition-all outline-none",
-                idx === activeIndex ? "border-primary ring-1 ring-primary scale-105" : "hover:border-zinc-300"
-              )}
-            >
-              <img
-                src={getFullUrl(img)}
-                alt=""
-                className="w-full h-full object-contain rounded-lg"
-              />
-            </button>
-          ))}
+          {validImages.map((img, idx) => {
+            const thumbUrl = resolveImageUrl(img);
+            if (!thumbUrl) return null;
+
+            return (
+              <button
+                key={idx}
+                onClick={() => setActiveIndex(idx)}
+                className={cn(
+                  "w-16 h-16 shrink-0 rounded-xl border p-1 bg-background overflow-hidden transition-all outline-none",
+                  idx === safeIndex ? "border-primary ring-1 ring-primary scale-105" : "hover:border-zinc-300"
+                )}
+              >
+                <img
+                  src={thumbUrl}
+                  alt=""
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -146,7 +161,7 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
                 className="w-full h-full max-w-4xl max-h-[75vh] p-4 flex items-center justify-center relative touch-none"
               >
                 <motion.img
-                  src={getFullUrl(images[activeIndex])}
+                  src={currentImageUrl}
                   alt=""
                   drag={zoomScale > 1}
                   dragConstraints={zoomScale > 1 ? false : { left: 0, right: 0, top: 0, bottom: 0 }}
@@ -154,9 +169,9 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
                   onDragEnd={(_, info) => {
                     if (zoomScale === 1) {
                       if (info.offset.x > 80) {
-                        setActiveIndex(prev => (prev - 1 + images.length) % images.length);
+                        setActiveIndex(prev => (prev - 1 + validImages.length) % validImages.length);
                       } else if (info.offset.x < -80) {
-                        setActiveIndex(prev => (prev + 1) % images.length);
+                        setActiveIndex(prev => (prev + 1) % validImages.length);
                       }
                     }
                   }}
@@ -175,11 +190,11 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
                 />
               </div>
 
-              {images.length > 1 && zoomScale === 1 && (
+              {validImages.length > 1 && zoomScale === 1 && (
                 <>
                   <button
                     onClick={() => {
-                      setActiveIndex(prev => (prev - 1 + images.length) % images.length);
+                      setActiveIndex(prev => (prev - 1 + validImages.length) % validImages.length);
                       handleResetZoom();
                     }}
                     className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-background border hover:bg-primary hover:text-white transition-all shadow-md outline-none"
@@ -188,7 +203,7 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
                   </button>
                   <button
                     onClick={() => {
-                      setActiveIndex(prev => (prev + 1) % images.length);
+                      setActiveIndex(prev => (prev + 1) % validImages.length);
                       handleResetZoom();
                     }}
                     className="hidden md:flex absolute left-6 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-background border hover:bg-primary hover:text-white transition-all shadow-md outline-none"

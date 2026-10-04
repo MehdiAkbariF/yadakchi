@@ -76,26 +76,36 @@ export interface ProductViewModel {
 }
 
 export interface SearchProductsRequest {
+  // فیلدهای OpenSearch
   searchTitle?: string;
+  brandIds?: string[];
+  partIds?: string[];
+  partCategoryIds?: string[];
+  carIds?: string[];
+  shopIds?: string[];
+  productCode?: number;
+  types?: Array<number | 'New' | 'Stock' | 'TakeOff'>;
+  fromPrice?: number;
+  toPrice?: number;
+  onlyInStock?: boolean;
+  onlyDiscounted?: boolean;
+  onlyDirectShipping?: boolean;
+  sortBy?: string;
+  sortDesc?: boolean;
+  includeAggregations?: boolean;
+
+  // فیلدهای قبلی جهت سازگاری کامل صفحات
   isProductInStock?: boolean;
   isSellerInUserCity?: boolean;
-  types?: Array<'New' | 'Stock' | 'TakeOff'>;
-  partCategoryIds?: string[];
   partCategoryEnglishTitle?: string;
   partEnglishTitle?: string;
   carModel?: string;
-  carIds?: string[];
-  partIds?: string[];
-  brandIds?: string[];
   shopId?: string;
   cityId?: string;
   hasDiscount?: boolean;
   hasDiscountWithExpiration?: boolean;
-  fromPrice?: number;
-  toPrice?: number;
   orderType?: 'Selected' | 'MostVisited' | 'Newest' | 'BestSelling' | 'Cheapest' | 'MostExpensive' | 'HighestRated';
   productDetails?: string;
-  productCode?: number;
   samePartByProductCode?: number;
   pageNumber?: number;
   pageSize?: number;

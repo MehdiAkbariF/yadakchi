@@ -6,31 +6,40 @@ import { ProductContent } from '@/components/features/Product/ProductContent';
 import { getFullUrl } from '@/core/utils/formatters';
 
 interface ProductPageProps {
-  params: { slug: string[] };
+  params: Promise<{ slug: string[] }> | { slug: string[] };
+}
+
+// استخراج ایمن کد محصول از اسلاگ
+async function extractProductCode(paramsPromise: ProductPageProps['params']): Promise<number> {
+  const resolvedParams = await Promise.resolve(paramsPromise);
+  const slugSegment = resolvedParams?.slug?.[0] || '';
+  const cleanCode = slugSegment.replace('ykp-', '').replace(/\D/g, '');
+  return parseInt(cleanCode, 10);
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const slugSegment = params.slug[0];
-  const productCode = parseInt(slugSegment.replace('ykp-', ''), 10);
+  const productCode = await extractProductCode(params);
+  if (!productCode || isNaN(productCode)) return { title: 'محصول یدک‌چی' };
+
   const productService = getProductService();
-  
   try {
     const pageData = await productService.getProductPageData(productCode);
-    if (!pageData) {
-      return { title: 'محصول یدک‌چی' };
-    }
+    if (!pageData) return { title: 'محصول یدک‌چی' };
+
     const product = pageData.product;
     const cleanDesc = product.seo?.description || product.description || '';
+    const resolvedParams = await Promise.resolve(params);
+
     return {
       title: `${product.title} | یدک‌چی`,
       description: cleanDesc.slice(0, 160),
       alternates: {
-        canonical: `https://www.yadakchi.com/product/${params.slug.join('/')}`,
+        canonical: `https://www.yadakchi.com/product/${resolvedParams.slug.join('/')}`,
       },
       openGraph: {
         title: `${product.title} | یدک‌چی`,
         description: cleanDesc.slice(0, 160),
-        url: `https://www.yadakchi.com/product/${params.slug.join('/')}`,
+        url: `https://www.yadakchi.com/product/${resolvedParams.slug.join('/')}`,
         siteName: 'یدک‌چی',
         locale: 'fa_IR',
         type: 'website',
@@ -50,26 +59,40 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const queryClient = new QueryClient();
-  const productService = getProductService();
-  const slugSegment = params.slug[0];
-  const productCode = parseInt(slugSegment.replace('ykp-', ''), 10);
+  const productCode = await extractProductCode(params);
 
-  let pageData = null;
+  if (!productCode || isNaN(productCode)) {
+    notFound();
+  }
+
+  // ایجاد QueryClient همراه با تنظیم staleTime برای جلوگیری از خالی شدن دیتا در کلاینت
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000, // ۵ دقیقه معتبر بودن دیتا در کلاینت بدون رفرش ناخواسته
+      },
+    },
+  });
+
+  const productService = getProductService();
 
   try {
-    pageData = await productService.getProductPageData(productCode);
+    // استفاده از prefetchQuery استاندارد TanStack
+    await queryClient.prefetchQuery({
+      queryKey: ['front', 'products', 'page-data', productCode],
+      queryFn: () => productService.getProductPageData(productCode),
+    });
   } catch (error: any) {
     if (error?.status === 404) {
       notFound();
     }
   }
 
+  const pageData: any = queryClient.getQueryData(['front', 'products', 'page-data', productCode]);
+
   if (!pageData) {
     notFound();
   }
-
-  queryClient.setQueryData(['front', 'products', 'page-data', productCode], pageData);
 
   const product = pageData.product;
   const sellers = [
@@ -81,7 +104,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ...(pageData.shopProducts.takeOffLocal || []),
   ];
 
-  const offers = sellers.map((s) => ({
+  const offers = sellers.map((s: any) => ({
     "@type": "Offer",
     "price": s.finalPriceRaw,
     "priceCurrency": "IRR",
@@ -93,20 +116,20 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   }));
 
-  const lowPrice = sellers.length > 0 ? Math.min(...sellers.map((s) => s.finalPriceRaw)) : 0;
-  const highPrice = sellers.length > 0 ? Math.max(...sellers.map((s) => s.finalPriceRaw)) : 0;
+  const lowPrice = sellers.length > 0 ? Math.min(...sellers.map((s: any) => s.finalPriceRaw)) : 0;
+  const highPrice = sellers.length > 0 ? Math.max(...sellers.map((s: any) => s.finalPriceRaw)) : 0;
 
   const schemaJson = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.title,
-    "image": product.gallery.length > 0 ? product.gallery.map((img) => getFullUrl(img)) : [getFullUrl(product.image)],
+    "image": product.gallery?.length > 0 ? product.gallery.map((img: string) => getFullUrl(img)) : [getFullUrl(product.image)],
     "description": product.description ? product.description.replace(/<[^>]*>/g, '') : '',
     "sku": product.partNumber || String(product.code),
     "mpn": product.partNumber || String(product.code),
     "brand": {
       "@type": "Brand",
-      "name": product.brand.name,
+      "name": product.brand?.name,
     },
     "aggregateRating": product.rateCount > 0 ? {
       "@type": "AggregateRating",
@@ -131,7 +154,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
       />
-      <ProductContent productCode={productCode} />
+      <ProductContent productCode={productCode} initialData={pageData} />
     </HydrationBoundary>
   );
 }

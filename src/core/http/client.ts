@@ -6,15 +6,9 @@ import { logger } from '../utils/logger';
 import { errorManager } from '../errors/error-manager';
 import { ApiError } from '../errors/api-error';
 import { HttpResponse, RequestOptions, HttpMethod } from './types';
-import http from 'http'; // ماژول بومی اتصال شبکه سرور
-import https from 'https'; // ماژول بومی اتصال امن سرور
+import http from 'http';
+import https from 'https';
 
-/*
-  بهینه‌سازی شبکه فوق حرفه‌ای در لایه سرور (Connection Pooling & Keep-Alive):
-  ایجاد مأمورهای اتصال زنده و مستمر در سمت سرور Node.js. با این تکنیک، کانکشن‌های فیزیکی 
-  TCP/SSL بین سرور فرانت‌اند و بک‌اند باز نگه‌داشته می‌شوند تا تاخیر دست‌دادن امن (SSL Handshake)
-  برای همیشه برطرف شده و انتقال بین صفحات در کسری از ثانیه انجام شود.
-*/
 const keepAliveHttpAgent = typeof window === 'undefined'
   ? new http.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 10, timeout: 60000 })
   : null;
@@ -44,7 +38,6 @@ export class HttpClient {
         'Accept': 'application/json',
         'X-App-Version': env.appVersion,
       },
-      // اعمال اتصال‌های زنده در سمت سرور جهت بهینه‌سازی سرعت پاسخ‌دهی
       httpAgent: keepAliveHttpAgent,
       httpsAgent: keepAliveHttpsAgent,
     });
@@ -187,9 +180,16 @@ export class HttpClient {
     }
 
     try {
+      // ✅ تشخیص اختصاصی آدرس برای اندپوینت‌های OpenSearch در SSR سرور
+      let requestBaseURL = this.axiosInstance.defaults.baseURL;
+      if (url.startsWith('/api/Search') && typeof window === 'undefined') {
+        requestBaseURL = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104';
+      }
+
       const config: AxiosRequestConfig = {
         method,
         url,
+        baseURL: requestBaseURL,
         params: options?.params,
         headers: options?.headers,
         timeout: options?.timeout ?? env.apiTimeout,

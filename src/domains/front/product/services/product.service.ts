@@ -5,66 +5,167 @@ import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { PRODUCT_ENDPOINTS } from '../endpoints/product.endpoints';
 import { ProductMapper } from '../mappers/product.mapper';
-import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel, ProductPageViewModel, PriceChartViewModel, CommentsAverageViewModel, CommentItemViewModel, InquiryItemViewModel } from '@/domains/front/product/types/view.types';
+import { 
+  SearchProductsRequest, 
+  ProductViewModel, 
+  ProductPriceChartViewModel, 
+  ProductPageViewModel, 
+  PriceChartViewModel, 
+  CommentsAverageViewModel, 
+  CommentItemViewModel, 
+  InquiryItemViewModel 
+} from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
-import { ProductPageResponseDto, PriceChartDto, CommentsAverageDto, CommentsResponseDto, InquiriesResponseDto } from '../types/dto.types';
+import { 
+  ProductPageResponseDto, 
+  PriceChartDto, 
+  CommentsAverageDto, 
+  CommentsResponseDto, 
+  InquiriesResponseDto, 
+  OpenSearchProductsResponseDto, 
+  OpenSearchProductsRequestDto
+} from '../types/dto.types';
+
+// ============================================
+// ماژول مبدل خودکار اسلاگ دسته‌بندی به GUID
+// ============================================
+let categorySlugToGuidMap: Map<string, string> | null = null;
+let categoryLookupPromise: Promise<Map<string, string>> | null = null;
+
+async function resolveCategoryGuid(httpClient: any, identifier: string): Promise<string> {
+  if (!identifier) return '';
+
+  // اگر شناسه وارد شده از قبل یک GUID معتبر است
+  const isGuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(identifier);
+  if (isGuid) {
+    return identifier;
+  }
+
+  const cleanSlug = identifier.trim().toLowerCase();
+
+  // اگر نقشه قبلاً در حافظه ایجاد شده بود
+  if (categorySlugToGuidMap && categorySlugToGuidMap.has(cleanSlug)) {
+    return categorySlugToGuidMap.get(cleanSlug) || identifier;
+  }
+
+  // واکشی لیست دسته‌بندی‌ها و کش کردن در حافظه (فقط یک‌بار)
+  if (!categoryLookupPromise) {
+    categoryLookupPromise = (async () => {
+      try {
+        const response = await httpClient.get('/api/Front/PartCategories', {
+          params: { CarId: '' }
+        });
+        const categories = Array.isArray(response.data) ? response.data : [];
+        const map = new Map<string, string>();
+
+        function traverse(items: any[]) {
+          items.forEach(cat => {
+            if (cat.englishTitle && cat.id) {
+              map.set(cat.englishTitle.trim().toLowerCase(), cat.id);
+            }
+            if (cat.name && cat.id) {
+              map.set(cat.name.trim().toLowerCase(), cat.id);
+            }
+            if (cat.children && Array.isArray(cat.children)) {
+              traverse(cat.children);
+            }
+          });
+        }
+
+        traverse(categories);
+        categorySlugToGuidMap = map;
+        return map;
+      } catch (err) {
+        logger.error('[ProductService] Failed to load categories for GUID resolution:', err);
+        return new Map<string, string>();
+      } finally {
+        categoryLookupPromise = null;
+      }
+    })();
+  }
+
+  const map = await categoryLookupPromise;
+  return map.get(cleanSlug) || identifier;
+}
 
 export class ProductService {
   private readonly httpClient = getHttpClient();
 
   async getNominatedProducts(cityId?: string): Promise<any> {
     try {
-      const response = await this.httpClient.get<any>(
+      const payload: OpenSearchProductsRequestDto = {
+        onlyInStock: true,
+        pageNumber: 1,
+        pageSize: 30,
+        includeAggregations: false,
+      };
+
+      const response = await this.httpClient.post<OpenSearchProductsResponseDto>(
         PRODUCT_ENDPOINTS.SEARCH_NOMINATED,
-        {
-          params: {
-            CityId: cityId || '',
-            PageNumber: 1,
-            PageSize: 30
-          }
-        }
+        payload
       );
-      return response.data;
+
+      const hits = response.data?.hits || [];
+      return {
+        products: {
+          items: hits,
+          totalCount: response.data?.total || hits.length,
+          currentPage: response.data?.pageNumber || 1,
+          pageSize: response.data?.pageSize || 30,
+        }
+      };
     } catch (error) {
+      logger.error('[ProductService] Get nominated products failed:', error);
       throw errorManager.normalize(error);
     }
   }
 
-  async getNominatedProductsByCategory(categoryEnglishTitle: string, cityId?: string): Promise<any> {
+  // ✅ متد ارتقایافته: حل خودکار اسلاگ (مثلاً audio-video-multimedia-system) به GUID معتبر
+  async getNominatedProductsByCategory(categoryIdOrSlug: string, cityId?: string): Promise<any> {
     try {
-      const response = await this.httpClient.get<any>(
+      const resolvedId = await resolveCategoryGuid(this.httpClient, categoryIdOrSlug);
+
+      const payload: OpenSearchProductsRequestDto = {
+        partCategoryIds: resolvedId ? [resolvedId] : undefined,
+        onlyInStock: true,
+        pageNumber: 1,
+        pageSize: 30,
+        includeAggregations: false,
+      };
+
+      const response = await this.httpClient.post<OpenSearchProductsResponseDto>(
         PRODUCT_ENDPOINTS.SEARCH_NOMINATED,
-        {
-          params: {
-            PartCategoryEnglishTitle: categoryEnglishTitle,
-            CityId: cityId || '',
-            PageNumber: 1,
-            PageSize: 30
-          }
-        }
+        payload
       );
-      return response.data;
+
+      const hits = response.data?.hits || [];
+      return {
+        products: {
+          items: hits,
+          totalCount: response.data?.total || hits.length,
+          currentPage: response.data?.pageNumber || 1,
+          pageSize: response.data?.pageSize || 30,
+        }
+      };
     } catch (error) {
+      logger.error('[ProductService] Get nominated products by category failed:', error);
       throw errorManager.normalize(error);
     }
   }
 
-  // ✅ متد جدید: دریافت محصولات چند دسته‌بندی با یک بار درخواست
   async getNominatedProductsByCategories(
-    categoryEnglishTitles: string[], 
+    categoryIdsOrSlugs: string[], 
     cityId?: string
   ): Promise<Record<string, any>> {
     try {
-      // ✅ اجرای موازی با حداکثر ۶ درخواست همزمان
       const results = await Promise.all(
-        categoryEnglishTitles.map(title =>
-          this.getNominatedProductsByCategory(title, cityId)
+        categoryIdsOrSlugs.map(id =>
+          this.getNominatedProductsByCategory(id, cityId)
         )
       );
 
-      // ✅ تبدیل به آبجکت
-      return categoryEnglishTitles.reduce((acc, title, index) => {
-        acc[title] = results[index];
+      return categoryIdsOrSlugs.reduce((acc, key, index) => {
+        acc[key] = results[index];
         return acc;
       }, {} as Record<string, any>);
     } catch (error) {
@@ -73,51 +174,65 @@ export class ProductService {
     }
   }
 
+  // ✅ جستجوی پیشرفته با حل خودکار دسته‌بندی‌ها به GUID
   async searchProducts(request: SearchProductsRequest): Promise<PaginatedResult<ProductViewModel>> {
     try {
-      const dto = ProductMapper.toDomainSearchRequest(request);
-      
-      const response = await this.httpClient.get<any>(
+      // اگر در درخواست partCategoryEnglishTitle وجود داشت ولی partCategoryIds خالی بود، خودکار به GUID تبدیل شود
+      if (request.partCategoryEnglishTitle && (!request.partCategoryIds || request.partCategoryIds.length === 0)) {
+        const resolved = await resolveCategoryGuid(this.httpClient, request.partCategoryEnglishTitle);
+        if (resolved) {
+          request.partCategoryIds = [resolved];
+        }
+      }
+
+      const payload = ProductMapper.toOpenSearchRequest(request);
+
+      const response = await this.httpClient.post<OpenSearchProductsResponseDto>(
         PRODUCT_ENDPOINTS.SEARCH_PRODUCTS,
-        { params: dto as Record<string, unknown> }
+        payload
       );
 
-      const productsData = response.data.products;
-      
-      if (!productsData || !productsData.items) {
+      const data = response.data;
+      const rawHits = data?.hits || (data as any)?.products?.items || (data as any)?.items || [];
+      const totalCount = data?.total ?? (data as any)?.totalCount ?? (data as any)?.products?.totalCount ?? 0;
+      const pageNumber = data?.pageNumber ?? (data as any)?.currentPage ?? request.pageNumber ?? 1;
+      const pageSize = data?.pageSize ?? (data as any)?.pageSize ?? request.pageSize ?? 30;
+      const totalPages = pageSize > 0 ? Math.ceil(totalCount / pageSize) : 0;
+
+      if (!rawHits || rawHits.length === 0) {
         return {
           items: [],
-          pageNumber: 1,
-          pageSize: 8,
-          totalCount: 0,
-          totalPages: 0,
+          pageNumber,
+          pageSize,
+          totalCount,
+          totalPages,
           hasNextPage: false,
           hasPreviousPage: false,
           hasMore: false,
-          from: 1,
+          from: 0,
           to: 0,
         };
       }
 
-      const items = productsData.items.map((item: any) => {
+      const items = rawHits.map((item: any) => {
         const domain = ProductMapper.toDomain(item);
         return ProductMapper.toView(domain);
       });
 
       return {
         items,
-        pageNumber: productsData.currentPage,
-        pageSize: productsData.pageSize,
-        totalCount: productsData.totalCount,
-        totalPages: productsData.totalPages,
-        hasNextPage: productsData.currentPage < productsData.totalPages,
-        hasPreviousPage: productsData.currentPage > 1,
-        hasMore: productsData.currentPage < productsData.totalPages,
-        from: (productsData.currentPage - 1) * productsData.pageSize + 1,
-        to: Math.min(productsData.currentPage * productsData.pageSize, productsData.totalCount),
+        pageNumber,
+        pageSize,
+        totalCount,
+        totalPages,
+        hasNextPage: pageNumber < totalPages,
+        hasPreviousPage: pageNumber > 1,
+        hasMore: pageNumber < totalPages,
+        from: (pageNumber - 1) * pageSize + 1,
+        to: Math.min(pageNumber * pageSize, totalCount),
       };
     } catch (error) {
-      logger.error('[ProductService] Search products failed:', error);
+      logger.error('[ProductService] Search products via OpenSearch failed:', error);
       throw errorManager.normalize(error);
     }
   }
@@ -355,7 +470,6 @@ export class ProductService {
       );
 
       const result = response.data;
-
       if (result === true || result === 'true') return true;
       if (result === false || result === 'false') return false;
 

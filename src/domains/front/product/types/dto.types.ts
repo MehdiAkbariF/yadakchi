@@ -217,3 +217,36 @@ export interface SearchProductKeywordItemApiDto {
 export interface SearchProductKeywordsResponseApiDto {
   searchProductKeywords: SearchProductKeywordItemApiDto[];
 }
+
+// ============================================
+// DTOهای جدید موتور جستجوی OpenSearch
+// ============================================
+export interface OpenSearchProductsRequestDto {
+  searchTitle?: string;
+  brandIds?: string[];
+  partIds?: string[];
+  partCategoryIds?: string[];
+  carIds?: string[];
+  shopIds?: string[];
+  productCode?: number;
+  types?: number[];
+  fromPrice?: number;
+  toPrice?: number;
+  onlyInStock?: boolean;
+  onlyDiscounted?: boolean;
+  onlyDirectShipping?: boolean;
+  sortBy?: string;
+  sortDesc?: boolean;
+  pageNumber?: number;
+  pageSize?: number;
+  includeAggregations?: boolean;
+}
+
+export interface OpenSearchProductsResponseDto {
+  total: number;
+  pageNumber: number;
+  pageSize: number;
+  took: number;
+  hits: any[];
+  aggregations?: any;
+}

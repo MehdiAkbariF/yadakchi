@@ -3,8 +3,8 @@ export const PRODUCT_ENDPOINTS = {
   GET_RELATED_PRODUCTS: '/api/Front/ProductRelatedProducts',
   GET_PRICE_CHART: '/api/Front/ProductPriceChart',
   IS_FAVORITE: '/api/Front/IsUserFavoriteProduct',
-  SEARCH_PRODUCTS: '/api/Front/SearchProducts',
-  SEARCH_NOMINATED: '/api/Front/SearchProducts',
+  SEARCH_PRODUCTS: '/api/Search/products',   // ✅ OpenSearch جدید
+  SEARCH_NOMINATED: '/api/Search/products',  // ✅ این هم به OpenSearch جدید متصل شد
   SEARCH_KEYWORDS: '/api/Front/SearchProductKeywords',
   SEARCH_SUGGESTIONS: '/api/Front/SearchProductSuggestion',
   SEARCH_HISTORY: '/api/Front/SearchProductHistory',

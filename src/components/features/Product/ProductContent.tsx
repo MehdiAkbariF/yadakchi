@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useGetProductPageData } from '@/domains/front/product/hooks/product.hooks';
 import { useAddToBasket as useGlobalAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
@@ -25,13 +25,37 @@ import Link from 'next/link';
 
 interface ProductContentProps {
   productCode: number;
+  initialData?: any; // دیتای اولیه سرور برای تضمین عدم پرش در رفرش
 }
 
-export function ProductContent({ productCode }: ProductContentProps) {
+export function ProductContent({ productCode, initialData }: ProductContentProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: pageData, isLoading } = useGetProductPageData(productCode);
-  const [selectedCondition, setSelectedCondition] = useState<'New' | 'Stock' | 'TakeOff'>('New');
+  
+  // دریافت دیتا از ری‌اکت کوئری با دیتای اولیه
+  const { data: clientData, isLoading } = useGetProductPageData(productCode);
+  
+  // همیشه دیتای معتبر (چه سرور و چه کلاینت) در اولویت است
+  const pageData = clientData || initialData;
+
+  // محاسبه هوشمند تب انتخابی: اگر کالای نو نبود، به تب استوک یا دست‌دوم برود تا خالی نمایش ندهد
+  const defaultCondition = useMemo((): 'New' | 'Stock' | 'TakeOff' => {
+    if (!pageData?.shopProducts) return 'New';
+    const sp = pageData.shopProducts;
+    
+    const hasNew = (sp.newOnline?.length || 0) + (sp.newLocal?.length || 0) > 0 || !!sp.newNominated;
+    if (hasNew) return 'New';
+
+    const hasStock = (sp.stockOnline?.length || 0) + (sp.stockLocal?.length || 0) > 0 || !!sp.stockNominated;
+    if (hasStock) return 'Stock';
+
+    const hasTakeOff = (sp.takeOffOnline?.length || 0) + (sp.takeOffLocal?.length || 0) > 0 || !!sp.takeOffNominated;
+    if (hasTakeOff) return 'TakeOff';
+
+    return 'New';
+  }, [pageData]);
+
+  const [selectedCondition, setSelectedCondition] = useState<'New' | 'Stock' | 'TakeOff'>(defaultCondition);
   const [activeSellerId, setActiveSellerId] = useState<string | null>(null);
   const [isIntroExpanded, setIsIntroExpanded] = useState(false);
   const [activeSection, setActiveSection] = useState('intro');
@@ -44,6 +68,13 @@ export function ProductContent({ productCode }: ProductContentProps) {
   const specsRef = useRef<HTMLDivElement>(null);
   const commentsRef = useRef<HTMLDivElement>(null);
   const inquiriesRef = useRef<HTMLDivElement>(null);
+
+  // هماهنگ‌سازی تب با موجودی به محض رسیدن دیتای کامل
+  useEffect(() => {
+    if (pageData && defaultCondition) {
+      setSelectedCondition(defaultCondition);
+    }
+  }, [defaultCondition]);
 
   useEffect(() => {
     const handleScrollSpy = () => {
@@ -79,37 +110,42 @@ export function ProductContent({ productCode }: ProductContentProps) {
     return () => clearInterval(interval);
   }, [pageData]);
 
-  if (isLoading || !pageData) {
+  // اگر حتی بعد از بررسی، هیچ دیتایی نبود اسکلتون نشان داده شود
+  if (!pageData && isLoading) {
     return <ProductPageSkeleton />;
   }
 
+  if (!pageData) {
+    return null;
+  }
+
   const product = pageData.product;
-  const sellersGroup = pageData.shopProducts;
+  const sellersGroup = pageData.shopProducts || {};
 
   const getSellersForCondition = () => {
     if (selectedCondition === 'Stock') {
       return {
-        nominated: sellersGroup.stockNominated,
-        online: sellersGroup.stockOnline,
-        local: sellersGroup.stockLocal,
+        nominated: sellersGroup.stockNominated || null,
+        online: sellersGroup.stockOnline || [],
+        local: sellersGroup.stockLocal || [],
       };
     }
     if (selectedCondition === 'TakeOff') {
       return {
-        nominated: sellersGroup.takeOffNominated,
-        online: sellersGroup.takeOffOnline,
-        local: sellersGroup.takeOffLocal,
+        nominated: sellersGroup.takeOffNominated || null,
+        online: sellersGroup.takeOffOnline || [],
+        local: sellersGroup.takeOffLocal || [],
       };
     }
     return {
-      nominated: sellersGroup.newNominated,
-      online: sellersGroup.newOnline,
-      local: sellersGroup.newLocal,
+      nominated: sellersGroup.newNominated || null,
+      online: sellersGroup.newOnline || [],
+      local: sellersGroup.newLocal || [],
     };
   };
 
   const activeSellers = getSellersForCondition();
-  const allAvailableSellersList = [...activeSellers.online, ...activeSellers.local];
+  const allAvailableSellersList = [...(activeSellers.online || []), ...(activeSellers.local || [])];
 
   const currentSelectedSeller =
     allAvailableSellersList.find((s) => s.id === activeSellerId) ||
@@ -141,7 +177,7 @@ export function ProductContent({ productCode }: ProductContentProps) {
     }
   };
 
-  const galleryImages = product.gallery.length > 0 ? product.gallery : [product.image];
+  const galleryImages = product.gallery && product.gallery.length > 0 ? product.gallery : [product.image];
 
   const originalPriceRaw = currentSelectedSeller?.retailPriceRaw || 0;
   const finalPriceRaw = currentSelectedSeller?.finalPriceRaw || 0;
@@ -196,12 +232,12 @@ export function ProductContent({ productCode }: ProductContentProps) {
         <Link href="/" className="hover:text-primary transition-colors">
           خانه
         </Link>
-        {product.breadCrumbs.map((crumb, idx) => {
+        {product.breadCrumbs?.map((crumb: any, idx: number) => {
           const isLast = idx === product.breadCrumbs.length - 1;
           const url = isLast ? getProductUrl(product.code, product.title) : `/part-category/${crumb.englishTitle}`;
 
           return (
-            <div key={crumb.id} className="flex items-center gap-1.5">
+            <div key={crumb.id || idx} className="flex items-center gap-1.5">
               <ChevronLeft className="h-3.5 w-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
               {isLast ? (
                 <span className="text-foreground font-bold truncate max-w-[180px] md:max-w-none">

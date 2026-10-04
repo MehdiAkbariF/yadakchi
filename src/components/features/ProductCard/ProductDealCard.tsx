@@ -27,19 +27,45 @@ export function ProductDealCard({
 }: ProductDealCardProps) {
   const nominated = product?.nominatedShopProduct || {};
   
-  const originalPriceRaw = nominated.rialRetailPrice || product.price || nominated.price || 0;
-  const finalPriceRaw = nominated.rialFinalPrice || product.discountPrice || nominated.discountPrice || 0;
+  // ✅ استخراج هوشمند و منعطف عنوان محصول
+  const title = product?.productTitle || product?.title || product?.name?.value || product?.name || '';
+
+  // ✅ استخراج قیمت‌ها (سازگار با OpenSearch، ViewModel و ساختار قدیمی)
+  const originalPriceRaw = 
+    product?.rialRetailPrice ?? 
+    product?.price?.raw ?? 
+    product?.price ?? 
+    nominated?.rialRetailPrice ?? 
+    nominated?.price ?? 
+    0;
+
+  const finalPriceRaw = 
+    product?.rialFinalPrice ?? 
+    product?.discountPrice ?? 
+    nominated?.rialFinalPrice ?? 
+    nominated?.discountPrice ?? 
+    originalPriceRaw;
 
   const originalPriceToman = Math.round(originalPriceRaw / 10);
   const finalPriceToman = Math.round(finalPriceRaw / 10);
 
-  const hasDiscount = originalPriceRaw > finalPriceRaw;
+  // ✅ بررسی وضعیت تخفیف
+  const hasDiscount = 
+    product?.isDiscountApplied !== undefined 
+      ? product.isDiscountApplied 
+      : (originalPriceRaw > finalPriceRaw && finalPriceRaw > 0);
 
-  const discountPercent = hasDiscount
-    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
-    : (nominated.discountPercentage || 0);
+  // ✅ درصد تخفیف
+  const discountPercent = 
+    product?.discountPercentage ?? 
+    product?.discount?.percent ?? 
+    nominated?.discountPercentage ?? 
+    (hasDiscount && originalPriceRaw > 0 
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100) 
+      : 0);
 
-  const expirationStr = nominated.discountUntil || nominated.discountExpiration || product.discountExpiration;
+  // استخراج تاریخ انقضا برای تایمر شگفت‌انگیز
+  const expirationStr = nominated.discountUntil || nominated.discountExpiration || product?.discountExpiration;
   const hasExpiration = !!expirationStr;
 
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
@@ -47,8 +73,8 @@ export function ProductDealCard({
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
-  const shopProductId = product?.shopProductId || nominated?.id || null;
-  
+  // شناسه فروشگاه برای ثبت Impression
+  const shopProductId = product?.shopProductId || nominated?.id || product?.id || null;
   const impressionRef = useImpression(shopProductId);
 
   useEffect(() => {
@@ -136,21 +162,28 @@ export function ProductDealCard({
   };
 
   const renderStars = () => {
-    const rating = product.averageRate || 5;
+    const rating = product?.averageRate || product?.rating?.average || 5;
     return (
       <div className="flex items-center gap-1 select-none">
         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
-        <span className="text-[10px] sm:text-xs font-iran-yekan text-muted-foreground font-medium">امتیاز {rating}</span>
+        <span className="text-[10px] sm:text-xs font-iran-yekan text-muted-foreground font-medium">
+          امتیاز {toPersianDigits(rating)}
+        </span>
       </div>
     );
   };
 
-  const productCardUrl = getProductUrl(product?.productCode || product?.code, product?.title || product?.name);
+  // ✅ لینک‌دهی مطمئن حتی اگر productCode وجود نداشته باشد (استفاده از productId)
+  const codeOrId = product?.productCode || product?.code || product?.productId || product?.id;
+  const productCardUrl = getProductUrl(codeOrId, title);
+
+  // استخراج تصویر
+  const imageSource = product?.image || product?.images?.[0]?.medium || product?.images?.[0]?.url || product?.images?.[0] || null;
 
   return (
     <Link 
       href={productCardUrl} 
-      prefetch={false} // غیرفعال کردن پیش‌دانلود کدهای فرعی برای آزادسازی ترافیک شبکه موبایل
+      prefetch={false}
       className="block w-full h-full select-none" 
       draggable={false}
       onMouseDown={handleMouseDown}
@@ -159,15 +192,18 @@ export function ProductDealCard({
       onTouchMove={handleTouchMove}
       onClick={handleClick}
     >
-      <div ref={impressionRef} className={cn(
-        "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
-        className
-      )}>
-        
+      <div 
+        ref={impressionRef} 
+        className={cn(
+          "w-full h-full bg-background rounded-xl border hover:border-primary/40 hover:shadow-md transition-all duration-300 p-3 sm:p-3.5 flex flex-col items-center relative select-none",
+          className
+        )}
+      >
+        {/* تصویر کالا */}
         <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
           <Image
-            src={getFullUrl(product.image)}
-            alt={product.imageAlt || product.title}
+            src={getFullUrl(imageSource)}
+            alt={product?.imageAlt || title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
             className="object-contain rounded-lg select-none"
@@ -175,29 +211,31 @@ export function ProductDealCard({
           />
         </div>
 
+        {/* عنوان کالا */}
         <div className="w-full min-h-[2.6rem] mb-1 flex items-start justify-end select-none">
           <h4 className="text-sm sm:text-sm font-bold font-iran-yekan text-foreground text-right line-clamp-2 leading-relaxed w-full">
-            {product.title}
+            {title}
           </h4>
         </div>
 
+        {/* امتیاز */}
         {showRating && (
           <div className="w-full flex justify-start mb-3 mt-1.5 select-none">
             {renderStars()}
           </div>
         )}
 
+        {/* باکس قیمت و درصد تخفیف */}
         <div className="w-full mt-auto pt-2 flex items-center justify-between">
-          
           <div className={cn(
             "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-yekan px-2.5 py-1 rounded-lg transition-opacity",
-            hasDiscount ? "opacity-100" : "opacity-0 pointer-events-none"
+            hasDiscount && discountPercent > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
           )}>
             {toPersianDigits(discountPercent)}٪
           </div>
 
           <div className="flex flex-col items-end min-w-0">
-            {hasDiscount && originalPriceToman > 0 && (
+            {hasDiscount && originalPriceToman > finalPriceToman && (
               <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-yekan font-medium">
                 {formatPrice(originalPriceToman)}
               </span>
@@ -209,25 +247,28 @@ export function ProductDealCard({
               <span className="text-[10px] text-muted-foreground font-iran-yekan">تومان</span>
             </div>
           </div>
-
         </div>
 
+        {/* تایمر تخفیف در صورت وجود انقضا */}
         {showTimer && hasExpiration && (
           <div className="w-full mt-2.5 pt-1.5 flex items-center justify-between text-muted-foreground/80 font-iran-yekan border-t border-dashed">
-            
             <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.hours)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">
+                {formatPersianDigits(timeLeft.hours)}
+              </span>
               <span className="text-muted-foreground">:</span>
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.minutes)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">
+                {formatPersianDigits(timeLeft.minutes)}
+              </span>
               <span className="text-muted-foreground">:</span>
-              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">{formatPersianDigits(timeLeft.seconds)}</span>
+              <span className="bg-muted dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[11px] font-iran-yekan">
+                {formatPersianDigits(timeLeft.seconds)}
+              </span>
             </div>
 
             <Hourglass className="h-3.5 w-3.5 text-primary shrink-0 animate-spin" />
-
           </div>
         )}
-
       </div>
     </Link>
   );

@@ -4,7 +4,7 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { queryClient } from '@/lib/react-query/query-client';
+import { getQueryClient } from '@/lib/react-query/query-client';
 import { env } from '@/core/config/env';
 
 interface QueryProviderProps {
@@ -12,6 +12,9 @@ interface QueryProviderProps {
 }
 
 export function QueryProvider({ children }: QueryProviderProps) {
+  // استفاده از کلاینت پایدار که با رفرش دیتایش از بین نمی‌رود
+  const queryClient = getQueryClient();
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}

@@ -31,7 +31,7 @@ export function useGetNominatedProducts() {
 }
 
 export function useGetNominatedProductsByCategory(
-  categoryEnglishTitle: string,
+  categoryId: string,
   options?: Omit<UseQueryOptions<any, any>, 'queryKey' | 'queryFn'>
 ) {
   const selectedCity = useAppStore((state) => state.selectedCity);
@@ -44,12 +44,12 @@ export function useGetNominatedProductsByCategory(
   const cityId = mounted ? selectedCity?.id : null;
 
   return useTypedQuery<any>(
-    ['front', 'products', 'nominated-category', categoryEnglishTitle, cityId || null],
-    () => productService.getNominatedProductsByCategory(categoryEnglishTitle, cityId || undefined),
+    ['front', 'products', 'nominated-category', categoryId, cityId || null],
+    () => productService.getNominatedProductsByCategory(categoryId, cityId || undefined),
     {
       staleTime: 5 * 60 * 1000,
       ...options,
-      enabled: !!categoryEnglishTitle && (options?.enabled !== false),
+      enabled: !!categoryId && (options?.enabled !== false),
     }
   );
 }

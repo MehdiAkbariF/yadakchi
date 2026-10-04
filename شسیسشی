@@ -1,0 +1,28 @@
+# ============================================
+# 🎯 YADAKCHI - Local Development Environment
+# ============================================
+
+# --- API Configuration ---
+# آدرس اصلی بک‌اند (محلی)
+NEXT_PUBLIC_API_BASE_URL=https://api.yadakchi.local
+
+# آدرس سرور جستجوی OpenSearch (از سرور شما)
+NEXT_PUBLIC_SEARCH_API_BASE_URL=http://172.92.92.237:7104
+
+# --- Timeout (milliseconds) ---
+NEXT_PUBLIC_API_TIMEOUT=30000
+
+# --- Environment ---
+NODE_ENV=development
+
+# --- Logging & DevTools ---
+NEXT_PUBLIC_ENABLE_LOGGING=true
+NEXT_PUBLIC_ENABLE_DEV_TOOLS=true
+
+# --- App Info ---
+NEXT_PUBLIC_APP_NAME=Yadakchi Marketplace
+NEXT_PUBLIC_APP_VERSION=1.0.0
+
+# --- Pagination ---
+NEXT_PUBLIC_DEFAULT_PAGE_SIZE=30
+NEXT_PUBLIC_MAX_PAGE_SIZE=100

@@ -10,10 +10,6 @@ import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { BestsellersContent } from '@/components/features/Bestsellers/BestsellersContent';
 
-/* 
-  صفحه پرفروش‌ترین‌ها به صورت کاملاً استاتیک و دوره‌ای (ISR) کش می‌شود 
-  تا سنگین‌ترین کوئری‌های فیلتر فروش برتر مستقیماً از روی کش با سرعت برق‌آسا لود شوند.
-*/
 export const revalidate = 60;
 
 export default async function BestsellersPage() {

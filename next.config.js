@@ -2,18 +2,10 @@
 
 /** @type {import('next').NextConfig} */
 const withPWA = require('@ducanh2912/next-pwa').default({
-  dest: 'public', // مسیر فایل‌های تولید شده سرویس‌ورکر
-  register: true, // ثبت خودکار سرویس‌ورکر روی مرورگر کاربر
-  skipWaiting: true, // فعال‌سازی آنی آپدیت‌های جدید اپلیکیشن بدون نیاز به بستن تب
-  
-  disable: process.env.NODE_ENV === 'development', // غیرفعال بودن PWA در محیط لوکال جهت جلوگیری از اختلال کش کدهای در حال ویرایش
-
-  /* 
-    بهینه‌سازی فوق‌العاده سخت‌گیرانه پیش‌دانلود PWA (Precache Exclusion):
-    در این بخش تمامی فایل‌های حجیم رسانه‌ای، تصاویر (PNG, JPG, WebP, SVG, GIF)،
-    پوشه‌های فونت با حروف بزرگ و کوچک (Font, font)، ویدیوها و آیکون‌ها را از لیست دانلود اولیه سرویس‌ورکر خارج کرده‌ایم.
-    این کار مانع از مسدود شدن اینترنت و پردازنده موبایل کاربر در اولین لود صفحه اصلی می‌شود.
-  */
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
   publicExcludes: [
     '!Font/**/*',
     '!font/**/*',
@@ -23,9 +15,8 @@ const withPWA = require('@ducanh2912/next-pwa').default({
     '!banner/**/*',
     '!**/*.{png,jpg,jpeg,gif,webp,svg,mp4,webm,pdf,ico}'
   ], 
-  
   workboxOptions: {
-    disableDevLogs: true, // غیرفعال کردن لاگ‌های سنگین ورک‌باکس در کنسول مرورگر
+    disableDevLogs: true,
   },
 });
 
@@ -33,32 +24,27 @@ const nextConfig = {
   reactStrictMode: true,
 
   typescript: {
-    ignoreBuildErrors: true, // نادیده گرفتن خطاهای تایپ‌اسکریپت در زمان بیلد جهت تسریع فرآیند دپلوی
+    ignoreBuildErrors: true,
   },
 
   eslint: {
-    ignoreDuringBuilds: true, // نادیده گرفتن خطاهای ESLint در زمان بیلد
+    ignoreDuringBuilds: true,
   },
 
   images: {
-    /* 
-      انقلاب پرفورمنس و آزاد کردن ۱۰۰٪ سی‌پی‌یو سرور پروژه (Bypass Next.js Image Optimizer):
-      با فعال‌سازی unoptimized، فرآیند فوق‌العاده سنگین فشرده‌سازی محلی تصاویر روی سرور Next.js را متوقف می‌کنیم.
-      مرورگر تصاویر را به صورت مستقیم و بدون کوچک‌ترین وقفه پردازشی از CDN پرسرعت شما دانلود می‌کند.
-      این کار سرعت سرور را آزاد کرده و انتقال بین صفحات هنگام کلیک را کاملاً آنی (زیر ۵۰ میلی‌ثانیه) می‌کند.
-    */
     unoptimized: true,
-
     remotePatterns: [
       { protocol: 'https', hostname: 'api.yadakchi.com' },
       { protocol: 'https', hostname: 'cdn.yadakchi.com' },
       { protocol: 'http', hostname: '51.158.252.139' },
+      { protocol: 'http', hostname: '172.92.92.237' },
     ],
-    formats: ['image/avif', 'image/webp'], // پشتیبانی از مدرن‌ترین و سبک‌ترین فرمت‌های تصویر روی مرورگرها
+    formats: ['image/avif', 'image/webp'],
   },
 
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_SEARCH_API_BASE_URL: process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104',
     NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
     NEXT_PUBLIC_ENABLE_LOGGING: process.env.NEXT_PUBLIC_ENABLE_LOGGING,
     NEXT_PUBLIC_ENABLE_DEV_TOOLS: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
@@ -69,14 +55,22 @@ const nextConfig = {
   },
 
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production', // حذف دستورات console.log در پروداکشن جهت بهبود پرفورمنس کلینت
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // تنظیم قوانین پروکسی جهت دور زدن محدودیت‌های مرورگر و CORS
+  // تنظیم تفکیک‌شده پروکسی: جستجو به پورت ۷۱۰۴ و سایر APIها به سرور اصلی
   async rewrites() {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com';
+    const searchApiBaseUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104';
     
     return [
+      // ۱. هدایت تمام درخواست‌های سرچ به سرور اختصاصی OpenSearch
+      {
+        source: '/proxy-api/api/Search/:path*',
+        destination: `${searchApiBaseUrl}/api/Search/:path*`,
+        basePath: false,
+      },
+      // ۲. هدایت سایر درخواست‌های اپلیکیشن به سرور عمومی
       {
         source: '/proxy-api/:path*',
         destination: `${apiBaseUrl}/:path*`,
@@ -94,12 +88,6 @@ const nextConfig = {
       },
     ];
   },
-
-  /* 
-    نکته پایداری بیلد داکر:
-    در صورت نیاز به بیلد تحت کانتینر داکر بر روی سرور لینوکس، خط زیر را از کامنت خارج کنید.
-  */
-  // output: 'standalone',
 
   logging: {
     fetches: {
