@@ -1,231 +1,404 @@
+/* ============================================================================
+   🎨 YADAKCHI GLOBAL STYLES v2.0
+   ============================================================================
+   
+   ساختار:
+   1. Tailwind Directives
+   2. Font Declarations
+   3. CSS Variables (Light Theme)
+   4. Dark Theme Overrides
+   5. Base Styles
+   6. Component Styles
+   7. Utility Classes
+   ============================================================================ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   1️⃣ FONT DECLARATIONS — IRANYekan
+   ============================================================================ */
+
+/* ─── Thin (100) ─── */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Thin.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff');
+  src: url('/Font/IranYekan/woff2/IRANYekanXFaNum-Thin.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanXFaNum-Thin.woff') format('woff');
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 
+/* ─── Light (300) ─── */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Light.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff');
+  src: url('/Font/IranYekan/woff2/IRANYekanXFaNum-Light.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanXFaNum-Light.woff') format('woff');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
+/* ─── Regular (400) ─── */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn.woff') format('woff');
+  src: url('/Font/IranYekan/woff2/IRANYekanXFaNum-Regular.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanXFaNum-Regular.woff') format('woff');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
+/* ─── Medium (500) ─── */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff'),
-       url('/font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff');
+  src: url('/Font/IranYekan/woff2/IRANYekanXFaNum-Medium.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanXFaNum-Medium.woff') format('woff');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
+/* ─── Bold (700) ─── */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff'),
-       url('/font/IranYekan/woff2/IRANYekanWebFn-Bold.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff');
+  src: url('/Font/IranYekan/woff2/IRANYekanXFaNum-Bold.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanXFaNum-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
+/* ─── ExtraBold (800) ─── */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff');
+  src: url('/Font/IranYekan/woff/IRANYekanXFaNum-ExtraBold.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanXFaNum-ExtraBold.woff') format('woff');
   font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
 
+/* ─── Black (900) ─── */
 @font-face {
   font-family: 'IRANYekan';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Black.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff');
+  src: url('/Font/IranYekan/woff/IRANYekanXFaNum-Black.woff2') format('woff2'),
+       url('/Font/IranYekan/woff/IRANYekanXFaNum-Black.woff') format('woff');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Thin.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Thin.woff') format('woff');
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Light.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Light.woff') format('woff');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Medium.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Medium.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Medium.woff') format('woff');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Bold.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Bold.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Bold.woff') format('woff');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-ExtraBold.woff') format('woff');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'IRANSans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Black.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn-Black.woff') format('woff');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'iran-sans';
-  src: url('/Font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
-       url('/Font/IranYekan/woff/IRANYekanWebFn.woff') format('woff'),
-       url('/font/IranYekan/woff/IRANYekanWebFn.woff2') format('woff2'),
-       url('/font/IranYekan/woff/IRANYekanWebFn.woff') format('woff');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
+/* ============================================================================
+   2️⃣ CSS VARIABLES — Light Theme (پیش‌فرض)
+   ============================================================================ */
 @layer base {
   :root {
-    --font-iran-sans: 'IRANYekan', sans-serif;
-    --font-iran-yekan: 'IRANYekan', sans-serif;
-    
-    --background: 0 0% 100%;
-    --foreground: 0 0% 12.5%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 12.5%;
+    /* ─── نام فونت ─── */
+    --font-iran-yekan: 'IRANYekan', system-ui, sans-serif;
+    --font-iran-sans: 'IRANYekan', system-ui, sans-serif;
+
+    /* ═══════════════════════════════════════════════
+       🎨 BASE COLORS
+       ═══════════════════════════════════════════════ */
+    --background: 0 0% 100%;              /* #FFFFFF */
+    --foreground: 240 6% 10%;             /* #18181B */
+
+    /* ═══════════════════════════════════════════════
+       🃏 CARDS & SURFACES
+       ═══════════════════════════════════════════════ */
+    --card: 0 0% 100%;                    /* #FFFFFF */
+    --card-foreground: 240 6% 10%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 12.5%;
-    --primary: 14 90% 60%;
+    --popover-foreground: 240 6% 10%;
+
+    /* ═══════════════════════════════════════════════
+       🎨 BRAND PRIMARY — نارنجی یدک‌چی
+       ═══════════════════════════════════════════════ */
+    --primary: 14 90% 60%;                /* #F56D3C */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 94%;
-    --secondary-foreground: 0 0% 12.5%;
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 38%;
-    --accent: 0 0% 94%;
-    --accent-foreground: 0 0% 12.5%;
-    --destructive: 0 84.2% 60.2%;
+
+    /* ═══════════════════════════════════════════════
+       🎨 SECONDARY
+       ═══════════════════════════════════════════════ */
+    --secondary: 240 5% 96%;              /* #F4F4F5 */
+    --secondary-foreground: 240 6% 10%;
+
+    /* ═══════════════════════════════════════════════
+       🎨 MUTED
+       ═══════════════════════════════════════════════ */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;       /* #71717A */
+
+    /* ═══════════════════════════════════════════════
+       🎨 ACCENT
+       ═══════════════════════════════════════════════ */
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+
+    /* ═══════════════════════════════════════════════
+       🎨 DESTRUCTIVE / DANGER
+       ═══════════════════════════════════════════════ */
+    --destructive: 0 84% 60%;             /* #EF4444 */
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 14 90% 60%;
+
+    /* ═══════════════════════════════════════════════
+       🎨 SUCCESS
+       ═══════════════════════════════════════════════ */
+    --success: 142 71% 45%;               /* #22C55E */
+    --success-foreground: 0 0% 100%;
+
+    /* ═══════════════════════════════════════════════
+       🎨 WARNING
+       ═══════════════════════════════════════════════ */
+    --warning: 38 92% 50%;                /* #F59E0B */
+    --warning-foreground: 0 0% 100%;
+
+    /* ═══════════════════════════════════════════════
+       🎨 INFO
+       ═══════════════════════════════════════════════ */
+    --info: 217 91% 60%;                  /* #3B82F6 */
+    --info-foreground: 0 0% 100%;
+
+    /* ═══════════════════════════════════════════════
+       🖼️ BORDERS & INPUTS
+       ═══════════════════════════════════════════════ */
+    --border: 240 6% 90%;                 /* #E4E4E7 */
+    --input: 240 6% 90%;
+    --ring: 14 90% 60%;                   /* #F56D3C */
+
+    /* ═══════════════════════════════════════════════
+       📐 RADIUS
+       ═══════════════════════════════════════════════ */
     --radius: 0.5rem;
   }
 
+  /* ============================================================================
+     3️⃣ DARK THEME
+     ============================================================================ */
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    
-    --card: 240 10% 6.9%;
+    /* ─── Background ─── */
+    --background: 240 10% 3.9%;           /* #09090B */
+    --foreground: 0 0% 98%;               /* #FAFAFA */
+
+    /* ─── Cards ─── */
+    --card: 240 6% 7%;                    /* #111113 */
     --card-foreground: 0 0% 98%;
-    
-    --popover: 240 10% 6.9%;
+
+    --popover: 240 6% 7%;
     --popover-foreground: 0 0% 98%;
-    
+
+    /* ─── Brand (همون نارنجی، برای کنتراست بهتر) ─── */
     --primary: 14 90% 60%;
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: 240 3.7% 15.9%;
+
+    /* ─── Secondary ─── */
+    --secondary: 240 4% 16%;              /* #27272A */
     --secondary-foreground: 0 0% 98%;
-    
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    
-    --accent: 240 3.7% 15.9%;
+
+    /* ─── Muted ─── */
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;       /* #A1A1AA */
+
+    /* ─── Accent ─── */
+    --accent: 240 4% 16%;
     --accent-foreground: 0 0% 98%;
-    
-    --destructive: 0 84.2% 60.2%;
+
+    /* ─── Destructive ─── */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+
+    /* ─── Success ─── */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    /* ─── Warning ─── */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* ─── Info ─── */
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    /* ─── Borders ─── */
+    --border: 240 4% 16%;                 /* #27272A */
+    --input: 240 4% 16%;
     --ring: 14 90% 60%;
   }
 }
 
+/* ============================================================================
+   4️⃣ BASE STYLES
+   ============================================================================ */
+@layer base {
+  /* ─── Reset و Global ─── */
+  * {
+    @apply border-border;
+    font-feature-settings: 'ss01' 1, 'ss02' 1;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px; /* فاصله برای هدر sticky */
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-iran-yekan);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* ─── برای اعداد لاتین در میان فارسی ─── */
+  body, input, button, select, textarea {
+    font-family: var(--font-iran-yekan);
+    font-variant-numeric: normal;
+  }
+
+  /* ─── Heading Reset ─── */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-iran-yekan);
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  /* ─── Selection ─── */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.25);
+    color: hsl(var(--foreground));
+  }
+
+  /* ─── Focus Ring پیش‌فرض برای عناصر تعاملی ─── */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+    border-radius: var(--radius);
+  }
+
+  /* ─── حذف Spin از number input ─── */
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* ─── حذف Background زرد از Autofill کروم ─── */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--background)) inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* ─── Placeholder ─── */
+  ::placeholder {
+    color: hsl(var(--muted-foreground) / 0.7);
+    opacity: 1;
+  }
+
+  /* ─── لینک‌ها ─── */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* ─── Resize برای textarea ─── */
+  textarea {
+    resize: vertical;
+    min-height: 4rem;
+  }
+}
+
+/* ============================================================================
+   5️⃣ SCROLLBAR
+   ============================================================================ */
+@layer base {
+  /* ─── Chrome, Safari, Edge ─── */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+    background-clip: content-box;
+  }
+
+  /* ─── Firefox ─── */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+}
+
+/* ============================================================================
+   6️⃣ COMPONENT STYLES (اختیاری — فقط برای کلاس‌های مشترک)
+   ============================================================================ */
+@layer components {
+  /* ─── Shimmer Loading Effect ─── */
+  .shimmer-effect {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted) / 0.6) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  /* ─── Divider با متن ─── */
+  .divider-with-text {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .divider-with-text::before,
+  .divider-with-text::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: hsl(var(--border));
+  }
+}
+
+/* ============================================================================
+   7️⃣ UTILITY CLASSES
+   ============================================================================ */
 @layer utilities {
+  /* ─── حذف Scrollbar ─── */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -233,19 +406,107 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* ─── Scrollbar نازک ─── */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 9999px;
+  }
+
+  /* ─── حذف Outline ─── */
+  .outline-none-all,
+  .outline-none-all:focus,
+  .outline-none-all:focus-visible {
+    outline: none;
+  }
+
+  /* ─── متن با Gradient برند ─── */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(14 90% 70%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ─── Safe Area برای گوشی‌های Notch دار ─── */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0);
+  }
+  .p-safe {
+    padding: env(safe-area-inset-top, 0)
+             env(safe-area-inset-right, 0)
+             env(safe-area-inset-bottom, 0)
+             env(safe-area-inset-left, 0);
+  }
+
+  /* ─── Text Balance (برای تیترها) ─── */
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* ─── انیمیشن‌های ورودی ─── */
+  .animate-in {
+    animation-fill-mode: both;
+    animation-duration: 0.25s;
+    animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+  .animate-in.fade-in {
+    animation-name: fade-in;
+  }
+  .animate-in.slide-in-from-top {
+    animation-name: slide-in-from-top;
+  }
+  .animate-in.slide-in-from-bottom {
+    animation-name: slide-in-from-bottom;
+  }
+  .animate-in.zoom-in {
+    animation-name: zoom-in;
+  }
+
+  /* ─── Filter Blur Helpers ─── */
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .backdrop-blur-2xl {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+  }
+
+  /* ─── Mask Gradient ─── */
+  .mask-fade-bottom {
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+  }
+  .mask-fade-top {
+    mask-image: linear-gradient(to top, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, black 70%, transparent 100%);
+  }
+  .mask-fade-x {
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-    font-family: 'IRANYekan', system-ui, sans-serif !important;
-  }
-  body, input, button, select, textarea {
-    @apply bg-background text-foreground;
-    font-family: 'IRANYekan', system-ui, sans-serif !important;
-  }
-}
-
+/* ============================================================================
+   8️⃣ KEYFRAMES
+   ============================================================================ */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -255,24 +516,74 @@
   }
 }
 
-.shimmer-effect {
-  background: linear-gradient(
-    90deg,
-    #f0f0f1 25%,
-    #e0e0e1 50%,
-    #f0f0f1 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.dark .shimmer-effect {
-  background: linear-gradient(
-    90deg,
-    #18181b 25%,
-    #27272a 50%,
-    #18181b 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
+@keyframes slide-in-from-top {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================================================
+   9️⃣ PRINT STYLES
+   ============================================================================ */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  a {
+    text-decoration: underline;
+  }
+}
+
+/* ============================================================================
+   🔟 REDUCED MOTION — برای کاربران با حساسیت حرکتی
+   ============================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

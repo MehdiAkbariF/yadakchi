@@ -183,7 +183,7 @@ export class HttpClient {
       // ✅ تشخیص اختصاصی آدرس برای اندپوینت‌های OpenSearch در SSR سرور
       let requestBaseURL = this.axiosInstance.defaults.baseURL;
       if (url.startsWith('/api/Search') && typeof window === 'undefined') {
-        requestBaseURL = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104';
+        requestBaseURL = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'https://query.yadakchi.local';
       }
 
       const config: AxiosRequestConfig = {
