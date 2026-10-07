@@ -29,7 +29,10 @@ import {
 
 export class StaticService {
   private readonly httpClient = getHttpClient();
-
+  /**
+   * دریافت یک صفحه استاتیک بر اساس englishTitle
+   * خروجی واقعی API: { id, title, englishTitle, url, content, seoInformation }
+   */
   async getStaticPage(title: string): Promise<StaticPageViewModel | null> {
     try {
       const response = await this.httpClient.get<StaticPageApiDto>(
@@ -37,19 +40,36 @@ export class StaticService {
         { params: { Title: title } }
       );
 
+      // اگر پاسخ خالی یا نامعتبر بود
+      if (!response.data || !response.data.id) {
+        return null;
+      }
+
       const domain = StaticMapper.toDomainPage(response.data);
       return StaticMapper.toViewPage(domain);
-    } catch (error) {
+    } catch (error: any) {
+      // 404 → کاربر باید not-found ببینه
+      if (error?.status === 404) {
+        return null;
+      }
       logger.error('[StaticService] Get static page failed:', error);
       return null;
     }
   }
 
+  /**
+   * دریافت لیست دسته‌بندی‌های صفحات استاتیک (برای فوتر)
+   * خروجی واقعی API: [{ title, staticPages: [{ id, title, englishTitle, url }] }]
+   */
   async getStaticPageCategories(): Promise<StaticPageCategoryViewModel[]> {
     try {
-      const response = await this.httpClient.get<StaticPageCategoryApiDto[]>(
+      const response = await this.httpClient.get<any[]>(
         STATIC_ENDPOINTS.GET_STATIC_PAGE_CATEGORY
       );
+
+      if (!Array.isArray(response.data)) {
+        return [];
+      }
 
       return response.data.map(dto => StaticMapper.toViewCategory(dto));
     } catch (error) {

@@ -3,31 +3,17 @@
 export interface StaticPage {
   id: string;
   title: string;
+  englishTitle: string;
+  url: string;
   content: string;
-  category: StaticPageCategory;
-  slug: string;
-  seo: StaticPageSEO;
-  isActive: boolean;
-  metadata: StaticPageMetadata;
-}
-
-export interface StaticPageCategory {
-  id: string;
-  name: string;
-  description?: string;
-  order: number;
-  isActive: boolean;
+  seo: StaticPageSEO | null;
 }
 
 export interface StaticPageSEO {
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;
-}
-
-export interface StaticPageMetadata {
-  createdAt: Date;
-  updatedAt: Date;
+  canonicalUrl?: string;
 }
 
 export interface FAQ {

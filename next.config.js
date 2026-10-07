@@ -64,7 +64,7 @@ const nextConfig = {
     const searchApiBaseUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104';
     
     return [
-      // ۱. هدایت تمام درخواست‌های سرچ به سرور اختصاصی OpenSearch
+
       {
         source: '/proxy-api/api/Search/:path*',
         destination: `${searchApiBaseUrl}/api/Search/:path*`,

@@ -1,32 +1,43 @@
 // src/domains/front/static/types/view.types.ts
 
+// ============================================
+// Static Page
+// ============================================
 export interface StaticPageViewModel {
   id: string;
   title: string;
+  englishTitle: string;
+  url: string;
   content: string;
-  category: {
-    id: string;
-    name: string;
-  };
-  slug: string;
   seo: {
     metaTitle: string | null;
     metaDescription: string | null;
     metaKeywords: string | null;
-  };
-  metadata: {
-    createdAt: string;
-    updatedAt: string;
-  };
+    canonicalUrl: string | null;
+  } | null;
 }
 
-export interface StaticPageCategoryViewModel {
+// ============================================
+// Static Page Item (برای فوتر)
+// ============================================
+export interface StaticPageItemViewModel {
   id: string;
-  name: string;
-  description: string | null;
-  order: number;
+  title: string;
+  englishTitle: string;
+  url: string;
 }
 
+// ============================================
+// Static Page Category (برای فوتر)
+// ============================================
+export interface StaticPageCategoryViewModel {
+  title: string;
+  staticPages: StaticPageItemViewModel[];
+}
+
+// ============================================
+// FAQ
+// ============================================
 export interface FAQViewModel {
   id: string;
   question: string;
@@ -38,6 +49,9 @@ export interface FAQViewModel {
   order: number;
 }
 
+// ============================================
+// Contact Us
+// ============================================
 export interface ContactUsSubjectViewModel {
   id: string;
   title: string;
@@ -54,6 +68,9 @@ export interface ContactUsRequest {
   attachments?: File[];
 }
 
+// ============================================
+// ToolTip
+// ============================================
 export interface ToolTipViewModel {
   id: string;
   key: string;
@@ -61,6 +78,9 @@ export interface ToolTipViewModel {
   content: string;
 }
 
+// ============================================
+// Market Message
+// ============================================
 export interface MarketMessageViewModel {
   id: string;
   pageUrl: string;
@@ -68,10 +88,16 @@ export interface MarketMessageViewModel {
   message: string;
 }
 
+// ============================================
+// Newsletter
+// ============================================
 export interface NewsletterRequest {
   email: string;
 }
 
+// ============================================
+// Filters
+// ============================================
 export interface StaticPageFilters {
   title?: string;
   categoryId?: string;

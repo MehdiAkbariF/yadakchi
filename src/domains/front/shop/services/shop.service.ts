@@ -1,3 +1,5 @@
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\shop\services\shop.service.ts
+
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
@@ -52,15 +54,15 @@ export class ShopService {
 
       return response.data.map(dto => ({
         id: dto.id,
-        name: dto.name,
+        name: (dto as any).shopTitle || dto.name,
         logo: dto.logo,
-        rating: dto.rating,
-        reviewCount: dto.reviewCount,
-        productCount: dto.productCount,
-        isVerified: false, 
+        rating: (dto as any).averageRate || dto.rating || 0,
+        reviewCount: dto.reviewCount || 0,
+        productCount: dto.productCount || 0,
+        isVerified: true, 
         cityName: '', 
-        rank: dto.rank,
-      })).map(dto => ShopMapper.toViewCard(dto as ShopCardApiDto));
+        rank: (dto as any).ranking || dto.rank || 0,
+      })).map(dto => ShopMapper.toViewCard(dto as unknown as ShopCardApiDto));
     } catch (error) {
       logger.error('[ShopService] Get best shops failed:', error);
       throw errorManager.normalize(error);
@@ -85,29 +87,39 @@ export class ShopService {
         params.PartIds = filters.partIds;
       }
 
-      const response = await this.httpClient.get<{
-        items: ShopCardApiDto[];
-        pageNumber: number;
-        pageSize: number;
-        totalCount: number;
-        totalPages: number;
-        hasNextPage: boolean;
-        hasPreviousPage: boolean;
-      }>(SHOP_ENDPOINTS.GET_SHOP_CARDS, { params });
+      const response = await this.httpClient.get<any>(SHOP_ENDPOINTS.GET_SHOP_CARDS, { params });
 
-      const items = response.data.items.map(dto => ShopMapper.toViewCard(dto));
+      const rawItems = response.data.items || [];
+      const currentPage = response.data.currentPage || response.data.pageNumber || 1;
+      const pageSize = response.data.pageSize || 30;
+      const totalCount = response.data.totalCount || rawItems.length;
+      const totalPages = response.data.totalPages || Math.ceil(totalCount / pageSize) || 1;
+
+      // مپ دقیق فیلدهای دریافتی Swagger به مدل ویو کارت
+      const items: ShopCardViewModel[] = rawItems.map((dto: any) => ({
+        id: dto.id,
+        name: dto.shopTitle || dto.name || 'فروشگاه یدکچی',
+        logo: dto.logo || null,
+        rating: dto.averageRate ?? dto.rating ?? 0,
+        reviewCount: dto.reviewCount || 0,
+        productCount: dto.productCount || dto.shopProductCount || 0,
+        isVerified: true,
+        cityName: dto.cityName || '',
+        rank: dto.ranking ?? dto.rank ?? 0,
+        highestDiscount: dto.highestDiscount || 0,
+      }));
 
       return {
         items,
-        pageNumber: response.data.pageNumber,
-        pageSize: response.data.pageSize,
-        totalCount: response.data.totalCount,
-        totalPages: response.data.totalPages,
-        hasNextPage: response.data.hasNextPage,
-        hasPreviousPage: response.data.hasPreviousPage,
-        hasMore: response.data.hasNextPage,
-        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
-        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+        pageNumber: currentPage,
+        pageSize: pageSize,
+        totalCount: totalCount,
+        totalPages: totalPages,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+        hasMore: currentPage < totalPages,
+        from: (currentPage - 1) * pageSize + 1,
+        to: Math.min(currentPage * pageSize, totalCount),
       };
     } catch (error) {
       logger.error('[ShopService] Get shop cards failed:', error);

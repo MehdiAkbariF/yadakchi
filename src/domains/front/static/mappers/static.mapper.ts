@@ -1,3 +1,5 @@
+// src/domains/front/static/mappers/static.mapper.ts
+
 import { 
   StaticPageApiDto, 
   StaticPageCategoryApiDto,
@@ -8,12 +10,11 @@ import {
   MarketMessageApiDto,
   NewsletterRequestDto
 } from '../types/dto.types';
-import { 
-  StaticPage, 
-} from '../types/domain.types';
+import { StaticPage } from '../types/domain.types';
 import { 
   StaticPageViewModel, 
   StaticPageCategoryViewModel,
+  StaticPageItemViewModel,
   FAQViewModel,
   ContactUsSubjectViewModel,
   ContactUsRequest,
@@ -23,67 +24,69 @@ import {
 } from '../types/view.types';
 
 export class StaticMapper {
+  /**
+   * تبدیل DTO صفحه استاتیک به Domain
+   * ساختار واقعی API:
+   * {
+   *   id, title, englishTitle, url, content, seoInformation
+   * }
+   */
   static toDomainPage(dto: StaticPageApiDto): StaticPage {
     return {
       id: dto.id,
       title: dto.title,
-      content: dto.content,
-      category: {
-        id: dto.categoryId,
-        name: dto.categoryName,
-        description: '',
-        order: 0,
-        isActive: true,
-      },
-      slug: dto.slug,
-      seo: {
-        metaTitle: dto.metaTitle,
-        metaDescription: dto.metaDescription,
-        metaKeywords: dto.metaKeywords,
-      },
-      isActive: dto.isActive,
-      metadata: {
-        createdAt: new Date(dto.createdAt),
-        updatedAt: new Date(dto.updatedAt),
-      },
+      englishTitle: dto.englishTitle,
+      url: dto.url,
+      content: dto.content || '',
+      seo: dto.seoInformation ? {
+        metaTitle: dto.seoInformation.title,
+        metaDescription: dto.seoInformation.description,
+        metaKeywords: dto.seoInformation.keywords || '',
+        canonicalUrl: dto.seoInformation.canonicalUrl || '',
+      } : null,
     };
   }
 
+  /**
+   * تبدیل Domain به ViewModel
+   * نکته: چون seoInformation در پاسخ API ممکنه null باشه، fallback میدیم
+   */
   static toViewPage(domain: StaticPage): StaticPageViewModel {
     return {
       id: domain.id,
       title: domain.title,
+      englishTitle: domain.englishTitle,
+      url: domain.url,
       content: domain.content,
-      category: {
-        id: domain.category.id,
-        name: domain.category.name,
-      },
-      slug: domain.slug,
       seo: {
-        metaTitle: domain.seo.metaTitle || null,
-        metaDescription: domain.seo.metaDescription || null,
-        metaKeywords: domain.seo.metaKeywords || null,
-      },
-      metadata: {
-        createdAt: domain.metadata.createdAt.toISOString(),
-        updatedAt: domain.metadata.updatedAt.toISOString(),
+        metaTitle: domain.seo?.metaTitle || null,
+        metaDescription: domain.seo?.metaDescription || null,
+        metaKeywords: domain.seo?.metaKeywords || null,
+        canonicalUrl: domain.seo?.canonicalUrl || null,
       },
     };
   }
 
-  static toViewCategory(dto: any): any {
+  /**
+   * تبدیل DTO دسته‌بندی به ViewModel
+   * ساختار واقعی API:
+   * [{ title, staticPages: [{ id, title, englishTitle, url }] }]
+   */
+  static toViewCategory(dto: any): StaticPageCategoryViewModel {
     return {
-      id: dto.id || '',
-      title: dto.title || dto.name || '',
-      staticPages: (dto.staticPages || []).map((page: any) => ({
-        id: page.id,
-        title: page.title,
-        englishTitle: page.englishTitle,
-        url: page.url,
+      title: dto.title || '',
+      staticPages: (dto.staticPages || []).map((page: any): StaticPageItemViewModel => ({
+        id: page.id || '',
+        title: page.title || '',
+        englishTitle: page.englishTitle || '',
+        url: page.url || '',
       })),
     };
   }
 
+  // ============================================
+  // FAQ
+  // ============================================
   static toViewFAQ(dto: FAQApiDto): FAQViewModel {
     return {
       id: dto.id,
@@ -97,6 +100,9 @@ export class StaticMapper {
     };
   }
 
+  // ============================================
+  // Contact Us
+  // ============================================
   static toViewContactSubject(dto: ContactUsSubjectApiDto): ContactUsSubjectViewModel {
     return {
       id: dto.id,
@@ -117,6 +123,9 @@ export class StaticMapper {
     };
   }
 
+  // ============================================
+  // ToolTip
+  // ============================================
   static toViewToolTip(dto: ToolTipApiDto): ToolTipViewModel {
     return {
       id: dto.id,
@@ -126,6 +135,9 @@ export class StaticMapper {
     };
   }
 
+  // ============================================
+  // Market Message
+  // ============================================
   static toViewMarketMessage(dto: MarketMessageApiDto): MarketMessageViewModel {
     return {
       id: dto.id,
@@ -135,6 +147,9 @@ export class StaticMapper {
     };
   }
 
+  // ============================================
+  // Newsletter
+  // ============================================
   static toNewsletterRequest(request: NewsletterRequest): NewsletterRequestDto {
     return {
       email: request.email,

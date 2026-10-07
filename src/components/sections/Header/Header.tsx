@@ -1,3 +1,4 @@
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\Header.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -58,28 +59,23 @@ export function Header({ className }: HeaderProps) {
 
   return (
     <header className={cn('lg:sticky lg:top-0 z-50 w-full bg-background border-b lg:bg-transparent lg:border-b-0 transition-colors duration-300', className)}>
-      
       <div className="hidden lg:block h-[116px] w-full pointer-events-none relative">
         <motion.div 
-          className="w-full bg-background border-b pointer-events-auto flex flex-col shadow-sm"
+          className="w-full bg-background border-b pointer-events-auto flex flex-col shadow-xs"
           initial={false}
           animate={isHeaderMinimized ? "collapsed" : "expanded"}
           variants={{
-            expanded: { 
-              height: '116px',
-              transition: { duration: 0.18, ease: 'easeInOut' }
-            },
-            collapsed: { 
-              height: '68px',
-              transition: { duration: 0.18, ease: 'easeInOut' }
-            }
+            expanded: { height: '116px', transition: { duration: 0.18, ease: 'easeInOut' } },
+            collapsed: { height: '68px', transition: { duration: 0.18, ease: 'easeInOut' } }
           }}
         >
           <div className="w-full px-4 lg:px-8 py-3 h-[68px] flex items-center">
-            <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto">
-              <Logo className="pt-0" />
+            <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto gap-4">
+              {/* ۱. لوگو */}
+              <Logo className="pt-0 shrink-0" />
               
-              <div className="flex-1 max-w-2xl mx-4">
+              {/* ۲. باکس سرچ عریض‌تر شده (طبق ایشو YF-25) */}
+              <div className="flex-1 max-w-3xl xl:max-w-4xl mx-2">
                 <SearchBar 
                   placeholder="جستجوی هوشمند قطعات..."
                   onSearch={handleSearch}
@@ -87,11 +83,14 @@ export function Header({ className }: HeaderProps) {
                 />
               </div>
               
-              <div className="flex items-center gap-2 shrink-0">
+              {/* ۳. چیدمان دقیق طبق عکس (فروشنده شو -> احراز هویت -> سبد خرید -> تغییر تم) */}
+              <div className="flex items-center gap-3 shrink-0">
                 <SellerButton />
-                <ThemeToggle />
                 <AuthButton />
                 <CartButton />
+                <div className="mr-1 pl-1 border-r border-border/60">
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </div>
@@ -100,16 +99,8 @@ export function Header({ className }: HeaderProps) {
             initial={false}
             animate={isHeaderMinimized ? "collapsed" : "expanded"}
             variants={{
-              expanded: { 
-                height: '48px', 
-                opacity: 1,
-                transition: { duration: 0.18, ease: 'easeInOut' }
-              },
-              collapsed: { 
-                height: 0, 
-                opacity: 0,
-                transition: { duration: 0.15, ease: 'easeInOut' }
-              }
+              expanded: { height: '48px', opacity: 1, transition: { duration: 0.18, ease: 'easeInOut' } },
+              collapsed: { height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeInOut' } }
             }}
             className={cn(
               "w-full border-t bg-muted/30",

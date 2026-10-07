@@ -1,8 +1,10 @@
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\SearchBar\SearchBar.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Search, X, Clock, Trash2, ArrowRight, Loader2, Sparkles, FolderKanban, Car } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Input } from '@/components/primitives/Input/Input';
 import { Modal } from '@/components/composites/Modal/Modal';
@@ -18,6 +20,20 @@ import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.ho
 import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import Link from 'next/link';
+
+// =============================================================================
+// کلمات کلیدی هاردکد شده برای انیمیشن پلیس‌هولدر
+// =============================================================================
+const DEFAULT_ROTATING_KEYWORDS = [
+  'لنت ترمز ۲۰۶',
+  'شمع سوزنی بوش',
+  'دیسک و صفحه پراید',
+  'تسمه تایم رنو ال ۹۰',
+  'فیلتر روغن دنا پلاس',
+  'کمک فنر جلو پژو پارس',
+  'کوئل دوبل تیبا',
+  'لوازم جلوبندی سمند',
+];
 
 interface SearchBarProps {
   placeholder?: string;
@@ -57,6 +73,9 @@ export function SearchBar({
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   
+  // ایندکس کلمه فعلی در انیمیشن چرخش
+  const [keywordIndex, setKeywordIndex] = useState(0);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
@@ -71,6 +90,15 @@ export function SearchBar({
 
   const desktopBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Desktop');
   const mobileBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Mobile');
+
+  // تغییر کلمه هر ۲.۸ ثانیه با انیمیشن نرم
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setKeywordIndex((prev) => (prev + 1) % DEFAULT_ROTATING_KEYWORDS.length);
+    }, 2800);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     setQuery(resolvedText);
@@ -137,6 +165,32 @@ export function SearchBar({
     if (window.history.state?.modalOpen === 'search-modal') {
       window.history.back();
     }
+  };
+
+  // رندر متن انیمیشنی داخل پلیس‌هولدر
+  const renderAnimatedPlaceholder = () => {
+    if (query) return null;
+
+    const currentWord = DEFAULT_ROTATING_KEYWORDS[keywordIndex];
+
+    return (
+      <div className="flex items-center text-xs font-iran-yekan h-5 overflow-hidden select-none pointer-events-none">
+        <span className="text-muted-foreground ml-1 shrink-0">جستجو در</span>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={currentWord}
+            initial={{ y: 14, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -14, opacity: 0 }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
+            className="font-bold inline-block truncate max-w-[210px]"
+            style={{ color: '#007fc8' }}
+          >
+            {currentWord}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+    );
   };
 
   const renderSuggestionsPanel = () => {
@@ -333,14 +387,25 @@ export function SearchBar({
     );
   };
 
+  // ۱. رندر در نسخه موبایل
   if (isMobile) {
     return (
       <div className={cn("relative w-full", className)}>
-        <div onClick={handleOpenMobileSearch} className="flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground min-w-0">
-          <Search className="h-4 w-4 shrink-0" />
-          <span className="text-sm font-iran-yekan font-medium mr-2 truncate whitespace-nowrap flex-1 text-right">
-            {query || placeholder}
-          </span>
+        <div 
+          onClick={handleOpenMobileSearch} 
+          className="relative flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground min-w-0 overflow-hidden"
+        >
+          <Search className="h-4 w-4 shrink-0 z-10" />
+          
+          {query ? (
+            <span className="text-sm font-iran-yekan font-medium mr-2 truncate flex-1 text-right">
+              {query}
+            </span>
+          ) : (
+            <div className="mr-2 flex-1 flex items-center text-right">
+              {renderAnimatedPlaceholder()}
+            </div>
+          )}
         </div>
 
         <Modal isOpen={isMobileModalOpen} onClose={handleCloseMobileSearch} className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-50 bg-background" overlayClassName="bg-black/40">
@@ -348,11 +413,11 @@ export function SearchBar({
             <button onClick={handleCloseMobileSearch} className="p-1 -mr-1 hover:bg-muted rounded-full" aria-label="Back">
               <ArrowRight className="h-5 w-5" />
             </button>
-            <div className="flex-1">
+            <div className="flex-1 relative">
               <Input
                 ref={mobileInputRef}
                 type="text"
-                placeholder="چی لازم داری؟"
+                placeholder=""
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
@@ -365,6 +430,11 @@ export function SearchBar({
                 dir="rtl"
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(query)}
               />
+              {!query && (
+                <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
+                  {renderAnimatedPlaceholder()}
+                </div>
+              )}
             </div>
           </div>
 
@@ -374,16 +444,17 @@ export function SearchBar({
     );
   }
 
+  // ۲. رندر در نسخه دسکتاپ
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
-      <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(query); }}>
+      <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(query); }} className="relative">
         <Input
           ref={desktopInputRef}
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { setIsFocused(true); refetchHistory(); }}
-          placeholder={placeholder}
+          placeholder=""
           leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
           rightIcon={query && (
             <button type="button" onClick={() => setQuery('')} className="p-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors">
@@ -393,6 +464,16 @@ export function SearchBar({
           className="w-full font-iran-yekan"
           dir="rtl"
         />
+
+        {/* لایه پلیس‌هولدر انیمیشنی برای دسکتاپ */}
+        {!query && (
+          <div 
+            onClick={() => desktopInputRef.current?.focus()}
+            className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none flex items-center cursor-text"
+          >
+            {renderAnimatedPlaceholder()}
+          </div>
+        )}
       </form>
 
       {isFocused && (

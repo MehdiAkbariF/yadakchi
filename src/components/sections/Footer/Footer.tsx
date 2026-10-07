@@ -67,9 +67,9 @@ export function Footer({ className }: FooterProps) {
     }
   };
 
-  const activeCategories = categories.filter(
-    (cat: any) => cat.staticPages && cat.staticPages.length > 0
-  );
+const activeCategories = categories.filter(
+  (cat) => cat && cat.staticPages && cat.staticPages.length > 0
+);
 
   const colCount = activeCategories.length + 1;
   const gridColsClass = 

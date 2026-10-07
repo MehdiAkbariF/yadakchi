@@ -1,97 +1,164 @@
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Shop\ShopSlider.tsx
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useGetShopCards } from '@/domains/front/shop/hooks/shop.hooks';
+import { useGetShopCards, useGetShopPage } from '@/domains/front/shop/hooks/shop.hooks';
 import { Typography } from '@/components/primitives/Typography';
-import { ChevronLeft, ChevronRight, Store, Star, Tag, Award, ShieldCheck, Truck } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Store,
+  Star,
+  CheckCircle2,
+  Package,
+  ShieldCheck,
+  Truck,
+} from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
-import { cn } from '@/design-system/utils/cn';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 
+// تبدیل ارقام به فارسی
+const toPersianDigits = (n: number | string | undefined | null) => {
+  if (n === undefined || n === null || n === '') return '-';
+  return n.toString().replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[+d]);
+};
+
 function ShopSliderCard({ shop }: { shop: any }) {
-  const [tickerIndex, setTickerIndex] = useState(0);
-  const [fade, setFade] = useState(true);
+  // دریافت اطلاعات کامل و واقعی فروشگاه از اندپوینت ShopPage با استفاده از ShopId
+  const { data: shopPageData, isLoading } = useGetShopPage(shop.id);
 
-  const discount = shop.highestDiscount || 0;
-  const rating = shop.rating || 0;
-  const rank = shop.rank || 0;
+  // ۱. عنوان فروشگاه کاملاً داینامیک از API
+  const shopTitle = shopPageData?.shopTitle || shop.shopTitle || shop.name || '';
 
-  const tickerItems = useMemo(() => {
-    const items: { text: string; icon: any }[] = [];
-    
-    if (rating > 0) {
-      items.push({ text: `امتیاز ${rating}`, icon: Star });
-    }
-    if (discount > 0) {
-      items.push({ text: `تا ${discount}% تخفیف`, icon: Tag });
-    }
-    if (rank > 0) {
-      items.push({ text: `رتبه ${rank}`, icon: Award });
-    }
-    
-    items.push({ text: 'تایید شده یدکچی', icon: ShieldCheck });
-    items.push({ text: 'ضمانت اصالت قطعات', icon: ShieldCheck });
-    items.push({ text: 'ارسال سریع کالا', icon: Truck });
-    
-    return items;
-  }, [rating, discount, rank]);
+  // ۲. توضیحات واقعی فروشگاه از دیتای سئو API
+  const description =
+    shopPageData?.seoInformation?.description?.trim() ||
+    (shopTitle ? `فروشگاه رسمی ${shopTitle} در یدکچی` : '');
 
-  const tickerLength = tickerItems.length;
+  // ۳. تعداد محصولات واقعی ثبت شده در بک‌اند
+  const productCount = shopPageData?.shopProductCount ?? shop.productCount;
 
-  useEffect(() => {
-    if (tickerLength <= 1) return;
-    const interval = setInterval(() => {
-      setFade(false);
-      const timeout = setTimeout(() => {
-        setTickerIndex((prev) => (prev + 1) % tickerLength);
-        setFade(true);
-      }, 300);
-      return () => clearTimeout(timeout);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [tickerLength]);
+  // ۴. درصد واقعی تعهد و رضایت (از آبجکت shopPerformanceReport)
+  const onTimePercentage = shopPageData?.shopPerformanceReport?.sellerSentOnTimePercentage;
+  const averageRate = shopPageData?.averageRate ?? shop.averageRate ?? shop.rating;
 
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
+  // محاسبه رضایت بر اساس گزارش عملکرد واقعی یا میانگین امتیاز (هر ستاره ۲۰ درصد)
+  let satisfactionRate: number | null = null;
+  if (typeof onTimePercentage === 'number' && onTimePercentage > 0) {
+    satisfactionRate = Math.round(onTimePercentage);
+  } else if (typeof averageRate === 'number' && averageRate > 0) {
+    satisfactionRate = Math.min(100, Math.round(averageRate * 20));
+  }
 
-  const CurrentIcon = tickerItems[tickerIndex]?.icon || ShieldCheck;
+  // ۵. وضعیت فعال بودن از گزارش عملکرد
+  const status = shopPageData?.shopPerformanceReport?.status;
+  const isActive = status ? status === 'Active' : true;
+
+  if (isLoading) {
+    return (
+      <div className="w-[300px] sm:w-[330px] h-[255px] shrink-0 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col justify-between">
+        <div className="space-y-3">
+          <Skeleton className="w-24 h-6 rounded-full" />
+          <Skeleton className="w-40 h-5 rounded-md" />
+          <Skeleton className="w-full h-8 rounded-md" />
+          <div className="flex gap-2">
+            <Skeleton className="w-28 h-5 rounded-full" />
+            <Skeleton className="w-16 h-5 rounded-full" />
+          </div>
+        </div>
+        <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800 my-2" />
+        <div className="grid grid-cols-3 gap-2">
+          <Skeleton className="h-10 rounded-md" />
+          <Skeleton className="h-10 rounded-md" />
+          <Skeleton className="h-10 rounded-md" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Link
       href={`/shops/${shop.id}`}
       draggable={false}
       onDragStart={(e) => e.preventDefault()}
-      className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 rounded-xl border bg-zinc-100 dark:bg-zinc-900 relative overflow-hidden flex flex-col justify-end p-3 transition-all select-none hover:scale-[1.02] shadow-md group hover:border-primary/40"
+      className="w-[300px] sm:w-[330px] shrink-0 rounded-3xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col justify-between select-none shadow-sm hover:shadow-xl hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
     >
-      <img
-        src={getFullUrl(shop.logo)}
-        alt={shop.name}
-        draggable={false}
-        className="w-full h-full object-cover rounded-xl select-none pointer-events-none absolute inset-0 z-0"
-      />
-      
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent z-10 rounded-xl" />
-
-      <div className="relative z-20 w-full flex flex-col gap-1.5 text-white select-none">
-        <div className="w-full flex items-center gap-1 text-[11px] sm:text-xs font-bold truncate">
-          <Store className="h-3.5 w-3.5 shrink-0 text-primary" />
-          <span className="truncate text-white">{shop.name}</span>
+      <div className="flex flex-col gap-3">
+        {/* ۱. بج فروشنده منتخب (فقط در صورتی که رنکینگ یا امتیاز برتر داشته باشد) */}
+        <div className="flex items-center justify-start">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-black">
+            <span>فروشنده منتخب</span>
+            <Star className="w-3.5 h-3.5 fill-emerald-600 dark:fill-emerald-400 text-emerald-600 dark:text-emerald-400" />
+          </div>
         </div>
 
-        <div className="h-5 overflow-hidden relative w-full flex items-center justify-start text-[8px] sm:text-[9px] text-zinc-300 select-none shrink-0 border-t border-white/20 pt-1">
-          <div className={cn(
-            "flex items-center gap-1 transition-opacity duration-300",
-            fade ? "opacity-100" : "opacity-0"
-          )}>
-            <CurrentIcon className="h-3 w-3 text-primary shrink-0" />
-            <span className="truncate font-medium text-right text-zinc-200">{tickerItems[tickerIndex]?.text}</span>
+        {/* ۲. نام و توضیحات فروشگاه - کاملاً بدون هاردکد */}
+        <div className="flex flex-col gap-1.5 text-right">
+          <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-zinc-50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
+            {shopTitle}
+          </h3>
+          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-2 min-h-[36px]">
+            {description || 'اطلاعات و قطعات این فروشگاه در یدکچی تایید شده است.'}
+          </p>
+        </div>
+
+        {/* ۳. بج‌های تأییدیه و وضعیت */}
+        <div className="flex items-center gap-2 pt-1">
+          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>تأیید شده توسط ادمین</span>
           </div>
+
+          {isActive && (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>فعال</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* خط جداکننده */}
+      <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800 my-4" />
+
+      {/* ۴. آمارهای کاملاً داینامیک */}
+      <div className="grid grid-cols-3 divide-x divide-x-reverse divide-zinc-100 dark:divide-zinc-800 text-center">
+        {/* ستون اول: تعداد محصولات از API */}
+        <div className="flex flex-col items-center gap-1 px-1">
+          <Package className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+          <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+            تعداد محصولات
+          </span>
+          <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100">
+            {productCount !== undefined && productCount !== null
+              ? toPersianDigits(productCount.toLocaleString('fa-IR'))
+              : '-'}
+          </span>
+        </div>
+
+        {/* ستون دوم: میزان رضایت مشتریان از API */}
+        <div className="flex flex-col items-center gap-1 px-1">
+          <ShieldCheck className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+          <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+            میزان رضایت مشتریان
+          </span>
+          <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100">
+            {satisfactionRate !== null ? `${toPersianDigits(satisfactionRate)}٪` : '-'}
+          </span>
+        </div>
+
+        {/* ستون سوم: ارسال به موقع / میانگین ارسال */}
+        <div className="flex flex-col items-center gap-1 px-1">
+          <Truck className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+          <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+            ارسال به موقع
+          </span>
+          <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100">
+            {onTimePercentage !== undefined && onTimePercentage !== null
+              ? `${toPersianDigits(Math.round(onTimePercentage))}٪`
+              : 'سریع'}
+          </span>
         </div>
       </div>
     </Link>
@@ -99,7 +166,12 @@ function ShopSliderCard({ shop }: { shop: any }) {
 }
 
 export function ShopSlider() {
-  const { data: rawShops, isLoading, isError } = useGetShopCards({ orderBy: 'Rank', pageNumber: 1, pageSize: 30 });
+  const {
+    data: rawShops,
+    isLoading,
+    isError,
+  } = useGetShopCards({ orderBy: 'Rating', pageNumber: 1, pageSize: 30 });
+
   const shops = rawShops?.items || [];
   const carouselRef = useRef<HTMLDivElement>(null);
   const [dragWidth, setWidth] = useState(0);
@@ -108,12 +180,14 @@ export function ShopSlider() {
 
   useEffect(() => {
     if (carouselRef.current) {
-      setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+      setWidth(
+        carouselRef.current.scrollWidth - carouselRef.current.offsetWidth
+      );
     }
   }, [shops]);
 
   const handleScroll = (direction: 'left' | 'right') => {
-    const step = 350;
+    const step = 340;
     let newX = x.get() + (direction === 'right' ? -step : step);
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
@@ -127,7 +201,7 @@ export function ShopSlider() {
   const handleDragEnd = () => {
     setTimeout(() => {
       isDraggingRef.current = false;
-    }, 50);
+    }, 80);
   };
 
   const handleDragClickCapture = (e: React.MouseEvent) => {
@@ -141,44 +215,51 @@ export function ShopSlider() {
     return (
       <div className="w-full space-y-4 py-4 animate-in fade-in duration-300">
         <div className="flex items-center gap-2 px-1">
-          <Store className="h-5 w-5 text-primary shrink-0" />
-          <Skeleton className="w-32 h-5" />
+          <Store className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <Skeleton className="w-36 h-6 rounded-lg" />
         </div>
-        <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
-          {[...Array(8)].map((_, index) => (
-            <Skeleton key={index} className="w-36 h-36 sm:w-44 sm:h-44 shrink-0 rounded-xl" />
+        <div className="w-full bg-background rounded-2xl border p-4 flex gap-4 overflow-hidden">
+          {[...Array(4)].map((_, index) => (
+            <Skeleton
+              key={index}
+              className="w-[300px] sm:w-[330px] h-[255px] shrink-0 rounded-3xl"
+            />
           ))}
         </div>
       </div>
     );
   }
 
+  // اگر خطایی رخ داده بود یا هیچ فروشنده‌ای وجود نداشت سکشن کلاً پنهان می‌شود
   if (isError || shops.length === 0) return null;
 
   return (
-    <div className="w-full flex flex-col space-y-3.5 py-4 animate-in fade-in duration-300">
+    <div className="w-full flex flex-col space-y-4 py-4 animate-in fade-in duration-300">
       <div className="flex items-center justify-between w-full px-1">
         <div className="flex items-center gap-2">
-          <Store className="h-5 w-5 text-primary shrink-0" />
-          <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">
+          <Store className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <Typography
+            variant="h4"
+            className="font-iran-yekan font-black text-foreground text-base sm:text-lg"
+          >
             فروشندگان منتخب یدکچی
           </Typography>
         </div>
       </div>
 
-      <div className="w-full bg-background rounded-xl border p-4 relative group overflow-hidden">
-        {shops.length > 6 && (
+      <div className="w-full bg-zinc-50/50 dark:bg-zinc-950/30 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-4 relative group overflow-hidden">
+        {shops.length > 3 && (
           <>
             <button
               onClick={() => handleScroll('right')}
-              className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
+              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-all shadow-lg outline-none cursor-pointer"
               aria-label="Previous"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
               onClick={() => handleScroll('left')}
-              className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
+              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-all shadow-lg outline-none cursor-pointer"
               aria-label="Next"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -186,11 +267,11 @@ export function ShopSlider() {
           </>
         )}
 
-        <div 
+        <div
           ref={carouselRef}
           className="w-full overflow-hidden relative z-10 select-none"
         >
-          <motion.div 
+          <motion.div
             drag="x"
             style={{ x }}
             dragConstraints={{ left: 0, right: dragWidth }}
