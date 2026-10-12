@@ -1,3 +1,4 @@
+﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Part\HomeCategories.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -7,6 +8,7 @@ import { Typography } from '@/components/primitives/Typography';
 import { ChevronLeft, ChevronRight, Settings, MoreHorizontal } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { getFullUrl } from '@/core/utils/formatters';
 
 interface PartCategoryItem {
   id: string;
@@ -56,14 +58,6 @@ export function HomeCategories() {
     animate(x, newX, { type: 'spring', stiffness: 220, damping: 28 });
   };
 
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   if (isLoading) {
     return (
       <div className="w-full space-y-6 py-6">
@@ -95,7 +89,7 @@ export function HomeCategories() {
   if (isError || categories.length === 0) return null;
 
   return (
-    <div className="w-full space-y-6 py-6 select-none">
+    <div className="w-full space-y-6 py-6 select-none font-iran-yekan">
       <Typography
         variant="h5"
         className="font-iran-yekan font-black text-center text-foreground/90 text-base sm:text-xl"
@@ -104,19 +98,18 @@ export function HomeCategories() {
       </Typography>
 
       {/* =========================================================================
-          ۱. نسخه موبایل: گرید دو ردیفه (۴ ستون در هر ردیف) + آیتم هشتم "سایر دسته‌ها"
+          ۱. نسخه موبایل: گرید دو ردیفه + آیتم هشتم "سایر دسته‌ها"
           ========================================================================= */}
       <div className="grid grid-cols-4 gap-y-6 gap-x-2 px-2 sm:px-4 md:hidden">
         {mobileCategories.map((cat) => {
           const href = `/part-category/${cat.englishTitle}`;
-          // اولویت با عکس واقعی و واضح بندانگشتی قطعه
           const imageSrc = cat.thumbnail || cat.icon;
 
           return (
             <Link
               key={cat.id}
               href={href}
-              className="flex flex-col items-center group text-center"
+              className="flex flex-col items-center group/cat text-center"
             >
               <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#f4ece6] dark:bg-zinc-800 p-2 flex items-center justify-center transition-transform active:scale-95 shadow-xs">
                 {imageSrc ? (
@@ -130,15 +123,15 @@ export function HomeCategories() {
                   <Settings className="h-7 w-7 text-zinc-400 stroke-[1.5]" />
                 )}
 
-                {/* بج تخفیف ویژه */}
+                {/* لیبل نارنجی تخفیف ویژه برای موبایل */}
                 {cat.hasDiscount && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#ea580c] text-white text-[8px] font-black px-1.5 py-0.2 rounded-full whitespace-nowrap shadow-xs">
-                    % تخفیف ویژه
+                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#f04812] text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm pointer-events-none">
+                    تخفیف ویژه
                   </span>
                 )}
               </div>
 
-              <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mt-2.5 leading-tight line-clamp-2 min-h-[28px] flex items-center justify-center">
+              <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mt-3 leading-tight line-clamp-2 min-h-[28px] flex items-center justify-center">
                 {cat.name}
               </span>
             </Link>
@@ -148,21 +141,21 @@ export function HomeCategories() {
         {/* دکمه هشتم در موبایل: سایر دسته‌ها با ارجاع به /categories */}
         <Link
           href="/categories"
-          className="flex flex-col items-center group text-center"
+          className="flex flex-col items-center text-center"
         >
           <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#f4ece6] dark:bg-zinc-800 flex items-center justify-center transition-transform active:scale-95 hover:bg-[#ebdcd3] shadow-xs">
             <MoreHorizontal className="h-7 w-7 text-zinc-500 dark:text-zinc-400" />
           </div>
-          <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mt-2.5 leading-tight line-clamp-2 min-h-[28px] flex items-center justify-center">
+          <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mt-3 leading-tight line-clamp-2 min-h-[28px] flex items-center justify-center">
             سایر دسته‌ها
           </span>
         </Link>
       </div>
 
       {/* =========================================================================
-          ۲. نسخه دسکتاپ: سوییپر کامل با قابلیت کشیدن ماوس (Mouse Drag & Slide)
+          ۲. نسخه دسکتاپ: حذف group از کانتینر بیرونی جهت عدم تداخل هاور آیتم‌ها
           ========================================================================= */}
-      <div className="hidden md:block relative w-full group">
+      <div className="hidden md:block relative w-full">
         {/* دکمه حرکت به راست */}
         {categories.length > 6 && (
           <button
@@ -193,7 +186,6 @@ export function HomeCategories() {
           >
             {categories.map((cat) => {
               const href = `/part-category/${cat.englishTitle}`;
-              // اولویت با عکس واقعی و واضح قطعه
               const imageSrc = cat.thumbnail || cat.icon;
 
               return (
@@ -202,34 +194,34 @@ export function HomeCategories() {
                   href={href}
                   draggable={false}
                   onClick={(e) => {
-                    // جلوگیری از هدایت ناخواسته به لینک در هنگام اسلاید کردن با موس
                     if (isDraggingRef.current) e.preventDefault();
                   }}
-                  className="flex flex-col items-center shrink-0 w-28 group text-center cursor-pointer"
+                  className="flex flex-col items-center shrink-0 w-28 group/cat text-center cursor-pointer"
                 >
-                  {/* دایره تصویر قطعه */}
-                  <div className="relative w-24 h-24 rounded-full bg-[#f4ece6] dark:bg-zinc-800 p-2.5 flex items-center justify-center shadow-xs transition-transform duration-300 ease-out group-hover:scale-105">
+                  {/* دایره تصویر قطعه - فقط با هاور روی این آیتم زوم می‌شود */}
+                  <div className="relative w-24 h-24 rounded-full bg-[#f4ece6] dark:bg-zinc-800 p-2.5 flex items-center justify-center shadow-xs transition-transform duration-300 ease-out group-hover/cat:scale-105">
                     {imageSrc ? (
                       <img
                         src={getFullUrl(imageSrc)}
                         alt={cat.thumbnailAlt || cat.name}
                         draggable={false}
-                        className="w-full h-full object-contain rounded-full transition-transform duration-300 group-hover:scale-110 pointer-events-none drop-shadow-sm"
+                        className="w-full h-full object-contain rounded-full transition-transform duration-300 group-hover/cat:scale-110 pointer-events-none drop-shadow-sm"
                         loading="lazy"
                       />
                     ) : (
-                      <Settings className="h-9 w-9 text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-colors stroke-[1.5]" />
+                      <Settings className="h-9 w-9 text-zinc-400 group-hover/cat:text-black dark:group-hover/cat:text-white transition-colors stroke-[1.5]" />
                     )}
 
+                    {/* لیبل نارنجی تخفیف ویژه مطابق تصویر پیوست */}
                     {cat.hasDiscount && (
-                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-[#ea580c] text-white text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm pointer-events-none">
-                        % تخفیف ویژه
+                      <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-[#f04812] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm pointer-events-none">
+                        تخفیف ویژه
                       </span>
                     )}
                   </div>
 
-                  {/* عنوان دسته‌بندی با هاور اختصاصی بولد و مشکی */}
-                  <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white group-hover:font-extrabold transition-all duration-200 mt-3 line-clamp-2 min-h-[34px] flex items-center justify-center leading-relaxed">
+                  {/* عنوان دسته‌بندی - واکنش رنگ و فونت فقط برای آیتم هاور شده */}
+                  <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover/cat:text-black dark:group-hover/cat:text-white group-hover/cat:font-extrabold transition-all duration-200 mt-3.5 line-clamp-2 min-h-[34px] flex items-center justify-center leading-relaxed">
                     {cat.name}
                   </span>
                 </Link>

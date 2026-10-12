@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Store, ShieldCheck, ShieldAlert, Truck, Sparkles, Plus, Minus, Loader2, Trash2 } from 'lucide-react';
 import { useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
-import { toPersianDigits } from '@/core/utils/formatters';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 
 interface BasketItemRowProps {
   item: any;
@@ -58,15 +58,6 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
       setActiveLoading(false);
     }
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPersianNumber = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };

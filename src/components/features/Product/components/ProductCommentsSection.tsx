@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useGetProductComments, useGetProductCommentsAverage } from '@/domains/front/product/hooks/product.hooks';
 import { useCreateComment } from '@/domains/front/comment/hooks/comment.hooks';
-import { Star, ThumbsUp, ThumbsDown, User, MessageSquare } from 'lucide-react';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { Star, ThumbsUp, ThumbsDown, User, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/primitives/Button/Button';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
@@ -11,6 +12,56 @@ import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
 import { toPersianDigits } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
+
+function LottiePlayer({ path, className = "w-48 h-48", loop = true }: { path: string; className?: string; loop?: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/') ? path.replace('/anumations/', '/animations/') : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+
+        if (!animationData || !isMounted || !containerRef.current) return;
+
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch (e) {}
+    };
+
+    init();
+
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
 
 interface ProductCommentsSectionProps {
   productId: string;
@@ -21,6 +72,10 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
   const [orderBy, setOrderBy] = useState('Newest');
   const [page, setPage] = useState(1);
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  const { user } = useAuth();
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'کاربر';
 
   const [rate, setRate] = useState(0);
   const [hoverRate, setHoverRate] = useState(0);
@@ -54,11 +109,11 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
         isIncognito,
       });
 
-      showToast.success('دیدگاه ارزشمند شما با موفقیت ثبت شد و پس از تایید نمایش داده خواهد شد');
       setRate(0);
       setCommentText('');
       setIsIncognito(false);
       setIsWriteModalOpen(false);
+      setIsSuccessModalOpen(true);
     } catch (error: any) {
       showToast.error(error.userMessage || 'خطا در ثبت دیدگاه شما');
     }
@@ -69,7 +124,6 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
       <h3 className="text-sm md:text-base font-bold font-iran-yekan text-foreground">امتیاز و نظرات کاربران</h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-8 items-start w-full">
-        
         <div className="lg:col-span-3 flex flex-col gap-5 lg:sticky lg:top-[196px] w-full bg-background border rounded-2xl p-5 shadow-sm">
           {average && (
             <div className="flex flex-col gap-5 items-center w-full">
@@ -195,96 +249,124 @@ export function ProductCommentsSection({ productId, productTitle = 'قطعه ی�
             )}
           </div>
         </div>
-
       </div>
 
- <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full">
-  <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
-    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right">
-      ثبت دیدگاه جدید
-    </ModalTitle>
-  </ModalHeader>
-  
-  <ModalBody className="p-5 pt-4 text-right">
-    <form onSubmit={handleCommentSubmit} className="flex flex-col gap-4 w-full text-right">
-      
-      <div className="flex flex-col gap-1 w-full border-b pb-3">
-        <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan">نام کالا:</span>
-        <span className="text-xs font-bold text-foreground font-iran-yekan leading-relaxed">{toPersianDigits(productTitle)}</span>
-      </div>
+      {/* مودال ثبت نظر */}
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="max-w-md w-full">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right">
+            ثبت دیدگاه جدید
+          </ModalTitle>
+        </ModalHeader>
+        
+        <ModalBody className="p-5 pt-4 text-right">
+          <form onSubmit={handleCommentSubmit} className="flex flex-col gap-4 w-full text-right">
+            <div className="flex flex-col gap-1 w-full border-b pb-3">
+              <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan">نام کالا:</span>
+              <span className="text-xs font-bold text-foreground font-iran-yekan leading-relaxed">{toPersianDigits(productTitle)}</span>
+            </div>
 
-      <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full">
-        <span className="text-xs font-bold text-muted-foreground font-iran-yekan">امتیاز شما به کالا *</span>
-        <div className="flex items-center gap-1.5 mt-1" dir="ltr">
-          {[1, 2, 3, 4, 5].map((starValue) => {
-            const isHighlighted = (hoverRate || rate) >= starValue;
-            return (
-              <button
-                key={starValue}
-                type="button"
-                onMouseEnter={() => setHoverRate(starValue)}
-                onMouseLeave={() => setHoverRate(0)}
-                onClick={() => setRate(starValue)}
-                className="p-1 hover:scale-110 transition-transform outline-none"
-              >
-                <Star 
-                  className={cn(
-                    "h-7 w-7 shrink-0", 
-                    isHighlighted ? "fill-yellow-400 text-yellow-400" : "text-zinc-200 dark:text-zinc-800"
-                  )} 
-                />
-              </button>
-            );
-          })}
+            <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full">
+              <span className="text-xs font-bold text-muted-foreground font-iran-yekan">امتیاز شما به کالا *</span>
+              <div className="flex items-center gap-1.5 mt-1" dir="ltr">
+                {[1, 2, 3, 4, 5].map((starValue) => {
+                  const isHighlighted = (hoverRate || rate) >= starValue;
+                  return (
+                    <button
+                      key={starValue}
+                      type="button"
+                      onMouseEnter={() => setHoverRate(starValue)}
+                      onMouseLeave={() => setHoverRate(0)}
+                      onClick={() => setRate(starValue)}
+                      className="p-1 hover:scale-110 transition-transform outline-none"
+                    >
+                      <Star 
+                        className={cn(
+                          "h-7 w-7 shrink-0", 
+                          isHighlighted ? "fill-yellow-400 text-yellow-400" : "text-zinc-200 dark:text-zinc-800"
+                        )} 
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="w-full">
+              <TextArea
+                label="متن نظر *"
+                placeholder="نظر خود را در مورد این کالا به اشتراک بگذارید..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="h-28 text-xs font-iran-yekan"
+                required
+              />
+            </div>
+
+            <div className="flex items-start gap-2.5 w-full mt-1 border-t border-dashed pt-4 select-none">
+              <Checkbox
+                checked={isIncognito}
+                onChange={(checked) => setIsIncognito(checked)}
+              />
+              <div>
+                <span className="text-xs font-bold text-foreground font-iran-yekan block">ارسال به صورت ناشناس</span>
+                <span className="text-[10px] text-muted-foreground font-iran-yekan block mt-0.5">در صورت فعال‌سازی، نام شما به کاربران نمایش داده نخواهد شد.</span>
+              </div>
+            </div>
+          </form>
+        </ModalBody>
+
+        <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsWriteModalOpen(false)}
+            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={createComment.isPending}
+            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+            onClick={handleCommentSubmit}
+          >
+            ثبت نظر نهایی
+          </Button>
         </div>
-      </div>
+      </Modal>
 
-      <div className="w-full">
-        <TextArea
-          label="متن نظر *"
-          placeholder="نظر خود را در مورد این کالا به اشتراک بگذارید..."
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          className="h-28 text-xs font-iran-yekan"
-          required
-        />
-      </div>
+      {/* مودال موفقیت ثبت دیدگاه با لاتی Rate-cong.json */}
+      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} className="max-w-md w-full">
+        <ModalBody className="p-6 text-center flex flex-col items-center justify-center gap-3">
+          <LottiePlayer 
+            path="/anumations/Rate-cong.json" 
+            className="w-48 h-48 max-w-full mx-auto" 
+            loop={false} 
+          />
 
-      <div className="flex items-start gap-2.5 w-full mt-1 border-t border-dashed pt-4 select-none">
-        <Checkbox
-          checked={isIncognito}
-          onChange={(checked) => setIsIncognito(checked)}
-        />
-        <div className="">
-          <span className="text-xs font-bold text-foreground font-iran-yekan block">ارسال به صورت ناشناس</span>
-          <span className="text-[10px] text-muted-foreground font-iran-yekan block mt-0.5">در صورت فعال‌سازی، نام شما به کاربران نمایش داده نخواهد شد.</span>
-        </div>
-      </div>
+          <h4 className="text-base font-black text-foreground font-iran-yekan leading-relaxed">
+            {userName} عزیز، از ارسال نظر شما ممنونیم
+          </h4>
 
-    </form>
-  </ModalBody>
+          <p className="text-xs font-bold text-primary font-iran-yekan">
+            با نوشتن این نظر به بقیه هم کمک بزرگی کردی
+          </p>
 
-  {/* فوتر با دکمه‌های تمام عرض */}
-  <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
-    <Button
-      type="button"
-      variant="outline"
-      onClick={() => setIsWriteModalOpen(false)}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
-    >
-      انصراف
-    </Button>
-    <Button
-      type="submit"
-      variant="primary"
-      isLoading={createComment.isPending}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
-      onClick={handleCommentSubmit}
-    >
-      ثبت نظر نهایی
-    </Button>
-  </div>
-</Modal>
+          <p className="text-xs text-muted-foreground font-iran-yekan leading-relaxed max-w-xs mx-auto">
+            نظر شما ثبت شد و پس از بررسی و تایید پشتیبانی، برای دیگران هم به اشتراک گذاشته میشود.
+          </p>
+
+          <Button
+            variant="primary"
+            onClick={() => setIsSuccessModalOpen(false)}
+            className="w-full mt-4 rounded-xl text-xs h-10 font-bold font-iran-yekan shadow-sm"
+          >
+            متوجه شدم
+          </Button>
+        </ModalBody>
+      </Modal>
 
     </div>
   );

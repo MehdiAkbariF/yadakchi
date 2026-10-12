@@ -1,4 +1,4 @@
-// src/components/features/Car/components/CarHeaderCard.tsx
+﻿// src/components/features/Car/components/CarHeaderCard.tsx
 
 'use client';
 
@@ -13,7 +13,7 @@ import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
 import { Car as CarIcon, Search, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { getCarUrl } from '@/core/utils/formatters';
+import { getCarUrl, getFullUrl } from '@/core/utils/formatters';
 
 interface CarHeaderCardProps {
   slug: string;
@@ -27,15 +27,6 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: cars = [], isLoading: isCarsLoading } = useGetCarListFlat(1, 200);
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const filteredCars = cars.filter((car: any) =>
     car.model.toLowerCase().includes(searchQuery.toLowerCase())
   );

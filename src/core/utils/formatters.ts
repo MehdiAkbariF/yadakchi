@@ -1,37 +1,42 @@
 // src/core/utils/formatters.ts
 
-export function formatDate(date: Date | string, format: 'full' | 'short' | 'relative' = 'full'): string {
+import { resolveMediaUrl } from './media-url';
+
+export function formatDate(
+  date: Date | string,
+  format: 'full' | 'short' | 'relative' = 'full'
+): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  
+
   if (isNaN(d.getTime())) {
     return 'تاریخ نامعتبر';
   }
-  
+
   if (format === 'relative') {
     return formatRelativeTime(d);
   }
-  
+
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: format === 'short' ? 'short' : 'long',
     day: 'numeric',
     ...(format === 'full' && { hour: '2-digit', minute: '2-digit' }),
   };
-  
+
   return new Intl.DateTimeFormat('fa-IR', options).format(d);
 }
 
 function formatRelativeTime(date: Date): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
-  
+
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
   const months = Math.floor(days / 30);
   const years = Math.floor(days / 365);
-  
+
   if (years > 0) return `${years} سال پیش`;
   if (months > 0) return `${months} ماه پیش`;
   if (days > 0) return `${days} روز پیش`;
@@ -44,7 +49,7 @@ export function formatNumber(value: number, locale: 'fa' | 'en' = 'fa'): string 
   const formatted = new Intl.NumberFormat(
     locale === 'fa' ? 'fa-IR' : 'en-US'
   ).format(value);
-  
+
   return formatted;
 }
 
@@ -62,14 +67,20 @@ export function formatPercentage(value: number, decimals: number = 0): string {
   return `${value.toFixed(decimals)}%`;
 }
 
-export function truncateText(text: string, maxLength: number, suffix: string = '...'): string {
+export function truncateText(
+  text: string,
+  maxLength: number,
+  suffix: string = '...'
+): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + suffix;
 }
 
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
 }
 
 export function debounce<T extends (...args: any[]) => any>(
@@ -77,8 +88,8 @@ export function debounce<T extends (...args: any[]) => any>(
   delay: number
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout;
-  
-  return function(this: any, ...args: Parameters<T>) {
+
+  return function (this: any, ...args: Parameters<T>) {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn.apply(this, args), delay);
   };
@@ -89,12 +100,12 @@ export function throttle<T extends (...args: any[]) => any>(
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean = false;
-  
-  return function(this: any, ...args: Parameters<T>) {
+
+  return function (this: any, ...args: Parameters<T>) {
     if (!inThrottle) {
       fn.apply(this, args);
       inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
   };
 }
@@ -133,7 +144,8 @@ export function jalaliToGregorian(jy: number, jm: number, jd: number): string {
   let jy2 = jy - 979;
   let jm2 = jm - 1;
   let jd2 = jd - 1;
-  let j_day_no = 365 * jy2 + Math.floor(jy2 / 33) * 8 + Math.floor((jy2 % 33 + 3) / 4);
+  let j_day_no =
+    365 * jy2 + Math.floor(jy2 / 33) * 8 + Math.floor(((jy2 % 33) + 3) / 4);
   for (let i = 0; i < jm2; ++i) j_day_no += j_days_in_month[i];
   j_day_no += jd2;
   let g_day_no = j_day_no + 79;
@@ -167,21 +179,21 @@ export function jalaliToGregorian(jy: number, jm: number, jd: number): string {
   return `${gy}-${String(gm).padStart(2, '0')}-${String(gd).padStart(2, '0')}`;
 }
 
-export function toPersianDigits(value: string | number | undefined | null): string {
+export function toPersianDigits(
+  value: string | number | undefined | null
+): string {
   if (value === undefined || value === null) return '';
   const str = String(value);
   const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
   return str.replace(/[0-9]/g, (w) => persianDigits[parseInt(w)]);
 }
 
+/**
+ * 🔄 تبدیل مسیر خام به URL نهایی عکس
+ *
+ * @deprecated از `resolveMediaUrl` (در `@/core/utils/media-url`) استفاده کنید.
+ * این تابع فقط برای backward-compatibility نگه داشته شده و به‌عنوان alias عمل می‌کند.
+ */
 export function getFullUrl(path: any): string {
-  if (!path || typeof path !== 'string') {
-    return '/placeholder.png';
-  }
-  if (path.startsWith('http')) {
-    return path;
-  }
-  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${base}${cleanPath}`;
+  return resolveMediaUrl(path);
 }

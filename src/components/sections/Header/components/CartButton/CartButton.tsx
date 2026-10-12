@@ -1,4 +1,4 @@
-// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\CartButton\CartButton.tsx
+﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\CartButton\CartButton.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,6 +9,7 @@ import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/fro
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
 
+import { getFullUrl } from '@/core/utils/formatters';
 export function CartButton() {
   const [mounted, setMounted] = useState(false);
   const { data: rawBasket } = useGetBasket();
@@ -51,15 +52,6 @@ export function CartButton() {
       setActiveLoadingId(null);
     }
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="relative group select-none">
       <Link href="/basket">

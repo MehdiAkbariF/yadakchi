@@ -1,22 +1,15 @@
-'use client';
+﻿'use client';
 
 import { Store } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '@/components/composites/Card';
 import { BasketItemRow } from './BasketItemRow';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface BasketMerchantGroupProps {
   sub: any;
 }
 
 export function BasketMerchantGroup({ sub }: BasketMerchantGroupProps) {
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <Card className="w-full overflow-hidden border rounded-xl shadow-sm bg-background">
       <CardHeader className="border-b bg-muted/20 px-4 py-3.5 flex items-center justify-between">

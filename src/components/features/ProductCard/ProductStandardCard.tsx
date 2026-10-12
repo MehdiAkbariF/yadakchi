@@ -1,4 +1,4 @@
-// src/components/features/ProductCard/ProductStandardCard.tsx
+﻿// src/components/features/ProductCard/ProductStandardCard.tsx
 
 'use client';
 
@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Star, Store, BadgeCheck, Truck, Eye } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { useImpression } from '@/shared/hooks/useImpression';
 import { trackShopProductClick } from '@/core/utils/impression-tracker';
 
@@ -117,15 +117,6 @@ export function ProductStandardCard({
     }, 3000);
     return () => clearInterval(interval);
   }, [tickerLength, isMounted]);
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };

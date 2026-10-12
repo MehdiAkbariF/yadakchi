@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
@@ -8,6 +8,7 @@ import { Card } from '@/components/composites/Card';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { ListFilter, Search, Settings } from 'lucide-react';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface ChangeCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,15 +24,6 @@ export function ChangeCategoryModal({ isOpen, onClose }: ChangeCategoryModalProp
       setSearchQuery('');
     }
   }, [isOpen]);
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const filteredCategories = categories.filter((cat: any) =>
     cat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );

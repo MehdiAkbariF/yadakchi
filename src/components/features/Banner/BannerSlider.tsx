@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
 import { useBannerImpression } from '@/shared/hooks/useBannerImpression'; // هوک بازدید
 import { bannerTracker } from '@/core/utils/banner-tracker'; // ترکر کلیک
 
@@ -45,15 +46,6 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
   
   // لود وضعیت ناظر بر اساس شناسه بنر اسلاید اکتیو فعلی
   const slideImpressionRef = useBannerImpression(currentSlide?.id || null);
-
-  const getFullUrl = (path: string) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   if (totalSlides === 0) return null;
 
   if (!isMounted) {

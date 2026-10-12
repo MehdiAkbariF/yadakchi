@@ -1,4 +1,4 @@
-// src/components/features/ProductCard/ProductDealCard.tsx
+﻿// src/components/features/ProductCard/ProductDealCard.tsx
 
 'use client';
 
@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Hourglass } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { useImpression } from '@/shared/hooks/useImpression';
 
 interface ProductDealCardProps {
@@ -109,15 +109,6 @@ export function ProductDealCard({
       .format(num)
       .padStart(2, '۰');
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };

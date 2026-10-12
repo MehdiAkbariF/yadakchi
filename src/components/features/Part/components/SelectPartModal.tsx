@@ -1,4 +1,4 @@
-// src/components/features/Part/components/SelectPartModal.tsx
+﻿// src/components/features/Part/components/SelectPartModal.tsx
 
 'use client';
 
@@ -11,6 +11,7 @@ import { Card } from '@/components/composites/Card';
 import { Loader2, Search, SlidersHorizontal, ChevronLeft, Inbox, Car } from 'lucide-react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface SelectPartModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -99,15 +100,6 @@ export function SelectPartModal({ isOpen, onClose, slug, categoryName, carSlug }
 
     window.location.href = `/parts/${slug}/${part.englishTitle}`;
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
       <ModalHeader onClose={onClose}>

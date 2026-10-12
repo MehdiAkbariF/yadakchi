@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import { motion, useMotionValue, animate } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 
+import { getFullUrl } from '@/core/utils/formatters';
 export function BrandSlider() {
   const { data: brands = [], isLoading, isError } = useGetMainBrands();
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -46,15 +47,6 @@ export function BrandSlider() {
       e.stopPropagation();
     }
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   if (isLoading) {
     return (
       <div className="w-full space-y-4 py-4">

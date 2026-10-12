@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Package,
   ShieldCheck,
-  Truck,
 } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
@@ -25,25 +24,23 @@ const toPersianDigits = (n: number | string | undefined | null) => {
 };
 
 function ShopSliderCard({ shop }: { shop: any }) {
-  // دریافت اطلاعات کامل و واقعی فروشگاه از اندپوینت ShopPage با استفاده از ShopId
   const { data: shopPageData, isLoading } = useGetShopPage(shop.id);
 
-  // ۱. عنوان فروشگاه کاملاً داینامیک از API
+  // ۱. عنوان فروشگاه
   const shopTitle = shopPageData?.shopTitle || shop.shopTitle || shop.name || '';
 
-  // ۲. توضیحات واقعی فروشگاه از دیتای سئو API
+  // ۲. توضیحات فروشگاه
   const description =
     shopPageData?.seoInformation?.description?.trim() ||
     (shopTitle ? `فروشگاه رسمی ${shopTitle} در یدکچی` : '');
 
-  // ۳. تعداد محصولات واقعی ثبت شده در بک‌اند
+  // ۳. تعداد محصولات
   const productCount = shopPageData?.shopProductCount ?? shop.productCount;
 
-  // ۴. درصد واقعی تعهد و رضایت (از آبجکت shopPerformanceReport)
+  // ۴. درصد تعهد و رضایت
   const onTimePercentage = shopPageData?.shopPerformanceReport?.sellerSentOnTimePercentage;
   const averageRate = shopPageData?.averageRate ?? shop.averageRate ?? shop.rating;
 
-  // محاسبه رضایت بر اساس گزارش عملکرد واقعی یا میانگین امتیاز (هر ستاره ۲۰ درصد)
   let satisfactionRate: number | null = null;
   if (typeof onTimePercentage === 'number' && onTimePercentage > 0) {
     satisfactionRate = Math.round(onTimePercentage);
@@ -51,23 +48,18 @@ function ShopSliderCard({ shop }: { shop: any }) {
     satisfactionRate = Math.min(100, Math.round(averageRate * 20));
   }
 
-  // ۵. وضعیت فعال بودن از گزارش عملکرد
-  const status = shopPageData?.shopPerformanceReport?.status;
-  const isActive = status ? status === 'Active' : true;
-
   if (isLoading) {
     return (
-      <div className="w-[300px] sm:w-[330px] h-[255px] shrink-0 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col justify-between">
+      <div className="w-[310px] sm:w-[330px] h-[255px] shrink-0 rounded-3xl border border-border bg-card p-4 sm:p-5 flex flex-col justify-between">
         <div className="space-y-3">
           <Skeleton className="w-24 h-6 rounded-full" />
           <Skeleton className="w-40 h-5 rounded-md" />
           <Skeleton className="w-full h-8 rounded-md" />
           <div className="flex gap-2">
-            <Skeleton className="w-28 h-5 rounded-full" />
-            <Skeleton className="w-16 h-5 rounded-full" />
+            <Skeleton className="w-20 h-5 rounded-full" />
           </div>
         </div>
-        <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800 my-2" />
+        <div className="w-full h-px bg-border my-2" />
         <div className="grid grid-cols-3 gap-2">
           <Skeleton className="h-10 rounded-md" />
           <Skeleton className="h-10 rounded-md" />
@@ -82,79 +74,75 @@ function ShopSliderCard({ shop }: { shop: any }) {
       href={`/shops/${shop.id}`}
       draggable={false}
       onDragStart={(e) => e.preventDefault()}
-      className="w-[300px] sm:w-[330px] shrink-0 rounded-3xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col justify-between select-none shadow-sm hover:shadow-xl hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer"
+      className="w-[310px] sm:w-[330px] shrink-0 rounded-3xl border border-border bg-card p-4 sm:p-5 flex flex-col justify-between select-none transition-colors duration-200 hover:border-primary cursor-pointer overflow-hidden"
     >
       <div className="flex flex-col gap-3">
-        {/* ۱. بج فروشنده منتخب (فقط در صورتی که رنکینگ یا امتیاز برتر داشته باشد) */}
+        {/* ۱. بج فروشنده منتخب با رنگ‌های سیستم */}
         <div className="flex items-center justify-start">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-black">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted border border-border text-muted-foreground text-xs font-semibold">
             <span>فروشنده منتخب</span>
-            <Star className="w-3.5 h-3.5 fill-emerald-600 dark:fill-emerald-400 text-emerald-600 dark:text-emerald-400" />
+            <Star className="w-3.5 h-3.5 fill-warning-500 text-warning-500" />
           </div>
         </div>
 
-        {/* ۲. نام و توضیحات فروشگاه - کاملاً بدون هاردکد */}
+        {/* ۲. نام و توضیحات فروشگاه */}
         <div className="flex flex-col gap-1.5 text-right">
-          <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-zinc-50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
+          <h3 className="text-base sm:text-lg font-bold text-foreground line-clamp-1">
             {shopTitle}
           </h3>
-          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-2 min-h-[36px]">
+          <p className="text-xs font-normal text-muted-foreground leading-relaxed line-clamp-2 min-h-[36px]">
             {description || 'اطلاعات و قطعات این فروشگاه در یدکچی تایید شده است.'}
           </p>
         </div>
 
-        {/* ۳. بج‌های تأییدیه و وضعیت */}
+        {/* ۳. بج احراز شده با استایل تم پیش‌فرض */}
         <div className="flex items-center gap-2 pt-1">
-          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>تأیید شده توسط ادمین</span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground text-[11px] font-medium">
+            <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
+            <span>احراز شده</span>
           </div>
-
-          {isActive && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>فعال</span>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* خط جداکننده */}
-      <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800 my-4" />
+      {/* خط جداکننده مطابق با رنگ border تم */}
+      <div className="w-full h-px bg-border my-4" />
 
-      {/* ۴. آمارهای کاملاً داینامیک */}
-      <div className="grid grid-cols-3 divide-x divide-x-reverse divide-zinc-100 dark:divide-zinc-800 text-center">
-        {/* ستون اول: تعداد محصولات از API */}
-        <div className="flex flex-col items-center gap-1 px-1">
-          <Package className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-          <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+      {/* ۴. ارقام و آمار بدون بیرون‌زدگی (تنظیم دقیق ستون‌ها و ابعاد) */}
+      <div className="w-full grid grid-cols-3 divide-x divide-x-reverse divide-border text-center items-center">
+        {/* ستون اول: تعداد محصولات */}
+        <div className="flex flex-col items-center justify-center gap-1 px-1 min-w-0">
+          <Package className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span className="text-[9.5px] sm:text-[10.5px] font-normal text-muted-foreground whitespace-nowrap truncate w-full">
             تعداد محصولات
           </span>
-          <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100">
+          <span className="text-xs sm:text-sm font-bold text-foreground truncate w-full">
             {productCount !== undefined && productCount !== null
               ? toPersianDigits(productCount.toLocaleString('fa-IR'))
               : '-'}
           </span>
         </div>
 
-        {/* ستون دوم: میزان رضایت مشتریان از API */}
-        <div className="flex flex-col items-center gap-1 px-1">
-          <ShieldCheck className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-          <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
+        {/* ستون دوم: میزان رضایت مشتریان */}
+        <div className="flex flex-col items-center justify-center gap-1 px-1 min-w-0">
+          <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span 
+            title="میزان رضایت مشتریان"
+            className="text-[9px] sm:text-[10px] font-normal text-muted-foreground whitespace-nowrap tracking-tighter truncate w-full"
+          >
             میزان رضایت مشتریان
           </span>
-          <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100">
+          <span className="text-xs sm:text-sm font-bold text-foreground truncate w-full">
             {satisfactionRate !== null ? `${toPersianDigits(satisfactionRate)}٪` : '-'}
           </span>
         </div>
 
-        {/* ستون سوم: ارسال به موقع / میانگین ارسال */}
-        <div className="flex flex-col items-center gap-1 px-1">
-          <Truck className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
-          <span className="text-[10px] sm:text-[11px] font-medium text-zinc-500 dark:text-zinc-400">
-            ارسال به موقع
+        {/* ستون سوم: امتیاز عملکرد */}
+        <div className="flex flex-col items-center justify-center gap-1 px-1 min-w-0">
+          <Star className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span className="text-[9.5px] sm:text-[10.5px] font-normal text-muted-foreground whitespace-nowrap truncate w-full">
+            امتیاز عملکرد
           </span>
-          <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100">
+          <span className="text-xs sm:text-sm font-bold text-foreground truncate w-full">
             {onTimePercentage !== undefined && onTimePercentage !== null
               ? `${toPersianDigits(Math.round(onTimePercentage))}٪`
               : 'سریع'}
@@ -187,7 +175,7 @@ export function ShopSlider() {
   }, [shops]);
 
   const handleScroll = (direction: 'left' | 'right') => {
-    const step = 340;
+    const step = 330;
     let newX = x.get() + (direction === 'right' ? -step : step);
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
@@ -215,14 +203,14 @@ export function ShopSlider() {
     return (
       <div className="w-full space-y-4 py-4 animate-in fade-in duration-300">
         <div className="flex items-center gap-2 px-1">
-          <Store className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <Store className="h-5 w-5 text-muted-foreground shrink-0" />
           <Skeleton className="w-36 h-6 rounded-lg" />
         </div>
-        <div className="w-full bg-background rounded-2xl border p-4 flex gap-4 overflow-hidden">
+        <div className="w-full bg-card rounded-2xl border border-border p-4 flex gap-4 overflow-hidden">
           {[...Array(4)].map((_, index) => (
             <Skeleton
               key={index}
-              className="w-[300px] sm:w-[330px] h-[255px] shrink-0 rounded-3xl"
+              className="w-[310px] sm:w-[330px] h-[255px] shrink-0 rounded-3xl"
             />
           ))}
         </div>
@@ -230,36 +218,35 @@ export function ShopSlider() {
     );
   }
 
-  // اگر خطایی رخ داده بود یا هیچ فروشنده‌ای وجود نداشت سکشن کلاً پنهان می‌شود
   if (isError || shops.length === 0) return null;
 
   return (
     <div className="w-full flex flex-col space-y-4 py-4 animate-in fade-in duration-300">
       <div className="flex items-center justify-between w-full px-1">
         <div className="flex items-center gap-2">
-          <Store className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <Store className="h-5 w-5 text-muted-foreground shrink-0" />
           <Typography
             variant="h4"
-            className="font-iran-yekan font-black text-foreground text-base sm:text-lg"
+            className="font-iran-yekan font-bold text-foreground text-base sm:text-lg"
           >
             فروشندگان منتخب یدکچی
           </Typography>
         </div>
       </div>
 
-      <div className="w-full bg-zinc-50/50 dark:bg-zinc-950/30 rounded-3xl border border-zinc-200/80 dark:border-zinc-800 p-4 relative group overflow-hidden">
+      <div className="w-full bg-card rounded-3xl border border-border p-4 relative overflow-hidden">
         {shops.length > 3 && (
           <>
             <button
               onClick={() => handleScroll('right')}
-              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-all shadow-lg outline-none cursor-pointer"
+              className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full border border-border bg-background hover:bg-muted text-foreground transition-colors shadow-sm outline-none cursor-pointer"
               aria-label="Previous"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
             <button
               onClick={() => handleScroll('left')}
-              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-all shadow-lg outline-none cursor-pointer"
+              className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full border border-border bg-background hover:bg-muted text-foreground transition-colors shadow-sm outline-none cursor-pointer"
               aria-label="Next"
             >
               <ChevronLeft className="h-4 w-4" />

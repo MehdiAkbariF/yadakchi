@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ import { useAppStore } from '@/shared/store/useAppStore';
 import { ShoppingBag, Check, Store, ShieldCheck, Truck, Award } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface ShopDetailsContentProps {
   id: string;
 }
@@ -51,15 +52,6 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
     setFilter('sort', value);
     setIsMobileSortOpen(false);
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const activeSortLabel = SORT_OPTIONS.find(o => o.value === (filters.orderType || 'Selected'))?.label || 'منتخب';
 
   const breadcrumbItems = [

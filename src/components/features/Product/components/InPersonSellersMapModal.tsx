@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -12,6 +12,7 @@ import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface InPersonSellersMapModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -201,15 +202,6 @@ export function InPersonSellersMapModal({
       showToast.error(error.userMessage || 'خطا در ثبت گزارش');
     }
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };

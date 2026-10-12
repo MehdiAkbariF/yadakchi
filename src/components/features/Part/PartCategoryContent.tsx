@@ -1,4 +1,4 @@
-// src/components/features/Part/PartCategoryContent.tsx
+﻿// src/components/features/Part/PartCategoryContent.tsx
 
 'use client';
 
@@ -22,6 +22,7 @@ import { ChangeCategoryModal } from './components/ChangeCategoryModal';
 import { SelectPartModal } from './components/SelectPartModal';
 import { ShoppingBag, Settings, ListFilter, X } from 'lucide-react';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface PartCategoryContentProps {
   slug: string;
 }
@@ -56,14 +57,6 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
   /*
     اصلاح امضای تابع محلی جهت پذیرش امن تایپ undefined (رفع ارور ts-2345):
   */
-  const getFullUrl = (path: string | null | undefined) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="w-full flex flex-col gap-6 text-right" dir="rtl">
       

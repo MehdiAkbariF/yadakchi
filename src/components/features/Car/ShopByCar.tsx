@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import { Input } from '@/components/primitives/Input/Input';
 import { Typography } from '@/components/primitives/Typography';
 import { Car, Search, Loader2, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { getCarUrl } from '@/core/utils/formatters';
+import { getCarUrl, getFullUrl } from '@/core/utils/formatters';
 
 interface CarItem {
   id: string;
@@ -31,15 +31,6 @@ export function ShopByCar() {
     که کاربر روی دکمه کلیک کرده و مودال پاپ‌آپ باز شود (enabled: isOpen)
   */
   const { data: cars = [], isLoading } = useGetCarListFlat(1, 200, { enabled: isOpen });
-
-  const getFullUrl = (path: string) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const handleSearchSubmit = () => {
     if (selectedCar) {
       window.location.href = getCarUrl(selectedCar.englishTitle);

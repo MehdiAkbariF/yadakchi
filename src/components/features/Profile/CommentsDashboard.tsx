@@ -1,4 +1,4 @@
-// src/components/features/Profile/CommentsDashboard.tsx
+﻿// src/components/features/Profile/CommentsDashboard.tsx
 
 'use client';
 
@@ -35,6 +35,7 @@ import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 import Link from 'next/link';
 
+import { getFullUrl } from '@/core/utils/formatters';
 export function CommentsDashboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -77,15 +78,6 @@ export function CommentsDashboard() {
   const isCommentsActive = activeTab === 'comments';
   const isInquiriesActive = activeTab === 'inquiries';
   const isBlogCommentsActive = activeTab === 'blogComments';
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const handleOpenWriteComment = (product: any) => {
     setSelectedProduct(product);
     setEditingComment(null);

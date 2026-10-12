@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,7 +22,7 @@ import { Input } from '@/components/primitives/Input/Input';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { ShoppingBag, Car as CarIcon, Search, ChevronLeft, Settings, X } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { getCarUrl } from '@/core/utils/formatters';
+import { getCarUrl, getFullUrl } from '@/core/utils/formatters';
 
 interface CarDetailsContentProps {
   slug: string;
@@ -59,15 +59,6 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
       href: undefined
     }))
   ];
-
-  const getFullUrl = (path: string | null | undefined) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const filteredCars = cars.filter((car: any) =>
     car.model.toLowerCase().includes(searchQuery.toLowerCase())
   );

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Card } from '@/components/composites/Card';
@@ -6,6 +6,7 @@ import { Button } from '@/components/primitives/Button/Button';
 import { ChangeCategoryModal } from './ChangeCategoryModal';
 import { SelectPartModal } from './SelectPartModal';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface PartCategoryHeaderCardProps {
   slug: string;
   categoryName: string;
@@ -15,15 +16,6 @@ interface PartCategoryHeaderCardProps {
 export function PartCategoryHeaderCard({ slug, categoryName, thumbnail }: PartCategoryHeaderCardProps) {
   const [isChangeCatOpen, setIsChangeCatOpen] = useState(false);
   const [isSelectPartOpen, setIsSelectPartOpen] = useState(false);
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="w-full">
       <Card className="w-full border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">

@@ -1,3 +1,4 @@
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\ProductCard\DealsSlider.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -52,6 +53,7 @@ export function DealsSlider() {
   return (
     <div className="w-full flex flex-col space-y-3.5 py-4 animate-in fade-in duration-300">
       
+      {/* هدر موبایل با استایل رنگ و فونت و فلش اصلاح‌شده */}
       <div className="flex md:hidden items-center justify-between w-full px-1">
         <div className="flex items-center gap-2">
           <AlarmClock className="h-5 w-5 text-primary shrink-0 animate-bounce [animation-duration:3s]" />
@@ -62,9 +64,10 @@ export function DealsSlider() {
         
         <Link 
           href="/special" 
-          className="text-xs font-bold font-iran-yekan text-primary hover:underline transition-colors shrink-0"
+          className="inline-flex items-center gap-1 text-xs font-medium font-iran-yekan text-foreground hover:opacity-75 transition-opacity shrink-0"
         >
-          مشاهده همه 
+          <span>مشاهده همه</span>
+          <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
         </Link>
       </div>
 
@@ -81,9 +84,10 @@ export function DealsSlider() {
 
           <Link 
             href="/special" 
-            className="text-xs font-bold font-iran-yekan border-b border-white hover:text-white/80 pb-0.5 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-medium font-iran-yekan border-b border-white hover:text-white/80 pb-0.5 transition-colors"
           >
-            مشاهده همه 
+            <span>مشاهده همه</span>
+            <ChevronLeft className="w-3.5 h-3.5 stroke-[2]" />
           </Link>
         </div>
 

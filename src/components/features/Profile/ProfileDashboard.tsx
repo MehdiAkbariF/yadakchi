@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRouter } from 'next/navigation';
 import { 
@@ -19,6 +19,7 @@ import { Card, CardBody } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { useGetOrders, useGetUserVehicles } from '@/domains/userpanel/hooks/userpanel.hooks';
 
+import { getFullUrl } from '@/core/utils/formatters';
 export function ProfileDashboard() {
   const router = useRouter();
   const { data: ordersData } = useGetOrders('', '', '', 1);
@@ -41,15 +42,6 @@ export function ProfileDashboard() {
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="w-full flex flex-col gap-6">
       

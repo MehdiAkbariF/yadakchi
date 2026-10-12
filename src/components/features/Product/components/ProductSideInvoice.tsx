@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Store, ShieldCheck, Truck, LineChart, Loader2, Sparkles, ShoppingBag, Info, Eye, Star, AlertTriangle } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composit
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface ProductSideInvoiceProps {
   product: any;
   seller: any | null;
@@ -40,15 +41,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
       setIsSubmitting(false);
     }
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };

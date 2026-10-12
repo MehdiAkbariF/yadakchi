@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -6,7 +6,7 @@ import { useGetShopProductBanners } from '@/domains/front/banner/hooks/banner.ho
 import { useBannerImpression } from '@/shared/hooks/useBannerImpression'; // استفاده از هوک بنر به جای هوک کالا
 import { bannerTracker } from '@/core/utils/banner-tracker'; // وارد کردن ترکر کلیک بنرها
 import { Star, Store } from 'lucide-react';
-import { toPersianDigits, getProductUrl } from '@/core/utils/formatters';
+import { toPersianDigits, getProductUrl, getFullUrl } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
 
 interface ShopProductAdBannerProps {
@@ -35,15 +35,6 @@ export function ShopProductAdBanner({
   const impressionRef = useBannerImpression(ad?.id || null, ad?.product?.id || null);
 
   if (isLoading || !ad) return null;
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const adProductUrl = getProductUrl(ad.product.code, ad.product.name);
 
   return (

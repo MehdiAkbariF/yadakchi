@@ -1,4 +1,4 @@
-// src/components/features/CarParts/CarPartsContent.tsx
+﻿// src/components/features/CarParts/CarPartsContent.tsx
 
 'use client';
 
@@ -25,7 +25,7 @@ import { ChangeCategoryModal } from '@/components/features/Part/components/Chang
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { ShoppingBag, Car as CarIcon, Settings, Search, ArrowRight, X, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { getCarUrl } from '@/core/utils/formatters';
+import { getCarUrl, getFullUrl } from '@/core/utils/formatters';
 import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
 
 interface CarPartsContentProps {
@@ -65,15 +65,6 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
     { id: 'car-active', title: carData?.model || decodedCarModel, href: getCarUrl(carSlug) },
     { id: 'part-active', title: categoryData?.category?.name || partSlug }
   ];
-
-  const getFullUrl = (path: string | null | undefined) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const filteredCars = cars.filter((car: any) =>
     car.model.toLowerCase().includes(searchQuery.toLowerCase())
   );

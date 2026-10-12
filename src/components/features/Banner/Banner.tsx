@@ -1,8 +1,9 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
 import { useBannerImpression } from '@/shared/hooks/useBannerImpression'; // وارد کردن هوک بازدید بنرها
 import { bannerTracker } from '@/core/utils/banner-tracker'; // وارد کردن ترکر بنرها
 
@@ -43,16 +44,6 @@ export function Banner({
   // فعال‌سازی ناظر لود چشم‌انداز (Impression) برای هر دو نسخه دسکتاپ و موبایل بنر استاتیک
   const desktopImpressionRef = useBannerImpression(desktopBanner.id);
   const mobileImpressionRef = useBannerImpression(mobileBanner.id);
-
-  const getFullUrl = (path: string) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const renderBannerImage = (banner: BannerItem, sizeClass: string, ref: React.RefObject<HTMLDivElement>) => {
     const fullSrc = getFullUrl(banner.image);
     const alt = banner.imageAlt || banner.title || 'Yadakchi Banner';

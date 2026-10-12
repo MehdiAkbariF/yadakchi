@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 import { CreditCard, Calendar, Truck, Clock, Store, ShieldCheck, Sparkles, Receipt, ArrowRight, Hourglass } from 'lucide-react';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface PayableTimerProps {
   payableUntil: string;
 }
@@ -105,15 +106,6 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
   if (isLoading || !order) {
     return <PageLoading message="در حال دریافت فاکتور رسمی سفارش..." />;
   }
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(Math.round(value));
   };

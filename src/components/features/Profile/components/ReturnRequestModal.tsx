@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
@@ -6,7 +6,7 @@ import { Button } from '@/components/primitives/Button/Button';
 import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { useGetReturnRequestReasons, useSubmitReturnRequest } from '@/domains/userpanel/hooks/userpanel.hooks';
-import { toPersianDigits } from '@/core/utils/formatters';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { showToast } from '@/core/utils/toast';
 import { Paperclip, Trash2, FileText, X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
@@ -89,15 +89,6 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder, item }: ReturnRe
     value: String(i + 1),
     label: `${toPersianDigits(i + 1)} عدد`,
   }));
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
       <ModalHeader onClose={onClose}>

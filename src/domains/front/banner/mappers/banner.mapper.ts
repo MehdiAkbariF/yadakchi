@@ -1,4 +1,4 @@
-import { env } from '@/core/config/env';
+﻿import { env } from '@/core/config/env';
 import { 
   BannerApiDto, 
   ShopProductBannerApiDto,
@@ -17,6 +17,7 @@ import {
   BannerViewRequest
 } from '../types/view.types';
 
+import { getFullUrl } from '@/core/utils/formatters';
 export class BannerMapper {
   static toDomain(dto: BannerApiDto): Banner {
     return {
@@ -132,14 +133,6 @@ export class BannerMapper {
 
   static toViewMegaMenu(dto: MegaMenuCategoryApiDto): MegaMenuCategoryViewModel {
     const apiBase = (env.apiBaseUrl || 'https://api.yadakchi.com').replace(/\/$/, '');
-    
-    const getFullUrl = (path: string | null) => {
-      if (!path) return null;
-      if (path.startsWith('http')) return path;
-      const cleanPath = path.startsWith('/') ? path : `/${path}`;
-      return `${apiBase}${cleanPath}`;
-    };
-
     const categoryIcon = getFullUrl(dto.icon);
 
     return {

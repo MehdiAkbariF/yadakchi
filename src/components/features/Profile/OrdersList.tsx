@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { cn } from '@/design-system/utils/cn';
 import { ShoppingBag, CreditCard, Truck, CheckCircle2, RotateCcw, XCircle, ChevronLeft, ArrowRight, Hourglass } from 'lucide-react';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface PayableTimerProps {
   payableUntil: string;
 }
@@ -77,15 +78,6 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
     { id: 'ReturnRequest', label: 'مرجوعی‌ها', icon: RotateCcw, count: 0 },
     { id: 'Cancelled', label: 'لغو شده', icon: XCircle, count: 12 },
   ];
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="flex-1 flex flex-col gap-6 w-full text-right" dir="rtl">
       

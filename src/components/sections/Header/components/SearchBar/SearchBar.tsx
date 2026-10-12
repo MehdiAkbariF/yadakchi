@@ -1,7 +1,7 @@
 // c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\SearchBar\SearchBar.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Search, X, Clock, Trash2, ArrowRight, Loader2, Sparkles, FolderKanban, Car } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -52,6 +52,13 @@ export function SearchBar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // استفاده از ترنزیشن جهت تشخیص وضعیت لودینگ ناوبری
+  const [isPending, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // وضعیت لودینگ کل هدر
+  const isGlobalSearching = isPending || isSubmitting;
+
   const urlQuery = searchParams.get('q') || '';
   const urlCarId = searchParams.get('carIds') || searchParams.get('carId') || '';
   const urlBrandId = searchParams.get('brandIds') || searchParams.get('brandId') || '';
@@ -100,9 +107,11 @@ export function SearchBar({
     return () => clearInterval(interval);
   }, []);
 
+  // به محض تغییر پارامترهای آدرس، لودینگ لغو و مقدار باکس سینک می‌شود
   useEffect(() => {
     setQuery(resolvedText);
-  }, [resolvedText]);
+    setIsSubmitting(false);
+  }, [resolvedText, pathname, searchParams]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -129,17 +138,25 @@ export function SearchBar({
     };
   }, [isMobileModalOpen]);
 
+  // متد ارسال جستجو با گارد جلوگیری از درخواست تکراری و فعال‌سازی آنی لودینگ
   const handleSearchSubmit = (searchWord: string) => {
-    if (!searchWord.trim()) return;
+    const trimmed = searchWord.trim();
+    if (!trimmed) return;
+
+    // جلوگیری از ارسال مجدد در حین پردازش یا جستجوی عینا همان عبارت فعال
+    if (isGlobalSearching) return;
+
+    setIsSubmitting(true);
+    setQuery(trimmed);
     
-    setQuery(searchWord);
-    
-    if (onSearch) onSearch(searchWord);
+    if (onSearch) onSearch(trimmed);
     
     setIsFocused(false);
     setIsMobileModalOpen(false);
-    
-    router.push(`/search?q=${encodeURIComponent(searchWord)}`);
+
+    startTransition(() => {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    });
   };
 
   const handleRemoveHistoryItem = (word: string, e: React.MouseEvent) => {
@@ -218,19 +235,24 @@ export function SearchBar({
                 </span>
                 <div className="flex flex-wrap gap-2 justify-start">
                   {carsList.map((car: any) => (
-                    <Link
+                    <button
                       key={car.id}
-                      href={`/search?carId=${car.id}`}
+                      type="button"
+                      disabled={isGlobalSearching}
                       onClick={() => {
                         setQuery(car.model);
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
+                        setIsSubmitting(true);
+                        startTransition(() => {
+                          router.push(`/search?carId=${car.id}`);
+                        });
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-medium font-iran-yekan hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-medium font-iran-yekan hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors disabled:opacity-50"
                     >
                       <Car className="h-3.5 w-3.5" />
                       همه کالا‌های خودرو {car.model}
-                    </Link>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -243,19 +265,24 @@ export function SearchBar({
                 </span>
                 <div className="flex flex-wrap gap-2 justify-start">
                   {uniqueCategories.map((cat: any) => (
-                    <Link
+                    <button
                       key={cat.partCategoryId}
-                      href={`/part-category/${cat.partCategoryEnglishTitle}`}
+                      type="button"
+                      disabled={isGlobalSearching}
                       onClick={() => {
                         setQuery(cat.partCategoryName);
                         setIsFocused(false);
                         setIsMobileModalOpen(false);
+                        setIsSubmitting(true);
+                        startTransition(() => {
+                          router.push(`/part-category/${cat.partCategoryEnglishTitle}`);
+                        });
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium font-iran-yekan hover:bg-primary/10 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium font-iran-yekan hover:bg-primary/10 transition-colors disabled:opacity-50"
                     >
                       <FolderKanban className="h-3.5 w-3.5" />
                       همه کالا‌های دسته {cat.partCategoryName}
-                    </Link>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -276,8 +303,10 @@ export function SearchBar({
                   {keywordsList.map((kw: any, index: number) => (
                     <button
                       key={index}
+                      type="button"
+                      disabled={isGlobalSearching}
                       onClick={() => handleSearchSubmit(kw.suggestion)}
-                      className="flex items-center justify-between w-full text-right p-2 rounded-md hover:bg-muted/50 transition-colors font-iran-yekan"
+                      className="flex items-center justify-between w-full text-right p-2 rounded-md hover:bg-muted/50 transition-colors font-iran-yekan disabled:opacity-50"
                     >
                       <div className="flex flex-col min-w-0 text-right">
                         <span className="text-sm text-foreground truncate">
@@ -338,7 +367,14 @@ export function SearchBar({
                     const itemId = isObject ? (item as any).id : String(idx);
 
                     return (
-                      <div key={itemId} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium font-iran-yekan text-foreground border hover:border-primary/20 transition-all cursor-pointer" onClick={() => handleSearchSubmit(wordValue)}>
+                      <div 
+                        key={itemId} 
+                        className={cn(
+                          "flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium font-iran-yekan text-foreground border hover:border-primary/20 transition-all cursor-pointer",
+                          isGlobalSearching && "opacity-50 pointer-events-none"
+                        )}
+                        onClick={() => handleSearchSubmit(wordValue)}
+                      >
                         <span>{wordValue}</span>
                         <button onClick={(e) => handleRemoveHistoryItem(wordValue, e)} className="p-0.5 hover:bg-muted-foreground/20 rounded-full flex items-center justify-center transition-colors" aria-label="Remove">
                           <X className="h-3 w-3 text-muted-foreground" />
@@ -358,7 +394,13 @@ export function SearchBar({
                 </span>
                 <div className="flex flex-wrap gap-2 pt-1 justify-start">
                   {suggestions.map((suggest: any, idx: number) => (
-                    <button key={idx} onClick={() => handleSearchSubmit(suggest)} className="px-3 py-1.5 rounded-lg border border-input hover:border-primary/40 hover:bg-primary/5 text-xs font-medium font-iran-yekan text-foreground transition-all">
+                    <button 
+                      key={idx} 
+                      type="button"
+                      disabled={isGlobalSearching}
+                      onClick={() => handleSearchSubmit(suggest)} 
+                      className="px-3 py-1.5 rounded-lg border border-input hover:border-primary/40 hover:bg-primary/5 text-xs font-medium font-iran-yekan text-foreground transition-all disabled:opacity-50"
+                    >
                       {suggest}
                     </button>
                   ))}
@@ -395,7 +437,11 @@ export function SearchBar({
           onClick={handleOpenMobileSearch} 
           className="relative flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground min-w-0 overflow-hidden"
         >
-          <Search className="h-4 w-4 shrink-0 z-10" />
+          {isGlobalSearching ? (
+            <Loader2 className="h-4 w-4 shrink-0 z-10 text-primary animate-spin" />
+          ) : (
+            <Search className="h-4 w-4 shrink-0 z-10" />
+          )}
           
           {query ? (
             <span className="text-sm font-iran-yekan font-medium mr-2 truncate flex-1 text-right">
@@ -419,16 +465,28 @@ export function SearchBar({
                 type="text"
                 placeholder=""
                 value={query}
+                disabled={isGlobalSearching}
                 onChange={(e) => setQuery(e.target.value)}
-                leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
-                rightIcon={query && (
+                leftIcon={
+                  isGlobalSearching ? (
+                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                  )
+                }
+                rightIcon={query && !isGlobalSearching && (
                   <button onClick={() => setQuery('')} className="p-1 hover:bg-muted rounded-full flex items-center justify-center" type="button">
                     <X className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 )}
                 className="w-full font-iran-yekan"
                 dir="rtl"
-                onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(query)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearchSubmit(query);
+                  }
+                }}
               />
               {!query && (
                 <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -447,16 +505,29 @@ export function SearchBar({
   // ۲. رندر در نسخه دسکتاپ
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
-      <form onSubmit={(e) => { e.preventDefault(); handleSearchSubmit(query); }} className="relative">
+      <form 
+        onSubmit={(e) => { 
+          e.preventDefault(); 
+          handleSearchSubmit(query); 
+        }} 
+        className="relative"
+      >
         <Input
           ref={desktopInputRef}
           type="text"
           value={query}
+          disabled={isGlobalSearching}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { setIsFocused(true); refetchHistory(); }}
           placeholder=""
-          leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
-          rightIcon={query && (
+          leftIcon={
+            isGlobalSearching ? (
+              <Loader2 className="h-4 w-4 text-primary animate-spin" />
+            ) : (
+              <Search className="h-4 w-4 text-muted-foreground" />
+            )
+          }
+          rightIcon={query && !isGlobalSearching && (
             <button type="button" onClick={() => setQuery('')} className="p-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>

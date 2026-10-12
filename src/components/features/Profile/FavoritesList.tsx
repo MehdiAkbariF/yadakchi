@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGetFavoriteProducts } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
@@ -9,7 +9,56 @@ import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { Select } from '@/components/primitives/Select/Select';
 import { Button } from '@/components/primitives/Button/Button';
 import { Heart, ArrowRight, ShoppingBag } from 'lucide-react';
-import { cn } from '@/design-system/utils/cn';
+
+function LottiePlayer({ path, className = "w-48 h-48", loop = true }: { path: string; className?: string; loop?: boolean }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/') ? path.replace('/anumations/', '/animations/') : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+
+        if (!animationData || !isMounted || !containerRef.current) return;
+
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch (e) {}
+    };
+
+    init();
+
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
 
 export function FavoritesList() {
   const router = useRouter();
@@ -32,7 +81,6 @@ export function FavoritesList() {
 
   return (
     <div className="flex-1 flex flex-col gap-6 w-full text-right" dir="rtl">
-      
       <div className="lg:hidden flex items-center justify-between border-b pb-3 mb-1 shrink-0">
         <div className="flex items-center gap-3">
           <button 
@@ -74,7 +122,6 @@ export function FavoritesList() {
         <PageLoading message="در حال دریافت کالاهای محبوب شما..." />
       ) : favorites.length > 0 ? (
         <div className="flex flex-col gap-6 w-full animate-in fade-in duration-200">
-          {/* گرید فوق حرفه‌ای با قابلیت لود ۵ کارت در دسکتاپ‌های عریض و روزآمد */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 w-full">
             {favorites.map((product) => (
               <ProductSearchCard key={product.id} product={product} />
@@ -88,21 +135,21 @@ export function FavoritesList() {
           />
         </div>
       ) : (
-        <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3.5">
-          <Heart className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] animate-pulse" />
-          <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز هیچ کالایی را به لیست محبوب‌های خود اضافه نکرده‌اید.</span>
+        /* استیت خالی با لاتی Like.json */
+        <div className="w-full py-12 px-4 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3">
+          <LottiePlayer path="/anumations/Like.json" className="w-48 h-48 max-w-full mx-auto" />
+          <span className="text-xs md:text-sm font-bold font-iran-yekan text-muted-foreground">هنوز هیچ کالایی را به لیست محبوب‌های خود اضافه نکرده‌اید.</span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.push('/search')}
-            className="rounded-xl mt-2 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1.5"
+            className="rounded-xl mt-2 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1.5 shadow-sm"
           >
             <ShoppingBag className="h-4 w-4" />
             <span>مشاهده و خرید کالاها</span>
           </Button>
         </div>
       )}
-
     </div>
   );
 }

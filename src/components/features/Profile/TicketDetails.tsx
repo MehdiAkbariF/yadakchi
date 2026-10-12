@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +12,7 @@ import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { ArrowRight, Send, Paperclip, X, FileText, User, Headphones } from 'lucide-react';
 import { showToast } from '@/core/utils/toast';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface TicketDetailsProps {
   ticketId: string;
 }
@@ -80,15 +81,6 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
       showToast.error(error.userMessage || 'خطا در ارسال پاسخ');
     }
   };
-
-  const getFullUrl = (path: any) => {
-    if (!path || typeof path !== 'string') return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-140px)] select-none text-right -mt-6 -mx-4 md:-mx-6 overflow-hidden bg-background" dir="rtl">
       

@@ -1,4 +1,4 @@
-// src/components/features/Part/PartDetailsContent.tsx
+﻿// src/components/features/Part/PartDetailsContent.tsx
 
 'use client';
 
@@ -21,6 +21,7 @@ import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProdu
 import { SelectPartModal } from './components/SelectPartModal';
 import { ShoppingBag, Settings, ListFilter, X } from 'lucide-react';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface PartDetailsContentProps {
   categorySlug: string;
   partSlug: string;
@@ -63,14 +64,6 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
   /*
     تابع کمکی و ایمن تبدیل آدرس عکس بک‌اند (سازگار با مقدار undefined و رفع خطای ts-2345):
   */
-  const getFullUrl = (path: string | null | undefined) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="w-full flex flex-col gap-6 text-right" dir="rtl">
       

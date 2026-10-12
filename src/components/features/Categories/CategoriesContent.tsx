@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,7 @@ import { Search, Settings, ArrowLeft } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import Link from 'next/link';
 
+import { getFullUrl } from '@/core/utils/formatters';
 export function CategoriesContent() {
   const router = useRouter();
   const { data: categories = [], isLoading } = useGetMegaMenu();
@@ -32,15 +33,6 @@ export function CategoriesContent() {
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
     <div className="w-full flex flex-col h-screen select-none text-right overflow-hidden bg-background" dir="rtl">
       

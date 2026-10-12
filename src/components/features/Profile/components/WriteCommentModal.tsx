@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -17,6 +17,7 @@ import { Star, MessageSquare } from 'lucide-react';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface WriteCommentFormValues {
   comment: string;
 }
@@ -91,15 +92,6 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
       console.error('[WriteCommentModal] Submission failed:', error);
     }
   };
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   return (
    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
   <ModalHeader onClose={onClose}>

@@ -44,7 +44,14 @@ const nextConfig = {
 
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
-    NEXT_PUBLIC_SEARCH_API_BASE_URL: process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104',
+
+    NEXT_PUBLIC_MEDIA_BASE_URL:
+      process.env.NEXT_PUBLIC_MEDIA_BASE_URL || '/proxy-api',
+
+    NEXT_PUBLIC_SEARCH_API_BASE_URL:
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local',
+
     NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
     NEXT_PUBLIC_ENABLE_LOGGING: process.env.NEXT_PUBLIC_ENABLE_LOGGING,
     NEXT_PUBLIC_ENABLE_DEV_TOOLS: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
@@ -60,21 +67,24 @@ const nextConfig = {
 
   // تنظیم تفکیک‌شده پروکسی: جستجو به پورت ۷۱۰۴ و سایر APIها به سرور اصلی
   async rewrites() {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com';
-    const searchApiBaseUrl = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104';
-    
-    return [
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com';
+    const searchApiBaseUrl =
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local';
 
+    return [
+      // ۱. هدایت درخواست‌های جستجو (OpenSearch) به سرور جداگانه
       {
         source: '/proxy-api/api/Search/:path*',
         destination: `${searchApiBaseUrl}/api/Search/:path*`,
         basePath: false,
       },
-      // ۲. هدایت سایر درخواست‌های اپلیکیشن به سرور عمومی
+      // ۲. هدایت سایر درخواست‌ها (شامل APIها و مدیا) به سرور عمومی
       {
         source: '/proxy-api/:path*',
         destination: `${apiBaseUrl}/:path*`,
-        basePath: false, 
+        basePath: false,
       },
     ];
   },

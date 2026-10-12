@@ -1,3 +1,4 @@
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\ProductCard\ProductSlider.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -81,12 +82,14 @@ export function ProductSlider({
           </Typography>
         </div>
         
+        {/* دکمه مشاهده همه: رنگ مشکی، وزن مناسب و فلش رو به چپ استاندارد */}
         <Link 
           href={viewAllLink} 
           prefetch={false}
-          className="text-xs sm:text-sm font-bold font-iran-yekan text-primary hover:underline transition-colors shrink-0"
+          className="inline-flex items-center gap-1 text-xs sm:text-sm font-medium font-iran-yekan text-foreground hover:opacity-75 transition-opacity shrink-0"
         >
-          مشاهده همه &lt;
+          <span>مشاهده همه</span>
+          <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
         </Link>
       </div>
 

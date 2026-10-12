@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { Truck, Store, Zap } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '@/components/composites/Card';
 import { Typography } from '@/components/primitives/Typography';
 import { cn } from '@/design-system/utils/cn';
 
+import { getFullUrl } from '@/core/utils/formatters';
 interface CheckoutShipmentGroupProps {
   sub: any;
   index: number;
@@ -20,14 +21,6 @@ export function CheckoutShipmentGroup({
   selectedMethod,
   onSelectMethod,
 }: CheckoutShipmentGroupProps) {
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value / 10) + ' تومان';
   };

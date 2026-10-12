@@ -8,6 +8,7 @@ import { getProductService } from '../services/product.service';
 import { SearchProductsRequest, ProductViewModel, ProductPriceChartViewModel, ProductPageViewModel, CommentsAverageViewModel, CommentItemViewModel, InquiryItemViewModel } from '@/domains/front/product/types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 import { useAppStore } from '@/shared/store/useAppStore';
+import { getHttpClient } from '@/core/http/client';
 
 const productService = getProductService();
 
@@ -50,6 +51,37 @@ export function useGetNominatedProductsByCategory(
       staleTime: 5 * 60 * 1000,
       ...options,
       enabled: !!categoryId && (options?.enabled !== false),
+    }
+  );
+}
+
+// هوک دریافت کالاهای مشاهده‌شده و بازدیدهای اخیر کاربر از بک‌اند
+export function useGetVisitedProducts() {
+  const selectedCity = useAppStore((state) => state.selectedCity);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cityId = mounted ? selectedCity?.id : null;
+
+  return useTypedQuery<any>(
+    ['front', 'products', 'user-visited-products', cityId || null],
+    async () => {
+      try {
+        const client = getHttpClient();
+        const response = await client.get<any>('/api/Front/Product/VisitedProducts', {
+          params: { cityId: cityId || undefined }
+        });
+        return response.data;
+      } catch (e) {
+        // در صورت عدم وجود این اندپوینت خاص در سرور، از کالاهای منتخب استفاده می‌شود
+        return productService.getNominatedProducts(cityId || undefined);
+      }
+    },
+    {
+      staleTime: 2 * 60 * 1000,
     }
   );
 }

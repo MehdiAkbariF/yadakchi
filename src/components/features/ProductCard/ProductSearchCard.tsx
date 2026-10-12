@@ -1,4 +1,4 @@
-// src/components/features/ProductCard/ProductSearchCard.tsx
+﻿// src/components/features/ProductCard/ProductSearchCard.tsx
 
 'use client';
 
@@ -10,7 +10,7 @@ import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
 import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
-import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useImpression } from '@/shared/hooks/useImpression';
 import { trackShopProductClick } from '@/core/utils/impression-tracker';
@@ -146,15 +146,6 @@ export function ProductSearchCard({
     }, 3000);
     return () => clearInterval(interval);
   }, [tickerLength, isMounted]);
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };

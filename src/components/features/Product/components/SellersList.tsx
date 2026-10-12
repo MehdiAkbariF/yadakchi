@@ -1,4 +1,4 @@
-// src/components/features/Product/components/SellersList.tsx
+﻿// src/components/features/Product/components/SellersList.tsx
 'use client';
 
 import { useState } from 'react';
@@ -12,7 +12,7 @@ import { useGetReportSubjects, useSubmitShopReport } from '@/domains/front/shop/
 import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
-import { toPersianDigits } from '@/core/utils/formatters';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 
 interface SellersListProps {
   activeSellers: any;
@@ -37,15 +37,6 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
 
   const onlineList = activeSellers.online || [];
   const localList = activeSellers.local || [];
-
-  const getFullUrl = (path: string | null) => {
-    if (!path) return '/placeholder.png';
-    if (path.startsWith('http')) return path;
-    const base = (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com').replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    return `${base}${cleanPath}`;
-  };
-
   const formatPrice = (value: number) => {
     return new Intl.NumberFormat('fa-IR').format(value);
   };
