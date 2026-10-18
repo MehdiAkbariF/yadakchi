@@ -26,7 +26,7 @@ export class HttpClient {
 
   constructor() {
     const baseURL = typeof window === 'undefined'
-      ? (env.apiBaseUrl || 'https://api.yadakchi.com')
+      ? (env.apiBaseUrl || 'https://api.yadakchi.local')
       : '/proxy-api';
     
     this.axiosInstance = axios.create({

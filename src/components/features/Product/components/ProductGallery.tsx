@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ZoomIn, ZoomOut, RotateCcw, X, ChevronLeft, ChevronRight, Maximize2, ImageOff } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, X, ChevronLeft, ChevronRight, Maximize2, ImageOff, Ticket } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 
@@ -11,27 +11,53 @@ interface ProductGalleryProps {
   title: string;
   hasDiscount?: boolean;
   discountPercent?: number;
+  hasTimedDiscount?: boolean;
+  discountExpiration?: string | null;
 }
 
-export function ProductGallery({ images = [], title, hasDiscount, discountPercent }: ProductGalleryProps) {
+function useCountdown(expiration?: string | null) {
+  const [remain, setRemain] = useState<{ h: number; m: number; s: number } | null>(null);
+  useEffect(() => {
+    if (!expiration) { setRemain(null); return; }
+    const calc = () => {
+      const diff = +new Date(expiration) - Date.now();
+      if (diff <= 0) { setRemain({ h: 0, m: 0, s: 0 }); return; }
+      setRemain({
+        h: Math.floor(diff / (1000 * 60 * 60)),
+        m: Math.floor((diff / 1000 / 60) % 60),
+        s: Math.floor((diff / 1000) % 60),
+      });
+    };
+    calc();
+    const iv = setInterval(calc, 1000);
+    return () => clearInterval(iv);
+  }, [expiration]);
+  return remain;
+}
+
+export function ProductGallery({
+  images = [],
+  title,
+  hasDiscount,
+  discountPercent,
+  hasTimedDiscount,
+  discountExpiration,
+}: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
-  // فیلتر کردن مقادیر خالی یا undefined
-  const validImages = (images || []).filter(Boolean);
+  const countdown = useCountdown(hasTimedDiscount ? discountExpiration : null);
+
+  const validImages = useMemo(() => (images || []).filter(Boolean), [images]);
   const safeIndex = activeIndex < validImages.length ? activeIndex : 0;
 
   useEffect(() => {
     if (!isFullscreenOpen) return;
 
     document.body.style.overflow = 'hidden';
-
-    const handlePopState = () => {
-      setIsFullscreenOpen(false);
-    };
-
+    const handlePopState = () => setIsFullscreenOpen(false);
     window.history.pushState({ modalOpen: 'gallery-modal' }, '');
     window.addEventListener('popstate', handlePopState);
 
@@ -63,14 +89,11 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
     }
   };
 
-  // ساخت آدرس استاندارد با تابع اصلی formatters
   const resolveImageUrl = (item: any): string => {
     if (!item) return '';
     const rawPath = typeof item === 'string' ? item : item.url || item.image || '';
     if (!rawPath) return '';
     if (rawPath.startsWith('http')) return rawPath;
-    
-    // استفاده از getFullUrl رسمی پروژه
     try {
       return getFullUrl(rawPath);
     } catch {
@@ -91,12 +114,25 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
 
   return (
     <div className="w-full flex flex-col gap-4 select-none">
-      
       <div className="relative w-full aspect-[4/3] rounded-2xl border p-4 bg-background flex items-center justify-center overflow-hidden shadow-sm group">
-        
-        {hasDiscount && (
-          <div className="lg:hidden absolute top-3 right-3 bg-destructive text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm z-10 select-none animate-pulse">
-            تخفیف ویژه {toPersianDigits(discountPercent || 0)}٪
+        {/* ✅ QA #17: تخفیف زمان‌دار با آیکون تیک‌آف */}
+        {hasTimedDiscount && (
+          <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 bg-destructive text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm">
+            <Ticket className="h-3.5 w-3.5" />
+            <span>تخفیف {toPersianDigits(discountPercent || 0)}٪</span>
+            {countdown && (
+              <span className="bg-white/20 rounded px-1.5 py-0.5 text-[10px] font-iran-yekan" dir="ltr">
+                {String(countdown.h).padStart(2, '0')}:
+                {String(countdown.m).padStart(2, '0')}:
+                {String(countdown.s).padStart(2, '0')}
+              </span>
+            )}
+          </div>
+        )}
+
+        {!hasTimedDiscount && hasDiscount && (
+          <div className="absolute top-3 right-3 z-10 bg-destructive text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-sm">
+            تخفیف {toPersianDigits(discountPercent || 0)}٪
           </div>
         )}
 
@@ -119,7 +155,6 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
           {validImages.map((img, idx) => {
             const thumbUrl = resolveImageUrl(img);
             if (!thumbUrl) return null;
-
             return (
               <button
                 key={idx}
@@ -129,11 +164,7 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
                   idx === safeIndex ? "border-primary ring-1 ring-primary scale-105" : "hover:border-zinc-300"
                 )}
               >
-                <img
-                  src={thumbUrl}
-                  alt=""
-                  className="w-full h-full object-contain rounded-lg"
-                />
+                <img src={thumbUrl} alt="" className="w-full h-full object-contain rounded-lg" />
               </button>
             );
           })}
@@ -143,7 +174,6 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
       <AnimatePresence>
         {isFullscreenOpen && (
           <div className="fixed inset-0 z-[110] bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md flex flex-col w-screen h-screen">
-            
             <div className="flex items-center justify-between px-6 py-4 border-b bg-background/20 shrink-0">
               <span className="text-xs md:text-sm font-bold font-iran-yekan text-foreground truncate max-w-xs md:max-w-xl">
                 نمای بزرگ محصول: {title}
@@ -157,9 +187,7 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
             </div>
 
             <div className="flex-1 min-h-0 relative w-full overflow-hidden flex items-center justify-center">
-              <div 
-                className="w-full h-full max-w-4xl max-h-[75vh] p-4 flex items-center justify-center relative touch-none"
-              >
+              <div className="w-full h-full max-w-4xl max-h-[75vh] p-4 flex items-center justify-center relative touch-none">
                 <motion.img
                   src={currentImageUrl}
                   alt=""
@@ -237,11 +265,9 @@ export function ProductGallery({ images = [], title, hasDiscount, discountPercen
                 <RotateCcw className="h-4.5 w-4.5" />
               </button>
             </div>
-
           </div>
         )}
       </AnimatePresence>
-
     </div>
   );
 }

@@ -232,7 +232,7 @@ export function ProductStandardCard({
         {shopName && (
           <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1">
             <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
-            <span className="font-iran-sans font-medium truncate">فروشگاه: {shopName}</span>
+            <span className="font-iran-sans font-medium truncate text-shop">فروشگاه: {shopName}</span>
           </div>
         )}
 

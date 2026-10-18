@@ -14,6 +14,8 @@ interface MobileBottomActionProps {
   icon?: ReactNode;
   className?: string;
   forceShowKey?: any;
+  /** ✅ حالت جدید برای دکمه «موجود شد خبرم کن» */
+  variant?: 'default' | 'notify';
 }
 
 export function MobileBottomAction({
@@ -25,6 +27,7 @@ export function MobileBottomAction({
   icon,
   className,
   forceShowKey,
+  variant = 'default',
 }: MobileBottomActionProps) {
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -74,16 +77,20 @@ export function MobileBottomAction({
       )}
       <div className={cn("flex-1", leftContent ? "max-w-[60%]" : "w-full")}>
         <Button
-          variant={disabled ? "outline" : "primary"}
+          variant={variant === 'notify' ? 'primary' : disabled ? 'outline' : 'primary'}
           size="lg"
           fullWidth
-          onClick={disabled ? undefined : onClick}
+          onClick={onClick}
           isLoading={isLoading}
-          disabled={disabled}
+          disabled={variant === 'notify' ? false : disabled}
           leftIcon={icon}
           className={cn(
-            "rounded-xl font-iran-yekan font-bold text-xs h-11 transition-all duration-200",
-            disabled && "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700 opacity-85 cursor-not-allowed hover:bg-zinc-100 hover:text-zinc-400 dark:hover:bg-zinc-800"
+            "rounded-xl font-iran-yekan font-bold text-xs transition-all duration-200",
+            variant === 'notify'
+              ? "h-12 bg-[#E94057] hover:bg-[#D63650] text-white text-sm md:text-base font-bold shadow-sm"
+              : "h-11",
+            variant === 'default' && disabled &&
+              "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700 opacity-85 cursor-not-allowed hover:bg-zinc-100 hover:text-zinc-400 dark:hover:bg-zinc-800"
           )}
         >
           {label}

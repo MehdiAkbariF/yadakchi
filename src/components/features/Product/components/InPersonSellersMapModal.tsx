@@ -274,7 +274,7 @@ export function InPersonSellersMapModal({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs font-bold text-foreground block truncate font-iran-yekan">{seller.shop.title}</span>
+                      <span className="text-xs font-bold text-shop block truncate font-iran-yekan">{seller.shop.title}</span>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] text-muted-foreground font-iran-yekan">شهر ری</span>
                         <span className="text-zinc-300">|</span>
@@ -382,7 +382,7 @@ export function InPersonSellersMapModal({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-xs font-bold text-foreground block truncate font-iran-yekan">{seller.shop.title}</span>
+                      <span className="text-xs font-bold text-shop block truncate font-iran-yekan">{seller.shop.title}</span>
                       <div className="flex items-center gap-1.5 mt-1">
                         <span className="text-[10px] text-muted-foreground font-iran-yekan">شهر ری</span>
                         <span className="text-zinc-300">|</span>

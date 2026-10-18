@@ -1,8 +1,7 @@
-﻿// src/components/features/Product/components/SellersList.tsx
-'use client';
+﻿'use client';
 
-import { useState } from 'react';
-import { Store, ShieldCheck, MapPin, Truck, AlertTriangle, Phone, Plus, Loader2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Store, ShieldCheck, MapPin, Truck, AlertTriangle, Phone, Plus, Loader2, ChevronDown } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
 import { useAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
@@ -21,12 +20,15 @@ interface SellersListProps {
   productTitle?: string;
 }
 
+const MAX_VISIBLE_SELLERS = 4;
+
 export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, productTitle = 'قطعه یدکی' }: SellersListProps) {
   const [activeTab, setActiveTab] = useState<'online' | 'local'>('online');
   const [reportShop, setReportShop] = useState<any | null>(null);
   const [loadingSellerId, setLoadingSellerId] = useState<string | null>(null);
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [mapInitialSellerId, setMapInitialSellerId] = useState<string | null>(null);
+  const [showAllOnline, setShowAllOnline] = useState(false);
 
   const [selectedSubjectId, setSelectedSubjectId] = useState('');
   const [reportDescription, setReportDescription] = useState('');
@@ -37,9 +39,15 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
 
   const onlineList = activeSellers.online || [];
   const localList = activeSellers.local || [];
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value);
-  };
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  // ✅ QA #19: نمایش فقط 4 فروشنده اول + دکمه مشاهده بیشتر
+  const visibleOnline = useMemo(() => {
+    if (onlineList.length <= MAX_VISIBLE_SELLERS || showAllOnline) return onlineList;
+    return onlineList.slice(0, MAX_VISIBLE_SELLERS);
+  }, [onlineList, showAllOnline]);
+
+  const hasMoreOnline = onlineList.length > MAX_VISIBLE_SELLERS && !showAllOnline;
 
   const handleAddOnlineToBasket = async (e: React.MouseEvent, seller: any) => {
     e.preventDefault();
@@ -93,7 +101,6 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
     const isOnline = activeTab === 'online';
     const isSelected = isOnline && selectedSellerId === seller.id;
 
-    // محاسبه وضعیت تخفیف و درصد تخفیف فروشنده
     const originalPriceRaw = seller.retailPriceRaw || 0;
     const finalPriceRaw = seller.finalPriceRaw || 0;
     const calculatedPercent =
@@ -113,8 +120,8 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
         onClick={() => isOnline && onSelectSeller(seller.id)}
         className={cn(
           "p-4 md:p-5 rounded-2xl border flex items-start justify-between gap-4 transition-all w-full",
-          isSelected ? "border-primary bg-primary/5" : "bg-background",
-          isOnline ? "cursor-pointer hover:border-primary/20" : "cursor-default"
+          isSelected ? "border-shop/40 bg-shop/5" : "bg-background",
+          isOnline ? "cursor-pointer hover:border-shop/30" : "cursor-default"
         )}
       >
         <div className="flex-1 flex gap-3.5 items-start min-w-0">
@@ -125,10 +132,11 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               <Store className="h-5 w-5 text-muted-foreground/80" />
             )}
           </div>
-          
+
           <div className="flex-1 min-w-0 text-right flex flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs md:text-sm font-bold text-foreground truncate">{seller.shop.title}</span>
+              {/* ✅ QA #1: نام فروشگاه آبی و بزرگ‌تر */}
+              <span className="text-sm md:text-base font-bold text-shop truncate">{seller.shop.title}</span>
               <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md">{seller.typeLabel}</span>
               {seller.isAdvertised && (
                 <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">آگهی</span>
@@ -145,14 +153,17 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               <span className="text-zinc-300">|</span>
               <span className="flex items-center gap-1 text-success-600 dark:text-success-400">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                ضمانت اصالت کالا
+                {seller.warrantyTitle || 'ضمانت اصالت کالا'}
               </span>
             </div>
 
+            {/* ✅ QA #18: فقط شهر، نه آدرس کامل */}
             {!isOnline && (
               <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-iran-yekan mt-1.5">
                 <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
-                <span className="truncate">{seller.shop.address}</span>
+                <span className="truncate">
+                  {(seller.shop as any).cityName || seller.shop.address?.split('،')[0] || ''}
+                </span>
               </div>
             )}
           </div>
@@ -188,7 +199,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
             </Button>
           )}
 
-          {/* بخش نمایش قیمت اصلی، بج تخفیف و قیمت نهایی */}
+          {/* ✅ QA #7/#8/#9/#20: قیمت‌ها در راستای دکمه (بالا سمت راست دکمه) */}
           <div className="flex flex-col items-end text-right mt-1">
             {hasDiscount && (
               <div className="flex items-center gap-1.5 mb-1 select-none">
@@ -201,7 +212,8 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               </div>
             )}
 
-            <span className="text-sm md:text-base font-black text-foreground font-iran-yekan leading-none">
+            {/* ✅ QA #20: قیمت بزرگ‌تر */}
+            <span className="text-base md:text-lg font-black text-foreground font-iran-yekan leading-none">
               {seller.finalPrice}
             </span>
 
@@ -227,7 +239,6 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
 
   return (
     <div className="w-full flex flex-col gap-4 text-right mt-4 select-none relative">
-      
       <div className="sticky top-[64px] lg:top-[76px] z-20 bg-background border-b pb-2 flex items-center gap-6 w-full shadow-sm px-1 transition-all duration-300">
         <button
           onClick={() => setActiveTab('online')}
@@ -252,7 +263,23 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
       <div className="flex flex-col gap-2.5">
         {activeTab === 'online' ? (
           onlineList.length > 0 ? (
-            onlineList.map((s: any) => renderSellerRow(s))
+            <>
+              {visibleOnline.map((s: any) => renderSellerRow(s))}
+
+              {/* ✅ QA #19: مشاهده بیشتر بدون گراند، آبی، فلش، فاصله مناسب */}
+              {hasMoreOnline && (
+                <div className="w-full flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllOnline(true)}
+                    className="flex items-center gap-1 text-xs font-bold text-shop hover:underline outline-none"
+                  >
+                    <span>مشاهده بیشتر ({toPersianDigits(onlineList.length - MAX_VISIBLE_SELLERS)} فروشنده دیگر)</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <span className="text-xs text-muted-foreground font-iran-yekan py-4">فروشگاه اینترنتی فعالی برای این قطعه موجود نیست.</span>
           )
@@ -264,18 +291,17 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               <span className="text-xs text-muted-foreground font-iran-yekan py-4">فروشگاه حضوری فعالی برای این قطعه ثبت نشده است.</span>
             )}
             {localList.length > 0 && (
-              <div 
+              <div
                 onClick={handleOpenGeneralMap}
-                className="w-full h-36 border border-zinc-150 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 relative overflow-hidden flex flex-col items-center justify-center p-6 gap-3 cursor-pointer shadow-sm group hover:border-primary/30 transition-all mt-2 select-none"
+                className="w-full h-36 border border-zinc-150 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 relative overflow-hidden flex flex-col items-center justify-center p-6 gap-3 cursor-pointer shadow-sm group hover:border-shop/30 transition-all mt-2 select-none"
               >
-                <div className="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950/5 pointer-events-none" />
-                <div className="p-3 bg-primary/10 rounded-full border border-primary/20 text-primary group-hover:scale-105 transition-transform duration-300 z-10 shrink-0">
+                <div className="p-3 bg-shop/10 rounded-full border border-shop/20 text-shop group-hover:scale-105 transition-transform duration-300 z-10 shrink-0">
                   <MapPin className="h-6 w-6 stroke-[2]" />
                 </div>
                 <span className="text-xs md:text-sm font-black font-iran-yekan text-foreground z-10">مشاهده تمام فروشگاه‌های حضوری روی نقشه</span>
                 <button
                   type="button"
-                  className="text-[10px] font-bold font-iran-yekan border-b border-primary text-primary pb-0.5 hover:text-primary/80 transition-colors z-10 outline-none"
+                  className="text-[10px] font-bold font-iran-yekan border-b border-shop text-shop pb-0.5 hover:opacity-80 transition-opacity z-10 outline-none"
                 >
                   مشاهده نقشه
                 </button>
@@ -299,10 +325,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               placeholder="دلیل گزارش را انتخاب کنید..."
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
-              options={reportSubjects.map((sub: any) => ({
-                value: sub.id,
-                label: sub.title,
-              }))}
+              options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
             />
           </div>
 
@@ -324,7 +347,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 setSelectedSubjectId('');
                 setReportDescription('');
               }}
-              className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
+              className="rounded-xl text-xs h-10 font-bold font-iran-yekan flex-1"
             >
               انصراف
             </Button>
@@ -332,7 +355,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               variant="destructive"
               onClick={handleReportSubmit}
               isLoading={submitReport.isPending}
-              className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
+              className="rounded-xl text-xs h-10 font-bold font-iran-yekan flex-1"
             >
               ثبت گزارش خطا
             </Button>
@@ -347,7 +370,6 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
         productTitle={productTitle}
         initialActiveSellerId={mapInitialSellerId}
       />
-
     </div>
   );
 }

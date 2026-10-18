@@ -68,7 +68,7 @@ const nextConfig = {
   // تنظیم تفکیک‌شده پروکسی: جستجو به پورت ۷۱۰۴ و سایر APIها به سرور اصلی
   async rewrites() {
     const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.com';
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.local';
     const searchApiBaseUrl =
       process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
       'https://query.yadakchi.local';
