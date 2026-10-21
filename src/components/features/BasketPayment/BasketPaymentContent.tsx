@@ -87,28 +87,33 @@ export default function BasketPaymentContent() {
     </div>
   );
 
-  return (
-    <div className="w-full flex flex-col lg:flex-row items-start gap-6 md:gap-8 select-none text-right" dir="rtl">
-      
-      <div className="flex-1 flex flex-col gap-6 w-full">
-        <PaymentMethodCard />
-        <DiscountCard />
-        <ReferralCard />
-        <ItemsSummaryCard onOpenTracking={() => setIsTrackingModalOpen(true)} />
+ return (
+  <div className="w-full flex flex-col lg:flex-row items-start gap-6 select-none text-right" dir="rtl">
+    
+    <div className="flex-1 flex flex-col gap-4 w-full">
+      {/* بنر اطلاع‌رسانی رزرو کالاها مطابق تصویر ۳ دیزاین */}
+      <div className="w-full bg-rose-50/80 border border-rose-200/90 text-rose-700 px-4 py-3 rounded-xl flex items-center justify-between text-xs font-iran-yekan font-medium">
+        <span>توجه: قیمت و موجودی قطعات در این مرحله به مدت <strong>۱۵ دقیقه</strong> برای شما رزرو شده است.</span>
       </div>
 
-      <PaymentInvoice
-        productPrice={productPriceRaw / 10}
-        discountPrice={discountPriceRaw / 10}
-        shippingPrice={shippingPriceRaw / 10}
-        finalPrice={finalPriceRaw / 10}
-        isLegalInvoice={isLegalInvoice}
-        isLegalUser={isLegalUser}
-        isSubmitting={isSubmitting}
-        onLegalInvoiceChange={(checked) => setIsLegalInvoice(checked)}
-        onPayment={handlePayment}
-        onCompleteLegalInfo={handleCompleteLegalInfo}
-      />
+      <PaymentMethodCard />
+      <DiscountCard />
+      <ReferralCard />
+      <ItemsSummaryCard onOpenTracking={() => setIsTrackingModalOpen(true)} />
+    </div>
+
+    <PaymentInvoice
+      productPrice={productPriceRaw / 10}
+      discountPrice={discountPriceRaw / 10}
+      shippingPrice={shippingPriceRaw / 10}
+      finalPrice={finalPriceRaw / 10}
+      isLegalInvoice={isLegalInvoice}
+      isLegalUser={isLegalUser}
+      isSubmitting={isSubmitting}
+      onLegalInvoiceChange={(checked) => setIsLegalInvoice(checked)}
+      onPayment={handlePayment}
+      onCompleteLegalInfo={handleCompleteLegalInfo}
+    />
 
       <MobileBottomAction
         label="پرداخت و تکمیل سفارش"

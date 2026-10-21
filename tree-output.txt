@@ -1,0 +1,1118 @@
+﻿=== Tree: src ===
+Folder PATH listing
+Volume serial number is 0000003A 7E68:BBBC
+C:\USERS\RAVEN\FINAL-PROJECTS\YADAKCHI-FRONT\YADAKCHI\SRC
+│   index.ts
+│   
+├───app
+│   │   favicon.ico
+│   │   globals.css
+│   │   layout.tsx
+│   │   loading.tsx
+│   │   manifest.ts
+│   │   not-found.tsx
+│   │   
+│   ├───(auth)
+│   │   │   layout.tsx
+│   │   │   
+│   │   └───login
+│   │           page.tsx
+│   │           
+│   ├───(profile)
+│   │   └───profile
+│   │       │   layout.tsx
+│   │       │   page.tsx
+│   │       │   
+│   │       ├───addresses
+│   │       │       page.tsx
+│   │       │       
+│   │       ├───comments
+│   │       │       page.tsx
+│   │       │       
+│   │       ├───favorites
+│   │       │       page.tsx
+│   │       │       
+│   │       ├───history
+│   │       │       page.tsx
+│   │       │       
+│   │       ├───notifications
+│   │       │       page.tsx
+│   │       │       
+│   │       ├───orders
+│   │       │   │   page.tsx
+│   │       │   │   
+│   │       │   └───[id]
+│   │       │           page.tsx
+│   │       │           
+│   │       ├───settings
+│   │       │       page.tsx
+│   │       │       
+│   │       ├───support
+│   │       │   │   page.tsx
+│   │       │   │   
+│   │       │   ├───new
+│   │       │   │       page.tsx
+│   │       │   │       
+│   │       │   └───[id]
+│   │       │           page.tsx
+│   │       │           
+│   │       └───wallet
+│   │               page.tsx
+│   │               
+│   ├───(public)
+│   │   │   layout.tsx
+│   │   │   
+│   │   ├───basket
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───basket-payment
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───bestsellers
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───blog
+│   │   │   │   page.tsx
+│   │   │   │   
+│   │   │   └───[slug]
+│   │   │           page.tsx
+│   │   │           
+│   │   ├───car
+│   │   │   └───[slug]
+│   │   │           page.tsx
+│   │   │           
+│   │   ├───car-parts
+│   │   │   └───[partSlug]
+│   │   │       └───[carSlug]
+│   │   │               page.tsx
+│   │   │               
+│   │   ├───checkout
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───home
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───my-car
+│   │   │   │   page.tsx
+│   │   │   │   
+│   │   │   └───add
+│   │   │           page.tsx
+│   │   │           
+│   │   ├───offers
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───page
+│   │   │   └───[slug]
+│   │   │           loading.tsx
+│   │   │           not-found.tsx
+│   │   │           page.tsx
+│   │   │           
+│   │   ├───part-category
+│   │   │   └───[slug]
+│   │   │           page.tsx
+│   │   │           
+│   │   ├───parts
+│   │   │   └───[categorySlug]
+│   │   │       └───[partSlug]
+│   │   │               page.tsx
+│   │   │               
+│   │   ├───product
+│   │   │   └───[...slug]
+│   │   │           page.tsx
+│   │   │           
+│   │   ├───search
+│   │   │       page.tsx
+│   │   │       
+│   │   ├───seller
+│   │   │   └───register
+│   │   │           page.tsx
+│   │   │           
+│   │   ├───shops
+│   │   │   └───[id]
+│   │   │           page.tsx
+│   │   │           
+│   │   └───special
+│   │           page.tsx
+│   │           
+│   ├───categories
+│   │       page.tsx
+│   │       
+│   ├───maintenance
+│   │       page.tsx
+│   │       
+│   └───offline
+│           page.tsx
+│           
+├───components
+│   ├───composites
+│   │   ├───Accordion
+│   │   │       Accordion.tsx
+│   │   │       
+│   │   ├───AddressMapModal
+│   │   │       AddressMapModal.tsx
+│   │   │       
+│   │   ├───BottomSheet
+│   │   │       BottomSheet.tsx
+│   │   │       
+│   │   ├───Breadcrumb
+│   │   │       Breadcrumb.tsx
+│   │   │       
+│   │   ├───Card
+│   │   │       Card.tsx
+│   │   │       index.ts
+│   │   │       
+│   │   ├───FilterList
+│   │   │       FilterList.tsx
+│   │   │       
+│   │   ├───FormField
+│   │   │       FormField.tsx
+│   │   │       index.ts
+│   │   │       
+│   │   ├───Loading
+│   │   │       PageLoading.tsx
+│   │   │       Spinner.tsx
+│   │   │       
+│   │   ├───MobileBottomAction
+│   │   │       MobileBottomAction.tsx
+│   │   │       
+│   │   ├───Modal
+│   │   │       index.ts
+│   │   │       Modal.tsx
+│   │   │       
+│   │   ├───PageDescription
+│   │   │       PageDescription.tsx
+│   │   │       
+│   │   ├───Pagination
+│   │   │       Pagination.tsx
+│   │   │       
+│   │   ├───PriceSlider
+│   │   │       PriceSlider.tsx
+│   │   │       
+│   │   ├───SortSelector
+│   │   │       SortSelector.tsx
+│   │   │       
+│   │   └───Toast
+│   │           index.ts
+│   │           Toast.tsx
+│   │           
+│   ├───features
+│   │   ├───Banner
+│   │   │       Banner.tsx
+│   │   │       BannerSlider.tsx
+│   │   │       
+│   │   ├───BasketPayment
+│   │   │   │   BasketPaymentContent.tsx
+│   │   │   │   
+│   │   │   └───components
+│   │   │           DiscountCard.tsx
+│   │   │           ItemsSummaryCard.tsx
+│   │   │           PaymentInvoice.tsx
+│   │   │           PaymentMethodCard.tsx
+│   │   │           ReferralCard.tsx
+│   │   │           TrackingDetailsModal.tsx
+│   │   │           
+│   │   ├───BasketSummary
+│   │   │   │   BasketSummary.tsx
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   └───components
+│   │   │           BasketInvoice.tsx
+│   │   │           BasketItemRow.tsx
+│   │   │           BasketMerchantGroup.tsx
+│   │   │           
+│   │   ├───Bestsellers
+│   │   │       BestsellersContent.tsx
+│   │   │       
+│   │   ├───Blog
+│   │   │       BlogCard.tsx
+│   │   │       BlogCardSkeleton.tsx
+│   │   │       BlogCommentsSection.tsx
+│   │   │       BlogListContent.tsx
+│   │   │       BlogPostContent.tsx
+│   │   │       BlogSidebar.tsx
+│   │   │       
+│   │   ├───Brand
+│   │   │       BrandSlider.tsx
+│   │   │       
+│   │   ├───Car
+│   │   │   │   CarDetailsContent.tsx
+│   │   │   │   ShopByCar.tsx
+│   │   │   │   
+│   │   │   └───components
+│   │   │           CarHeaderCard.tsx
+│   │   │           
+│   │   ├───CarParts
+│   │   │       CarPartsContent.tsx
+│   │   │       
+│   │   ├───Categories
+│   │   │       CategoriesContent.tsx
+│   │   │       
+│   │   ├───Checkout
+│   │   │   │   CheckoutContent.tsx
+│   │   │   │   
+│   │   │   └───components
+│   │   │           AddressModal.tsx
+│   │   │           CheckoutAddress.tsx
+│   │   │           CheckoutInvoice.tsx
+│   │   │           CheckoutShipmentGroup.tsx
+│   │   │           
+│   │   ├───Home
+│   │   │       HomeContent.tsx
+│   │   │       
+│   │   ├───Offers
+│   │   │       OffersContent.tsx
+│   │   │       
+│   │   ├───Part
+│   │   │   │   HomeCategories.tsx
+│   │   │   │   PartCategoryContent.tsx
+│   │   │   │   PartDetailsContent.tsx
+│   │   │   │   
+│   │   │   └───components
+│   │   │           ChangeCategoryModal.tsx
+│   │   │           PartCategoryHeaderCard.tsx
+│   │   │           PartHeaderCard.tsx
+│   │   │           SelectPartModal.tsx
+│   │   │           
+│   │   ├───Product
+│   │   │   │   ProductContent.tsx
+│   │   │   │   
+│   │   │   └───components
+│   │   │           ConditionSelector.tsx
+│   │   │           InPersonSellersMapModal.tsx
+│   │   │           PickupAlert.tsx
+│   │   │           ProductCommentsSection.tsx
+│   │   │           ProductGallery.tsx
+│   │   │           ProductHeader.tsx
+│   │   │           ProductInquiriesSection.tsx
+│   │   │           ProductPageSkeleton.tsx
+│   │   │           ProductSideInvoice.tsx
+│   │   │           ProductSpecsTable.tsx
+│   │   │           SellersList.tsx
+│   │   │           SpecHighlights.tsx
+│   │   │           
+│   │   ├───ProductCard
+│   │   │       DealsSlider.tsx
+│   │   │       index.ts
+│   │   │       ProductCard.tsx
+│   │   │       ProductCardSkeleton.tsx
+│   │   │       ProductDealCard.tsx
+│   │   │       ProductSearchCard.tsx
+│   │   │       ProductSlider.tsx
+│   │   │       ProductStandardCard.tsx
+│   │   │       ShopProductAdBanner.tsx
+│   │   │       SliderSkeleton.tsx
+│   │   │       
+│   │   ├───ProductGrid
+│   │   │       index.ts
+│   │   │       ProductGrid.tsx
+│   │   │       SearchContent.tsx
+│   │   │       SearchHeader.tsx
+│   │   │       SearchSidebar.tsx
+│   │   │       
+│   │   ├───Profile
+│   │   │   │   AddressesList.tsx
+│   │   │   │   CommentsDashboard.tsx
+│   │   │   │   CreateTicket.tsx
+│   │   │   │   FavoritesList.tsx
+│   │   │   │   NotificationsList.tsx
+│   │   │   │   OrdersList.tsx
+│   │   │   │   ProfileDashboard.tsx
+│   │   │   │   RecentlyViewedList.tsx
+│   │   │   │   SettingsForm.tsx
+│   │   │   │   TicketDetails.tsx
+│   │   │   │   TicketsList.tsx
+│   │   │   │   WalletDashboard.tsx
+│   │   │   │   
+│   │   │   └───components
+│   │   │           AddBankCardForm.tsx
+│   │   │           ChangeMobileModal.tsx
+│   │   │           DefaultBankModal.tsx
+│   │   │           EconomicCodeModal.tsx
+│   │   │           JobModal.tsx
+│   │   │           LegalInfoModal.tsx
+│   │   │           OrderDetails.tsx
+│   │   │           PersonalInfoModal.tsx
+│   │   │           ProfileLayoutWrapper.tsx
+│   │   │           ProfileSidebar.tsx
+│   │   │           ReturnRequestModal.tsx
+│   │   │           WithdrawModal.tsx
+│   │   │           WriteCommentModal.tsx
+│   │   │           
+│   │   ├───SellerRegister
+│   │   │   │   SellerRegisterContent.tsx
+│   │   │   │   
+│   │   │   ├───components
+│   │   │   │       AnimatedBackground.tsx
+│   │   │   │       CTAButton.tsx
+│   │   │   │       FeatureCard.tsx
+│   │   │   │       OrbitDiagram.tsx
+│   │   │   │       StepCard.tsx
+│   │   │   │       TestimonialCard.tsx
+│   │   │   │       
+│   │   │   └───svgs
+│   │   │           DecorativeShapes.tsx
+│   │   │           FeatureIcons.tsx
+│   │   │           
+│   │   ├───Shop
+│   │   │       ShopDetailsContent.tsx
+│   │   │       ShopSlider.tsx
+│   │   │       
+│   │   ├───Special
+│   │   │       SpecialContent.tsx
+│   │   │       
+│   │   └───Static
+│   │           StaticPageContent.tsx
+│   │           
+│   ├───primitives
+│   │   ├───Avatar
+│   │   │       Avatar.tsx
+│   │   │       index.ts
+│   │   │       
+│   │   ├───Badge
+│   │   │       Badge.tsx
+│   │   │       index.ts
+│   │   │       
+│   │   ├───Button
+│   │   │       Button.tsx
+│   │   │       index.ts
+│   │   │       
+│   │   ├───Checkbox
+│   │   │       Checkbox.tsx
+│   │   │       
+│   │   ├───Icon
+│   │   │       Icon.tsx
+│   │   │       index.ts
+│   │   │       
+│   │   ├───Input
+│   │   │       index.ts
+│   │   │       Input.tsx
+│   │   │       
+│   │   ├───OtpInput
+│   │   │       index.ts
+│   │   │       OtpInput.tsx
+│   │   │       
+│   │   ├───Select
+│   │   │       Select.tsx
+│   │   │       
+│   │   ├───Skeleton
+│   │   │       Skeleton.tsx
+│   │   │       
+│   │   ├───Switch
+│   │   │       Switch.tsx
+│   │   │       
+│   │   ├───TextArea
+│   │   │       TextArea.tsx
+│   │   │       
+│   │   └───Typography
+│   │           index.ts
+│   │           Typography.tsx
+│   │           
+│   ├───sections
+│   │   ├───BottomNav
+│   │   │       BottomNav.tsx
+│   │   │       
+│   │   ├───Footer
+│   │   │       Footer.tsx
+│   │   │       index.ts
+│   │   │       
+│   │   ├───Header
+│   │   │   │   Header.tsx
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───components
+│   │   │   │   ├───AuthButton
+│   │   │   │   │       AuthButton.tsx
+│   │   │   │   │       
+│   │   │   │   ├───CartButton
+│   │   │   │   │       CartButton.tsx
+│   │   │   │   │       
+│   │   │   │   ├───CategoryDropdown
+│   │   │   │   │       CategoryDropdown.tsx
+│   │   │   │   │       
+│   │   │   │   ├───CitySelector
+│   │   │   │   │       CitySelector.tsx
+│   │   │   │   │       
+│   │   │   │   ├───DesktopNavigation
+│   │   │   │   │       DesktopNavigation.tsx
+│   │   │   │   │       
+│   │   │   │   ├───HeaderActions
+│   │   │   │   │       HeaderActions.tsx
+│   │   │   │   │       
+│   │   │   │   ├───Logo
+│   │   │   │   │       Logo.tsx
+│   │   │   │   │       
+│   │   │   │   ├───MobileHeader
+│   │   │   │   │       MobileHeader.tsx
+│   │   │   │   │       
+│   │   │   │   ├───MobileMenu
+│   │   │   │   │       MobileMenu.tsx
+│   │   │   │   │       
+│   │   │   │   ├───MobileMenuToggle
+│   │   │   │   │       MobileMenuToggle.tsx
+│   │   │   │   │       
+│   │   │   │   ├───MyCarButton
+│   │   │   │   │       MyCarButton.tsx
+│   │   │   │   │       
+│   │   │   │   ├───NavItem
+│   │   │   │   │       NavItem.tsx
+│   │   │   │   │       
+│   │   │   │   ├───SearchBar
+│   │   │   │   │       SearchBar.tsx
+│   │   │   │   │       
+│   │   │   │   ├───SearchResults
+│   │   │   │   │       index.ts
+│   │   │   │   │       SearchResults.tsx
+│   │   │   │   │       
+│   │   │   │   ├───SellerButton
+│   │   │   │   │       SellerButton.tsx
+│   │   │   │   │       
+│   │   │   │   └───ThemeToggle
+│   │   │   │           ThemeToggle.tsx
+│   │   │   │           
+│   │   │   └───constants
+│   │   │           header.constants.ts
+│   │   │           
+│   │   └───HeroSection
+│   │           HeroSection.tsx
+│   │           index.ts
+│   │           
+│   └───shared
+│       └───Layouts
+│           ├───AuthLayout
+│           │       AuthLayout.tsx
+│           │       index.ts
+│           │       
+│           └───MainLayout
+│                   index.ts
+│                   MainLayout.tsx
+│                   
+├───core
+│   ├───config
+│   │       constants.ts
+│   │       env.ts
+│   │       index.ts
+│   │       
+│   ├───errors
+│   │   │   api-error.ts
+│   │   │   error-manager.ts
+│   │   │   error-normalizer.ts
+│   │   │   index.ts
+│   │   │   
+│   │   └───types
+│   │           error.types.ts
+│   │           
+│   ├───http
+│   │   │   client.ts
+│   │   │   index.ts
+│   │   │   server-http.ts
+│   │   │   
+│   │   └───types
+│   │           index.ts
+│   │           
+│   ├───mappers
+│   │       base.mapper.ts
+│   │       index.ts
+│   │       pagination.mapper.ts
+│   │       
+│   ├───utils
+│   │       banner-tracker.ts
+│   │       formatters.ts
+│   │       impression-tracker.ts
+│   │       index.ts
+│   │       logger.ts
+│   │       media-url.ts
+│   │       toast.ts
+│   │       
+│   └───validation
+│           base.validator.ts
+│           index.ts
+│           
+├───design-system
+│   ├───themes
+│   │       dark.ts
+│   │       index.ts
+│   │       light.ts
+│   │       types.ts
+│   │       
+│   ├───tokens
+│   │       breakpoints.ts
+│   │       colors.ts
+│   │       index.ts
+│   │       shadows.ts
+│   │       spacing.ts
+│   │       typography.ts
+│   │       
+│   ├───utils
+│   │       cn.ts
+│   │       index.ts
+│   │       
+│   └───variants
+│           button.variants.ts
+│           index.ts
+│           input.variants.ts
+│           typography.variants.ts
+│           
+├───domains
+│   ├───auth
+│   │   │   index.ts
+│   │   │   server.auth.ts
+│   │   │   
+│   │   ├───constants
+│   │   │       auth.constants.ts
+│   │   │       
+│   │   ├───endpoints
+│   │   │       auth.endpoints.ts
+│   │   │       
+│   │   ├───hooks
+│   │   │       auth.hooks.ts
+│   │   │       
+│   │   ├───mappers
+│   │   │       auth.mapper.ts
+│   │   │       
+│   │   ├───services
+│   │   │       auth.service.ts
+│   │   │       
+│   │   ├───types
+│   │   │       auth.types.ts
+│   │   │       dto.types.ts
+│   │   │       
+│   │   └───validation
+│   │           auth.validation.ts
+│   │           
+│   ├───blog
+│   │   ├───constants
+│   │   │       blog.constants.ts
+│   │   │       
+│   │   ├───endpoints
+│   │   │       blog.endpoints.ts
+│   │   │       
+│   │   ├───hooks
+│   │   │       blog.hooks.ts
+│   │   │       
+│   │   ├───mappers
+│   │   │       blog.mapper.ts
+│   │   │       
+│   │   ├───services
+│   │   │       blog.service.ts
+│   │   │       
+│   │   ├───types
+│   │   │       domain.types.ts
+│   │   │       dto.types.ts
+│   │   │       view.types.ts
+│   │   │       
+│   │   └───validation
+│   │           blog.validation.ts
+│   │           
+│   ├───front
+│   │   ├───banner
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───constants
+│   │   │   │       banner.constants.ts
+│   │   │   │       
+│   │   │   ├───endpoints
+│   │   │   │       banner.endpoints.ts
+│   │   │   │       
+│   │   │   ├───hooks
+│   │   │   │       banner.hooks.ts
+│   │   │   │       
+│   │   │   ├───mappers
+│   │   │   │       banner.mapper.ts
+│   │   │   │       
+│   │   │   ├───services
+│   │   │   │       banner.service.ts
+│   │   │   │       
+│   │   │   └───types
+│   │   │           domain.types.ts
+│   │   │           dto.types.ts
+│   │   │           view.types.ts
+│   │   │           
+│   │   ├───basket
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───constants
+│   │   │   │       basket.constants.ts
+│   │   │   │       
+│   │   │   ├───endpoints
+│   │   │   │       basket.endpoints.ts
+│   │   │   │       
+│   │   │   ├───hooks
+│   │   │   │       basket.hooks.ts
+│   │   │   │       
+│   │   │   ├───mappers
+│   │   │   │       basket.mapper.ts
+│   │   │   │       
+│   │   │   ├───services
+│   │   │   │       basket.service.ts
+│   │   │   │       
+│   │   │   ├───types
+│   │   │   │       domain.types.ts
+│   │   │   │       dto.types.ts
+│   │   │   │       view.types.ts
+│   │   │   │       
+│   │   │   └───validation
+│   │   │           basket.validation.ts
+│   │   │           
+│   │   ├───comment
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───constants
+│   │   │   │       comment.constants.ts
+│   │   │   │       
+│   │   │   ├───endpoints
+│   │   │   │       comment.endpoints.ts
+│   │   │   │       
+│   │   │   ├───hooks
+│   │   │   │       comment.hooks.ts
+│   │   │   │       
+│   │   │   ├───mappers
+│   │   │   │       comment.mapper.ts
+│   │   │   │       
+│   │   │   ├───services
+│   │   │   │       comment.service.ts
+│   │   │   │       
+│   │   │   ├───types
+│   │   │   │       domain.types.ts
+│   │   │   │       dto.types.ts
+│   │   │   │       view.types.ts
+│   │   │   │       
+│   │   │   └───validation
+│   │   │           comment.validation.ts
+│   │   │           
+│   │   ├───inquiry
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───constants
+│   │   │   │       inquiry.constants.ts
+│   │   │   │       
+│   │   │   ├───endpoints
+│   │   │   │       inquiry.endpoints.ts
+│   │   │   │       
+│   │   │   ├───hooks
+│   │   │   │       inquiry.hooks.ts
+│   │   │   │       
+│   │   │   ├───mappers
+│   │   │   │       inquiry.mapper.ts
+│   │   │   │       
+│   │   │   ├───services
+│   │   │   │       inquiry.service.ts
+│   │   │   │       
+│   │   │   ├───types
+│   │   │   │       domain.types.ts
+│   │   │   │       dto.types.ts
+│   │   │   │       view.types.ts
+│   │   │   │       
+│   │   │   └───validation
+│   │   │           inquiry.validation.ts
+│   │   │           
+│   │   ├───page-builder
+│   │   │   │   index.ts
+│   │   │   │   PuckSchemaRenderer.tsx
+│   │   │   │   
+│   │   │   ├───blocks
+│   │   │   │   ├───content
+│   │   │   │   │       Button.tsx
+│   │   │   │   │       Heading.tsx
+│   │   │   │   │       Text.tsx
+│   │   │   │   │       
+│   │   │   │   ├───layout
+│   │   │   │   │       Divider.tsx
+│   │   │   │   │       Section.tsx
+│   │   │   │   │       Spacer.tsx
+│   │   │   │   │       
+│   │   │   │   └───media
+│   │   │   │           Image.tsx
+│   │   │   │           
+│   │   │   └───config
+│   │   │           puck.config.tsx
+│   │   │           
+│   │   ├───part
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───constants
+│   │   │   │       part.constants.ts
+│   │   │   │       
+│   │   │   ├───endpoints
+│   │   │   │       part.endpoints.ts
+│   │   │   │       
+│   │   │   ├───hooks
+│   │   │   │       part.hooks.ts
+│   │   │   │       
+│   │   │   ├───mappers
+│   │   │   │       part.mapper.ts
+│   │   │   │       
+│   │   │   ├───services
+│   │   │   │       part.service.ts
+│   │   │   │       
+│   │   │   ├───types
+│   │   │   │       domain.types.ts
+│   │   │   │       dto.types.ts
+│   │   │   │       view.types.ts
+│   │   │   │       
+│   │   │   └───validation
+│   │   │           part.validation.ts
+│   │   │           
+│   │   ├───product
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───constants
+│   │   │   │       product.constants.ts
+│   │   │   │       
+│   │   │   ├───endpoints
+│   │   │   │       product.endpoints.ts
+│   │   │   │       
+│   │   │   ├───hooks
+│   │   │   │       product.hooks.ts
+│   │   │   │       
+│   │   │   ├───mappers
+│   │   │   │       product.mapper.ts
+│   │   │   │       
+│   │   │   ├───services
+│   │   │   │       product.service.ts
+│   │   │   │       
+│   │   │   ├───types
+│   │   │   │       domain.types.ts
+│   │   │   │       dto.types.ts
+│   │   │   │       view.types.ts
+│   │   │   │       
+│   │   │   └───validation
+│   │   │           product.validation.ts
+│   │   │           
+│   │   ├───reference
+│   │   │   ├───brand
+│   │   │   │   │   index.ts
+│   │   │   │   │   
+│   │   │   │   ├───constants
+│   │   │   │   │       brand.constants.ts
+│   │   │   │   │       
+│   │   │   │   ├───endpoints
+│   │   │   │   │       brand.endpoints.ts
+│   │   │   │   │       
+│   │   │   │   ├───hooks
+│   │   │   │   │       brand.hooks.ts
+│   │   │   │   │       
+│   │   │   │   ├───mappers
+│   │   │   │   │       brand.mapper.ts
+│   │   │   │   │       
+│   │   │   │   ├───services
+│   │   │   │   │       brand.service.ts
+│   │   │   │   │       
+│   │   │   │   └───types
+│   │   │   │           dto.types.ts
+│   │   │   │           view.types.ts
+│   │   │   │           
+│   │   │   ├───car
+│   │   │   │   │   index.ts
+│   │   │   │   │   
+│   │   │   │   ├───constants
+│   │   │   │   │       car.constants.ts
+│   │   │   │   │       
+│   │   │   │   ├───endpoints
+│   │   │   │   │       car.endpoints.ts
+│   │   │   │   │       
+│   │   │   │   ├───hooks
+│   │   │   │   │       car.hooks.ts
+│   │   │   │   │       
+│   │   │   │   ├───mappers
+│   │   │   │   │       car.mapper.ts
+│   │   │   │   │       
+│   │   │   │   ├───services
+│   │   │   │   │       car.service.ts
+│   │   │   │   │       
+│   │   │   │   └───types
+│   │   │   │           domain.types.ts
+│   │   │   │           dto.types.ts
+│   │   │   │           view.types.ts
+│   │   │   │           
+│   │   │   ├───city
+│   │   │   │   │   index.ts
+│   │   │   │   │   
+│   │   │   │   ├───constants
+│   │   │   │   │       city.constants.ts
+│   │   │   │   │       
+│   │   │   │   ├───endpoints
+│   │   │   │   │       city.endpoints.ts
+│   │   │   │   │       
+│   │   │   │   ├───hooks
+│   │   │   │   │       city.hooks.ts
+│   │   │   │   │       
+│   │   │   │   ├───mappers
+│   │   │   │   │       city.mapper.ts
+│   │   │   │   │       
+│   │   │   │   ├───services
+│   │   │   │   │       city.service.ts
+│   │   │   │   │       
+│   │   │   │   └───types
+│   │   │   │           dto.types.ts
+│   │   │   │           view.types.ts
+│   │   │   │           
+│   │   │   ├───country
+│   │   │   │   │   index.ts
+│   │   │   │   │   
+│   │   │   │   ├───constants
+│   │   │   │   │       country.constants.ts
+│   │   │   │   │       
+│   │   │   │   ├───endpoints
+│   │   │   │   │       country.endpoints.ts
+│   │   │   │   │       
+│   │   │   │   ├───hooks
+│   │   │   │   │       country.hooks.ts
+│   │   │   │   │       
+│   │   │   │   ├───services
+│   │   │   │   │       country.service.ts
+│   │   │   │   │       
+│   │   │   │   └───types
+│   │   │   │           dto.types.ts
+│   │   │   │           view.types.ts
+│   │   │   │           
+│   │   │   └───province
+│   │   │       │   index.ts
+│   │   │       │   
+│   │   │       ├───constants
+│   │   │       │       province.constants.ts
+│   │   │       │       
+│   │   │       ├───endpoints
+│   │   │       │       province.endpoints.ts
+│   │   │       │       
+│   │   │       ├───hooks
+│   │   │       │       province.hooks.ts
+│   │   │       │       
+│   │   │       ├───services
+│   │   │       │       province.service.ts
+│   │   │       │       
+│   │   │       └───types
+│   │   │               dto.types.ts
+│   │   │               view.types.ts
+│   │   │               
+│   │   ├───shop
+│   │   │   │   index.ts
+│   │   │   │   
+│   │   │   ├───constants
+│   │   │   │       shop.constants.ts
+│   │   │   │       
+│   │   │   ├───endpoints
+│   │   │   │       shop.endpoints.ts
+│   │   │   │       
+│   │   │   ├───hooks
+│   │   │   │       shop.hooks.ts
+│   │   │   │       
+│   │   │   ├───mappers
+│   │   │   │       shop.mapper.ts
+│   │   │   │       
+│   │   │   ├───services
+│   │   │   │       shop.service.ts
+│   │   │   │       
+│   │   │   ├───types
+│   │   │   │       domain.types.ts
+│   │   │   │       dto.types.ts
+│   │   │   │       view.types.ts
+│   │   │   │       
+│   │   │   └───validation
+│   │   │           shop.validation.ts
+│   │   │           
+│   │   └───static
+│   │       │   index.ts
+│   │       │   
+│   │       ├───constants
+│   │       │       static.constants.ts
+│   │       │       
+│   │       ├───endpoints
+│   │       │       static.endpoints.ts
+│   │       │       
+│   │       ├───hooks
+│   │       │       static.hooks.ts
+│   │       │       
+│   │       ├───mappers
+│   │       │       static.mapper.ts
+│   │       │       
+│   │       ├───services
+│   │       │       static.service.ts
+│   │       │       
+│   │       └───types
+│   │               domain.types.ts
+│   │               dto.types.ts
+│   │               view.types.ts
+│   │               
+│   ├───ticket
+│   │   ├───constants
+│   │   │       ticket.constants.ts
+│   │   │       
+│   │   ├───endpoints
+│   │   │       ticket.endpoints.ts
+│   │   │       
+│   │   ├───hooks
+│   │   │       ticket.hooks.ts
+│   │   │       
+│   │   ├───mappers
+│   │   │       ticket.mapper.ts
+│   │   │       
+│   │   ├───services
+│   │   │       ticket.service.ts
+│   │   │       
+│   │   ├───types
+│   │   │       domain.types.ts
+│   │   │       dto.types.ts
+│   │   │       view.types.ts
+│   │   │       
+│   │   └───validation
+│   │           ticket.validation.ts
+│   │           
+│   └───userpanel
+│       ├───constants
+│       │       userpanel.constants.ts
+│       │       
+│       ├───endpoints
+│       │       userpanel.endpoints.ts
+│       │       
+│       ├───hooks
+│       │       userpanel.hooks.ts
+│       │       
+│       ├───mappers
+│       │       userpanel.mapper.ts
+│       │       
+│       ├───services
+│       │       userpanel.service.ts
+│       │       
+│       ├───types
+│       │       domain.types.ts
+│       │       dto.types.ts
+│       │       view.types.ts
+│       │       
+│       └───validation
+│               userpanel.validation.ts
+│               
+├───lib
+│   ├───media
+│   │       constants.ts
+│   │       resolver.ts
+│   │       
+│   └───react-query
+│       │   index.ts
+│       │   query-client.ts
+│       │   query-keys.ts
+│       │   
+│       └───hooks
+│               base.hooks.ts
+│               
+├───providers
+│       index.ts
+│       query.provider.tsx
+│       root.provider.tsx
+│       theme.provider.tsx
+│       
+└───shared
+    ├───hooks
+    │       index.ts
+    │       useBannerImpression.ts
+    │       useDebounce.ts
+    │       useImpression.ts
+    │       useSearchFilters.ts
+    │       
+    ├───PWAInstallBanner
+    │       PWAInstallBanner.tsx
+    │       
+    ├───store
+    │       useAppStore.ts
+    │       
+    ├───Transitions
+    │       PageTransition.tsx
+    │       
+    ├───types
+    │       common.types.ts
+    │       index.ts
+    │       
+    └───utils
+            index.ts
+            logger.ts
+            
+
+=== tailwind.config.js ===
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: ['class'],
+  content: [
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/design-system/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/domains/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+          50: '#FDE8E3', 100: '#FCD1C7', 200: '#FAA3AB', 300: '#F8758F', 400: '#F64773',
+          500: '#F56D3C', 600: '#D95D32', 700: '#BD4D28', 800: '#A13D1E', 900: '#852D14', 950: '#691D0A',
+        },
+        shop: {
+          DEFAULT: '#2B76A1',
+          foreground: '#FFFFFF',
+          50: '#EAF2F7', 100: '#CFE1EC', 200: '#A3C6DA', 300: '#77ABC8', 400: '#4C90B6',
+          500: '#2B76A1', 600: '#235F82', 700: '#1B4863', 800: '#133144', 900: '#0B1A25',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+          50: '#FFFFFF', 100: '#FCFCFC', 200: '#F8F8F8', 300: '#F0F0F1', 400: '#E0E0E1',
+          500: '#C0C0C1', 600: '#A0A0A1', 700: '#808081', 800: '#606061', 900: '#404041', 950: '#202021',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+          50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171',
+          500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d',
+        },
+        success: {
+          50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80',
+          500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d',
+        },
+        warning: {
+          50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24',
+          500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f',
+        },
+        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+        popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
+        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+      },
+      borderRadius: {
+        none: '0', sm: '0.125rem', md: '0.375rem', lg: '0.5rem',
+        xl: '0.75rem', '2xl': '1rem', '3xl': '1.5rem', full: '9999px',
+      },
+      fontFamily: {
+        sans: ['IRANYekan', 'system-ui', 'sans-serif'],
+        yekan: ['IRANYekan', 'system-ui', 'sans-serif'],
+        'iran-sans': ['IRANYekan', 'system-ui', 'sans-serif'],
+        'iran-yekan': ['IRANYekan', 'system-ui', 'sans-serif'],
+      },
+      lineHeight: {
+        'reading': '2.15',
+      },
+      keyframes: {
+        'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
+        'accordion-up': { from: { height: 'var(--radix-accordion-content-height)' }, to: { height: '0' } },
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'fade-out': { from: { opacity: '1' }, to: { opacity: '0' } },
+        'slide-in': { from: { transform: 'translateY(10px)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
+        'slide-in-from-top': { from: { transform: 'translateY(-10px)', opacity: '0' }, to: { transform: 'translateY(0)', opacity: '1' } },
+        'scale-in': { from: { transform: 'scale(0.95)', opacity: '0' }, to: { transform: 'scale(1)', opacity: '1' } },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'fade-out': 'fade-out 0.3s ease-out',
+        'slide-in': 'slide-in 0.3s ease-out',
+        'slide-in-from-top': 'slide-in-from-top 0.3s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
+      },
+    },
+  },
+  plugins: [],
+};

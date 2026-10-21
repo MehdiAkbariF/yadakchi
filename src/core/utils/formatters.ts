@@ -190,9 +190,7 @@ export function toPersianDigits(
 
 /**
  * 🔄 تبدیل مسیر خام به URL نهایی عکس
- *
- * @deprecated از `resolveMediaUrl` (در `@/core/utils/media-url`) استفاده کنید.
- * این تابع فقط برای backward-compatibility نگه داشته شده و به‌عنوان alias عمل می‌کند.
+ * @deprecated از `resolveMediaUrl` استفاده کن
  */
 export function getFullUrl(path: any): string {
   return resolveMediaUrl(path);

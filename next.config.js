@@ -14,7 +14,7 @@ const withPWA = require('@ducanh2912/next-pwa').default({
     '!banners/**/*',
     '!banner/**/*',
     '!**/*.{png,jpg,jpeg,gif,webp,svg,mp4,webm,pdf,ico}'
-  ], 
+  ],
   workboxOptions: {
     disableDevLogs: true,
   },
@@ -34,6 +34,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
     remotePatterns: [
+      // Fallback — اگر روزی عکسی مستقیم لود شد (نه از /proxy-api)
+      { protocol: 'https', hostname: 'api.yadakchi.local' },
       { protocol: 'https', hostname: 'api.yadakchi.com' },
       { protocol: 'https', hostname: 'cdn.yadakchi.com' },
       { protocol: 'http', hostname: '51.158.252.139' },
@@ -65,7 +67,6 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // تنظیم تفکیک‌شده پروکسی: جستجو به پورت ۷۱۰۴ و سایر APIها به سرور اصلی
   async rewrites() {
     const apiBaseUrl =
       process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.local';
@@ -74,13 +75,13 @@ const nextConfig = {
       'https://query.yadakchi.local';
 
     return [
-      // ۱. هدایت درخواست‌های جستجو (OpenSearch) به سرور جداگانه
+      // ۱. جستجو → سرور جداگانه
       {
         source: '/proxy-api/api/Search/:path*',
         destination: `${searchApiBaseUrl}/api/Search/:path*`,
         basePath: false,
       },
-      // ۲. هدایت سایر درخواست‌ها (شامل APIها و مدیا) به سرور عمومی
+      // ۲. بقیه (شامل مدیا) → سرور اصلی
       {
         source: '/proxy-api/:path*',
         destination: `${apiBaseUrl}/:path*`,
