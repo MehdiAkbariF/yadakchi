@@ -15,8 +15,8 @@ import {
   Store,
   Check,
   Ban,
-  Clock,
   RotateCcw,
+  Package,
 } from 'lucide-react';
 import {
   useGetOrderDetails,
@@ -121,6 +121,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
   };
 
   const canCancel = order.status === 'WaitingForPayment' || order.status === 'InProgress';
+  const hasSubOrders = order.subOrders && order.subOrders.length > 0;
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6">
@@ -152,7 +153,7 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
               onClick={() => setIsCancelModalOpen(true)}
               className="flex h-8 items-center gap-1 rounded-lg border-destructive/40 text-2xs font-bold text-destructive hover:bg-destructive/10"
             >
-              <Ban className="h-3.5 w-3.5" />
+              <Ban className="h-4 w-4" />
               <span>لغو سفارش</span>
             </Button>
           ) : null}
@@ -188,171 +189,186 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
           ) : null}
 
           {/* لیست مرسوله‌ها (SubOrders) */}
-          <div className="flex flex-col gap-4">
-            {order.subOrders.map((sub: any, idx: number) => {
-              const subStatus = STATUS_MAP[sub.status] || {
-                label: sub.status,
-                color: 'text-primary',
-                bg: 'bg-secondary',
-              };
+          {hasSubOrders ? (
+            <div className="flex flex-col gap-4">
+              {order.subOrders.map((sub: any, idx: number) => {
+                const subStatus = STATUS_MAP[sub.status] || {
+                  label: sub.status,
+                  color: 'text-primary',
+                  bg: 'bg-secondary',
+                };
 
-              return (
-                <Card key={sub.id} className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs">
-                  {/* هدر مرسوله */}
-                  <CardHeader className="flex items-center justify-between border-b border-border/60 bg-card px-5 py-3">
-                    <div className="flex items-center gap-2">
-                      <Truck className="h-4 w-4 text-primary" />
-                      <span className="text-xs font-bold text-foreground">
-                        مرسوله {new Intl.NumberFormat('fa-IR').format(idx + 1)} از {new Intl.NumberFormat('fa-IR').format(order.subOrders.length)}
-                      </span>
-                    </div>
+                const isDelivered =
+                  order.status === 'Delivered' ||
+                  sub.status === 'Delivered' ||
+                  sub.status === 'Received' ||
+                  Boolean(sub.recieveDate);
 
-                    <span className={cn('rounded-full border px-3 py-1 text-2xs font-bold', subStatus.bg, subStatus.color)}>
-                      {subStatus.label}
-                    </span>
-                  </CardHeader>
-
-                  <CardBody className="flex flex-col gap-4 p-5">
-                    {/* اطلاعات فروشگاه ارسال‌کننده */}
-                    <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                return (
+                  <Card key={sub.id} className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs">
+                    {/* هدر مرسوله */}
+                    <CardHeader className="flex items-center justify-between border-b border-border/60 bg-card px-5 py-3">
                       <div className="flex items-center gap-2">
-                        <Store className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-xs font-bold text-foreground">فروشگاه: {sub.shop.shopTitle}</span>
+                        <Truck className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-bold text-foreground">
+                          مرسوله {new Intl.NumberFormat('fa-IR').format(idx + 1)} از {new Intl.NumberFormat('fa-IR').format(order.subOrders.length)}
+                        </span>
                       </div>
-                      <span className="text-2xs text-muted-foreground">
-                        روش ارسال: <strong>{sub.shipmentMethod === 'Local' ? 'تحویل حضوری' : sub.shipmentMethod}</strong>
+
+                      <span className={cn('rounded-full border px-3 py-1 text-2xs font-bold', subStatus.bg, subStatus.color)}>
+                        {subStatus.label}
                       </span>
-                    </div>
+                    </CardHeader>
 
-                    {/* اطلاعات رهگیری هوشمند مرسوله */}
-                    {sub.traceNumber || sub.driverFullName ? (
-                      <div className="flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs">
-                        {sub.traceNumber ? (
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground font-semibold">کد رهگیری پستی / تیپاکس:</span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold text-foreground tracking-wider">{sub.traceNumber}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleCopyTrace(sub.traceNumber)}
-                                className="flex items-center gap-1 rounded-md bg-card border px-2 py-1 text-2xs font-semibold text-primary shadow-2xs hover:bg-secondary"
-                              >
-                                {copiedTrace === sub.traceNumber ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
-                                <span>{copiedTrace === sub.traceNumber ? 'کپی شد' : 'کپی'}</span>
-                              </button>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {sub.driverFullName ? (
-                          <div className="flex items-center justify-between pt-1 border-t border-border/40">
-                            <span className="text-muted-foreground">مشخصات راننده پیک:</span>
-                            <div className="flex items-center gap-2 font-bold text-foreground">
-                              <span>{sub.driverFullName}</span>
-                              {sub.driverMobile ? (
-                                <a href={`tel:${sub.driverMobile}`} className="flex items-center gap-1 text-primary hover:underline">
-                                  <Phone className="h-3 w-3" />
-                                  <span>{sub.driverMobile}</span>
-                                </a>
-                              ) : null}
-                            </div>
-                          </div>
-                        ) : null}
+                    <CardBody className="flex flex-col gap-4 p-5">
+                      {/* اطلاعات فروشگاه ارسال‌کننده */}
+                      <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Store className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs font-bold text-foreground">فروشگاه: {sub.shop?.shopTitle || 'یدک‌چی'}</span>
+                        </div>
+                        <span className="text-2xs text-muted-foreground">
+                          روش ارسال: <strong>{sub.shipmentMethod === 'Local' ? 'تحویل حضوری' : sub.shipmentMethod}</strong>
+                        </span>
                       </div>
-                    ) : null}
 
-                    {/* لیست اقلام مرسوله */}
-                    <div className="flex flex-col divide-y divide-border/60">
-                      {sub.subOrderItems.map((item: any) => (
-                        <div key={item.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-card p-1 shadow-2xs">
-                              <img
-                                src={getFullUrl(item.shopProduct?.product?.image)}
-                                className="h-full w-full object-contain"
-                                alt=""
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1 min-w-0 flex-1">
-                              <span className="truncate text-xs font-bold text-foreground">
-                                {item.shopProduct?.product?.title}
-                              </span>
-                              <div className="flex items-center gap-2 text-2xs text-muted-foreground">
-                                <span>تعداد: {new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد</span>
-                                <span>•</span>
-                                <span className="font-bold text-foreground">
-                                  {formatPrice(item.finalTotalPrice)} تومان
-                                </span>
+                      {/* اطلاعات رهگیری هوشمند مرسوله */}
+                      {sub.traceNumber || sub.driverFullName ? (
+                        <div className="flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs">
+                          {sub.traceNumber ? (
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground font-semibold">کد رهگیری پستی / تیپاکس:</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-foreground tracking-wider">{sub.traceNumber}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyTrace(sub.traceNumber)}
+                                  className="flex items-center gap-1 rounded-md bg-card border px-2 py-1 text-2xs font-semibold text-primary shadow-2xs hover:bg-secondary"
+                                >
+                                  {copiedTrace === sub.traceNumber ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
+                                  <span>{copiedTrace === sub.traceNumber ? 'کپی شد' : 'کپی'}</span>
+                                </button>
                               </div>
                             </div>
-                          </div>
+                          ) : null}
 
-                          {/* دکمه ثبت درخواست مرجوعی */}
-                          {sub.status === 'Delivered' ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedSubOrder(sub);
-                                setSelectedItem(item);
-                                setIsReturnModalOpen(true);
-                              }}
-                              className="h-8 shrink-0 rounded-lg text-2xs font-bold hover:border-primary hover:text-primary"
-                            >
-                              درخواست مرجوعی
-                            </Button>
+                          {sub.driverFullName ? (
+                            <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                              <span className="text-muted-foreground">مشخصات راننده پیک:</span>
+                              <div className="flex items-center gap-2 font-bold text-foreground">
+                                <span>{sub.driverFullName}</span>
+                                {sub.driverMobile ? (
+                                  <a href={`tel:${sub.driverMobile}`} className="flex items-center gap-1 text-primary hover:underline">
+                                    <Phone className="h-3 w-3" />
+                                    <span>{sub.driverMobile}</span>
+                                  </a>
+                                ) : null}
+                              </div>
+                            </div>
                           ) : null}
                         </div>
-                      ))}
-                    </div>
+                      ) : null}
 
-                    {/* دکمه‌های تایید تحویل یا اعلام عدم دریافت */}
-                    {sub.status === 'InProgress' ? (
-                      <div className="mt-2 flex flex-wrap items-center justify-end gap-2 border-t border-dashed border-border/60 pt-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleConfirmNotReceived(sub.id)}
-                          className="flex items-center gap-1.5 rounded-lg text-xs font-bold text-destructive border-destructive/40 hover:bg-destructive/10"
-                        >
-                          <PackageX className="h-4 w-4" />
-                          <span>بسته را دریافت نکردم</span>
-                        </Button>
+                      {/* لیست اقلام مرسوله */}
+                      <div className="flex flex-col divide-y divide-border/60">
+                        {sub.subOrderItems?.map((item: any) => (
+                          <div key={item.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-card p-1 shadow-2xs">
+                                <img
+                                  src={getFullUrl(item.shopProduct?.product?.image)}
+                                  className="h-full w-full object-contain"
+                                  alt=""
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1 min-w-0 flex-1">
+                                <span className="truncate text-xs font-bold text-foreground">
+                                  {item.shopProduct?.product?.title}
+                                </span>
+                                <div className="flex items-center gap-2 text-2xs text-muted-foreground">
+                                  <span>تعداد: {new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد</span>
+                                  <span>•</span>
+                                  <span className="font-bold text-foreground">
+                                    {formatPrice(item.finalTotalPrice)} تومان
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleConfirmReceived(sub.id)}
-                          className="flex items-center gap-1.5 rounded-lg text-xs font-bold text-success border-success/40 hover:bg-success/10"
-                        >
-                          <PackageCheck className="h-4 w-4" />
-                          <span>کالا را تحویل گرفتم</span>
-                        </Button>
+                            {/* دکمه ثبت درخواست مرجوعی برای این کالا */}
+                            {isDelivered ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSubOrder(sub);
+                                  setSelectedItem(item);
+                                  setIsReturnModalOpen(true);
+                                }}
+                                className="h-8 shrink-0 rounded-lg text-2xs font-bold text-amber-600 border-amber-500/40 hover:bg-amber-500/10"
+                              >
+                                درخواست مرجوعی
+                              </Button>
+                            ) : null}
+                          </div>
+                        ))}
                       </div>
-                    ) : null}
 
-                    {/* دکمه ثبت رسید پستی در صورت مرجوعی تایید شده */}
-                    {sub.status === 'ReturnRequest' ? (
-                      <div className="mt-2 flex items-center justify-end border-t border-dashed border-border/60 pt-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setActiveReturnRequestId(sub.id);
-                            setIsReturnShipmentOpen(true);
-                          }}
-                          className="flex items-center gap-1.5 rounded-lg text-xs font-bold text-primary border-primary/40 hover:bg-primary/10"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                          <span>ثبت بارنامه مرجوعی کالا</span>
-                        </Button>
-                      </div>
-                    ) : null}
-                  </CardBody>
-                </Card>
-              );
-            })}
-          </div>
+                      {/* دکمه‌های تایید تحویل یا اعلام عدم دریافت */}
+                      {sub.status === 'InProgress' ? (
+                        <div className="mt-2 flex flex-wrap items-center justify-end gap-2 border-t border-dashed border-border/60 pt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleConfirmNotReceived(sub.id)}
+                            className="flex items-center gap-1 rounded-lg text-xs font-bold text-destructive border-destructive/40 hover:bg-destructive/10"
+                          >
+                            <PackageX className="h-4 w-4" />
+                            <span>بسته را دریافت نکردم</span>
+                          </Button>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleConfirmReceived(sub.id)}
+                            className="flex items-center gap-1 rounded-lg text-xs font-bold text-success border-success/40 hover:bg-success/10"
+                          >
+                            <PackageCheck className="h-4 w-4" />
+                            <span>کالا را تحویل گرفتم</span>
+                          </Button>
+                        </div>
+                      ) : null}
+
+                      {/* دکمه ثبت رسید پستی مرجوعی */}
+                      {sub.status === 'ReturnRequest' ? (
+                        <div className="mt-2 flex items-center justify-end border-t border-dashed border-border/60 pt-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setActiveReturnRequestId(sub.id);
+                              setIsReturnShipmentOpen(true);
+                            }}
+                            className="flex items-center gap-1 rounded-lg text-xs font-bold text-primary border-primary/40 hover:bg-primary/10"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            <span>ثبت بارنامه مرجوعی کالا</span>
+                          </Button>
+                        </div>
+                      ) : null}
+                    </CardBody>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card p-12 text-center shadow-xs">
+              <Package className="mb-2 h-10 w-10 text-muted-foreground/40" />
+              <p className="text-xs font-semibold text-muted-foreground">
+                هیچ مرسوله یا کالایی برای این سفارش ثبت نشده است (داده تستی).
+              </p>
+            </Card>
+          )}
         </div>
 
         {/* ستون چپ: صورتحساب و پرداخت */}
