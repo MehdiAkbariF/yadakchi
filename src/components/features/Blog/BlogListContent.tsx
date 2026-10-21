@@ -1,8 +1,6 @@
-// src/components/features/Blog/BlogListContent.tsx
+﻿'use client';
 
-'use client';
-
-import { useState } from 'react';
+import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { BookOpen, SlidersHorizontal, Inbox } from 'lucide-react';
 import { useGetBlogCategories, useGetBlogPosts, useGetBlogPostFilters } from '@/domains/blog/hooks/blog.hooks';
@@ -17,8 +15,7 @@ import { toPersianDigits } from '@/core/utils/formatters';
 export function BlogListContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
 
   const selectedCategory = searchParams.get('category') || undefined;
   const selectedTitle = searchParams.get('q') || undefined;
@@ -79,55 +76,50 @@ export function BlogListContent() {
   const breadcrumbItems = [{ id: 'blog-root', title: 'مجله تخصصی یدک‌چی' }];
 
   return (
-    <main className="w-full flex flex-col gap-6 sm:gap-8 pb-12" dir="rtl">
-      
-      {/* ناوبری مسیر (Breadcrumb) */}
+    <main className="flex w-full flex-col gap-6 pb-12 sm:gap-8">
       <nav aria-label="مسیر جاری">
         <Breadcrumb items={breadcrumbItems} />
       </nav>
 
-      {/* بنر هدر مجله: بهینه‌سازی شده در موبایل با پدینگ و تایپوگرافی تطبیقی */}
-      <header className="relative w-full rounded-2xl sm:rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-5 sm:p-8 md:p-10 overflow-hidden shadow-xs">
-        <div className="relative z-10 flex flex-col items-start gap-2 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary">
-            <BookOpen className="h-4 w-4 shrink-0" />
+      <header className="relative w-full overflow-hidden rounded-lg border border-accent bg-muted/50 p-5 shadow-xs sm:p-8 md:p-10">
+        <div className="relative z-10 flex max-w-3xl flex-col items-start gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-primary">
+            <BookOpen aria-hidden="true" className="h-4 w-4 shrink-0" />
             <span className="text-xs font-bold">مجله خودرو و قطعات یدکی</span>
           </div>
 
-          <h1 className="text-xl sm:text-2xl md:text-4xl font-black text-foreground tracking-tight mt-1 leading-tight sm:leading-snug">
+          <h1 className="mt-1 text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">
             دانشنامه فنی و اخبار دنیای قطعات یدک‌چی
           </h1>
 
-          <p className="text-xs sm:text-sm md:text-base text-muted-foreground leading-relaxed mt-1">
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground md:text-base">
             راهنمای جامع خرید، معرفی و عیب‌یابی قطعات انواع خودروها به قلم کارشناسان خبره
           </p>
         </div>
 
-        {/* پترن پس‌زمینه برای جلوه بصری */}
-        <div className="absolute -left-10 -bottom-10 w-44 h-44 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-10 -start-10 h-44 w-44 rounded-full bg-primary/10 blur-3xl"
+        />
       </header>
 
-      {/* کنترلر و اکشن‌بار موبایل */}
-      <div className="lg:hidden flex items-center justify-between gap-3 p-1">
+      <div className="flex items-center justify-between gap-3 p-1 lg:hidden">
         <button
           type="button"
           onClick={() => setIsMobileFiltersOpen(true)}
-          className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-input bg-background shadow-xs text-xs font-bold text-foreground hover:bg-accent active:scale-95 transition-transform"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-input bg-card px-4 text-xs font-bold text-foreground shadow-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <SlidersHorizontal className="h-4 w-4 text-primary shrink-0" />
+          <SlidersHorizontal aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
           <span>فیلتر و دسته‌بندی‌ها</span>
         </button>
 
-        <span className="text-xs font-semibold text-muted-foreground bg-muted/60 px-3 py-2 rounded-xl border border-border/40">
+        <span className="rounded-md border border-border bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground">
           {toPersianDigits(totalCount)} مقاله
         </span>
       </div>
 
-      {/* چیدمان اصلی ۲ ستونه */}
-      <div className="w-full flex items-start gap-8">
-        
-        {/* سایدبار فیلترها (دسکتاپ) */}
-        <aside className="hidden lg:block w-72 xl:w-80 shrink-0 sticky top-28">
+      <div className="flex w-full items-start gap-8">
+        <aside className="sticky top-28 hidden w-72 shrink-0 lg:block xl:w-80">
           <BlogSidebar
             categories={categories}
             availableFilters={availableFilters}
@@ -140,49 +132,43 @@ export function BlogListContent() {
           />
         </aside>
 
-        {/* گرید مقالات و وضعیت‌ها */}
-        <section className="flex-1 min-w-0 flex flex-col gap-6">
-          
-          {/* هدر بالایی لیست در دسکتاپ */}
-          <div className="hidden lg:flex items-center justify-between pb-3 border-b border-border/60">
+        <section className="flex min-w-0 flex-1 flex-col gap-6">
+          <div className="hidden items-center justify-between border-b border-border pb-3 lg:flex">
             <h2 className="text-base font-bold text-foreground">آخرین مطالب منتشر شده</h2>
-            <span className="text-xs font-bold text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/30">
+            <span className="rounded-sm border border-border bg-muted px-3 py-1.5 text-xs font-bold text-muted-foreground">
               {toPersianDigits(totalCount)} مقاله تخصصی
             </span>
           </div>
 
           {isPostsLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <BlogCardSkeleton key={i} />
               ))}
             </div>
           ) : posts.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
                 {posts.map((post) => (
                   <BlogCard key={post.id} post={post} />
                 ))}
               </div>
 
-              {totalPages > 1 && (
+              {totalPages > 1 ? (
                 <div className="pt-6">
-                  <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
+                  <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
                 </div>
-              )}
+              ) : null}
             </>
           ) : (
-            /* حالت خالی (Empty State) مهندسی شده */
-            <div className="flex flex-col items-center justify-center p-8 sm:p-14 text-center bg-card rounded-2xl border border-dashed border-border/80 gap-3">
-              <div className="p-3 bg-muted rounded-full">
-                <Inbox className="h-8 w-8 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card p-8 text-center sm:p-14">
+              <div className="rounded-full bg-muted p-3">
+                <Inbox aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-sm sm:text-base font-bold text-foreground">مقاله‌ای با این مشخصات یافت نشد</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
+              <h3 className="text-sm font-bold text-foreground sm:text-base">
+                مقاله‌ای با این مشخصات یافت نشد
+              </h3>
+              <p className="max-w-sm text-xs text-muted-foreground sm:text-sm">
                 لطفاً کلمات کلیدی دیگری را جستجو کنید یا فیلترهای فعال را پاک نمایید.
               </p>
               <button
@@ -194,20 +180,17 @@ export function BlogListContent() {
               </button>
             </div>
           )}
-
         </section>
-
       </div>
 
-      {/* مودال فیلتر موبایل */}
       <Modal isOpen={isMobileFiltersOpen} onClose={() => setIsMobileFiltersOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsMobileFiltersOpen(false)}>
-          <ModalTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-primary" />
+          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <SlidersHorizontal aria-hidden="true" className="h-4 w-4 text-primary" />
             فیلتر مقالات
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="p-4 sm:p-5 max-h-[75vh] overflow-y-auto">
+        <ModalBody className="max-h-[75vh] overflow-y-auto p-4 sm:p-5">
           <BlogSidebar
             categories={categories}
             availableFilters={availableFilters}
@@ -227,7 +210,6 @@ export function BlogListContent() {
           />
         </ModalBody>
       </Modal>
-
     </main>
   );
 }

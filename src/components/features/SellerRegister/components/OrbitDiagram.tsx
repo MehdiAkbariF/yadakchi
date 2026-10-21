@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
+import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import { Store, User, Layers, Plus, Check, ShieldCheck } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 
@@ -17,7 +17,7 @@ const orbitItems = [
     title: 'خریدار آنلاین',
     desc: 'در جستجوی قطعه',
     icon: User,
-    color: 'text-primary bg-primary/10',
+    color: 'text-primary bg-accent',
     top: '0%',
     left: '50%',
   },
@@ -42,14 +42,14 @@ const orbitItems = [
 ];
 
 export function OrbitDiagram() {
-  const [notifications] = useState<Notification[]>([
+  const [notifications] = React.useState<Notification[]>([
     { id: 1, text: 'علی علوی ۱ خرید انجام داد', type: 'buy' },
     { id: 2, text: 'فروشگاه آزادی: ثبت محصول جدید', type: 'add' },
     { id: 3, text: 'تامین‌کننده البرز: تایید سفارش', type: 'approve' },
   ]);
-  const [notifIndex, setNotifIndex] = useState(0);
+  const [notifIndex, setNotifIndex] = React.useState(0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const interval = setInterval(() => {
       setNotifIndex((prev) => (prev + 1) % notifications.length);
     }, 4000);
@@ -57,25 +57,25 @@ export function OrbitDiagram() {
   }, [notifications.length]);
 
   return (
-    <div className="lg:col-span-6 w-full flex items-center justify-center relative order-2 py-10 sm:py-16">
-      <div className="relative w-[280px] h-[280px] sm:w-[380px] sm:h-[380px] md:w-[460px] md:h-[460px] flex items-center justify-center">
-        
-        {/* حلقه‌های چرخان SVG */}
+    <div className="relative order-2 flex w-full items-center justify-center py-10 sm:py-16 lg:col-span-6">
+      <div className="relative flex h-[280px] w-[280px] items-center justify-center sm:h-[380px] sm:w-[380px] md:h-[460px] md:w-[460px]">
         <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full"
           viewBox="0 0 400 400"
           fill="none"
         >
           <defs>
             <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#F56D3C" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#F56D3C" stopOpacity="0" />
+              <stop offset="0%" stopColor="#D95D32" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#D95D32" stopOpacity="0" />
             </linearGradient>
           </defs>
 
-          {/* حلقه بیرونی */}
           <motion.circle
-            cx="200" cy="200" r="190"
+            cx="200"
+            cy="200"
+            r="190"
             stroke="url(#ringGrad)"
             strokeWidth="1"
             strokeDasharray="6 12"
@@ -84,10 +84,11 @@ export function OrbitDiagram() {
             style={{ originX: '50%', originY: '50%', transformBox: 'fill-box' }}
           />
 
-          {/* حلقه میانی */}
           <motion.circle
-            cx="200" cy="200" r="155"
-            stroke="#F56D3C"
+            cx="200"
+            cy="200"
+            r="155"
+            stroke="#D95D32"
             strokeWidth="0.5"
             strokeOpacity="0.2"
             strokeDasharray="3 8"
@@ -96,26 +97,23 @@ export function OrbitDiagram() {
             style={{ originX: '50%', originY: '50%', transformBox: 'fill-box' }}
           />
 
-          {/* حلقه داخلی */}
           <motion.circle
-            cx="200" cy="200" r="115"
-            stroke="#F56D3C"
+            cx="200"
+            cy="200"
+            r="115"
+            stroke="#D95D32"
             strokeWidth="0.5"
             strokeOpacity="0.3"
-            animate={{ 
-              r: [115, 120, 115],
-              opacity: [0.3, 0.6, 0.3],
-            }}
+            animate={{ r: [115, 120, 115], opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             style={{ originX: '50%', originY: '50%', transformBox: 'fill-box' }}
           />
         </svg>
 
-        {/* نودهای اطراف که می‌چرخند */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
-          className="absolute inset-0 w-full h-full rounded-full pointer-events-none"
+          className="pointer-events-none absolute inset-0 h-full w-full rounded-full"
         >
           {orbitItems.map((item, idx) => {
             const ItemIcon = item.icon;
@@ -134,20 +132,25 @@ export function OrbitDiagram() {
                   animate={{ rotate: -360 }}
                   transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
                 >
-                  {/* glow پشت نود */}
                   <motion.div
-                    className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl"
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-lg bg-primary/20 blur-xl"
                     animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity, delay: idx * 0.5 }}
                   />
-                  
-                  <div className="relative bg-card/95 backdrop-blur-xl border border-primary/30 rounded-2xl p-3 shadow-2xl flex items-center gap-2.5 whitespace-nowrap hover:scale-110 hover:border-primary/60 transition-all duration-300 cursor-default">
-                    <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', item.color)}>
-                      <ItemIcon className="h-4.5 w-4.5" />
+
+                  <div className="relative flex cursor-default items-center gap-2.5 whitespace-nowrap rounded-lg border border-primary/30 bg-card/95 p-3 shadow-md backdrop-blur-xl transition-colors duration-normal hover:border-primary/60">
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
+                        item.color
+                      )}
+                    >
+                      <ItemIcon aria-hidden="true" className="h-4 w-4" />
                     </div>
-                    <div className="flex flex-col text-right">
-                      <span className="text-xs font-black text-foreground">{item.title}</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">{item.desc}</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-foreground">{item.title}</span>
+                      <span className="mt-0.5 text-2xs text-muted-foreground">{item.desc}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -156,27 +159,26 @@ export function OrbitDiagram() {
           })}
         </motion.div>
 
-        {/* لوگوی مرکزی با pulse */}
         <div className="relative z-10">
-          {/* هاله‌های متعدد پشت لوگو */}
           <motion.div
+            aria-hidden="true"
             className="absolute inset-0 rounded-full bg-primary/20 blur-2xl"
             animate={{ scale: [1, 1.5, 1], opacity: [0.4, 0.7, 0.4] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
           />
           <motion.div
+            aria-hidden="true"
             className="absolute inset-0 rounded-full border-2 border-primary/30"
             animate={{ scale: [1, 1.6], opacity: [0.5, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut' }}
           />
 
-          <div className="relative w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-background border-2 border-primary/20 shadow-2xl p-4 flex items-center justify-center backdrop-blur-sm">
-            <img src="/Logo.svg" alt="یدک‌چی" className="w-full h-full object-contain" />
+          <div className="relative flex h-24 w-24 items-center justify-center rounded-lg border-2 border-primary/20 bg-card p-4 shadow-lg backdrop-blur-sm sm:h-32 sm:w-32">
+            <img src="/Logo.svg" alt="یدک‌چی" className="h-full w-full object-contain" />
           </div>
         </div>
 
-        {/* کارت نوتیفیکیشن زنده */}
-        <div className="absolute -bottom-6 sm:bottom-0 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[280px] z-20">
+        <div className="absolute -bottom-6 left-1/2 z-20 w-[calc(100%-2rem)] max-w-[280px] -translate-x-1/2 sm:bottom-0 rtl:translate-x-1/2">
           <AnimatePresence mode="wait">
             <motion.div
               key={notifIndex}
@@ -184,28 +186,35 @@ export function OrbitDiagram() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: -20, opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="w-full bg-card/95 backdrop-blur-xl border border-primary/20 rounded-2xl p-3 shadow-xl flex items-center gap-3"
+              className="flex w-full items-center gap-3 rounded-lg border border-primary/20 bg-card/95 p-3 shadow-lg backdrop-blur-xl"
             >
               <motion.div
                 className={cn(
-                  'w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
-                  notifications[notifIndex].type === 'buy' && 'bg-primary/10 text-primary',
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
+                  notifications[notifIndex].type === 'buy' && 'bg-accent text-primary',
                   notifications[notifIndex].type === 'add' && 'bg-blue-500/10 text-blue-500',
-                  notifications[notifIndex].type === 'approve' && 'bg-emerald-500/10 text-emerald-500'
+                  notifications[notifIndex].type === 'approve' &&
+                    'bg-emerald-500/10 text-emerald-500'
                 )}
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 0.5 }}
               >
-                {notifications[notifIndex].type === 'buy' && <Check className="h-4 w-4 stroke-[2.5]" />}
-                {notifications[notifIndex].type === 'add' && <Plus className="h-4 w-4 stroke-[2.5]" />}
-                {notifications[notifIndex].type === 'approve' && <ShieldCheck className="h-4 w-4 stroke-[2.5]" />}
+                {notifications[notifIndex].type === 'buy' ? (
+                  <Check aria-hidden="true" className="h-4 w-4 stroke-2" />
+                ) : null}
+                {notifications[notifIndex].type === 'add' ? (
+                  <Plus aria-hidden="true" className="h-4 w-4 stroke-2" />
+                ) : null}
+                {notifications[notifIndex].type === 'approve' ? (
+                  <ShieldCheck aria-hidden="true" className="h-4 w-4 stroke-2" />
+                ) : null}
               </motion.div>
-              <div className="flex-1 min-w-0 text-right">
-                <span className="text-[11px] sm:text-xs font-black text-foreground block truncate">
+              <div className="min-w-0 flex-1">
+                <span className="block truncate text-xs font-bold text-foreground">
                   {notifications[notifIndex].text}
                 </span>
-                <span className="text-[9px] text-muted-foreground block flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="mt-0.5 flex items-center gap-1 text-2xs text-muted-foreground">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
                   به صورت زنده در یدک‌چی
                 </span>
               </div>

@@ -1,5 +1,3 @@
-// src/components/sections/Header/components/HeaderActions/HeaderActions.tsx
-
 'use client';
 
 import { SellerButton } from '../SellerButton/SellerButton';
@@ -15,12 +13,16 @@ interface HeaderActionsProps {
 
 export function HeaderActions({ isMobileMenuOpen, onMobileMenuToggle }: HeaderActionsProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 sm:gap-2.5">
       <SellerButton />
-      <ThemeToggle />
+      <div className="hidden sm:block">
+        <ThemeToggle />
+      </div>
       <AuthButton />
       <CartButton />
-      <MobileMenuToggle isOpen={isMobileMenuOpen} onClick={onMobileMenuToggle} />
+      <div className="border-s border-border/60 ps-1.5 lg:hidden">
+        <MobileMenuToggle isOpen={isMobileMenuOpen} onClick={onMobileMenuToggle} />
+      </div>
     </div>
   );
 }

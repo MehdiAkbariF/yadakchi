@@ -1,55 +1,92 @@
-'use client';
-
-import { forwardRef } from 'react';
+import * as React from 'react';
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+import { inputVariants } from '@/design-system/variants/input.variants';
 
-interface SelectOption {
+export interface SelectOption {
   value: string;
   label: string;
 }
 
-export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
+export interface SelectProps
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
   options: SelectOption[];
   error?: string;
   label?: string;
-  size?: 'sm' | 'md' | 'lg';
+  description?: string;
   placeholder?: string;
+  size?: 'sm' | 'md' | 'lg';
+  containerClassName?: string;
 }
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, options = [], error, label, size = 'md', placeholder, ...props }, ref) => {
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+  (
+    {
+      className,
+      containerClassName,
+      options = [],
+      error,
+      label,
+      description,
+      placeholder,
+      size = 'md',
+      id,
+      ...props
+    },
+    ref
+  ) => {
+    const generatedId = React.useId();
+    const selectId = id ?? generatedId;
+    const errorId = `${selectId}-error`;
+    const descriptionId = `${selectId}-description`;
+    const hasError = Boolean(error);
+
     return (
-      <div className="w-full space-y-1.5 text-right">
-        {label && (
-          <label className="text-xs md:text-sm font-medium leading-none text-foreground">
+      <div className={cn('w-full space-y-1.5', containerClassName)}>
+        {label ? (
+          <label
+            htmlFor={selectId}
+            className="text-sm font-medium text-foreground"
+          >
             {label}
           </label>
-        )}
+        ) : null}
         <div className="relative">
           <select
+            ref={ref}
+            id={selectId}
+            aria-invalid={hasError || undefined}
+            aria-describedby={
+              hasError ? errorId : description ? descriptionId : undefined
+            }
             className={cn(
-              "flex w-full rounded-xl border bg-background px-3 py-2 text-xs md:text-sm transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 outline-none appearance-none cursor-pointer",
-              size === 'sm' && 'h-8',
-              size === 'md' && 'h-11',
-              size === 'lg' && 'h-12',
-              error ? 'border-destructive' : 'border-zinc-200 dark:border-zinc-800',
+              inputVariants({ variant: hasError ? 'error' : 'default', size }),
+              'appearance-none pe-10 cursor-pointer',
               className
             )}
-            ref={ref}
             {...props}
           >
-            {placeholder && <option value="">{placeholder}</option>}
+            {placeholder ? <option value="">{placeholder}</option> : null}
             {options.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
           </select>
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-9"/></svg>
-          </div>
+          <ChevronDown
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+          />
         </div>
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {hasError ? (
+          <p id={errorId} role="alert" className="text-xs text-destructive">
+            {error}
+          </p>
+        ) : description ? (
+          <p id={descriptionId} className="text-xs text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
       </div>
     );
   }

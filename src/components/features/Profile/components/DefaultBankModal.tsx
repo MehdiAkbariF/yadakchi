@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -80,15 +80,15 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+        <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-2">
           <CreditCard className="h-5 w-5 text-primary" />
           انتخاب حساب پیش‌فرض تسویه
         </ModalTitle>
       </ModalHeader>
-      <ModalBody className="p-0 pt-4 text-right">
+      <ModalBody className="p-0 pt-4">
         {!isAddCardOpen ? (
           <div className="flex flex-col gap-4 w-full">
-            <span className="text-xs text-muted-foreground font-iran-yekan block mb-1">
+            <span className="text-xs text-muted-foreground block mb-1">
               برای انتخاب حساب پیش‌فرض، روی کارت مورد نظر کلیک کنید.
             </span>
 
@@ -98,11 +98,11 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
                   key={b.id}
                   onClick={() => onSelectDefaultBank(b.id)}
                   className={cn(
-                    "p-4 rounded-xl border cursor-pointer flex items-center justify-between text-right transition-all hover:border-primary/20 bg-background",
+                    "p-4 rounded-xl border cursor-pointer flex items-center justify-between transition-all hover:border-primary/20 bg-card",
                     b.isDefault ? "border-primary bg-primary/5 text-primary ring-1 ring-primary" : ""
                   )}
                 >
-                  <div className="flex flex-col gap-1 font-iran-yekan text-xs">
+                  <div className="flex flex-col gap-1 text-xs">
                     <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{b.cardNumber}</span>
                     {b.shebaNumber && (
                       <span className="text-[10px] text-muted-foreground mt-1 ltr:inline-block" dir="ltr">شبا: {b.shebaNumber}</span>
@@ -127,14 +127,14 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
               type="button"
               variant="outline"
               onClick={() => setIsAddCardOpen(true)}
-              className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-4 flex items-center justify-center gap-1.5 shadow-sm mt-2"
+              className="rounded-xl font-bold text-xs h-10 px-4 flex items-center justify-center gap-1.5 shadow-sm mt-2"
             >
               <Plus className="h-4 w-4" />
               <span>اضافه کردن حساب جدید (کارت یا شبا)</span>
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onAddCardSubmit)} className="flex flex-col gap-4 w-full text-right animate-in slide-in-from-left duration-200">
+          <form onSubmit={handleSubmit(onAddCardSubmit)} className="flex flex-col gap-4 w-full animate-in slide-in-from-left duration-200">
             <div className="flex items-center gap-2 border-b pb-2 mb-2">
               <button 
                 type="button" 
@@ -144,10 +144,10 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
               >
                 <ArrowRight className="h-4.5 w-4.5" />
               </button>
-              <span className="text-xs font-bold text-foreground font-iran-yekan">افزودن حساب جدید</span>
+              <span className="text-xs font-bold text-foreground ">افزودن حساب جدید</span>
             </div>
 
-            <span className="text-xs text-muted-foreground font-iran-yekan block mb-1">
+            <span className="text-xs text-muted-foreground block mb-1">
               برای افزودن حساب، <strong>یکی</strong> از دو کادر زیر را پر کنید.
             </span>
 
@@ -156,13 +156,13 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
                 label="شماره کارت"
                 placeholder="شماره کارت ۱۶ رقمی"
                 error={errors.cardNumber?.message ? String(errors.cardNumber.message) : undefined}
-                className="text-xs font-iran-yekan text-left"
+                className="text-xs"
                 dir="ltr"
                 {...register('cardNumber')}
               />
             </div>
 
-            <div className="text-center font-iran-yekan font-bold text-xs text-muted-foreground py-1 select-none">
+            <div className="text-center font-bold text-xs text-muted-foreground py-1 select-none">
               یا
             </div>
 
@@ -171,7 +171,7 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
                 label="شماره شبا (بدون IR)"
                 placeholder="شماره شبا ۲۴ رقمی"
                 error={errors.shebaNumber?.message ? String(errors.shebaNumber.message) : undefined}
-                className="text-xs font-iran-yekan text-left"
+                className="text-xs"
                 dir="ltr"
                 {...register('shebaNumber')}
               />

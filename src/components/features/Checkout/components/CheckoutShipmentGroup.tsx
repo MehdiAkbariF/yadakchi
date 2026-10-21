@@ -1,12 +1,11 @@
 ﻿'use client';
 
-import { Truck, Store, Zap } from 'lucide-react';
+import { Truck, Store, Zap, Check, PackageCheck } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '@/components/composites/Card';
-import { Typography } from '@/components/primitives/Typography';
 import { cn } from '@/design-system/utils/cn';
-
 import { getFullUrl } from '@/core/utils/formatters';
-interface CheckoutShipmentGroupProps {
+
+export interface CheckoutShipmentGroupProps {
   sub: any;
   index: number;
   totalSubBaskets: number;
@@ -21,145 +20,229 @@ export function CheckoutShipmentGroup({
   selectedMethod,
   onSelectMethod,
 }: CheckoutShipmentGroupProps) {
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value / 10) + ' تومان';
-  };
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat('fa-IR').format(value / 10) + ' تومان';
 
-  // ۱. تیپاکس (Tipax = 2)
   const isTipaxAvailable = typeof sub.tipaxShipmentPrice === 'number' && sub.tipaxShipmentPrice > 0;
-
-  // ۲. ارسال مستقیم فروشنده (DirectShipment = 3)
   const directPrice = sub.directShipmentPrice ?? sub.sellerShipmentPrice;
   const isDirectAvailable = typeof directPrice === 'number' && directPrice > 0;
-
-  // ۳. اسنپ‌باکس (SnappBox = 5)
   const snappBoxPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice;
   const isSnappBoxAvailable = typeof snappBoxPrice === 'number' && snappBoxPrice > 0;
-
-  // ۴. دریافت حضوری (Local = 1)
   const isLocalAvailable = !!sub.isLocalShipmentAvailable;
 
   return (
-    <Card className="w-full overflow-hidden border rounded-xl shadow-sm bg-background text-right">
-      <CardHeader className="border-b bg-muted/20 px-4 py-3.5 flex items-center justify-between">
-        <span className="text-xs font-bold font-iran-yekan text-foreground">
-          مرسوله {new Intl.NumberFormat('fa-IR').format(index + 1)} از {new Intl.NumberFormat('fa-IR').format(totalSubBaskets)}
-        </span>
-        <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground">
-          ارسال از فروشگاه: {sub.shop?.shopTitle || ''}
+    <Card className="w-full overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs">
+      {/* هدر تمیز و شفاف مرسوله */}
+      <CardHeader className="flex items-center justify-between border-b border-border/60 bg-card px-5 py-3.5">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-secondary text-primary font-bold text-xs">
+            {new Intl.NumberFormat('fa-IR').format(index + 1)}
+          </div>
+          <span className="text-xs font-bold text-foreground">
+            مرسوله {new Intl.NumberFormat('fa-IR').format(index + 1)} از{' '}
+            {new Intl.NumberFormat('fa-IR').format(totalSubBaskets)}
+          </span>
+        </div>
+
+        <span className="rounded-full bg-secondary/60 px-3 py-1 text-2xs font-semibold text-foreground/80">
+          فروشگاه: <strong className="text-primary">{sub.shop?.shopTitle || 'یدک‌چی'}</strong>
         </span>
       </CardHeader>
 
-      <CardBody className="p-5 flex flex-col gap-5">
-        <div className="w-full flex flex-col gap-3">
-          <Typography variant="h6" className="font-iran-yekan font-bold text-foreground border-b pb-1.5 mb-2">
-            شیوه دریافت سفارش را انتخاب کنید
-          </Typography>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* ۱. ارسال با تیپاکس */}
-            {isTipaxAvailable && (
-              <button
-                type="button"
+      <CardBody className="flex flex-col gap-5 p-5">
+        {/* انتخاب روش ارسال به صورت کارت‌های مدرن و تعاملی */}
+        <div className="flex flex-col gap-2.5">
+          <span className="text-xs font-bold text-foreground">
+            انتخاب شیوه ارسال برای این مرسوله:
+          </span>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {/* گزینه تیپاکس */}
+            {isTipaxAvailable ? (
+              <div
                 onClick={() => onSelectMethod('Tipax')}
                 className={cn(
-                  "p-3.5 border rounded-xl flex items-center justify-between text-right transition-all outline-none",
-                  selectedMethod === 'Tipax' 
-                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary font-bold" 
-                    : "hover:border-primary/20 bg-background text-foreground"
+                  'relative flex cursor-pointer items-start justify-between rounded-xl border p-3.5 transition-all duration-fast',
+                  selectedMethod === 'Tipax'
+                    ? 'border-primary bg-primary/[0.04] ring-2 ring-primary/20 shadow-xs'
+                    : 'border-border/70 bg-card hover:border-primary/40'
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <Truck className="h-4.5 w-4.5 shrink-0" />
-                  <span className="text-xs font-iran-yekan font-bold">ارسال با تیپاکس</span>
+                <div className="flex items-start gap-2.5">
+                  <div className={cn(
+                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                    selectedMethod === 'Tipax' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                  )}>
+                    <Truck className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-foreground">ارسال با تیپاکس</span>
+                    <span className="text-2xs text-muted-foreground">تحویل ۲۴ تا ۷۲ ساعته</span>
+                  </div>
                 </div>
-                <span className="text-xs font-iran-yekan font-bold">{formatPrice(sub.tipaxShipmentPrice)}</span>
-              </button>
-            )}
 
-            {/* ۲. ارسال مستقیم (فروشنده) */}
-            {isDirectAvailable && (
-              <button
-                type="button"
-                onClick={() => onSelectMethod('DirectShipment')}
-                className={cn(
-                  "p-3.5 border rounded-xl flex items-center justify-between text-right transition-all outline-none",
-                  selectedMethod === 'DirectShipment' 
-                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary font-bold" 
-                    : "hover:border-primary/20 bg-background text-foreground"
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <Truck className="h-4.5 w-4.5 shrink-0" />
-                  <span className="text-xs font-iran-yekan font-bold">ارسال فروشنده</span>
+                <div className="flex flex-col items-end gap-1">
+                  <div className={cn(
+                    'flex h-4 w-4 items-center justify-center rounded-full border',
+                    selectedMethod === 'Tipax' ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                  )}>
+                    {selectedMethod === 'Tipax' ? <Check className="h-3 w-3 stroke-[3]" /> : null}
+                  </div>
+                  <span className="text-xs font-bold text-primary">
+                    {formatPrice(sub.tipaxShipmentPrice)}
+                  </span>
                 </div>
-                <span className="text-xs font-iran-yekan font-bold">{formatPrice(directPrice)}</span>
-              </button>
-            )}
+              </div>
+            ) : null}
 
-            {/* ۳. اسنپ‌باکس */}
-            {isSnappBoxAvailable && (
-              <button
-                type="button"
+            {/* گزینه اسنپ‌باکس (فوری) */}
+            {isSnappBoxAvailable ? (
+              <div
                 onClick={() => onSelectMethod('SnappBox')}
                 className={cn(
-                  "p-3.5 border rounded-xl flex items-center justify-between text-right transition-all outline-none",
-                  selectedMethod === 'SnappBox' 
-                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary font-bold" 
-                    : "hover:border-primary/20 bg-background text-foreground"
+                  'relative flex cursor-pointer items-start justify-between rounded-xl border p-3.5 transition-all duration-fast',
+                  selectedMethod === 'SnappBox'
+                    ? 'border-primary bg-primary/[0.04] ring-2 ring-primary/20 shadow-xs'
+                    : 'border-border/70 bg-card hover:border-primary/40'
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <Zap className="h-4.5 w-4.5 shrink-0 text-amber-500" />
-                  <span className="text-xs font-iran-yekan font-bold">اسنپ‌باکس (فوری)</span>
+                <div className="flex items-start gap-2.5">
+                  <div className={cn(
+                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                    selectedMethod === 'SnappBox' ? 'bg-warning text-warning-foreground' : 'bg-secondary text-muted-foreground'
+                  )}>
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-foreground">اسنپ‌باکس (فوری)</span>
+                    <span className="text-2xs text-muted-foreground">ارسال درون‌شهری اکسپرس</span>
+                  </div>
                 </div>
-                <span className="text-xs font-iran-yekan font-bold">{formatPrice(snappBoxPrice)}</span>
-              </button>
-            )}
 
-            {/* ۴. تحویل حضوری */}
-            {isLocalAvailable && (
-              <button
-                type="button"
+                <div className="flex flex-col items-end gap-1">
+                  <div className={cn(
+                    'flex h-4 w-4 items-center justify-center rounded-full border',
+                    selectedMethod === 'SnappBox' ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                  )}>
+                    {selectedMethod === 'SnappBox' ? <Check className="h-3 w-3 stroke-[3]" /> : null}
+                  </div>
+                  <span className="text-xs font-bold text-primary">
+                    {formatPrice(snappBoxPrice)}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            {/* گزینه ارسال مستقیم فروشنده */}
+            {isDirectAvailable ? (
+              <div
+                onClick={() => onSelectMethod('DirectShipment')}
+                className={cn(
+                  'relative flex cursor-pointer items-start justify-between rounded-xl border p-3.5 transition-all duration-fast',
+                  selectedMethod === 'DirectShipment'
+                    ? 'border-primary bg-primary/[0.04] ring-2 ring-primary/20 shadow-xs'
+                    : 'border-border/70 bg-card hover:border-primary/40'
+                )}
+              >
+                <div className="flex items-start gap-2.5">
+                  <div className={cn(
+                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                    selectedMethod === 'DirectShipment' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'
+                  )}>
+                    <Truck className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-foreground">پیک اختصاصی فروشنده</span>
+                    <span className="text-2xs text-muted-foreground">طبق هماهنگی تلفنی</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-1">
+                  <div className={cn(
+                    'flex h-4 w-4 items-center justify-center rounded-full border',
+                    selectedMethod === 'DirectShipment' ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                  )}>
+                    {selectedMethod === 'DirectShipment' ? <Check className="h-3 w-3 stroke-[3]" /> : null}
+                  </div>
+                  <span className="text-xs font-bold text-primary">
+                    {formatPrice(directPrice)}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            {/* گزینه تحویل حضوری */}
+            {isLocalAvailable ? (
+              <div
                 onClick={() => onSelectMethod('Local')}
                 className={cn(
-                  "p-3.5 border rounded-xl flex items-center justify-between text-right transition-all outline-none",
-                  selectedMethod === 'Local' 
-                    ? "border-primary bg-primary/5 text-primary ring-1 ring-primary font-bold" 
-                    : "hover:border-primary/20 bg-background text-foreground"
+                  'relative flex cursor-pointer items-start justify-between rounded-xl border p-3.5 transition-all duration-fast',
+                  selectedMethod === 'Local'
+                    ? 'border-primary bg-primary/[0.04] ring-2 ring-primary/20 shadow-xs'
+                    : 'border-border/70 bg-card hover:border-primary/40'
                 )}
               >
-                <div className="flex items-center gap-2">
-                  <Store className="h-4.5 w-4.5 shrink-0" />
-                  <span className="text-xs font-iran-yekan font-bold">دریافت حضوری</span>
+                <div className="flex items-start gap-2.5">
+                  <div className={cn(
+                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                    selectedMethod === 'Local' ? 'bg-success text-success-foreground' : 'bg-secondary text-muted-foreground'
+                  )}>
+                    <Store className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-bold text-foreground">تحویل حضوری از فروشگاه</span>
+                    <span className="text-2xs text-muted-foreground">بدون هزینه ارسال</span>
+                  </div>
                 </div>
-                <span className="text-xs font-iran-yekan font-bold text-success-500">رایگان</span>
-              </button>
-            )}
+
+                <div className="flex flex-col items-end gap-1">
+                  <div className={cn(
+                    'flex h-4 w-4 items-center justify-center rounded-full border',
+                    selectedMethod === 'Local' ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                  )}>
+                    {selectedMethod === 'Local' ? <Check className="h-3 w-3 stroke-[3]" /> : null}
+                  </div>
+                  <span className="text-xs font-bold text-success">رایگان</span>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
-        {/* لیست محصولات سفارش */}
-        <div className="w-full divide-y border-t border-dashed mt-3 pt-3">
-          {sub.subBasketItems?.map((item: any) => (
-            <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex items-center gap-4">
-              <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden border bg-muted/10">
-                <img
-                  src={getFullUrl(item.shopProduct?.product?.image)}
-                  alt={item.shopProduct?.product?.title || ''}
-                  className="w-full h-full object-contain"
-                />
+        {/* لیست افقی و خلاصه قطعات موجود در این مرسوله */}
+        <div className="border-t border-dashed border-border/70 pt-3">
+          <div className="mb-3 flex items-center gap-1.5 text-2xs font-bold text-muted-foreground">
+            <PackageCheck className="h-3.5 w-3.5" />
+            <span>اقلام این مرسوله:</span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {sub.subBasketItems?.map((item: any) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 rounded-lg border border-border/60 bg-secondary/30 p-2.5"
+              >
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-border/60 bg-card p-1">
+                  <img
+                    src={getFullUrl(item.shopProduct?.product?.image)}
+                    alt={item.shopProduct?.product?.title || ''}
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="truncate text-xs font-semibold text-foreground">
+                    {item.shopProduct?.product?.title}
+                  </h4>
+                  <div className="mt-1 flex items-center justify-between text-2xs text-muted-foreground">
+                    <span>تعداد: {new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد</span>
+                    <span className="font-bold text-foreground/80">
+                      {formatPrice(item.finalTotalPrice)}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold font-iran-yekan text-foreground truncate">
-                  {item.shopProduct?.product?.title}
-                </h4>
-                <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground block mt-1.5">
-                  تعداد: {new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد
-                </span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </CardBody>
     </Card>

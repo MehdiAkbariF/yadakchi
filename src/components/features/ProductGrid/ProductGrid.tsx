@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { cn } from '@/design-system/utils/cn';
 import { Typography } from '@/components/primitives/Typography';
@@ -76,10 +76,10 @@ export function SearchHeader({
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center justify-between md:justify-start gap-4">
-          <Typography variant="h3" className="font-iran-yekan font-extrabold text-foreground">
+          <Typography variant="h3" className=" font-extrabold text-foreground">
             {searchTitle ? `نتایج جستجو برای «${searchTitle}»` : 'لیست قطعات یدکی'}
           </Typography>
-          <span className="text-xs font-bold font-iran-yekan text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
+          <span className="text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
             {formatNumber(totalCount)} کالا
           </span>
         </div>
@@ -87,7 +87,7 @@ export function SearchHeader({
         <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={onOpenMobileFilters}
-            className="flex items-center justify-center gap-1.5 border rounded-xl px-4 py-2 bg-background hover:bg-muted text-xs font-bold font-iran-yekan text-foreground shadow-sm flex-1"
+            className="flex items-center justify-center gap-1.5 border rounded-xl px-4 py-2 bg-card hover:bg-muted text-xs font-bold text-foreground shadow-sm flex-1"
           >
             <SlidersHorizontal className="h-4 w-4 text-primary" />
             <span>فیلترها</span>
@@ -96,7 +96,7 @@ export function SearchHeader({
       </div>
 
       <div className="hidden md:flex items-center gap-2 border-t pt-3 overflow-x-auto no-scrollbar">
-        <span className="text-xs font-bold font-iran-yekan text-muted-foreground whitespace-nowrap ml-2">
+        <span className="text-xs font-bold text-muted-foreground whitespace-nowrap ms-2">
           مرتب‌سازی:
         </span>
         <div className="flex items-center gap-2 relative">
@@ -107,7 +107,7 @@ export function SearchHeader({
                 key={opt.value}
                 onClick={() => onSortChange(opt.value)}
                 className={cn(
-                  "relative px-4 py-1.5 rounded-full text-xs font-bold font-iran-yekan transition-colors select-none whitespace-nowrap outline-none",
+                  "relative px-4 py-1.5 rounded-full text-xs font-bold transition-colors select-none whitespace-nowrap outline-none",
                   isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -133,10 +133,10 @@ export function SearchHeader({
               key={opt.value}
               onClick={() => onSortChange(opt.value)}
               className={cn(
-                "px-4 py-1.5 rounded-full text-xs font-bold font-iran-yekan transition-all select-none whitespace-nowrap border shrink-0",
+                "px-4 py-1.5 rounded-full text-xs font-bold transition-all select-none whitespace-nowrap border shrink-0",
                 isActive 
-                  ? "bg-primary border-primary text-white shadow-sm" 
-                  : "bg-background text-muted-foreground hover:text-foreground"
+                  ? "bg-primary border-primary text-primary-foreground shadow-sm" 
+                  : "bg-card text-muted-foreground hover:text-foreground"
               )}
             >
               {opt.label}
@@ -150,7 +150,7 @@ export function SearchHeader({
           {chipsList.map((chip, idx) => (
             <div
               key={`${chip.name}-${idx}`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 text-[10px] font-bold font-iran-yekan text-foreground border hover:border-primary/20 transition-all select-none"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted/60 text-[10px] font-bold text-foreground border hover:border-primary/20 transition-all select-none"
             >
               <span>{chip.label}</span>
               <button
@@ -164,7 +164,7 @@ export function SearchHeader({
           ))}
           <button
             onClick={onClearAll}
-            className="text-xs font-bold font-iran-yekan text-destructive hover:underline ml-2"
+            className="text-xs font-bold text-destructive hover:underline ms-2"
           >
             حذف فیلترها
           </button>

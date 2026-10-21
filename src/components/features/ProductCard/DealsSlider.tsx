@@ -1,39 +1,36 @@
-// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\ProductCard\DealsSlider.tsx
-'use client';
+﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
+import { ChevronLeft, ChevronRight, AlarmClock } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import { useGetNominatedProducts } from '@/domains/front/product/hooks/product.hooks';
 import { useGetCurrentTime } from '@/domains/front/static/hooks/static.hooks';
 import { ProductDealCard } from './ProductDealCard';
-import { ChevronLeft, ChevronRight, AlarmClock } from 'lucide-react';
 import { Typography } from '@/components/primitives/Typography';
-import { motion, useMotionValue, animate } from 'framer-motion';
 import { SliderSkeleton } from './SliderSkeleton';
 
 export function DealsSlider() {
   const { data: rawData, isLoading, isError } = useGetNominatedProducts();
   const { data: serverTime } = useGetCurrentTime();
-  
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [dragWidth, setWidth] = useState(0);
+
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const [dragWidth, setDragWidth] = React.useState(0);
   const x = useMotionValue(0);
 
   const productItems = rawData?.products?.items || [];
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (carouselRef.current) {
-      setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+      setDragWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
     }
   }, [productItems]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 450;
     let newX = x.get() + (direction === 'left' ? step : -step);
-    
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
-
     animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
   };
 
@@ -51,86 +48,83 @@ export function DealsSlider() {
   if (isError || productItems.length === 0) return null;
 
   return (
-    <div className="w-full flex flex-col space-y-3.5 py-4 animate-in fade-in duration-300">
-      
-      {/* هدر موبایل با استایل رنگ و فونت و فلش اصلاح‌شده */}
-      <div className="flex md:hidden items-center justify-between w-full px-1">
+    <div className="flex w-full flex-col space-y-3.5 py-4">
+      {/* هدر موبایل */}
+      <div className="flex w-full items-center justify-between px-1 md:hidden">
         <div className="flex items-center gap-2">
-          <AlarmClock className="h-5 w-5 text-primary shrink-0 animate-bounce [animation-duration:3s]" />
-          <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">
+          <AlarmClock aria-hidden="true" className="h-5 w-5 shrink-0 animate-bounce text-primary [animation-duration:3s]" />
+          <Typography variant="h4" className="font-bold text-foreground">
             تخفیف‌های شگفت‌انگیز
           </Typography>
         </div>
-        
-        <Link 
-          href="/special" 
-          className="inline-flex items-center gap-1 text-xs font-medium font-iran-yekan text-foreground hover:opacity-75 transition-opacity shrink-0"
+
+        <Link
+          href="/special"
+          className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground transition-opacity hover:opacity-75"
         >
           <span>مشاهده همه</span>
-          <ChevronLeft className="w-4 h-4 stroke-[2.25]" />
+          <ChevronLeft aria-hidden="true" className="h-4 w-4 stroke-[2.25]" />
         </Link>
       </div>
 
-      <div className="w-full bg-zinc-100/60 dark:bg-zinc-900/40 rounded-xl border p-4 flex flex-col md:flex-row items-stretch gap-4 relative group overflow-hidden">
-        
-        <div className="hidden md:flex w-[210px] shrink-0 flex-col items-center justify-center text-center text-white bg-gradient-to-br from-primary to-primary-600 rounded-xl p-6 relative overflow-hidden shadow-sm select-none">
-          <Typography variant="h4" className="font-iran-yekan font-extrabold text-white leading-tight">
+      <div className="group relative flex w-full flex-col items-stretch gap-4 overflow-hidden rounded-lg border border-border bg-muted p-4 md:flex-row">
+        <div className="relative hidden w-[210px] shrink-0 select-none flex-col items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary-hover p-6 text-center text-primary-foreground shadow-xs md:flex">
+          <Typography variant="h4" className="font-bold leading-tight text-primary-foreground">
             تخفیف‌های شگفت‌انگیز
           </Typography>
-          
-          <div className="my-4 p-3 bg-white/10 rounded-full border border-white/20 backdrop-blur-sm animate-bounce [animation-duration:3s]">
-            <AlarmClock className="h-10 w-10 text-white stroke-[1.5]" />
+
+          <div className="my-4 animate-bounce rounded-full border border-primary-foreground/20 bg-primary-foreground/10 p-3 backdrop-blur-sm [animation-duration:3s]">
+            <AlarmClock aria-hidden="true" className="h-10 w-10 stroke-[1.5] text-primary-foreground" />
           </div>
 
-          <Link 
-            href="/special" 
-            className="inline-flex items-center gap-1 text-xs font-medium font-iran-yekan border-b border-white hover:text-white/80 pb-0.5 transition-colors"
+          <Link
+            href="/special"
+            className="inline-flex items-center gap-1 border-b border-primary-foreground pb-0.5 text-xs font-medium transition-colors hover:text-primary-foreground/80"
           >
             <span>مشاهده همه</span>
-            <ChevronLeft className="w-3.5 h-3.5 stroke-[2]" />
+            <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5 stroke-2" />
           </Link>
         </div>
 
-        {productItems.length > 3 && (
+        {productItems.length > 3 ? (
           <>
             <button
+              type="button"
               onClick={() => handleScroll('right')}
-              className="hidden md:flex absolute right-[235px] top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Previous"
+              className="absolute start-[235px] top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer rounded-full border border-border bg-card p-2 text-foreground shadow-sm transition-colors duration-fast hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              aria-label="محصولات قبلی"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight aria-hidden="true" className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => handleScroll('left')}
-              className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Next"
+              className="absolute end-2 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer rounded-full border border-border bg-card p-2 text-foreground shadow-sm transition-colors duration-fast hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              aria-label="محصولات بعدی"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
             </button>
           </>
-        )}
+        ) : null}
 
-        <div 
-          ref={carouselRef}
-          className="w-full overflow-hidden relative z-10 select-none"
-        >
-          <motion.div 
+        <div ref={carouselRef} className="relative z-10 w-full select-none overflow-hidden">
+          <motion.div
             drag="x"
             style={{ x }}
             dragConstraints={{ left: 0, right: dragWidth }}
             dragElastic={0.12}
             onClickCapture={handleDragClickCapture}
-            className="flex gap-4 py-1 cursor-grab active:cursor-grabbing"
+            className="flex cursor-grab gap-4 py-1 active:cursor-grabbing"
           >
             {productItems.map((prod: any) => (
-              <div key={prod.id} className="w-[190px] sm:w-[250px] shrink-0">
+              <div key={prod.id} className="w-[190px] shrink-0 sm:w-[250px]">
                 <ProductDealCard product={prod} serverTime={serverTime} />
               </div>
             ))}
           </motion.div>
         </div>
-
       </div>
     </div>
   );
 }
+

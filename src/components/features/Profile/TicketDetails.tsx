@@ -82,24 +82,24 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
     }
   };
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-140px)] select-none text-right -mt-6 -mx-4 md:-mx-6 overflow-hidden bg-background" dir="rtl">
+    <div className="flex-1 flex flex-col h-[calc(100vh-140px)] select-none -mt-6 -mx-4 md:-mx-6 overflow-hidden bg-card" dir="rtl">
       
       <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
         <div className="flex items-center gap-2">
           <button 
             onClick={() => router.push('/profile/support')}
-            className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
+            className="p-1 -me-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
             aria-label="Back"
           >
             <ArrowRight className="h-5 w-5 text-foreground" />
           </button>
-          <div className="flex flex-col text-right">
+          <div className="flex flex-col">
             <span className="text-xs font-bold text-foreground block truncate max-w-[200px] sm:max-w-md">{ticket.title}</span>
-            <span className="text-[9px] text-muted-foreground font-iran-yekan block mt-0.5">شماره تیکت: {ticket.ticketNumberFormatted}</span>
+            <span className="text-[9px] text-muted-foreground block mt-0.5">شماره تیکت: {ticket.ticketNumberFormatted}</span>
           </div>
         </div>
         <span className={cn(
-          "px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold font-iran-yekan shrink-0",
+          "px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold shrink-0",
           ticket.status === 'WaitingForAnswer' && "bg-warning-50 text-warning-600 dark:bg-warning-950/20 dark:text-warning-400",
           ticket.status === 'Answered' && "bg-success-50 text-success-600 dark:bg-success-950/20 dark:text-success-400",
           ticket.status === 'Closed' && "bg-muted text-muted-foreground"
@@ -116,13 +116,13 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
               <div 
                 key={msg.id}
                 className={cn(
-                  "flex items-start gap-3 w-full max-w-[85%] md:max-w-[70%] text-right font-iran-yekan",
+                  "flex items-start gap-3 w-full max-w-[85%] md:max-w-[70%] ",
                   isMyMsg ? "self-start flex-row" : "self-end flex-row-reverse"
                 )}
               >
                 <div className={cn(
                   "w-8 h-8 rounded-full border flex items-center justify-center shrink-0 shadow-sm",
-                  isMyMsg ? "bg-primary/10 border-primary/15 text-primary" : "bg-muted border-zinc-200 text-muted-foreground"
+                  isMyMsg ? "bg-primary/10 border-primary/15 text-primary" : "bg-muted border-border text-muted-foreground"
                 )}>
                   {isMyMsg ? <User className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
                 </div>
@@ -134,7 +134,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
                   </div>
                   <div className={cn(
                     "p-3 rounded-2xl shadow-sm text-xs md:text-sm font-medium leading-relaxed break-words",
-                    isMyMsg ? "bg-primary text-white rounded-tr-none" : "bg-muted/40 dark:bg-zinc-900 border rounded-tl-none text-foreground"
+                    isMyMsg ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-muted/40 dark:bg-muted border rounded-tl-none text-foreground"
                   )}>
                     {msg.text}
                   </div>
@@ -147,7 +147,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
                           href={getFullUrl(url)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="h-8 px-2.5 rounded-lg border bg-background text-[9px] font-bold text-foreground flex items-center gap-1.5 shadow-sm hover:border-primary/20"
+                          className="h-8 px-2.5 rounded-lg border bg-card text-[9px] font-bold text-foreground flex items-center gap-1.5 shadow-sm hover:border-primary/20"
                         >
                           <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
                           <span className="truncate max-w-[80px]">فایل ضمیمه {formatPrice(index + 1)}</span>
@@ -160,22 +160,22 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
             );
           })
         ) : (
-          <span className="text-xs text-muted-foreground font-iran-yekan py-4">پیامی ثبت نشده است.</span>
+          <span className="text-xs text-muted-foreground py-4">پیامی ثبت نشده است.</span>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {ticket.status !== 'Closed' && (
-        <div className="border-t bg-background p-4 shrink-0 flex flex-col gap-3.5 relative z-10 w-full shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
+        <div className="border-t bg-card p-4 shrink-0 flex flex-col gap-3.5 relative z-10 w-full shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-1.5 overflow-x-auto py-0.5 shrink-0 no-scrollbar">
               {attachments.map((file, idx) => (
                 <div 
                   key={idx}
-                  className="h-8 px-2.5 rounded-lg border bg-muted/20 text-[9px] font-bold font-iran-yekan text-foreground flex items-center gap-1.5 shrink-0 max-w-[120px]"
+                  className="h-8 px-2.5 rounded-lg border bg-muted/20 text-[9px] font-bold text-foreground flex items-center gap-1.5 shrink-0 max-w-[120px]"
                 >
                   <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate flex-1 text-right">{file.name}</span>
+                  <span className="truncate flex-1">{file.name}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveFile(idx)}

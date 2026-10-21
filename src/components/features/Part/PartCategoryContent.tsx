@@ -1,9 +1,7 @@
-﻿// src/components/features/Part/PartCategoryContent.tsx
+﻿'use client';
 
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import * as React from 'react';
+import { ShoppingBag } from 'lucide-react';
 import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
 import { useGetPartCategoryPage } from '@/domains/front/part/hooks/part.hooks';
 import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
@@ -20,20 +18,17 @@ import { SortSelector } from '@/components/composites/SortSelector/SortSelector'
 import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner';
 import { ChangeCategoryModal } from './components/ChangeCategoryModal';
 import { SelectPartModal } from './components/SelectPartModal';
-import { ShoppingBag, Settings, ListFilter, X } from 'lucide-react';
-
 import { getFullUrl } from '@/core/utils/formatters';
-interface PartCategoryContentProps {
+
+export interface PartCategoryContentProps {
   slug: string;
 }
 
 export function PartCategoryContent({ slug }: PartCategoryContentProps) {
-  const router = useRouter();
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
-
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  const [isChangeCatOpen, setIsChangeCatOpen] = useState(false);
-  const [isSelectPartOpen, setIsSelectPartOpen] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
+  const [isChangeCatOpen, setIsChangeCatOpen] = React.useState(false);
+  const [isSelectPartOpen, setIsSelectPartOpen] = React.useState(false);
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
   const currentFilters = { ...filters, partCategoryEnglishTitle: slug };
@@ -50,56 +45,56 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
     ...(categoryData?.breadCrumbs || []).map((b: any) => ({
       id: b.id,
       title: b.title,
-      href: `/part-category/${b.englishTitle}`
-    }))
+      href: `/part-category/${b.englishTitle}`,
+    })),
   ];
 
-  /*
-    اصلاح امضای تابع محلی جهت پذیرش امن تایپ undefined (رفع ارور ts-2345):
-  */
   return (
-    <div className="w-full flex flex-col gap-6 text-right" dir="rtl">
-      
-      {/* هدر تلفیقی میکرو چسبان مخصوص موبایل */}
-      <div 
-        style={{
-          top: isHeaderMinimized ? '56px' : '122px'
-        }}
-        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 w-full flex flex-col gap-3 shadow-sm select-none transition-all duration-300 mt-1 shrink-0"
+    <div className="flex w-full flex-col gap-6">
+      <div
+        style={{ top: isHeaderMinimized ? '56px' : '122px' }}
+        className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
       >
-        {/* ردیف اول: مینی آدرس و تغییر سریع دسته‌بندی قطعات */}
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 shrink-0 rounded-lg border bg-muted/10 flex items-center justify-center overflow-hidden">
-              <img src={getFullUrl(categoryData?.category?.thumbnail)} className="w-full h-full object-contain filter dark:invert" alt="" />
+        <div className="flex w-full items-center justify-between">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+              <img
+                src={getFullUrl(categoryData?.category?.thumbnail)}
+                className="h-full w-full object-contain filter dark:invert"
+                alt=""
+              />
             </div>
-            <div className="flex flex-col min-w-0 text-right">
-              <span className="text-[9px] text-muted-foreground font-bold leading-none">گروه قطعات</span>
-              <span className="text-xs font-black text-foreground truncate mt-1 leading-none">{categoryData?.category?.name || 'قطعات یدکی'}</span>
+            <div className="flex min-w-0 flex-col">
+              <span className="text-2xs font-bold leading-none text-muted-foreground">گروه قطعات</span>
+              <span className="mt-1 truncate text-xs font-bold leading-none text-foreground">
+                {categoryData?.category?.name || 'قطعات یدکی'}
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5">
             <button
+              type="button"
               onClick={() => setIsChangeCatOpen(true)}
-              className="text-[10px] font-black text-primary bg-primary/10 px-2.5 py-1.5 rounded-lg outline-none"
+              className="rounded-md bg-accent px-2.5 py-1.5 text-2xs font-bold text-accent-foreground outline-none"
             >
               تغییر دسته
             </button>
             <button
+              type="button"
               onClick={() => setIsSelectPartOpen(true)}
-              className="text-[10px] font-black text-foreground bg-secondary px-2.5 py-1.5 rounded-lg outline-none"
+              className="rounded-md bg-secondary px-2.5 py-1.5 text-2xs font-bold text-secondary-foreground outline-none"
             >
               انتخاب قطعه
             </button>
           </div>
         </div>
 
-        {/* ردیف دوم: فیلترها و مرتب‌سازی در یک خط */}
-        <div className="flex items-center justify-between gap-3 w-full border-t border-dashed pt-2.5">
+        <div className="flex w-full items-center justify-between gap-3 border-t border-dashed border-border pt-2.5">
           <button
+            type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-sans text-foreground flex-1 h-9 shadow-sm outline-none"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-xs font-bold text-foreground shadow-xs outline-none transition-colors hover:bg-muted"
           >
             <span className="truncate">فیلترها</span>
           </button>
@@ -110,16 +105,15 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             variant="trigger"
           />
 
-          <span className="text-[10px] font-bold font-iran-sans text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center">
+          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
       </div>
 
-      <Breadcrumb items={breadcrumbItems} className="hidden md:flex px-4 md:px-0" />
+      <Breadcrumb items={breadcrumbItems} className="hidden px-4 md:flex md:px-0" />
 
-      <div className="w-full flex items-start gap-6 md:gap-8">
-        
+      <div className="flex w-full items-start gap-6 md:gap-8">
         <SearchSidebar
           filters={currentFilters}
           onFilterChange={(name, val) => setFilter(name, val)}
@@ -129,17 +123,16 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           partCategoryId={categoryData?.category?.id}
         />
 
-        <div className="flex-1 flex flex-col items-stretch gap-6">
-          
+        <div className="flex flex-1 flex-col items-stretch gap-6">
           <div className="hidden md:block">
-            <PartCategoryHeaderCard 
+            <PartCategoryHeaderCard
               slug={slug}
               categoryName={categoryData?.category?.name || 'گروه قطعات'}
               thumbnail={categoryData?.category?.thumbnail || null}
             />
           </div>
 
-          <div className="block lg:hidden w-full">
+          <div className="block w-full lg:hidden">
             <ShopProductAdBanner partCategoryId={categoryData?.category?.id} />
           </div>
 
@@ -152,14 +145,14 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -172,27 +165,27 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
               />
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center select-none bg-background rounded-xl border border-dashed mx-4 md:mx-0">
-              <ShoppingBag className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] mb-4 animate-bounce" />
-              <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">کالایی یافت نشد</Typography>
-              <p className="text-xs text-muted-foreground mt-2 font-iran-sans">لطفاً فیلترهای خود را تغییر داده یا مجدداً امتحان کنید.</p>
+            <div className="mx-4 flex select-none flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card py-16 text-center md:mx-0">
+              <ShoppingBag aria-hidden="true" className="mb-4 h-12 w-12 text-muted-foreground/60" />
+              <Typography variant="h4" className="font-bold text-foreground">
+                کالایی یافت نشد
+              </Typography>
+              <p className="mt-2 text-xs text-muted-foreground">
+                لطفاً فیلترهای خود را تغییر داده یا مجدداً امتحان کنید.
+              </p>
             </div>
           )}
         </div>
-
       </div>
 
-      {categoryData?.category?.description && (
-        <PageDescription 
-          htmlContent={categoryData.category.description} 
+      {categoryData?.category?.description ? (
+        <PageDescription
+          htmlContent={categoryData.category.description}
           title={`راهنمای خرید و شناخت قطعات ${categoryData.category.name}`}
         />
-      )}
+      ) : null}
 
-      <ChangeCategoryModal
-        isOpen={isChangeCatOpen}
-        onClose={() => setIsChangeCatOpen(false)}
-      />
+      <ChangeCategoryModal isOpen={isChangeCatOpen} onClose={() => setIsChangeCatOpen(false)} />
 
       <SelectPartModal
         isOpen={isSelectPartOpen}
@@ -200,7 +193,6 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
         slug={slug}
         categoryName={categoryData?.category?.name || 'گروه قطعات'}
       />
-
     </div>
   );
 }

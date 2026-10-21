@@ -1,21 +1,19 @@
-﻿// src/components/features/ProductCard/ProductSearchCard.tsx
+﻿'use client';
 
-'use client';
-
-import { useState, useEffect, useMemo, useRef } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Store, BadgeCheck, Truck, Eye, Plus, Minus, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
 import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
 import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useImpression } from '@/shared/hooks/useImpression';
 import { trackShopProductClick } from '@/core/utils/impression-tracker';
 
-interface ProductSearchCardProps {
+export interface ProductSearchCardProps {
   product: any;
   showRating?: boolean;
   showAddToBasket?: boolean;
@@ -26,39 +24,35 @@ export function ProductSearchCard({
   product,
   showRating = true,
   showAddToBasket = false,
-  className
+  className,
 }: ProductSearchCardProps) {
-  const [tickerIndex, setTickerIndex] = useState(0);
-  const [isMounted, setIsMounted] = useState(false);
-  const [activeLoading, setActiveLoading] = useState(false);
+  const [tickerIndex, setTickerIndex] = React.useState(0);
+  const [isMounted, setIsMounted] = React.useState(false);
+  const [activeLoading, setActiveLoading] = React.useState(false);
 
   const { data: rawBasket } = useGetBasket();
   const addToBasket = useAddToBasket();
   const deleteFromBasket = useDeleteFromBasket();
 
   const rawBasketData = rawBasket as any;
-  const lastValidBasketRef = useRef<any>(null);
+  const lastValidBasketRef = React.useRef<any>(null);
 
   if (rawBasketData && !rawBasketData.isEmpty) {
     lastValidBasketRef.current = rawBasketData;
   }
+  const basket =
+    rawBasketData && !rawBasketData.isEmpty ? rawBasketData : lastValidBasketRef.current;
 
-  const basket = rawBasketData && !rawBasketData.isEmpty ? rawBasketData : lastValidBasketRef.current;
-
-  useEffect(() => {
+  React.useEffect(() => {
     setIsMounted(true);
   }, []);
 
   const nominated = product?.nominatedShopProduct || {};
-  
-  // ✅ استخراج شناسه فروشگاه کالا (مستقیم از OpenSearch یا ساختار قدیمی)
   const shopProductId = product?.shopProductId || nominated?.id || product?.id || null;
   const impressionRef = useImpression(shopProductId);
 
-  // ✅ عنوان کالا
-  const title = product?.productTitle || product?.title || product?.name?.value || product?.name || '';
-
-  // ✅ نام فروشگاه
+  const title =
+    product?.productTitle || product?.title || product?.name?.value || product?.name || '';
   const shopName = product?.shopTitle || nominated?.shopTitle || product?.shop?.name || null;
 
   const isTipax = product?.isTipaxShipping || nominated?.isTipaxShipping || false;
@@ -66,45 +60,44 @@ export function ProductSearchCard({
   const salesCount = product?.totalSalesCount || product?.salesCount || 0;
   const views = product?.viewsAndClicks || product?.views || 0;
 
-  // ✅ استخراج هوشمند قیمت‌ها (پشتیبانی مستقیم از rialRetailPrice و rialFinalPrice در OpenSearch)
   const originalPriceRaw = Number(
-    product?.rialRetailPrice ?? 
-    nominated?.rialRetailPrice ?? 
-    product?.price?.raw ?? 
-    (typeof product?.price === 'number' ? product.price : 0) ?? 
-    nominated?.price ?? 
-    0
+    product?.rialRetailPrice ??
+      nominated?.rialRetailPrice ??
+      product?.price?.raw ??
+      (typeof product?.price === 'number' ? product.price : 0) ??
+      nominated?.price ??
+      0
   );
-  
+
   const finalPriceRaw = Number(
-    product?.rialFinalPrice ?? 
-    nominated?.rialFinalPrice ?? 
-    (product?.discount?.hasDiscount ? (product?.price?.raw * (1 - product?.discount?.percent / 100)) : null) ?? 
-    product?.price?.raw ?? 
-    (typeof product?.price === 'number' ? product.price : 0) ?? 
-    originalPriceRaw
+    product?.rialFinalPrice ??
+      nominated?.rialFinalPrice ??
+      (product?.discount?.hasDiscount
+        ? product?.price?.raw * (1 - product?.discount?.percent / 100)
+        : null) ??
+      product?.price?.raw ??
+      (typeof product?.price === 'number' ? product.price : 0) ??
+      originalPriceRaw
   );
 
   const originalPriceToman = Math.round(originalPriceRaw / 10);
   const finalPriceToman = Math.round(finalPriceRaw / 10);
-  
-  // وضعیت موجودی انبار
-  const isOutOfStock = finalPriceRaw === 0 || (product?.quantity !== undefined && product.quantity === 0);
 
-  // وضعیت تخفیف
-  const hasDiscount = 
-    product?.isDiscountApplied !== undefined 
-      ? product.isDiscountApplied 
-      : (originalPriceRaw > finalPriceRaw && !isOutOfStock);
+  const isOutOfStock =
+    finalPriceRaw === 0 || (product?.quantity !== undefined && product.quantity === 0);
 
-  // درصد تخفیف
-  const discountPercent = 
-    product?.discountPercentage ?? 
-    (hasDiscount && originalPriceRaw > 0 
-      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100) 
-      : (nominated?.discountPercentage || product?.discount?.percent || 0));
+  const hasDiscount =
+    product?.isDiscountApplied !== undefined
+      ? product.isDiscountApplied
+      : originalPriceRaw > finalPriceRaw && !isOutOfStock;
 
-  const basketItem = useMemo(() => {
+  const discountPercent =
+    product?.discountPercentage ??
+    (hasDiscount && originalPriceRaw > 0
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+      : nominated?.discountPercentage || product?.discount?.percent || 0);
+
+  const basketItem = React.useMemo(() => {
     if (!basket || basket.isEmpty || !shopProductId) return null;
     for (const sub of basket.subBaskets) {
       const found = sub.items.find((item: any) => item.shopProductId === shopProductId);
@@ -113,42 +106,39 @@ export function ProductSearchCard({
     return null;
   }, [basket, shopProductId]);
 
-  const isInBasket = !!basketItem;
+  const isInBasket = Boolean(basketItem);
   const basketQuantity = basketItem?.quantity || 0;
-  
-  const maxLimit = basketItem?.maxQuantity || product?.quantity || nominated?.maxQuantityPerOrder || nominated?.quantity || 10;
+  const maxLimit =
+    basketItem?.maxQuantity ||
+    product?.quantity ||
+    nominated?.maxQuantityPerOrder ||
+    nominated?.quantity ||
+    10;
 
-  const tickerItems = useMemo(() => {
+  const tickerItems = React.useMemo(() => {
     const items: { text: string; icon: any }[] = [];
-    
     if (salesCount > 0) {
       items.push({ text: `${toPersianDigits(salesCount)} فروش موفق در یدک‌چی`, icon: BadgeCheck });
     }
-    if (isTipax) {
-      items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
-    }
-    if (isDirect) {
-      items.push({ text: 'ارسال مستقیم فروشگاه', icon: Truck });
-    }
+    if (isTipax) items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
+    if (isDirect) items.push({ text: 'ارسال مستقیم فروشگاه', icon: Truck });
     if (views > 0) {
       items.push({ text: `${toPersianDigits(views)} بازدید اخیر`, icon: Eye });
     }
-    
     return items;
   }, [isTipax, isDirect, salesCount, views]);
 
   const tickerLength = tickerItems.length;
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isMounted || tickerLength <= 1) return;
     const interval = setInterval(() => {
       setTickerIndex((prev) => (prev + 1) % tickerLength);
     }, 3000);
     return () => clearInterval(interval);
   }, [tickerLength, isMounted]);
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value);
-  };
+
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
   const handleAddToBasket = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -193,9 +183,7 @@ export function ProductSearchCard({
   };
 
   const handleCardClick = () => {
-    if (shopProductId) {
-      trackShopProductClick(shopProductId);
-    }
+    if (shopProductId) trackShopProductClick(shopProductId);
   };
 
   const ratingValue = product?.averageRate || product?.rating?.average || 5;
@@ -203,66 +191,72 @@ export function ProductSearchCard({
 
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
 
-  // ✅ لینک‌دهی مطمئن (کد کالا یا آیدی محصول OpenSearch)
-  const codeOrId = product?.productCode || product?.code || product?.productId || product?.id;
+  const codeOrId =
+    product?.productCode || product?.code || product?.productId || product?.id;
   const productCardUrl = getProductUrl(codeOrId, title);
 
-  // استخراج تصویر
-  const imageSource = product?.image || product?.images?.[0]?.medium || product?.images?.[0]?.url || product?.images?.[0] || null;
+  const imageSource =
+    product?.image ||
+    product?.images?.[0]?.medium ||
+    product?.images?.[0]?.url ||
+    product?.images?.[0] ||
+    null;
 
   return (
-    <div ref={impressionRef} className={cn("w-full transition-all select-none", className)}>
-      
-      {/* نسخه دسکتاپ */}
-      <Link 
+    <div ref={impressionRef} className={cn('w-full select-none transition-all', className)}>
+      {/* دسکتاپ */}
+      <Link
         href={productCardUrl}
         prefetch={false}
         onClick={handleCardClick}
-        className="hidden md:flex w-full h-full flex-col bg-background rounded-xl border hover:border-primary/40 hover:shadow-md p-3 sm:p-3.5 relative select-none"
+        className={cn(
+          'relative hidden h-full w-full select-none flex-col rounded-lg border border-border bg-card p-3 transition-all duration-normal sm:p-3.5 md:flex',
+          'hover:border-primary/40 hover:shadow-sm'
+        )}
         draggable={false}
       >
-        <div className="w-full aspect-[4/3] relative rounded-lg overflow-hidden mb-2 select-none" draggable={false}>
+        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-md" draggable={false}>
           <Image
             src={getFullUrl(imageSource)}
             alt={product?.imageAlt || title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
-            className="object-contain rounded-lg select-none"
+            className="select-none rounded-md object-contain"
             draggable={false}
           />
         </div>
 
-        <div className="w-full h-9 mb-1 mt-2 text-right">
-          <h4 className="text-sm font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed">
+        <div className="mb-1 mt-2 h-9 w-full">
+          <h4 className="line-clamp-2 text-sm font-semibold leading-relaxed text-foreground">
             {title}
           </h4>
         </div>
 
-        {showRating && (
-          <div className="w-full flex items-center gap-1 mt-1 justify-start select-none">
-            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400 shrink-0" />
-            <span className="text-[10px] sm:text-[11px] font-iran-sans font-bold text-foreground">
+        {showRating ? (
+          <div className="mt-1 flex w-full select-none items-center justify-start gap-1">
+            <Star aria-hidden="true" className="h-3.5 w-3.5 shrink-0 fill-warning text-warning" />
+            <span className="text-2xs font-bold text-foreground sm:text-xs">
               {formatPrice(ratingValue)}
             </span>
-            {ratingCount > 0 && (
-              <span className="text-[9px] text-muted-foreground font-iran-sans">
+            {ratingCount > 0 ? (
+              <span className="text-2xs text-muted-foreground">
                 ({toPersianDigits(ratingCount)})
               </span>
-            )}
+            ) : null}
           </div>
-        )}
+        ) : null}
 
-        {shopName && (
-          <div className="w-full flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground/85 hover:text-primary transition-colors select-none mt-1.5 justify-start">
-            <Store className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
-            <span className="font-iran-sans font-medium truncate text-shop">فروشگاه: {shopName}</span>
+        {shopName ? (
+          <div className="mt-1.5 flex w-full select-none items-center justify-start gap-1 text-2xs text-muted-foreground transition-colors hover:text-primary sm:text-xs">
+            <Store aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground/75" />
+            <span className="truncate font-medium text-shop">فروشگاه: {shopName}</span>
           </div>
-        )}
+        ) : null}
 
-        <div className="w-full flex flex-col items-stretch select-none">
+        <div className="flex w-full select-none flex-col items-stretch">
           {isMounted && tickerLength > 0 ? (
-            <div className="h-6 overflow-hidden relative w-full flex items-center justify-start text-[10px] sm:text-xs text-muted-foreground mt-0.5 select-none shrink-0">
-              <div className="hidden md:block w-full h-full relative">
+            <div className="relative mt-0.5 flex h-6 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground sm:text-xs">
+              <div className="relative hidden h-full w-full md:block">
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={tickerIndex}
@@ -270,73 +264,79 @@ export function ProductSearchCard({
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -15, opacity: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-                    className="absolute inset-x-0 top-0 bottom-0 flex items-center gap-1.5 font-iran-sans truncate h-full py-1 justify-start"
+                    className="absolute inset-x-0 bottom-0 top-0 flex h-full items-center justify-start gap-1.5 truncate py-1"
                   >
-                    <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate font-medium text-right text-foreground">{tickerItems[tickerIndex]?.text}</span>
+                    <CurrentTickerIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    <span className="truncate font-medium text-foreground">
+                      {tickerItems[tickerIndex]?.text}
+                    </span>
                   </motion.span>
                 </AnimatePresence>
               </div>
-
-              <div className="flex md:hidden items-center gap-1.5 font-iran-sans truncate w-full justify-start h-full">
-                <CurrentTickerIcon className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>
+              <div className="flex h-full w-full items-center justify-start gap-1.5 truncate md:hidden">
+                <CurrentTickerIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
+                <span className="truncate text-2xs font-medium">{tickerItems[0]?.text}</span>
               </div>
             </div>
           ) : (
-            <div className="h-6 mt-0.5 w-full shrink-0" />
+            <div className="mt-0.5 h-6 w-full shrink-0" />
           )}
         </div>
 
-        <div className={cn(
-          "w-full mt-auto pt-2 flex items-center justify-between",
-          (isOutOfStock || !showAddToBasket) ? "pb-1" : "border-b border-dashed pb-3.5"
-        )}>
-          <div className={cn(
-            "shrink-0 bg-primary/10 text-primary border border-primary/20 text-xs font-black font-iran-sans px-2.5 py-1 rounded-lg transition-opacity",
-            hasDiscount && discountPercent > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
-          )}>
+        <div
+          className={cn(
+            'mt-auto flex w-full items-center justify-between pt-2',
+            isOutOfStock || !showAddToBasket
+              ? 'pb-1'
+              : 'border-b border-dashed border-border pb-3.5'
+          )}
+        >
+          <div
+            className={cn(
+              'shrink-0 rounded-sm border border-accent bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground transition-opacity duration-fast',
+              hasDiscount && discountPercent > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
+            )}
+          >
             {toPersianDigits(discountPercent)}٪
           </div>
 
-          <div className="flex flex-col items-end min-w-0">
-            {hasDiscount && originalPriceToman > finalPriceToman && (
-              <span className="text-[10px] sm:text-xs text-zinc-500 line-through font-iran-sans font-medium">
+          <div className="flex min-w-0 flex-col items-end">
+            {hasDiscount && originalPriceToman > finalPriceToman ? (
+              <span className="text-2xs font-medium text-muted-foreground line-through sm:text-xs">
                 {formatPrice(originalPriceToman)}
               </span>
-            )}
-            <div className="flex items-center gap-0.5 mt-0.5">
+            ) : null}
+            <div className="mt-0.5 flex items-center gap-0.5">
               {isOutOfStock ? (
-                <span className="text-sm sm:text-base font-bold font-iran-sans text-destructive">
-                  ناموجود
-                </span>
+                <span className="text-sm font-bold text-destructive sm:text-base">ناموجود</span>
               ) : (
                 <>
-                  <span className="text-base sm:text-lg font-black font-iran-sans text-foreground">
+                  <span className="text-base font-bold text-foreground sm:text-lg">
                     {formatPrice(finalPriceToman)}
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-iran-sans">تومان</span>
+                  <span className="text-2xs text-muted-foreground">تومان</span>
                 </>
               )}
             </div>
           </div>
         </div>
 
-        {showAddToBasket && !isOutOfStock && (
-          <div className="w-full mt-3 h-9 shrink-0">
+        {showAddToBasket && !isOutOfStock ? (
+          <div className="mt-3 h-9 w-full shrink-0">
             {isInBasket ? (
-              <div className="flex items-center border border-primary rounded-xl bg-background p-1 gap-1 shadow-sm h-full justify-between">
+              <div className="flex h-full items-center justify-between gap-1 rounded-md border border-primary bg-card p-1 shadow-xs">
                 <button
                   type="button"
                   onClick={handleIncrease}
                   disabled={basketQuantity >= maxLimit || activeLoading}
-                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors disabled:opacity-30"
+                  aria-label="افزایش تعداد"
+                  className="rounded-sm p-1 text-primary transition-colors hover:bg-muted disabled:opacity-30"
                 >
-                  <Plus className="h-4.5 w-4.5" />
+                  <Plus aria-hidden="true" className="h-4 w-4" />
                 </button>
-                <span className="text-xs font-bold font-iran-sans text-primary">
+                <span className="text-xs font-bold text-primary">
                   {activeLoading ? (
-                    <Loader2 className="h-4.5 w-4.5 animate-spin text-primary mx-auto" />
+                    <Loader2 aria-hidden="true" className="mx-auto h-4 w-4 animate-spin text-primary" />
                   ) : (
                     new Intl.NumberFormat('fa-IR').format(basketQuantity)
                   )}
@@ -345,9 +345,10 @@ export function ProductSearchCard({
                   type="button"
                   onClick={handleDecrease}
                   disabled={activeLoading}
-                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors"
+                  aria-label="کاهش تعداد"
+                  className="rounded-sm p-1 text-primary transition-colors hover:bg-muted"
                 >
-                  <Minus className="h-4.5 w-4.5" />
+                  <Minus aria-hidden="true" className="h-4 w-4" />
                 </button>
               </div>
             ) : (
@@ -356,99 +357,101 @@ export function ProductSearchCard({
                 size="sm"
                 onClick={handleAddToBasket}
                 isLoading={activeLoading}
-                className="w-full rounded-xl text-xs h-full text-primary border-primary hover:bg-primary/5"
+                className="h-full w-full border-primary text-xs text-primary hover:bg-accent"
               >
                 <span>افزودن به سبد خرید</span>
               </Button>
             )}
           </div>
-        )}
+        ) : null}
       </Link>
 
-      {/* نسخه موبایل */}
+      {/* موبایل */}
       <Link
         href={productCardUrl}
         prefetch={false}
         onClick={handleCardClick}
-        className="md:hidden flex flex-col w-full bg-background border-b border-zinc-100 dark:border-zinc-800/80 py-4 px-0 relative select-none"
+        className="relative flex w-full select-none flex-col border-b border-border bg-card px-0 py-4 md:hidden"
         draggable={false}
       >
         <div className="flex w-full items-stretch gap-3">
-          <div className="w-[100px] h-[100px] shrink-0 relative rounded-lg overflow-hidden bg-muted/10">
+          <div className="relative h-[100px] w-[100px] shrink-0 overflow-hidden rounded-md bg-muted">
             <Image
               src={getFullUrl(imageSource)}
               alt={product?.imageAlt || title}
               fill
               sizes="100px"
-              className="object-contain rounded-lg select-none"
+              className="select-none rounded-md object-contain"
               draggable={false}
             />
           </div>
 
-          <div className="flex-1 flex flex-col justify-between min-w-0 text-right">
+          <div className="flex min-w-0 flex-1 flex-col justify-between">
             <div className="w-full">
-              <h4 className="text-xs font-bold font-iran-sans text-foreground line-clamp-2 leading-relaxed">
+              <h4 className="line-clamp-2 text-xs font-semibold leading-relaxed text-foreground">
                 {title}
               </h4>
 
-              {showRating && (
-                <div className="flex items-center gap-1 mt-1 justify-start select-none">
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 shrink-0" />
-                  <span className="text-[10px] font-iran-sans font-bold text-foreground">
+              {showRating ? (
+                <div className="mt-1 flex select-none items-center justify-start gap-1">
+                  <Star aria-hidden="true" className="h-3 w-3 shrink-0 fill-warning text-warning" />
+                  <span className="text-2xs font-bold text-foreground">
                     {formatPrice(ratingValue)}
                   </span>
-                  {ratingCount > 0 && (
-                    <span className="text-[9px] text-muted-foreground font-iran-sans">
+                  {ratingCount > 0 ? (
+                    <span className="text-2xs text-muted-foreground">
                       ({toPersianDigits(ratingCount)})
                     </span>
-                  )}
+                  ) : null}
                 </div>
-              )}
-              
-              {shopName && (
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1.5 justify-start">
-                  <Store className="h-3 w-3 shrink-0 text-muted-foreground/75" />
+              ) : null}
+
+              {shopName ? (
+                <div className="mt-1.5 flex items-center justify-start gap-1 text-2xs text-muted-foreground">
+                  <Store aria-hidden="true" className="h-3 w-3 shrink-0 text-muted-foreground/75" />
                   <span className="truncate">فروشگاه: {shopName}</span>
                 </div>
-              )}
+              ) : null}
 
               {isMounted && tickerLength > 0 ? (
-                <div className="h-5 overflow-hidden relative w-full flex items-center justify-start text-[9px] sm:text-[10px] text-muted-foreground mt-1 select-none shrink-0">
-                  <div className="flex items-center gap-1.5 font-iran-sans truncate w-full justify-start h-full">
-                    <CurrentTickerIcon className="h-3 w-3 text-primary shrink-0" />
-                    <span className="truncate font-medium text-right text-[10px]">{tickerItems[0]?.text}</span>
+                <div className="relative mt-1 flex h-5 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground">
+                  <div className="flex h-full w-full items-center justify-start gap-1.5 truncate">
+                    <CurrentTickerIcon aria-hidden="true" className="h-3 w-3 shrink-0 text-primary" />
+                    <span className="truncate text-2xs font-medium">{tickerItems[0]?.text}</span>
                   </div>
                 </div>
               ) : (
-                <div className="h-5 mt-1 w-full shrink-0" />
+                <div className="mt-1 h-5 w-full shrink-0" />
               )}
             </div>
 
-            <div className="w-full flex items-end justify-between mt-2">
-              <div className={cn(
-                "bg-primary/10 text-primary border border-primary/20 text-[10px] font-black font-iran-sans px-2 py-0.5 rounded-lg",
-                hasDiscount && discountPercent > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
-              )}>
+            <div className="mt-2 flex w-full items-end justify-between">
+              <div
+                className={cn(
+                  'rounded-sm border border-accent bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground',
+                  hasDiscount && discountPercent > 0
+                    ? 'opacity-100'
+                    : 'pointer-events-none opacity-0'
+                )}
+              >
                 {toPersianDigits(discountPercent)}٪
               </div>
 
-              <div className="flex flex-col items-end min-w-0">
-                {hasDiscount && originalPriceToman > finalPriceToman && (
-                  <span className="text-[9px] text-zinc-500 line-through font-iran-sans">
+              <div className="flex min-w-0 flex-col items-end">
+                {hasDiscount && originalPriceToman > finalPriceToman ? (
+                  <span className="text-2xs text-muted-foreground line-through">
                     {formatPrice(originalPriceToman)}
                   </span>
-                )}
+                ) : null}
                 <div className="flex items-center gap-0.5">
                   {isOutOfStock ? (
-                    <span className="text-xs font-bold font-iran-sans text-destructive">
-                      ناموجود
-                    </span>
+                    <span className="text-xs font-bold text-destructive">ناموجود</span>
                   ) : (
                     <>
-                      <span className="text-sm font-black text-foreground font-iran-sans">
+                      <span className="text-sm font-bold text-foreground">
                         {formatPrice(finalPriceToman)}
                       </span>
-                      <span className="text-[9px] text-muted-foreground font-iran-sans">تومان</span>
+                      <span className="text-2xs text-muted-foreground">تومان</span>
                     </>
                   )}
                 </div>
@@ -457,21 +460,22 @@ export function ProductSearchCard({
           </div>
         </div>
 
-        {showAddToBasket && !isOutOfStock && (
-          <div className="w-full mt-3 h-8 shrink-0">
+        {showAddToBasket && !isOutOfStock ? (
+          <div className="mt-3 h-8 w-full shrink-0">
             {isInBasket ? (
-              <div className="flex items-center border border-primary rounded-xl bg-background p-1 gap-1 shadow-sm h-full justify-between">
+              <div className="flex h-full items-center justify-between gap-1 rounded-md border border-primary bg-card p-1 shadow-xs">
                 <button
                   type="button"
                   onClick={handleIncrease}
                   disabled={basketQuantity >= maxLimit || activeLoading}
-                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors"
+                  aria-label="افزایش تعداد"
+                  className="rounded-sm p-1 text-primary transition-colors hover:bg-muted"
                 >
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
-                <span className="text-xs font-bold font-iran-sans text-primary">
+                <span className="text-xs font-bold text-primary">
                   {activeLoading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary mx-auto" />
+                    <Loader2 aria-hidden="true" className="mx-auto h-3.5 w-3.5 animate-spin text-primary" />
                   ) : (
                     new Intl.NumberFormat('fa-IR').format(basketQuantity)
                   )}
@@ -480,9 +484,10 @@ export function ProductSearchCard({
                   type="button"
                   onClick={handleDecrease}
                   disabled={activeLoading}
-                  className="p-1 hover:bg-muted text-primary rounded-lg transition-colors"
+                  aria-label="کاهش تعداد"
+                  className="rounded-sm p-1 text-primary transition-colors hover:bg-muted"
                 >
-                  <Minus className="h-3.5 w-3.5" />
+                  <Minus aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
               </div>
             ) : (
@@ -491,15 +496,14 @@ export function ProductSearchCard({
                 size="sm"
                 onClick={handleAddToBasket}
                 isLoading={activeLoading}
-                className="w-full rounded-xl text-xs h-full text-primary border-primary hover:bg-primary/5"
+                className="h-full w-full border-primary text-xs text-primary hover:bg-accent"
               >
                 <span>افزودن به سبد خرید</span>
               </Button>
             )}
           </div>
-        )}
+        ) : null}
       </Link>
-
     </div>
   );
 }

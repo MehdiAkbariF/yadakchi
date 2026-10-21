@@ -1,58 +1,49 @@
-﻿'use client';
+'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useGetOrderDetails, useRetryOrderPayment } from '@/domains/userpanel/hooks/userpanel.hooks';
-import { Card, CardBody } from '@/components/composites/Card';
+import {
+  CreditCard,
+  Receipt,
+  ArrowRight,
+  Truck,
+  Copy,
+  Phone,
+  PackageCheck,
+  PackageX,
+  MapPin,
+  Store,
+  Check,
+  Ban,
+  Clock,
+  RotateCcw,
+} from 'lucide-react';
+import {
+  useGetOrderDetails,
+  useRetryOrderPayment,
+  useMarkSubOrderReceived,
+  useMarkSubOrderNotReceived,
+} from '@/domains/userpanel/hooks/userpanel.hooks';
+import { Card, CardBody, CardHeader } from '@/components/composites/Card';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { ReturnRequestModal } from './ReturnRequestModal';
+import { CancelOrderModal } from './CancelOrderModal';
+import { ReturnShipmentModal } from './ReturnShipmentModal';
 import { Button } from '@/components/primitives/Button/Button';
 import { showToast } from '@/core/utils/toast';
-
 import { cn } from '@/design-system/utils/cn';
-import { CreditCard, Calendar, Truck, Clock, Store, ShieldCheck, Sparkles, Receipt, ArrowRight, Hourglass } from 'lucide-react';
-
 import { getFullUrl } from '@/core/utils/formatters';
-interface PayableTimerProps {
-  payableUntil: string;
-}
 
-function PayableTimer({ payableUntil }: PayableTimerProps) {
-  const [timeLeft, setTimeLeft] = useState('');
+const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+  WaitingForPayment: { label: 'در انتظار پرداخت', color: 'text-warning', bg: 'bg-warning/10 border-warning/20' },
+  InProgress: { label: 'در حال پردازش و ارسال', color: 'text-primary', bg: 'bg-primary/10 border-primary/20' },
+  Delivered: { label: 'تحویل داده شده', color: 'text-success', bg: 'bg-success/10 border-success/20' },
+  ReturnRequest: { label: 'درخواست مرجوعی', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
+  Cancelled: { label: 'لغو شده', color: 'text-muted-foreground', bg: 'bg-secondary border-border/80' },
+  SystemCancelled: { label: 'لغو خودکار سیستم', color: 'text-muted-foreground', bg: 'bg-secondary border-border/80' },
+};
 
-  useEffect(() => {
-    const calculateTime = () => {
-      const now = new Date();
-      const deadline = new Date(payableUntil);
-      const diff = deadline.getTime() - now.getTime();
-
-      if (diff > 0) {
-        const mins = Math.floor(diff / 1000 / 60);
-        const secs = Math.floor((diff / 1000) % 60);
-        const formattedMins = new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(mins).padStart(2, '۰');
-        const formattedSecs = new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(secs).padStart(2, '۰');
-        setTimeLeft(`${formattedMins}:${formattedSecs}`);
-      } else {
-        setTimeLeft('پایان یافته');
-      }
-    };
-
-    calculateTime();
-    const interval = setInterval(calculateTime, 1000);
-    return () => clearInterval(interval);
-  }, [payableUntil]);
-
-  return (
-    <div className="flex items-center gap-1.5 text-destructive font-black font-iran-yekan text-sm" dir="ltr">
-      <span>{timeLeft}</span>
-      {timeLeft !== 'پایان یافته' && (
-        <Hourglass className="h-4.5 w-4.5 animate-spin shrink-0" style={{ animationDuration: '4s' }} />
-      )}
-    </div>
-  );
-}
-
-interface OrderDetailsProps {
+export interface OrderDetailsProps {
   orderId: string;
 }
 
@@ -60,257 +51,360 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
   const router = useRouter();
   const { data: order, isLoading } = useGetOrderDetails(orderId);
   const retryPayment = useRetryOrderPayment();
+  const markReceived = useMarkSubOrderReceived();
+  const markNotReceived = useMarkSubOrderNotReceived();
 
-  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
-  const [selectedSubOrder, setSelectedSubOrder] = useState<any | null>(null);
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = React.useState(false);
+  const [isReturnShipmentOpen, setIsReturnShipmentOpen] = React.useState(false);
 
-  const [isExpired, setIsExpired] = useState(false);
+  const [selectedSubOrder, setSelectedSubOrder] = React.useState<any | null>(null);
+  const [selectedItem, setSelectedItem] = React.useState<any | null>(null);
+  const [activeReturnRequestId, setActiveReturnRequestId] = React.useState<string>('');
+  const [copiedTrace, setCopiedTrace] = React.useState<string | null>(null);
 
-  useEffect(() => {
-    if (!order?.payableUntil) return;
-
-    const checkExpiration = () => {
-      const now = new Date();
-      const deadline = new Date(order.payableUntil);
-      const expired = deadline.getTime() - now.getTime() <= 0;
-      setIsExpired(expired);
-    };
-
-    checkExpiration();
-    const interval = setInterval(checkExpiration, 1000);
-    return () => clearInterval(interval);
-  }, [order?.payableUntil]);
+  const handleCopyTrace = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedTrace(code);
+    showToast.success('کد رهگیری کپی شد');
+    setTimeout(() => setCopiedTrace(null), 2500);
+  };
 
   const handleRetryPayment = async () => {
-    if (isExpired) {
-      showToast.error('مهلت پرداخت این فاکتور به پایان رسیده است و امکان پرداخت وجود ندارد');
-      return;
-    }
-
     try {
-      const response = await retryPayment.mutateAsync(orderId);
-      const gatewayUrl = response?.link || response?.paymentUrl || response?.data?.link || response?.data?.paymentUrl;
-
+      const response: any = await retryPayment.mutateAsync(orderId);
+      const gatewayUrl =
+        response?.link ||
+        response?.paymentUrl ||
+        response?.data?.link ||
+        response?.data?.paymentUrl;
       if (gatewayUrl) {
-        showToast.success('در حال انتقال ایمن به درگاه بانکی...');
+        showToast.success('در حال انتقال به درگاه بانکی...');
         window.location.href = gatewayUrl;
       } else {
-        showToast.error('خطا در دریافت درگاه بانکی فعال از سمت سرور');
+        showToast.error('خطا در دریافت درگاه بانکی');
       }
     } catch (error: any) {
-      showToast.error(error.userMessage || 'اتصال به درگاه پرداخت با خطا مواجه شد. لطفاً دوباره تلاش کنید.');
+      showToast.error(error.userMessage || 'خطا در برقراری ارتباط با بانک');
+    }
+  };
+
+  const handleConfirmReceived = async (subOrderId: string) => {
+    try {
+      await markReceived.mutateAsync(subOrderId);
+      showToast.success('دریافت مرسوله با موفقیت تایید شد');
+    } catch {
+      showToast.error('خطا در تایید وضعیت تحویل');
+    }
+  };
+
+  const handleConfirmNotReceived = async (subOrderId: string) => {
+    try {
+      await markNotReceived.mutateAsync(subOrderId);
+      showToast.success('گزارش عدم دریافت مرسوله ثبت شد و توسط پشتیبانی پیگیری خواهد شد');
+    } catch {
+      showToast.error('خطا در ثبت گزارش عدم دریافت');
     }
   };
 
   if (isLoading || !order) {
-    return <PageLoading message="در حال دریافت فاکتور رسمی سفارش..." />;
+    return <PageLoading label="در حال بارگذاری اطلاعات کامل سفارش..." />;
   }
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(Math.round(value));
+
+  const formatPrice = (val: number) =>
+    new Intl.NumberFormat('fa-IR').format(Math.round((val || 0) / 10));
+
+  const statusCfg = STATUS_MAP[order.status] || {
+    label: order.status,
+    color: 'text-foreground',
+    bg: 'bg-secondary',
   };
 
-  const statusLabels: Record<string, string> = {
-    WaitingForPayment: 'در انتظار پرداخت',
-    InProgress: 'جاری',
-    Delivered: 'تحویل شده',
-    ReturnRequest: 'مرجوع شده',
-    Cancelled: 'لغو شده',
-  };
+  const canCancel = order.status === 'WaitingForPayment' || order.status === 'InProgress';
 
   return (
-    <div className="flex-1 flex flex-col gap-6 w-full text-right" dir="rtl">
-      
-      <div className="lg:hidden flex items-center gap-3 border-b pb-3 mb-1 shrink-0">
-        <button 
-          onClick={() => router.push('/profile/orders')}
-          className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
-          aria-label="Back"
-        >
-          <ArrowRight className="h-5 w-5 text-foreground" />
-        </button>
-        <span className="text-sm font-bold font-iran-yekan text-foreground">جزئیات سفارش {order.orderNumber}</span>
-      </div>
+    <div className="flex w-full flex-1 flex-col gap-6">
+      {/* هدر صفحه و دکمه بازگشت */}
+      <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.push('/profile/orders')}
+            className="rounded-lg p-2 transition-colors hover:bg-secondary"
+          >
+            <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-sm font-bold text-foreground sm:text-base">
+              سفارش شماره {order.orderNumber}
+            </h1>
+            <span className="text-2xs text-muted-foreground">
+              ثبت‌شده در تاریخ {new Date(order.createDate).toLocaleDateString('fa-IR')}
+            </span>
+          </div>
+        </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
-        <div className="flex flex-col gap-1.5 text-right">
-          <h3 className="text-sm md:text-base font-black text-foreground font-iran-yekan">کد سفارش: {order.orderNumber}</h3>
-          <span className="text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
-            تاریخ ثبت سفارش: {new Date(order.createDate).toLocaleDateString('fa-IR')}
+        <div className="flex items-center gap-2">
+          {canCancel ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCancelModalOpen(true)}
+              className="flex h-8 items-center gap-1 rounded-lg border-destructive/40 text-2xs font-bold text-destructive hover:bg-destructive/10"
+            >
+              <Ban className="h-3.5 w-3.5" />
+              <span>لغو سفارش</span>
+            </Button>
+          ) : null}
+
+          <span className={cn('rounded-full border px-3 py-1 text-xs font-bold', statusCfg.bg, statusCfg.color)}>
+            {statusCfg.label}
           </span>
         </div>
-
-        <span className={cn(
-          "px-4 py-1.5 rounded-full text-xs font-black font-iran-yekan self-start sm:self-auto",
-          order.status === 'WaitingForPayment' && "bg-destructive/10 text-destructive",
-          order.status === 'Cancelled' && "bg-muted text-muted-foreground"
-        )}>
-          {statusLabels[order.status] || order.status}
-        </span>
       </div>
 
-      {order.status === 'WaitingForPayment' && (
-        <div className={cn(
-          "w-full border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none transition-all duration-300",
-          /* سازگار سازی کامل با متغیرهای معنایی سیستم دیزاین برای پشتیبانی بی نقص از دارک مود */
-          isExpired 
-            ? "bg-muted/40 border-border text-muted-foreground" 
-            : "bg-destructive/10 border-destructive/20 text-destructive dark:bg-destructive/20 dark:border-destructive/30"
-        )}>
-          <div className="flex items-center gap-2.5">
-            <Clock className={cn("h-5 w-5 shrink-0", !isExpired && "animate-pulse")} />
-            <div className="flex flex-col text-right">
-              <span className="text-xs md:text-sm font-bold font-iran-yekan">
-                {isExpired ? "مهلت پرداخت این سفارش به پایان رسیده است" : "مهلت پرداخت این سفارش رو به پایان است:"}
-              </span>
-              {!isExpired && <PayableTimer payableUntil={order.payableUntil} />}
-            </div>
-          </div>
-          
-          {!isExpired && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleRetryPayment}
-              isLoading={retryPayment.isPending}
-              className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-6 shrink-0 shadow-sm"
-            >
-              <span>ادامه پرداخت سفارش</span>
-            </Button>
-          )}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-start">
-        
-        <div className="flex flex-col gap-6 w-full">
-          <div className="flex items-start gap-3 border rounded-xl p-4 bg-background">
-            <Clock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <span className="text-xs font-bold text-foreground font-iran-yekan block">تاریخچه تراکنش</span>
-              <div className="flex items-center justify-between w-full mt-2 text-xs text-muted-foreground font-iran-yekan">
-                <span>{statusLabels[order.status] || order.status}</span>
-                <span>{new Date(order.createDate).toLocaleDateString('fa-IR')}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            {order.subOrders.map((sub, index) => (
-              <Card key={sub.id} className="w-full border rounded-xl overflow-hidden bg-background">
-                <div className="bg-muted/15 px-4 py-3 border-b flex items-center justify-between text-xs font-bold font-iran-yekan">
-                  <span>مرسوله {formatPrice(index + 1)}</span>
-                  <span className="text-primary">{statusLabels[sub.status] || sub.status}</span>
+      <div className="grid w-full grid-cols-1 items-start gap-6 lg:grid-cols-12">
+        {/* ستون راست: مرسوله‌ها و آدرس تحویل */}
+        <div className="flex w-full flex-col gap-5 lg:col-span-8">
+          {/* کارت آدرس تحویل سفارش */}
+          {order.userLocation ? (
+            <Card className="w-full rounded-xl border border-border/70 bg-card p-4 shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <MapPin className="h-4 w-4" />
                 </div>
-                <CardBody className="p-4 flex flex-col gap-4">
-                  
-                  <div className="flex items-center gap-3 border-b pb-3">
-                    <div className="w-10 h-10 shrink-0 rounded-lg border overflow-hidden p-0.5 bg-background">
-                      <img src={getFullUrl(sub.shop.logo)} className="w-full h-full object-contain" alt="" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-xs md:text-sm font-bold text-foreground block font-iran-yekan">{sub.shop.shopTitle}</span>
-                      <span className="text-[10px] text-muted-foreground block mt-0.5 font-iran-yekan">ارسال از {sub.shipmentMethod === 'Local' ? 'حضوری' : 'تیپاکس'}</span>
-                    </div>
+                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                  <span className="text-xs font-bold text-foreground">آدرس تحویل گیرنده:</span>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    {order.userLocation.address} (پلاک {order.userLocation.plaque}، واحد {order.userLocation.unit})
+                  </p>
+                  <div className="mt-1 flex flex-wrap gap-4 text-2xs text-muted-foreground font-semibold">
+                    <span>گیرنده: {order.userLocation.receiverFullName}</span>
+                    <span>تماس: {order.userLocation.receiverMobile}</span>
                   </div>
+                </div>
+              </div>
+            </Card>
+          ) : null}
 
-                  <div className="flex flex-col gap-4">
-                    {sub.subOrderItems.map((item) => (
-                      <div key={item.id} className="flex gap-4 items-center justify-between">
-                        <div className="flex gap-4 items-center flex-1 min-w-0">
-                          <div className="w-14 h-14 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden p-0.5">
-                            <img src={getFullUrl(item.shopProduct.product.image)} className="w-full h-full object-contain" alt="" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-xs md:text-sm font-bold text-foreground block truncate font-iran-yekan">
-                              {item.shopProduct.product.title}
-                            </span>
-                            <div className="flex flex-wrap gap-2.5 items-center mt-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
-                              <span>تعداد: {formatPrice(item.quantity)} عدد</span>
-                              <span>|</span>
-                              <span>{item.shopProduct.type === 'New' ? 'قطعه نو' : 'قطعه استوک'}</span>
-                              <span>|</span>
-                              <span className="font-bold text-foreground">{formatPrice(item.finalUnitPrice / 10)} تومان</span>
+          {/* لیست مرسوله‌ها (SubOrders) */}
+          <div className="flex flex-col gap-4">
+            {order.subOrders.map((sub: any, idx: number) => {
+              const subStatus = STATUS_MAP[sub.status] || {
+                label: sub.status,
+                color: 'text-primary',
+                bg: 'bg-secondary',
+              };
+
+              return (
+                <Card key={sub.id} className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs">
+                  {/* هدر مرسوله */}
+                  <CardHeader className="flex items-center justify-between border-b border-border/60 bg-card px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-bold text-foreground">
+                        مرسوله {new Intl.NumberFormat('fa-IR').format(idx + 1)} از {new Intl.NumberFormat('fa-IR').format(order.subOrders.length)}
+                      </span>
+                    </div>
+
+                    <span className={cn('rounded-full border px-3 py-1 text-2xs font-bold', subStatus.bg, subStatus.color)}>
+                      {subStatus.label}
+                    </span>
+                  </CardHeader>
+
+                  <CardBody className="flex flex-col gap-4 p-5">
+                    {/* اطلاعات فروشگاه ارسال‌کننده */}
+                    <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                      <div className="flex items-center gap-2">
+                        <Store className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-bold text-foreground">فروشگاه: {sub.shop.shopTitle}</span>
+                      </div>
+                      <span className="text-2xs text-muted-foreground">
+                        روش ارسال: <strong>{sub.shipmentMethod === 'Local' ? 'تحویل حضوری' : sub.shipmentMethod}</strong>
+                      </span>
+                    </div>
+
+                    {/* اطلاعات رهگیری هوشمند مرسوله */}
+                    {sub.traceNumber || sub.driverFullName ? (
+                      <div className="flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs">
+                        {sub.traceNumber ? (
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground font-semibold">کد رهگیری پستی / تیپاکس:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-foreground tracking-wider">{sub.traceNumber}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyTrace(sub.traceNumber)}
+                                className="flex items-center gap-1 rounded-md bg-card border px-2 py-1 text-2xs font-semibold text-primary shadow-2xs hover:bg-secondary"
+                              >
+                                {copiedTrace === sub.traceNumber ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
+                                <span>{copiedTrace === sub.traceNumber ? 'کپی شد' : 'کپی'}</span>
+                              </button>
                             </div>
                           </div>
-                        </div>
+                        ) : null}
 
-                        {sub.status === 'Delivered' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedSubOrder(sub);
-                              setSelectedItem(item);
-                              setIsReturnModalOpen(true);
-                            }}
-                            className="rounded-xl text-[10px] font-bold h-8 px-3.5 border-zinc-200 text-foreground shrink-0 shadow-sm outline-none"
-                          >
-                            درخواست مرجوعی
-                          </Button>
-                        )}
+                        {sub.driverFullName ? (
+                          <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                            <span className="text-muted-foreground">مشخصات راننده پیک:</span>
+                            <div className="flex items-center gap-2 font-bold text-foreground">
+                              <span>{sub.driverFullName}</span>
+                              {sub.driverMobile ? (
+                                <a href={`tel:${sub.driverMobile}`} className="flex items-center gap-1 text-primary hover:underline">
+                                  <Phone className="h-3 w-3" />
+                                  <span>{sub.driverMobile}</span>
+                                </a>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
-                    ))}
-                  </div>
+                    ) : null}
 
-                  <div className="border-t border-dashed pt-3 mt-1.5 flex flex-wrap gap-x-6 gap-y-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
-                    <span>هزینه ارسال: {sub.shipmentPrice === 0 ? 'رایگان' : `${formatPrice(sub.shipmentPrice / 10)} تومان`}</span>
-                    <span>روش ارسال: {sub.shipmentMethod === 'Local' ? 'تحویل حضوری' : 'تیپاکس'}</span>
-                  </div>
+                    {/* لیست اقلام مرسوله */}
+                    <div className="flex flex-col divide-y divide-border/60">
+                      {sub.subOrderItems.map((item: any) => (
+                        <div key={item.id} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-card p-1 shadow-2xs">
+                              <img
+                                src={getFullUrl(item.shopProduct?.product?.image)}
+                                className="h-full w-full object-contain"
+                                alt=""
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1 min-w-0 flex-1">
+                              <span className="truncate text-xs font-bold text-foreground">
+                                {item.shopProduct?.product?.title}
+                              </span>
+                              <div className="flex items-center gap-2 text-2xs text-muted-foreground">
+                                <span>تعداد: {new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد</span>
+                                <span>•</span>
+                                <span className="font-bold text-foreground">
+                                  {formatPrice(item.finalTotalPrice)} تومان
+                                </span>
+                              </div>
+                            </div>
+                          </div>
 
-                </CardBody>
-              </Card>
-            ))}
+                          {/* دکمه ثبت درخواست مرجوعی */}
+                          {sub.status === 'Delivered' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSubOrder(sub);
+                                setSelectedItem(item);
+                                setIsReturnModalOpen(true);
+                              }}
+                              className="h-8 shrink-0 rounded-lg text-2xs font-bold hover:border-primary hover:text-primary"
+                            >
+                              درخواست مرجوعی
+                            </Button>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* دکمه‌های تایید تحویل یا اعلام عدم دریافت */}
+                    {sub.status === 'InProgress' ? (
+                      <div className="mt-2 flex flex-wrap items-center justify-end gap-2 border-t border-dashed border-border/60 pt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleConfirmNotReceived(sub.id)}
+                          className="flex items-center gap-1.5 rounded-lg text-xs font-bold text-destructive border-destructive/40 hover:bg-destructive/10"
+                        >
+                          <PackageX className="h-4 w-4" />
+                          <span>بسته را دریافت نکردم</span>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleConfirmReceived(sub.id)}
+                          className="flex items-center gap-1.5 rounded-lg text-xs font-bold text-success border-success/40 hover:bg-success/10"
+                        >
+                          <PackageCheck className="h-4 w-4" />
+                          <span>کالا را تحویل گرفتم</span>
+                        </Button>
+                      </div>
+                    ) : null}
+
+                    {/* دکمه ثبت رسید پستی در صورت مرجوعی تایید شده */}
+                    {sub.status === 'ReturnRequest' ? (
+                      <div className="mt-2 flex items-center justify-end border-t border-dashed border-border/60 pt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setActiveReturnRequestId(sub.id);
+                            setIsReturnShipmentOpen(true);
+                          }}
+                          className="flex items-center gap-1.5 rounded-lg text-xs font-bold text-primary border-primary/40 hover:bg-primary/10"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                          <span>ثبت بارنامه مرجوعی کالا</span>
+                        </Button>
+                      </div>
+                    ) : null}
+                  </CardBody>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
-        <Card className="w-full border rounded-xl p-5 bg-background shadow-sm h-fit">
-          <div className="flex items-center gap-2 border-b pb-3 mb-4">
-            <Receipt className="h-5 w-5 text-primary" />
-            <span className="text-xs md:text-sm font-bold font-iran-yekan text-foreground">صورتحساب سفارش</span>
-          </div>
-
-          <div className="space-y-4 border-b pb-4 mb-4 text-right">
-            <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-yekan text-muted-foreground">
-              <span>قیمت کل کالاها</span>
-              <span>{formatPrice(order.totalOriginalPrice / 10)} تومان</span>
+        {/* ستون چپ: صورتحساب و پرداخت */}
+        <div className="flex w-full flex-col gap-4 lg:col-span-4">
+          <Card className="sticky top-28 rounded-xl border border-border/70 bg-card p-5 shadow-xs">
+            <div className="flex items-center gap-2 border-b border-border/60 pb-3 font-bold text-foreground text-sm">
+              <Receipt className="h-4 w-4 text-primary" />
+              <span>خلاصه فاکتور مالی</span>
             </div>
 
-            {order.totalDiscountValue > 0 && (
-              <div className="flex items-center justify-between text-xs md:text-sm font-bold font-iran-yekan text-destructive">
-                <span>تخفیف کل</span>
-                <span>{formatPrice(order.totalDiscountValue / 10)} تومان-</span>
+            <div className="flex flex-col gap-3 border-b border-border/60 py-4 text-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>قیمت کالاها:</span>
+                <span className="font-semibold text-foreground">{formatPrice(order.totalOriginalPrice)} تومان</span>
               </div>
-            )}
 
-            <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-yekan text-muted-foreground">
-              <span>هزینه ارسال کل</span>
-              <span>{order.totalShipmentPrice === 0 ? 'رایگان' : `${formatPrice(order.totalShipmentPrice / 10)} تومان`}</span>
+              {order.totalDiscountValue > 0 ? (
+                <div className="flex items-center justify-between text-destructive font-semibold">
+                  <span>تخفیف:</span>
+                  <span>- {formatPrice(order.totalDiscountValue)} تومان</span>
+                </div>
+              ) : null}
+
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>هزینه باربری و ارسال:</span>
+                <span className="font-semibold text-foreground">{formatPrice(order.totalShipmentPrice)} تومان</span>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between text-right mb-4">
-            <span className="text-xs md:text-sm font-bold font-iran-yekan text-muted-foreground">مبلغ نهایی پرداخت شده</span>
-            <span className="text-base md:text-lg font-black text-foreground">{formatPrice(order.totalFinalPrice / 10)} تومان</span>
-          </div>
+            <div className="flex items-baseline justify-between py-4">
+              <span className="text-xs font-bold text-foreground">مبلغ نهایی پرداخت:</span>
+              <span className="text-base font-bold text-primary">{formatPrice(order.totalFinalPrice)} تومان</span>
+            </div>
 
-          {order.status === 'WaitingForPayment' && !isExpired && (
-            <Button
-              variant="primary"
-              size="lg"
-              fullWidth
-              onClick={handleRetryPayment}
-              isLoading={retryPayment.isPending}
-              className="rounded-xl font-iran-yekan font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 flex items-center justify-center gap-1.5"
-            >
-              <CreditCard className="h-4.5 w-4.5 shrink-0" />
-              <span>پرداخت آنلاین و نهایی‌سازی سفارش</span>
-            </Button>
-          )}
-        </Card>
-
+            {order.status === 'WaitingForPayment' ? (
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={handleRetryPayment}
+                isLoading={retryPayment.isPending}
+                className="flex h-11 items-center justify-center gap-2 rounded-xl text-xs font-bold shadow-xs"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>پرداخت اینترنتی سفارش</span>
+              </Button>
+            ) : null}
+          </Card>
+        </div>
       </div>
 
+      {/* مودال ثبت درخواست مرجوعی */}
       <ReturnRequestModal
         isOpen={isReturnModalOpen}
         onClose={() => setIsReturnModalOpen(false)}
@@ -318,6 +412,19 @@ export function OrderDetails({ orderId }: OrderDetailsProps) {
         item={selectedItem}
       />
 
+      {/* مودال لغو سفارش */}
+      <CancelOrderModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        orderId={order.id}
+      />
+
+      {/* مودال ارسال رسید پستی مرجوعی */}
+      <ReturnShipmentModal
+        isOpen={isReturnShipmentOpen}
+        onClose={() => setIsReturnShipmentOpen(false)}
+        returnRequestId={activeReturnRequestId}
+      />
     </div>
   );
 }

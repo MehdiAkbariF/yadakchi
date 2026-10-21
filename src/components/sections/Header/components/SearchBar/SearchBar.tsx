@@ -1,29 +1,35 @@
-// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\SearchBar\SearchBar.tsx
-'use client';
+﻿'use client';
 
-import { useState, useRef, useEffect, useTransition } from 'react';
+import * as React from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { Search, X, Clock, Trash2, ArrowRight, Loader2, Sparkles, FolderKanban, Car } from 'lucide-react';
+import {
+  Search,
+  X,
+  Clock,
+  Trash2,
+  ArrowRight,
+  Loader2,
+  Sparkles,
+  FolderKanban,
+  Car,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Input } from '@/components/primitives/Input/Input';
 import { Modal } from '@/components/composites/Modal/Modal';
-import { 
-  useGetSearchHistory, 
-  useGetSearchSuggestions, 
-  useGetSearchKeywords, 
-  useRemoveSearchHistory 
+import {
+  useGetSearchHistory,
+  useGetSearchSuggestions,
+  useGetSearchKeywords,
+  useRemoveSearchHistory,
 } from '@/domains/front/product/hooks/product.hooks';
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
 import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
 import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import Link from 'next/link';
 
-// =============================================================================
-// کلمات کلیدی هاردکد شده برای انیمیشن پلیس‌هولدر
-// =============================================================================
 const DEFAULT_ROTATING_KEYWORDS = [
   'لنت ترمز ۲۰۶',
   'شمع سوزنی بوش',
@@ -35,28 +41,25 @@ const DEFAULT_ROTATING_KEYWORDS = [
   'لوازم جلوبندی سمند',
 ];
 
-interface SearchBarProps {
+export interface SearchBarProps {
   placeholder?: string;
   className?: string;
   onSearch?: (query: string) => void;
   isMobile?: boolean;
 }
 
-export function SearchBar({ 
-  placeholder = 'جستجو در یدکچی...', 
-  className = '', 
+export function SearchBar({
+  placeholder = 'جستجو در یدکچی...',
+  className = '',
   onSearch,
-  isMobile = false 
+  isMobile = false,
 }: SearchBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // استفاده از ترنزیشن جهت تشخیص وضعیت لودینگ ناوبری
-  const [isPending, startTransition] = useTransition();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // وضعیت لودینگ کل هدر
+  const [isPending, startTransition] = React.useTransition();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const isGlobalSearching = isPending || isSubmitting;
 
   const urlQuery = searchParams.get('q') || '';
@@ -69,23 +72,21 @@ export function SearchBar({
 
   const activeCar = cars.find((c: any) => c.id === urlCarId)?.model || '';
   const activeBrand = brands.find((b: any) => b.id === urlBrandId)?.name || '';
-  
+
   const isCategoryPage = pathname.startsWith('/part-category/');
   const catSlug = isCategoryPage ? pathname.split('/').pop() : '';
   const activeCategory = categories.find((c: any) => c.englishTitle === catSlug)?.name || '';
 
   const resolvedText = urlQuery || activeCar || activeBrand || activeCategory || '';
 
-  const [query, setQuery] = useState(resolvedText);
-  const [isFocused, setIsFocused] = useState(false);
-  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
-  
-  // ایندکس کلمه فعلی در انیمیشن چرخش
-  const [keywordIndex, setKeywordIndex] = useState(0);
+  const [query, setQuery] = React.useState(resolvedText);
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [isMobileModalOpen, setIsMobileModalOpen] = React.useState(false);
+  const [keywordIndex, setKeywordIndex] = React.useState(0);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const desktopInputRef = useRef<HTMLInputElement>(null);
-  const mobileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const desktopInputRef = React.useRef<HTMLInputElement>(null);
+  const mobileInputRef = React.useRef<HTMLInputElement>(null);
 
   const debouncedQuery = useDebounce(query, 500);
 
@@ -95,25 +96,26 @@ export function SearchBar({
   const { data: searchBanners = [] } = useGetBanners('SearchResult');
   const removeHistoryMutation = useRemoveSearchHistory();
 
-  const desktopBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Desktop');
-  const mobileBanner = searchBanners.find(b => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Mobile');
+  const desktopBanner = searchBanners.find(
+    (b) => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Desktop'
+  );
+  const mobileBanner = searchBanners.find(
+    (b) => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Mobile'
+  );
 
-  // تغییر کلمه هر ۲.۸ ثانیه با انیمیشن نرم
-  useEffect(() => {
+  React.useEffect(() => {
     const interval = setInterval(() => {
       setKeywordIndex((prev) => (prev + 1) % DEFAULT_ROTATING_KEYWORDS.length);
     }, 2800);
-
     return () => clearInterval(interval);
   }, []);
 
-  // به محض تغییر پارامترهای آدرس، لودینگ لغو و مقدار باکس سینک می‌شود
-  useEffect(() => {
+  React.useEffect(() => {
     setQuery(resolvedText);
     setIsSubmitting(false);
   }, [resolvedText, pathname, searchParams]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsFocused(false);
@@ -123,37 +125,22 @@ export function SearchBar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isMobileModalOpen) return;
-
-    const handlePopState = () => {
-      setIsMobileModalOpen(false);
-    };
-
+    const handlePopState = () => setIsMobileModalOpen(false);
     window.history.pushState({ modalOpen: 'search-modal' }, '');
     window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [isMobileModalOpen]);
 
-  // متد ارسال جستجو با گارد جلوگیری از درخواست تکراری و فعال‌سازی آنی لودینگ
   const handleSearchSubmit = (searchWord: string) => {
     const trimmed = searchWord.trim();
-    if (!trimmed) return;
-
-    // جلوگیری از ارسال مجدد در حین پردازش یا جستجوی عینا همان عبارت فعال
-    if (isGlobalSearching) return;
-
+    if (!trimmed || isGlobalSearching) return;
     setIsSubmitting(true);
     setQuery(trimmed);
-    
     if (onSearch) onSearch(trimmed);
-    
     setIsFocused(false);
     setIsMobileModalOpen(false);
-
     startTransition(() => {
       router.push(`/search?q=${encodeURIComponent(trimmed)}`);
     });
@@ -172,27 +159,20 @@ export function SearchBar({
   const handleOpenMobileSearch = () => {
     setIsMobileModalOpen(true);
     refetchHistory();
-    setTimeout(() => {
-      mobileInputRef.current?.focus();
-    }, 150);
+    setTimeout(() => mobileInputRef.current?.focus(), 150);
   };
 
   const handleCloseMobileSearch = () => {
     setIsMobileModalOpen(false);
-    if (window.history.state?.modalOpen === 'search-modal') {
-      window.history.back();
-    }
+    if (window.history.state?.modalOpen === 'search-modal') window.history.back();
   };
 
-  // رندر متن انیمیشنی داخل پلیس‌هولدر
   const renderAnimatedPlaceholder = () => {
     if (query) return null;
-
     const currentWord = DEFAULT_ROTATING_KEYWORDS[keywordIndex];
-
     return (
-      <div className="flex items-center text-xs font-iran-yekan h-5 overflow-hidden select-none pointer-events-none">
-        <span className="text-muted-foreground ml-1 shrink-0">جستجو در</span>
+      <div className="pointer-events-none flex h-5 select-none items-center overflow-hidden text-xs">
+        <span className="ms-1 shrink-0 text-muted-foreground">جستجو در</span>
         <AnimatePresence mode="wait">
           <motion.span
             key={currentWord}
@@ -200,8 +180,7 @@ export function SearchBar({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -14, opacity: 0 }}
             transition={{ duration: 0.32, ease: 'easeOut' }}
-            className="font-bold inline-block truncate max-w-[210px]"
-            style={{ color: '#007fc8' }}
+            className="inline-block max-w-[210px] truncate font-bold text-primary"
           >
             {currentWord}
           </motion.span>
@@ -224,16 +203,15 @@ export function SearchBar({
     );
 
     return (
-      <div className="flex flex-col flex-1 overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-y-auto">
         {showKeywords ? (
-          <div className="p-4 space-y-4 flex flex-col h-full text-right">
-            
-            {carsList.length > 0 && (
-              <div className="space-y-2 shrink-0">
-                <span className="text-[11px] text-muted-foreground font-iran-yekan font-bold block pb-2 border-b text-right">
+          <div className="flex h-full flex-col space-y-4 p-4">
+            {carsList.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
                   خودروها
                 </span>
-                <div className="flex flex-wrap gap-2 justify-start">
+                <div className="flex flex-wrap justify-start gap-2">
                   {carsList.map((car: any) => (
                     <button
                       key={car.id}
@@ -248,22 +226,22 @@ export function SearchBar({
                           router.push(`/search?carId=${car.id}`);
                         });
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-xs font-medium font-iran-yekan hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:opacity-50"
                     >
-                      <Car className="h-3.5 w-3.5" />
-                      همه کالا‌های خودرو {car.model}
+                      <Car aria-hidden="true" className="h-3.5 w-3.5" />
+                      همه کالاهای خودرو {car.model}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {uniqueCategories.length > 0 && (
-              <div className="space-y-2 shrink-0">
-                <span className="text-[11px] text-muted-foreground font-iran-yekan font-bold block pb-2 border-b text-right">
+            {uniqueCategories.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
                   دسته‌بندی‌های مرتبط
                 </span>
-                <div className="flex flex-wrap gap-2 justify-start">
+                <div className="flex flex-wrap justify-start gap-2">
                   {uniqueCategories.map((cat: any) => (
                     <button
                       key={cat.partCategoryId}
@@ -278,25 +256,25 @@ export function SearchBar({
                           router.push(`/part-category/${cat.partCategoryEnglishTitle}`);
                         });
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium font-iran-yekan hover:bg-primary/10 transition-colors disabled:opacity-50"
+                      className="flex items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:opacity-50"
                     >
-                      <FolderKanban className="h-3.5 w-3.5" />
-                      همه کالا‌های دسته {cat.partCategoryName}
+                      <FolderKanban aria-hidden="true" className="h-3.5 w-3.5" />
+                      همه کالاهای دسته {cat.partCategoryName}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            <div className="space-y-2 shrink-0">
-              <span className="text-[11px] text-muted-foreground font-iran-yekan font-bold block pb-2 border-b text-right">
+            <div className="shrink-0 space-y-2">
+              <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
                 عبارات پیشنهادی
               </span>
-              
+
               {isKeywordsLoading ? (
-                <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                  <span className="text-xs font-iran-yekan">در حال لود عبارات کلیدی...</span>
+                <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
+                  <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-xs">در حال لود عبارات کلیدی...</span>
                 </div>
               ) : keywordsList.length > 0 ? (
                 <div className="space-y-1">
@@ -306,122 +284,152 @@ export function SearchBar({
                       type="button"
                       disabled={isGlobalSearching}
                       onClick={() => handleSearchSubmit(kw.suggestion)}
-                      className="flex items-center justify-between w-full text-right p-2 rounded-md hover:bg-muted/50 transition-colors font-iran-yekan disabled:opacity-50"
+                      className="flex w-full items-center justify-between rounded-md p-2 transition-colors hover:bg-muted disabled:opacity-50"
                     >
-                      <div className="flex flex-col min-w-0 text-right">
-                        <span className="text-sm text-foreground truncate">
-                          {kw.suggestion}
-                        </span>
-                        {kw.partCategoryName && (
-                          <span className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm text-foreground">{kw.suggestion}</span>
+                        {kw.partCategoryName ? (
+                          <span className="mt-0.5 truncate text-2xs text-muted-foreground">
                             در دسته {kw.partCategoryName}
                           </span>
-                        )}
+                        ) : null}
                       </div>
-                      <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <Search aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-muted-foreground font-iran-yekan py-4 text-center">
+                <div className="py-4 text-center text-sm text-muted-foreground">
                   نتیجه مناسبی یافت نشد.
                 </div>
               )}
             </div>
 
-            <div className="mt-auto pt-4 shrink-0">
-              {isMobile ? (
-                mobileBanner && (
-                  <Link href={mobileBanner.link || '#'} onClick={handleCloseMobileSearch} className="block overflow-hidden rounded-xl">
-                    <img src={mobileBanner.imageUrl} alt={mobileBanner.title} className="w-full object-cover h-24 hover:scale-[1.01] transition-transform duration-200" />
-                  </Link>
-                )
-              ) : (
-                desktopBanner && (
-                  <Link href={desktopBanner.link || '#'} className="block overflow-hidden rounded-xl">
-                    <img src={desktopBanner.imageUrl} alt={desktopBanner.title} className="w-full object-cover h-24 hover:scale-[1.01] transition-transform duration-200" />
-                  </Link>
-                )
-              )}
+            <div className="mt-auto shrink-0 pt-4">
+              {isMobile
+                ? mobileBanner && (
+                    <Link
+                      href={mobileBanner.link || '#'}
+                      onClick={handleCloseMobileSearch}
+                      className="block overflow-hidden rounded-lg"
+                    >
+                      <img
+                        src={mobileBanner.imageUrl}
+                        alt={mobileBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )
+                : desktopBanner && (
+                    <Link href={desktopBanner.link || '#'} className="block overflow-hidden rounded-lg">
+                      <img
+                        src={desktopBanner.imageUrl}
+                        alt={desktopBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )}
             </div>
-
           </div>
         ) : (
-          <div className="p-4 space-y-5 flex-1 flex flex-col text-right">
-            {history.length > 0 && (
-              <div className="space-y-2 shrink-0">
-                <div className="flex items-center justify-between pb-1 border-b">
-                  <span className="text-xs text-muted-foreground font-iran-yekan font-bold flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    جستجو‌های اخیر شما
+          <div className="flex flex-1 flex-col space-y-5 p-4">
+            {history.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <div className="flex items-center justify-between border-b border-border pb-1">
+                  <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
+                    <Clock aria-hidden="true" className="h-3.5 w-3.5" />
+                    جستجوهای اخیر شما
                   </span>
-                  <button onClick={handleClearAllHistory} className="text-xs text-destructive hover:underline font-iran-yekan flex items-center gap-0.5">
-                    <Trash2 className="h-3 w-3" />
+                  <button
+                    type="button"
+                    onClick={handleClearAllHistory}
+                    className="flex items-center gap-0.5 text-xs text-destructive hover:underline"
+                  >
+                    <Trash2 aria-hidden="true" className="h-3 w-3" />
                     پاک کردن همه
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-1 justify-start">
+                <div className="flex flex-wrap justify-start gap-2 pt-1">
                   {history.map((item: any, idx: number) => {
                     const isObject = typeof item === 'object' && item !== null;
                     const wordValue = isObject ? (item as any).value : String(item);
                     const itemId = isObject ? (item as any).id : String(idx);
-
                     return (
-                      <div 
-                        key={itemId} 
-                        className={cn(
-                          "flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium font-iran-yekan text-foreground border hover:border-primary/20 transition-all cursor-pointer",
-                          isGlobalSearching && "opacity-50 pointer-events-none"
-                        )}
+                      <div
+                        key={itemId}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => handleSearchSubmit(wordValue)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSearchSubmit(wordValue);
+                        }}
+                        className={cn(
+                          'flex cursor-pointer items-center gap-1 rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/30',
+                          isGlobalSearching && 'pointer-events-none opacity-50'
+                        )}
                       >
                         <span>{wordValue}</span>
-                        <button onClick={(e) => handleRemoveHistoryItem(wordValue, e)} className="p-0.5 hover:bg-muted-foreground/20 rounded-full flex items-center justify-center transition-colors" aria-label="Remove">
-                          <X className="h-3 w-3 text-muted-foreground" />
+                        <button
+                          type="button"
+                          onClick={(e) => handleRemoveHistoryItem(wordValue, e)}
+                          aria-label={`حذف ${wordValue}`}
+                          className="flex items-center justify-center rounded-full p-0.5 transition-colors hover:bg-muted-foreground/20"
+                        >
+                          <X aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
                         </button>
                       </div>
                     );
                   })}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {suggestions.length > 0 && (
-              <div className="space-y-2 shrink-0">
-                <span className="text-xs text-muted-foreground font-iran-yekan font-bold flex items-center gap-1.5 pb-1 border-b justify-start">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  جستجو‌های پرطرفدار
+            {suggestions.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <span className="flex items-center justify-start gap-1.5 border-b border-border pb-1 text-xs font-bold text-muted-foreground">
+                  <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
+                  جستجوهای پرطرفدار
                 </span>
-                <div className="flex flex-wrap gap-2 pt-1 justify-start">
+                <div className="flex flex-wrap justify-start gap-2 pt-1">
                   {suggestions.map((suggest: any, idx: number) => (
-                    <button 
-                      key={idx} 
+                    <button
+                      key={idx}
                       type="button"
                       disabled={isGlobalSearching}
-                      onClick={() => handleSearchSubmit(suggest)} 
-                      className="px-3 py-1.5 rounded-lg border border-input hover:border-primary/40 hover:bg-primary/5 text-xs font-medium font-iran-yekan text-foreground transition-all disabled:opacity-50"
+                      onClick={() => handleSearchSubmit(suggest)}
+                      className="rounded-md border border-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-accent disabled:opacity-50"
                     >
                       {suggest}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            <div className="mt-auto pt-4 shrink-0">
-              {isMobile ? (
-                mobileBanner && (
-                  <Link href={mobileBanner.link || '#'} onClick={handleCloseMobileSearch} className="block overflow-hidden rounded-xl">
-                    <img src={mobileBanner.imageUrl} alt={mobileBanner.title} className="w-full object-cover h-24 hover:scale-[1.01] transition-transform duration-200" />
-                  </Link>
-                )
-              ) : (
-                desktopBanner && (
-                  <Link href={desktopBanner.link || '#'} className="block overflow-hidden rounded-xl">
-                    <img src={desktopBanner.imageUrl} alt={desktopBanner.title} className="w-full object-cover h-24 hover:scale-[1.01] transition-transform duration-200" />
-                  </Link>
-                )
-              )}
+            <div className="mt-auto shrink-0 pt-4">
+              {isMobile
+                ? mobileBanner && (
+                    <Link
+                      href={mobileBanner.link || '#'}
+                      onClick={handleCloseMobileSearch}
+                      className="block overflow-hidden rounded-lg"
+                    >
+                      <img
+                        src={mobileBanner.imageUrl}
+                        alt={mobileBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )
+                : desktopBanner && (
+                    <Link href={desktopBanner.link || '#'} className="block overflow-hidden rounded-lg">
+                      <img
+                        src={desktopBanner.imageUrl}
+                        alt={desktopBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )}
             </div>
           </div>
         )}
@@ -429,37 +437,47 @@ export function SearchBar({
     );
   };
 
-  // ۱. رندر در نسخه موبایل
   if (isMobile) {
     return (
-      <div className={cn("relative w-full", className)}>
-        <div 
-          onClick={handleOpenMobileSearch} 
-          className="relative flex items-center w-full border border-input rounded-md px-3 py-1.5 bg-background cursor-pointer h-9 text-muted-foreground min-w-0 overflow-hidden"
+      <div className={cn('relative w-full', className)}>
+        <div
+          onClick={handleOpenMobileSearch}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleOpenMobileSearch();
+          }}
+          className="relative flex h-9 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-md border border-input bg-card px-3 py-1.5 text-muted-foreground"
         >
           {isGlobalSearching ? (
-            <Loader2 className="h-4 w-4 shrink-0 z-10 text-primary animate-spin" />
+            <Loader2 aria-hidden="true" className="z-10 h-4 w-4 shrink-0 animate-spin text-primary" />
           ) : (
-            <Search className="h-4 w-4 shrink-0 z-10" />
+            <Search aria-hidden="true" className="z-10 h-4 w-4 shrink-0" />
           )}
-          
+
           {query ? (
-            <span className="text-sm font-iran-yekan font-medium mr-2 truncate flex-1 text-right">
-              {query}
-            </span>
+            <span className="me-2 flex-1 truncate text-sm font-medium">{query}</span>
           ) : (
-            <div className="mr-2 flex-1 flex items-center text-right">
-              {renderAnimatedPlaceholder()}
-            </div>
+            <div className="me-2 flex flex-1 items-center">{renderAnimatedPlaceholder()}</div>
           )}
         </div>
 
-        <Modal isOpen={isMobileModalOpen} onClose={handleCloseMobileSearch} className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-50 bg-background" overlayClassName="bg-black/40">
-          <div className="flex items-center gap-3 px-4 py-4 border-b shrink-0 bg-muted/20">
-            <button onClick={handleCloseMobileSearch} className="p-1 -mr-1 hover:bg-muted rounded-full" aria-label="Back">
-              <ArrowRight className="h-5 w-5" />
+        <Modal
+          isOpen={isMobileModalOpen}
+          onClose={handleCloseMobileSearch}
+          className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0"
+          overlayClassName="bg-foreground/40"
+        >
+          <div className="flex shrink-0 items-center gap-3 border-b border-border bg-muted/30 px-4 py-4">
+            <button
+              type="button"
+              onClick={handleCloseMobileSearch}
+              aria-label="بستن جستجو"
+              className="rounded-full p-1 transition-colors hover:bg-muted"
+            >
+              <ArrowRight aria-hidden="true" className="h-5 w-5" />
             </button>
-            <div className="flex-1 relative">
+            <div className="relative flex-1">
               <Input
                 ref={mobileInputRef}
                 type="text"
@@ -469,18 +487,24 @@ export function SearchBar({
                 onChange={(e) => setQuery(e.target.value)}
                 leftIcon={
                   isGlobalSearching ? (
-                    <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
                   ) : (
-                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <Search aria-hidden="true" className="h-4 w-4" />
                   )
                 }
-                rightIcon={query && !isGlobalSearching && (
-                  <button onClick={() => setQuery('')} className="p-1 hover:bg-muted rounded-full flex items-center justify-center" type="button">
-                    <X className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                )}
-                className="w-full font-iran-yekan"
-                dir="rtl"
+                rightIcon={
+                  query && !isGlobalSearching ? (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      aria-label="پاک کردن"
+                      className="flex items-center justify-center rounded-full p-1 hover:bg-muted"
+                    >
+                      <X aria-hidden="true" className="h-3.5 w-3.5" />
+                    </button>
+                  ) : undefined
+                }
+                className="w-full"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -488,11 +512,11 @@ export function SearchBar({
                   }
                 }}
               />
-              {!query && (
-                <div className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none">
+              {!query ? (
+                <div className="pointer-events-none absolute end-10 top-1/2 -translate-y-1/2">
                   {renderAnimatedPlaceholder()}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -502,15 +526,15 @@ export function SearchBar({
     );
   }
 
-  // ۲. رندر در نسخه دسکتاپ
   return (
-    <div ref={containerRef} className={cn("relative w-full", className)}>
-      <form 
-        onSubmit={(e) => { 
-          e.preventDefault(); 
-          handleSearchSubmit(query); 
-        }} 
+    <div ref={containerRef} className={cn('relative w-full', className)}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSearchSubmit(query);
+        }}
         className="relative"
+        role="search"
       >
         <Input
           ref={desktopInputRef}
@@ -518,40 +542,49 @@ export function SearchBar({
           value={query}
           disabled={isGlobalSearching}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => { setIsFocused(true); refetchHistory(); }}
+          onFocus={() => {
+            setIsFocused(true);
+            refetchHistory();
+          }}
           placeholder=""
+          aria-label="جستجو"
           leftIcon={
             isGlobalSearching ? (
-              <Loader2 className="h-4 w-4 text-primary animate-spin" />
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
             ) : (
-              <Search className="h-4 w-4 text-muted-foreground" />
+              <Search aria-hidden="true" className="h-4 w-4" />
             )
           }
-          rightIcon={query && !isGlobalSearching && (
-            <button type="button" onClick={() => setQuery('')} className="p-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors">
-              <X className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
-          )}
-          className="w-full font-iran-yekan"
-          dir="rtl"
+          rightIcon={
+            query && !isGlobalSearching ? (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                aria-label="پاک کردن"
+                className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
+              >
+                <X aria-hidden="true" className="h-3.5 w-3.5" />
+              </button>
+            ) : undefined
+          }
+          className="w-full"
         />
 
-        {/* لایه پلیس‌هولدر انیمیشنی برای دسکتاپ */}
-        {!query && (
-          <div 
+        {!query ? (
+          <div
             onClick={() => desktopInputRef.current?.focus()}
-            className="absolute right-10 top-1/2 -translate-y-1/2 pointer-events-none flex items-center cursor-text"
+            className="pointer-events-none absolute end-10 top-1/2 flex -translate-y-1/2 cursor-text items-center"
           >
             {renderAnimatedPlaceholder()}
           </div>
-        )}
+        ) : null}
       </form>
 
-      {isFocused && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 z-50 bg-background border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[480px]">
+      {isFocused ? (
+        <div className="absolute inset-x-0 top-full z-dropdown mt-1.5 flex max-h-[480px] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg">
           {renderSuggestionsPanel()}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

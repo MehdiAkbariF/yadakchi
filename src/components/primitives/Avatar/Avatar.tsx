@@ -1,12 +1,10 @@
-// src/components/primitives/Avatar/Avatar.tsx
-
-import { forwardRef } from 'react';
+import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/design-system/utils/cn';
 import { User } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
 
-const avatarVariants = cva(
-  'relative flex shrink-0 overflow-hidden rounded-full',
+export const avatarVariants = cva(
+  'relative flex shrink-0 overflow-hidden rounded-full bg-muted',
   {
     variants: {
       size: {
@@ -33,26 +31,32 @@ export interface AvatarProps
   fallback?: string;
 }
 
-export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
+export const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, size, src, alt, fallback, children, ...props }, ref) => {
+    const [errored, setErrored] = React.useState(false);
+    const showImage = Boolean(src) && !errored;
+
     return (
       <div
         ref={ref}
         className={cn(avatarVariants({ size }), className)}
         {...props}
       >
-        {src ? (
-          <img src={src} alt={alt} className="h-full w-full object-cover" />
+        {showImage ? (
+          <img
+            src={src}
+            alt={alt ?? ''}
+            className="h-full w-full object-cover"
+            onError={() => setErrored(true)}
+          />
+        ) : fallback ? (
+          <span className="flex h-full w-full items-center justify-center text-sm font-medium text-muted-foreground">
+            {fallback.slice(0, 2).toUpperCase()}
+          </span>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted">
-            {fallback ? (
-              <span className="text-sm font-medium text-muted-foreground">
-                {fallback.slice(0, 2).toUpperCase()}
-              </span>
-            ) : (
-              <User className="h-1/2 w-1/2 text-muted-foreground" />
-            )}
-          </div>
+          <span className="flex h-full w-full items-center justify-center text-muted-foreground">
+            <User aria-hidden="true" className="h-1/2 w-1/2" />
+          </span>
         )}
         {children}
       </div>
@@ -62,48 +66,42 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
 
 Avatar.displayName = 'Avatar';
 
-export interface AvatarFallbackProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+export interface AvatarFallbackProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
 }
 
-export const AvatarFallback = forwardRef<HTMLDivElement, AvatarFallbackProps>(
-  ({ className, children, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          'flex h-full w-full items-center justify-center bg-muted text-muted-foreground',
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
+export const AvatarFallback = React.forwardRef<HTMLDivElement, AvatarFallbackProps>(
+  ({ className, children, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        'flex h-full w-full items-center justify-center bg-muted text-muted-foreground',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
 );
 
 AvatarFallback.displayName = 'AvatarFallback';
 
-export interface AvatarImageProps
-  extends React.ImgHTMLAttributes<HTMLImageElement> {
+export interface AvatarImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
   alt?: string;
 }
 
-export const AvatarImage = forwardRef<HTMLImageElement, AvatarImageProps>(
-  ({ className, src, alt, ...props }, ref) => {
-    return (
-      <img
-        ref={ref}
-        src={src}
-        alt={alt}
-        className={cn('h-full w-full object-cover', className)}
-        {...props}
-      />
-    );
-  }
+export const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
+  ({ className, src, alt, ...props }, ref) => (
+    <img
+      ref={ref}
+      src={src}
+      alt={alt ?? ''}
+      className={cn('h-full w-full object-cover', className)}
+      {...props}
+    />
+  )
 );
 
 AvatarImage.displayName = 'AvatarImage';

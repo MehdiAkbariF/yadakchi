@@ -22,7 +22,7 @@ export default function MaintenancePage() {
         <Settings className="h-10 w-10" />
       </div>
       
-      <h1 className="text-base md:text-lg font-black font-iran-yekan mb-2">یدک‌چی در حال بروزرسانی است</h1>
+      <h1 className="text-base md:text-lg font-black mb-2">یدک‌چی در حال بروزرسانی است</h1>
       
       <p className="text-xs md:text-sm text-muted-foreground font-iran-sans max-w-sm leading-relaxed mb-6">
         ما در حال بهبود بخش فنی یدک‌چی برای ارائه خدمات سریع‌تر، پایدارتر و امن‌تر هستیم. این فرآیند معمولاً چند دقیقه بیشتر طول نمی‌کشد. از صبر و همراهی صمیمانه شما سپاسگزاریم.

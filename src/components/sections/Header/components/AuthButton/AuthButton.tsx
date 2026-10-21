@@ -1,4 +1,4 @@
-// src/components/sections/Header/components/AuthButton/AuthButton.tsx
+﻿// src/components/sections/Header/components/AuthButton/AuthButton.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -51,7 +51,7 @@ export function AuthButton() {
         ref={containerRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="relative inline-block text-right"
+        className="relative inline-block"
         dir="rtl"
       >
         {/* دکمه مطابق با کادر سفید داخل تصویر */}
@@ -59,19 +59,19 @@ export function AuthButton() {
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(
-            "h-10 px-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center gap-2 select-none transition-all shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800/60",
-            isOpen && "border-zinc-300 dark:border-zinc-700 bg-zinc-50"
+            "h-10 px-3.5 rounded-md border border-border bg-card flex items-center gap-2 select-none transition-all shadow-xs hover:bg-muted dark:hover:bg-muted/60",
+            isOpen && "border-border bg-muted"
           )}
         >
           {/* آیکون کاربر مشکی/تیره */}
-          <User className="h-4 w-4 text-zinc-800 dark:text-zinc-200 shrink-0" />
+          <User className="h-4 w-4 text-foreground shrink-0" />
           
-          <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 max-w-[110px] truncate leading-none">
+          <span className="text-xs font-bold text-foreground max-w-[110px] truncate leading-none">
             {displayName}
           </span>
 
           {/* فلش چپ مطابق عکس */}
-          <ChevronLeft className="h-4 w-4 text-zinc-500 shrink-0 mr-0.5" />
+          <ChevronLeft className="h-4 w-4 text-muted-foreground shrink-0 me-0.5" />
         </button>
 
         <AnimatePresence>
@@ -83,7 +83,7 @@ export function AuthButton() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.97 }}
                 transition={{ duration: 0.15 }}
-                className="overflow-hidden rounded-xl border border-border/80 bg-popover p-1.5 shadow-xl"
+                className="overflow-hidden rounded-md border border-border/80 bg-popover p-1.5 shadow-xl"
               >
                 <Link
                   href="/profile"
@@ -117,9 +117,9 @@ export function AuthButton() {
     <Link href="/login" className="inline-block">
       <button 
         type="button"
-        className="h-10 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-2 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+        className="h-10 px-4 rounded-md border border-border bg-card text-xs font-bold text-foreground flex items-center gap-2 shadow-xs hover:bg-muted dark:hover:bg-muted transition-colors"
       >
-        <User className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
+        <User className="h-4 w-4 text-foreground" />
         <span>ورود / ثبت‌نام</span>
       </button>
     </Link>

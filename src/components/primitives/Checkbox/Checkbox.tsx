@@ -1,42 +1,57 @@
-'use client';
-
-import { cn } from '@/design-system/utils/cn';
+﻿import * as React from 'react';
 import { Check } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
 
-interface CheckboxProps {
+export interface CheckboxProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;
   className?: string;
   disabled?: boolean;
+  id?: string;
 }
 
-export function Checkbox({ checked, onChange, label, className, disabled }: CheckboxProps) {
-  return (
-    <label className={cn(
-      "flex items-center justify-between w-full select-none py-1.5 group",
-      disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
-      className
-    )}>
-      {label && (
-        <span className="text-xs font-medium font-iran-yekan text-muted-foreground group-hover:text-foreground transition-colors truncate pl-2">
-          {label}
-        </span>
-      )}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => !disabled && onChange(!checked)}
+export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
+  ({ checked, onChange, label, className, disabled, id }, ref) => {
+    const generatedId = React.useId();
+    const checkboxId = id ?? generatedId;
+
+    return (
+      <label
+        htmlFor={checkboxId}
         className={cn(
-          "h-5 w-5 shrink-0 rounded-lg border-2 flex items-center justify-center transition-all duration-200 outline-none shadow-sm",
-          checked 
-            ? "border-primary bg-primary text-white scale-105" 
-            : "border-zinc-300 dark:border-zinc-700 bg-background group-hover:border-primary/40",
-          disabled && "pointer-events-none"
+          'flex items-center gap-2 select-none',
+          disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+          className
         )}
       >
-        {checked && <Check className="h-3 w-3 stroke-[3.5] animate-in zoom-in duration-150" />}
-      </button>
-    </label>
-  );
-}
+        <button
+          ref={ref}
+          id={checkboxId}
+          type="button"
+          role="checkbox"
+          aria-checked={checked}
+          disabled={disabled}
+          onClick={() => !disabled && onChange(!checked)}
+          className={cn(
+            'h-5 w-5 shrink-0 rounded-sm border flex items-center justify-center',
+            'transition-colors duration-fast ease-in-out',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            checked
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-input bg-card hover:border-primary'
+          )}
+        >
+          {checked ? (
+            <Check aria-hidden="true" className="h-3 w-3 stroke-[3]" />
+          ) : null}
+        </button>
+        {label ? (
+          <span className="text-sm text-foreground">{label}</span>
+        ) : null}
+      </label>
+    );
+  }
+);
+
+Checkbox.displayName = 'Checkbox';

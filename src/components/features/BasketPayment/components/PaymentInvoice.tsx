@@ -1,11 +1,11 @@
 'use client';
 
-import { CreditCard, ArrowLeft, Briefcase } from 'lucide-react';
+import { Lock, ArrowLeft, Briefcase, FileCheck, ShieldCheck } from 'lucide-react';
 import { Card, CardTitle } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button';
 import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
 
-interface PaymentInvoiceProps {
+export interface PaymentInvoiceProps {
   productPrice: number;
   discountPrice: number;
   shippingPrice: number;
@@ -30,37 +30,45 @@ export function PaymentInvoice({
   onPayment,
   onCompleteLegalInfo,
 }: PaymentInvoiceProps) {
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value);
-  };
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat('fa-IR').format(Math.round(value));
 
   return (
-    <Card className="w-full lg:w-[360px] shrink-0 border rounded-xl p-5 bg-background shadow-sm h-fit text-right">
-      <CardTitle className="font-iran-yekan font-extrabold text-foreground border-b pb-3 mb-4 flex items-center gap-2">
-        <CreditCard className="h-5 w-5 text-primary" />
-        <span>صورتحساب</span>
+    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]">
+      <CardTitle className="mb-4 flex items-center gap-2 border-b border-border/60 pb-3.5 font-bold text-foreground">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <FileCheck aria-hidden="true" className="h-4 w-4" />
+        </div>
+        <span className="text-sm">صورتحساب نهایی</span>
       </CardTitle>
 
-      <div className="space-y-4 border-b pb-4 mb-4 text-right">
-        <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-yekan text-muted-foreground">
-          <span>قیمت محصولات</span>
-          <span>{formatPrice(productPrice)} تومان</span>
+      <div className="mb-4 space-y-3.5 border-b border-border/60 pb-4 text-xs">
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>مجموع قیمت قطعات</span>
+          <span className="font-semibold text-foreground">{formatPrice(productPrice)} تومان</span>
         </div>
 
-        <div className="flex items-center justify-between text-xs md:text-sm font-bold font-iran-yekan text-destructive">
-          <span>تخفیف ها</span>
-          <span>{formatPrice(discountPrice)} تومان</span>
-        </div>
+        {discountPrice > 0 ? (
+          <div className="flex items-center justify-between font-semibold text-destructive">
+            <span>تخفیف اعمال‌شده</span>
+            <span>- {formatPrice(discountPrice)} تومان</span>
+          </div>
+        ) : null}
 
-        <div className="flex items-center justify-between text-xs md:text-sm font-medium font-iran-yekan text-muted-foreground">
-          <span>هزینه ارسال</span>
-          <span>{formatPrice(shippingPrice)} تومان</span>
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>هزینه بسته‌بندی و ارسال</span>
+          <span className="font-semibold text-foreground">
+            {shippingPrice > 0 ? `${formatPrice(shippingPrice)} تومان` : 'رایگان'}
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-5 text-right">
-        <span className="text-xs md:text-sm font-bold font-iran-yekan text-muted-foreground">جمع کل</span>
-        <span className="text-lg font-black font-iran-yekan text-foreground">{formatPrice(finalPrice)} تومان</span>
+      <div className="mb-6 flex items-baseline justify-between">
+        <span className="text-xs font-bold text-foreground">مبلغ نهایی قابل پرداخت:</span>
+        <div className="flex items-baseline gap-1">
+          <span className="text-xl font-bold text-primary">{formatPrice(finalPrice)}</span>
+          <span className="text-2xs font-semibold text-muted-foreground">تومان</span>
+        </div>
       </div>
 
       <Button
@@ -69,44 +77,48 @@ export function PaymentInvoice({
         fullWidth
         onClick={onPayment}
         isLoading={isSubmitting}
-        className="rounded-xl font-iran-yekan font-bold text-xs h-11 shadow-md shadow-primary/10 flex items-center justify-center gap-1"
+        className="flex h-11 items-center justify-center gap-2 rounded-lg text-xs font-bold shadow-xs transition-transform active:scale-[0.99]"
       >
-        <span>پرداخت و تکمیل سفارش</span>
-        <ArrowLeft className="h-4.5 w-4.5 mr-1" />
+        <Lock className="h-4 w-4" />
+        <span>پرداخت امن و ثبت نهایی سفارش</span>
+        <ArrowLeft aria-hidden="true" className="me-1 h-4 w-4" />
       </Button>
 
-      <span className="text-[10px] text-center text-muted-foreground block mt-2.5 font-iran-yekan">
-        ارسال در سریع ترین زمان ممکن انجام خواهد شد
-      </span>
-
-      <div className="border-t border-dashed mt-5 pt-4 space-y-3.5 text-right w-full">
-        <div className="flex items-start gap-2.5 w-full">
+      {/* بخش صدور فاکتور حقوقی/رسمی */}
+      <div className="mt-5 w-full space-y-3 border-t border-dashed border-border/70 pt-4">
+        <div className="flex items-start gap-2.5">
           <Checkbox
             checked={isLegalInvoice}
             disabled={!isLegalUser}
             onChange={onLegalInvoiceChange}
           />
-          <div className="">
-            <p className="text-xs leading-relaxed text-muted-foreground font-iran-yekan text-right select-none">
-              با انتخاب این گزینه، فاکتور خرید شما به صورت حقوقی صادر خواهد شد. شما می‌توانید از قسمت سفارش در حساب کاربری خود، فاکتور خود را دریافت کنید.
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold text-foreground">درخواست صدور فاکتور رسمی حقوقی</span>
+            <p className="select-none text-2xs leading-relaxed text-muted-foreground">
+              فاکتور رسمی شرکتی با کد اقتصادی صادر و در پنل کاربری قابل دریافت خواهد بود.
             </p>
-            {!isLegalUser && (
-              <span className="text-[9px] text-destructive font-iran-yekan block mt-1">
-                جهت فعال‌سازی فاکتور حقوقی، ابتدا باید اطلاعات حقوقی خود را تکمیل کنید.
+            {!isLegalUser ? (
+              <span className="text-2xs font-semibold text-destructive">
+                اطلاعات حقوقی شرکت شما هنوز تایید نشده است.
               </span>
-            )}
+            ) : null}
           </div>
         </div>
 
-        <div className="flex justify-start w-full">
+        {!isLegalUser ? (
           <button
             type="button"
             onClick={onCompleteLegalInfo}
-            className="text-xs font-bold font-iran-yekan text-primary hover:underline flex items-center gap-1 mt-1 outline-none"
+            className="flex items-center gap-1.5 text-xs font-bold text-primary outline-none hover:underline"
           >
-            <Briefcase className="h-3.5 w-3.5 shrink-0" />
-            <span>تکمیل اطلاعات حقوقی</span>
+            <Briefcase className="h-3.5 w-3.5" />
+            <span>تکمیل و ارسال مدارک حقوقی</span>
           </button>
+        ) : null}
+
+        <div className="flex items-center justify-center gap-1.5 pt-2 text-2xs text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 text-success" />
+          <span>تضمین بازگشت وجه در صورت عدم انطباق کالا</span>
         </div>
       </div>
     </Card>

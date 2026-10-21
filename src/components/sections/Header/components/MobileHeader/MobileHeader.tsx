@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { cn } from '@/design-system/utils/cn';
 import { Logo } from '../Logo/Logo';
 import { SellerButton } from '../SellerButton/SellerButton';
@@ -15,46 +15,51 @@ export interface MobileHeaderProps {
 }
 
 export function MobileHeader({ className, onSearch, isScrolled = false }: MobileHeaderProps) {
-  const [isMounted, setIsMounted] = useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setIsMounted(true);
   }, []);
 
   return (
-    <div className={cn("w-full flex flex-col transition-transform duration-300 will-change-transform", className)}>
-      <div className="flex items-center justify-between w-full h-10 bg-background z-20 relative">
+    <div className={cn('flex w-full flex-col transition-transform duration-normal will-change-transform', className)}>
+      {/* ردیف بالای موبایل: لوگو و اکشن‌ها کاملاً هماهنگ با پس‌زمینه سفید کارت */}
+      <div className="relative z-20 flex h-10 w-full items-center justify-between">
         <Logo className="shrink-0" />
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <SellerButton size="sm" />
           <ThemeToggle />
         </div>
       </div>
 
-      <div className={cn(
-        "w-full bg-background transition-all duration-300 ease-out origin-top transform will-change-[transform,opacity,max-height]",
-        isScrolled 
-          ? "max-h-0 opacity-0 pointer-events-none scale-y-90 -translate-y-3 overflow-hidden" 
-          : "max-h-36 opacity-100 scale-y-100 translate-y-0"
-      )}>
-        <div className="pt-2 pb-1.5 flex flex-col w-full">
+      {/* ردیف پایین: سرچ و انتخاب شهر */}
+      <div
+        className={cn(
+          'w-full origin-top transform transition-all duration-slow ease-out',
+          'will-change-[transform,opacity,max-height]',
+          isScrolled
+            ? 'pointer-events-none max-h-0 -translate-y-3 scale-y-90 overflow-hidden opacity-0'
+            : 'max-h-36 translate-y-0 scale-y-100 opacity-100'
+        )}
+      >
+        <div className="flex w-full flex-col pb-1 pt-2">
           {isMounted ? (
             <>
-              <SearchBar 
+              <SearchBar
                 placeholder="جستجو در یدک‌چی..."
                 onSearch={onSearch}
-                className="rounded-md px-3 py-1.5 bg-background w-full"
-                isMobile={true}
+                className="w-full"
+                isMobile
               />
-              
-              <div className="border-t pt-2 mt-2">
+
+              <div className="mt-2.5 border-t border-border/60 pt-2">
                 <CitySelector variant="mobile" />
               </div>
             </>
           ) : (
             <>
-              <div className="h-9 w-full bg-muted/20 rounded-md animate-pulse" />
-              <div className="h-6 mt-2.5 w-full bg-muted/15 rounded-md animate-pulse" />
+              <div className="h-9 w-full animate-pulse rounded-md bg-secondary" />
+              <div className="mt-2.5 h-6 w-full animate-pulse rounded-md bg-secondary/70" />
             </>
           )}
         </div>

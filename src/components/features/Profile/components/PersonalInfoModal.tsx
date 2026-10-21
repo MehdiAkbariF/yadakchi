@@ -95,15 +95,15 @@ export function PersonalInfoModal({ isOpen, onClose, user }: PersonalInfoModalPr
   return (
 <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
   <ModalHeader onClose={onClose}>
-    <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+    <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-2">
       <UserIcon className="h-5 w-5 text-primary" />
       ویرایش اطلاعات فردی
     </ModalTitle>
   </ModalHeader>
   
-  <ModalBody className="p-5 pt-4 text-right">
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
-      <span className="text-xs text-muted-foreground font-iran-yekan block mb-2 leading-relaxed">
+  <ModalBody className="p-5 pt-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
+      <span className="text-xs text-muted-foreground block mb-2 leading-relaxed">
         لطفاً اطلاعات خود را ویرایش و سپس ثبت کنید.
       </span>
 
@@ -112,14 +112,14 @@ export function PersonalInfoModal({ isOpen, onClose, user }: PersonalInfoModalPr
           label="نام *"
           placeholder="نام"
           error={errors.name?.message ? String(errors.name.message) : undefined}
-          className="text-xs font-iran-yekan"
+          className="text-xs "
           {...register('name')}
         />
         <Input
           label="نام خانوادگی *"
           placeholder="نام خانوادگی"
           error={errors.lastName?.message ? String(errors.lastName.message) : undefined}
-          className="text-xs font-iran-yekan"
+          className="text-xs "
           {...register('lastName')}
         />
       </div>
@@ -128,7 +128,7 @@ export function PersonalInfoModal({ isOpen, onClose, user }: PersonalInfoModalPr
         label="کد ملی *"
         placeholder="مثال: 0021606803"
         error={errors.nationalCode?.message ? String(errors.nationalCode.message) : undefined}
-        className="text-xs font-iran-yekan text-left"
+        className="text-xs"
         dir="ltr"
         {...register('nationalCode')}
       />
@@ -137,7 +137,7 @@ export function PersonalInfoModal({ isOpen, onClose, user }: PersonalInfoModalPr
         label="آدرس ایمیل"
         placeholder="مثال: email@gmail.com"
         error={errors.email?.message ? String(errors.email.message) : undefined}
-        className="text-xs font-iran-yekan text-left"
+        className="text-xs"
         dir="ltr"
         {...register('email')}
       />
@@ -177,7 +177,7 @@ export function PersonalInfoModal({ isOpen, onClose, user }: PersonalInfoModalPr
       type="button"
       variant="outline"
       onClick={onClose}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+      className="flex-1 rounded-xl text-xs h-10 font-bold "
     >
       انصراف
     </Button>
@@ -185,7 +185,7 @@ export function PersonalInfoModal({ isOpen, onClose, user }: PersonalInfoModalPr
       type="submit"
       variant="primary"
       isLoading={updateProfile.isPending}
-      className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+      className="flex-1 rounded-xl text-xs h-10 font-bold "
       onClick={handleSubmit(onSubmit)}
     >
       ثبت اطلاعات

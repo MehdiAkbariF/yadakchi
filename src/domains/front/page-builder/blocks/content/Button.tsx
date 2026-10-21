@@ -1,4 +1,4 @@
-// src/domains/front/page-builder/blocks/content/Button.tsx
+﻿// src/domains/front/page-builder/blocks/content/Button.tsx
 
 import { cn } from '@/design-system/utils/cn';
 import type { ComponentConfig } from '@measured/puck';
@@ -13,7 +13,7 @@ export interface ButtonProps {
 
 const VARIANT_MAP: Record<ButtonProps['variant'], string> = {
   primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-  outline: 'border border-input bg-background hover:bg-accent',
+  outline: 'border border-input bg-card hover:bg-accent',
   ghost: 'hover:bg-accent hover:text-accent-foreground',
 };
 
@@ -37,7 +37,7 @@ function ButtonComponent(props: ButtonProps) {
       <a
         href={href || '#'}
         className={cn(
-          'inline-flex items-center justify-center rounded-md font-medium transition-colors font-iran-yekan',
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors ',
           VARIANT_MAP[variant],
           SIZE_MAP[size]
         )}

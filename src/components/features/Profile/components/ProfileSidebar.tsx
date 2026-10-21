@@ -1,29 +1,41 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
-import { 
-  User, 
-  ShoppingBag, 
-  Headphones, 
-  Wallet, 
-  Heart, 
-  MapPin, 
-  MessageSquare, 
-  Bell, 
-  Eye, 
-  Settings, 
-  LogOut, 
-  Copy, 
+import { usePathname } from 'next/navigation';
+import {
+  User,
+  ShoppingBag,
+  Headphones,
+  Wallet,
+  Heart,
+  MapPin,
+  MessageSquare,
+  Bell,
+  Eye,
+  Settings,
+  LogOut,
+  Copy,
   Share2,
-  ChevronLeft
+  ChevronLeft,
 } from 'lucide-react';
 import { Card } from '@/components/composites/Card';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useGetWalletBalances } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
+
+const MENU_ITEMS = [
+  { id: 'orders', label: 'سفارش‌های من', icon: ShoppingBag, href: '/profile/orders' },
+  { id: 'support', label: 'پشتیبانی', icon: Headphones, href: '/profile/support' },
+  { id: 'wallet', label: 'کیف پول من', icon: Wallet, href: '/profile/wallet' },
+  { id: 'favorites', label: 'کالاها و فروشگاه‌های محبوب', icon: Heart, href: '/profile/favorites' },
+  { id: 'addresses', label: 'آدرس‌های من', icon: MapPin, href: '/profile/addresses' },
+  { id: 'comments', label: 'نظرات و پرسش‌ها', icon: MessageSquare, href: '/profile/comments' },
+  { id: 'notifications', label: 'پیام‌ها', icon: Bell, href: '/profile/notifications' },
+  { id: 'history', label: 'آخرین کالاهای دیده شده', icon: Eye, href: '/profile/history' },
+  { id: 'settings', label: 'اطلاعات حساب کاربری', icon: Settings, href: '/profile/settings' },
+] as const;
 
 export function ProfileSidebar() {
   const pathname = usePathname();
@@ -32,10 +44,8 @@ export function ProfileSidebar() {
 
   const isDashboard = pathname === '/profile';
 
-  // ریست اسکرول برای اطمینان از موقعیت رندر در صفحات داخلی روی موبایل
-  useEffect(() => {
+  React.useEffect(() => {
     let frameId: number;
-
     const performScroll = () => {
       if (typeof window !== 'undefined') {
         window.scrollTo(0, 0);
@@ -43,17 +53,14 @@ export function ProfileSidebar() {
         document.body.scrollTop = 0;
       }
     };
-
     const triggerScroll = () => {
       performScroll();
       frameId = requestAnimationFrame(performScroll);
     };
-
     triggerScroll();
     const timer1 = setTimeout(triggerScroll, 50);
     const timer2 = setTimeout(triggerScroll, 150);
     const timer3 = setTimeout(triggerScroll, 300);
-
     return () => {
       cancelAnimationFrame(frameId);
       clearTimeout(timer1);
@@ -82,7 +89,7 @@ export function ProfileSidebar() {
       await logout(undefined);
       showToast.success('با موفقیت از حساب کاربری خود خارج شدید');
       window.location.href = '/';
-    } catch (error) {}
+    } catch {}
   };
 
   const handleCopyReferral = () => {
@@ -94,11 +101,13 @@ export function ProfileSidebar() {
 
   const handleShareReferral = () => {
     if (user?.referralCode && typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: 'کد معرف یدک‌چی',
-        text: `با اشتراک‌گذاری این کد، هم دوستت برای خرید اولش ۱۰۰,۰۰۰ تومان تخفیف می‌گیره و هم خودت ۱۰۰,۰۰۰ تومان اعتبار خرید دریافت می‌کنی.`,
-        url: window.location.origin
-      }).catch(() => {});
+      navigator
+        .share({
+          title: 'کد معرف یدک‌چی',
+          text: `با اشتراک‌گذاری این کد، هم دوستت برای خرید اولش ۱۰۰,۰۰۰ تومان تخفیف می‌گیره و هم خودت ۱۰۰,۰۰۰ تومان اعتبار خرید دریافت می‌کنی.`,
+          url: window.location.origin,
+        })
+        .catch(() => {});
     } else {
       handleCopyReferral();
     }
@@ -108,117 +117,125 @@ export function ProfileSidebar() {
     window.location.href = '/profile/wallet?action=withdraw';
   };
 
-  const menuItems = [
-    { id: 'orders', label: 'سفارش‌های من', icon: ShoppingBag, href: '/profile/orders' },
-    { id: 'support', label: 'پشتیبانی', icon: Headphones, href: '/profile/support' },
-    { id: 'wallet', label: 'کیف پول من', icon: Wallet, href: '/profile/wallet' },
-    { id: 'favorites', label: 'کالاها و فروشگاه‌های محبوب من', icon: Heart, href: '/profile/favorites' },
-    { id: 'addresses', label: 'آدرس‌های من', icon: MapPin, href: '/profile/addresses' },
-    { id: 'comments', label: 'نظرات و پرسش‌ها', icon: MessageSquare, href: '/profile/comments' },
-    { id: 'notifications', label: 'پیام‌ها', icon: Bell, href: '/profile/notifications' },
-    { id: 'history', label: 'آخرین کالاهای دیده شده', icon: Eye, href: '/profile/history' },
-    { id: 'settings', label: 'اطلاعات حساب کاربری', icon: Settings, href: '/profile/settings' },
-  ];
-
   return (
-    /* 
-      فیکس کلیدی: کل سایدبار در موبایل فقط در روت اصلی پروفایل (/profile) نمایش داده می‌شود.
-      در صفحات فرعی (نظیر /profile/orders) کل این سایدبار مخفی شده و فضا برای نمایش تمام‌صفحه محتوای روت فراهم می‌شود.
-    */
-    <div 
+    <div
       className={cn(
-        "w-full flex-col gap-5 text-right select-none", 
-        isDashboard ? "flex" : "hidden lg:flex"
-      )} 
-      dir="rtl"
+        'w-full flex-col gap-5 select-none',
+        isDashboard ? 'flex' : 'hidden lg:flex'
+      )}
     >
-      
-      {/* بخش کارت کیف پول و موجودی */}
-      <Card className="w-full border rounded-xl p-4 bg-background flex items-center justify-between gap-4">
-        <div className="flex flex-col text-right">
-          <span className="text-[10px] text-muted-foreground font-iran-yekan mb-1">موجودی کیف پول:</span>
-          <span className="text-sm font-black text-foreground font-iran-yekan">{wallet?.totalBalance || '۰ تومان'}</span>
+      <Card className="flex w-full items-center justify-between gap-4 p-4">
+        <div className="flex flex-col">
+          <span className="mb-1 text-2xs text-muted-foreground">موجودی کیف پول</span>
+          <span className="text-sm font-bold text-foreground">
+            {wallet?.totalBalance || '۰ تومان'}
+          </span>
         </div>
         <button
+          type="button"
           onClick={handleWithdraw}
-          className="text-[10px] font-bold font-iran-yekan text-primary border-b border-primary pb-0.5 hover:text-primary/80 transition-colors outline-none"
+          className="border-b border-primary pb-0.5 text-2xs font-bold text-primary outline-none transition-colors hover:text-primary-hover"
         >
           برداشت موجودی
         </button>
       </Card>
 
-      {/* بخش کارت کد معرف */}
-      {user?.referralCode && (
-        <Card className="w-full border rounded-xl p-4 bg-background flex flex-col gap-3">
-          <div className="flex items-center justify-between w-full border-b border-dashed pb-2">
-            <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan">کد معرف شما:</span>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-black text-foreground font-iran-yekan tracking-widest">{user.referralCode}</span>
-              <button onClick={handleCopyReferral} className="text-primary hover:scale-105 transition-transform" aria-label="Copy">
-                <Copy className="h-4 w-4" />
+      {user?.referralCode ? (
+        <Card className="flex w-full flex-col gap-3 p-4">
+          <div className="flex w-full items-center justify-between border-b border-dashed border-border pb-2">
+            <span className="text-2xs font-bold text-muted-foreground">کد معرف شما:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold tracking-widest text-foreground">
+                {user.referralCode}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyReferral}
+                aria-label="کپی کد معرف"
+                className="rounded-sm p-1 text-primary transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Copy aria-hidden="true" className="h-4 w-4" />
               </button>
-              <button onClick={handleShareReferral} className="text-primary hover:scale-105 transition-transform" aria-label="Share">
-                <Share2 className="h-4 w-4" />
+              <button
+                type="button"
+                onClick={handleShareReferral}
+                aria-label="اشتراک‌گذاری کد معرف"
+                className="rounded-sm p-1 text-primary transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Share2 aria-hidden="true" className="h-4 w-4" />
               </button>
             </div>
           </div>
-          <p className="text-[9px] leading-relaxed text-muted-foreground font-iran-yekan text-justify">
+          <p className="text-justify text-2xs leading-relaxed text-muted-foreground">
             با اشتراک‌گذاری این کد، هم دوستت برای خرید اولش ۱۰۰,۰۰۰ تومان تخفیف می‌گیره و هم خودت ۱۰۰,۰۰۰ تومان اعتبار خرید دریافت می‌کنی.
           </p>
         </Card>
-      )}
+      ) : null}
 
-      {/* بخش منوهای ناوبری و پروفایل */}
-      <Card className="w-full border rounded-xl p-4 bg-background flex flex-col gap-3">
-        <div className="flex items-center justify-between border-b pb-3 w-full">
+      <Card className="flex w-full flex-col gap-3 p-4">
+        <div className="flex w-full items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 shrink-0 rounded-full border bg-primary/10 flex items-center justify-center text-primary">
-              <User className="h-5 w-5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-accent bg-accent text-primary">
+              <User aria-hidden="true" className="h-5 w-5" />
             </div>
-            <div className="flex flex-col text-right">
-              <span className="text-xs font-black text-foreground font-iran-yekan">{user?.fullName || user?.lastName || 'کاربر یدک‌چی'}</span>
-              <span className="text-[10px] text-muted-foreground font-iran-yekan mt-0.5">{user?.userName}</span>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-foreground">
+                {user?.fullName || user?.lastName || 'کاربر یدک‌چی'}
+              </span>
+              <span className="mt-0.5 text-2xs text-muted-foreground">{user?.userName}</span>
             </div>
           </div>
-          <Link 
+          <Link
             href="/profile/settings"
-            className="text-[10px] font-bold font-iran-yekan text-primary border-b border-primary pb-0.5 hover:text-primary/80 transition-colors outline-none"
+            className="border-b border-primary pb-0.5 text-2xs font-bold text-primary outline-none transition-colors hover:text-primary-hover"
           >
             ویرایش
           </Link>
         </div>
 
-        <div className="flex flex-col gap-1 w-full">
-          {menuItems.map((item) => (
-            <Link
-              key={item.id}
-              href={item.href}
-              scroll={true}
-              className={cn(
-                "flex items-center justify-between w-full px-3 py-3 rounded-lg text-sm font-bold font-iran-yekan transition-colors outline-none",
-                activeTab === item.id 
-                  ? "bg-primary/5 text-primary" 
-                  : "text-foreground hover:bg-muted/40"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <item.icon className="h-5 w-5 shrink-0" />
-                <span>{item.label}</span>
-              </div>
-              <ChevronLeft className="h-4 w-4 opacity-50" />
-            </Link>
-          ))}
+        <nav className="flex w-full flex-col gap-1" aria-label="منوی پروفایل">
+          {MENU_ITEMS.map((item) => {
+            const isActive = activeTab === item.id;
+            const ItemIcon = item.icon;
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                scroll
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  'flex w-full items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium outline-none transition-colors duration-fast focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                  isActive
+                    ? 'bg-accent font-bold text-accent-foreground'
+                    : 'text-foreground hover:bg-muted'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <ItemIcon
+                    aria-hidden="true"
+                    className={cn('h-4.5 w-4.5 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')}
+                  />
+                  <span>{item.label}</span>
+                </div>
+                <ChevronLeft
+                  aria-hidden="true"
+                  className={cn('h-4 w-4 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground/60')}
+                />
+              </Link>
+            );
+          })}
+
           <button
+            type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-sm font-bold font-iran-yekan text-destructive hover:bg-destructive/5 transition-colors outline-none border-t border-dashed mt-2 pt-3"
+            className="mt-2 flex items-center gap-3 rounded-md border-t border-dashed border-border px-3 pb-3 pt-4 text-sm font-medium text-destructive outline-none transition-colors hover:bg-destructive/5 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-destructive focus-visible:ring-offset-2"
           >
-            <LogOut className="h-5 w-5 shrink-0" />
+            <LogOut aria-hidden="true" className="h-4.5 w-4.5 shrink-0" />
             <span>خروج از حساب</span>
           </button>
-        </div>
+        </nav>
       </Card>
-
     </div>
   );
 }

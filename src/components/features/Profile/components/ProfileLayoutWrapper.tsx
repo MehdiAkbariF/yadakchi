@@ -2,20 +2,18 @@
 
 import { ProfileSidebar } from './ProfileSidebar';
 
-interface ProfileLayoutWrapperProps {
+export interface ProfileLayoutWrapperProps {
   children: React.ReactNode;
   activeTab: string;
 }
 
-export function ProfileLayoutWrapper({ children, activeTab }: ProfileLayoutWrapperProps) {
+export function ProfileLayoutWrapper({ children }: ProfileLayoutWrapperProps) {
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-8 select-none text-right" dir="rtl">
-      <div className="w-full lg:w-[320px] shrink-0">
+    <div className="flex w-full flex-col gap-6 select-none lg:flex-row lg:gap-8">
+      <div className="w-full shrink-0 lg:w-[300px] xl:w-[320px]">
         <ProfileSidebar />
       </div>
-      <div className="flex-1 w-full min-w-0">
-        {children}
-      </div>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }

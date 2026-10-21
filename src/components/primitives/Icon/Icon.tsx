@@ -1,11 +1,9 @@
-// src/components/primitives/Icon/Icon.tsx
-
-import { forwardRef } from 'react';
+import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import type { LucideProps } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import { LucideProps } from 'lucide-react';
 
-const iconVariants = cva('shrink-0', {
+export const iconVariants = cva('shrink-0', {
   variants: {
     size: {
       xs: 'h-3 w-3',
@@ -26,18 +24,19 @@ export interface IconProps
   extends Omit<LucideProps, 'size'>,
     VariantProps<typeof iconVariants> {
   icon: React.ComponentType<LucideProps>;
+  label?: string;
 }
 
-export const Icon = forwardRef<SVGSVGElement, IconProps>(
-  ({ className, size, icon: IconComponent, ...props }, ref) => {
-    return (
-      <IconComponent
-        ref={ref}
-        className={cn(iconVariants({ size }), className)}
-        {...props}
-      />
-    );
-  }
+export const Icon = React.forwardRef<SVGSVGElement, IconProps>(
+  ({ className, size, icon: IconComponent, label, ...props }, ref) => (
+    <IconComponent
+      ref={ref}
+      aria-hidden={label ? undefined : true}
+      aria-label={label}
+      className={cn(iconVariants({ size }), className)}
+      {...props}
+    />
+  )
 );
 
 Icon.displayName = 'Icon';

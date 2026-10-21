@@ -1,54 +1,58 @@
-﻿// src/components/features/Profile/CommentsDashboard.tsx
-
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { 
-  useGetPendingComments, 
-  useGetUserComments, 
-  useDeleteComment 
+import {
+  MessageSquare,
+  ArrowRight,
+  Star,
+  Clock,
+  Trash2,
+  Pencil,
+  Plus,
+  Search,
+  BookOpen,
+} from 'lucide-react';
+import {
+  useGetPendingComments,
+  useGetUserComments,
+  useDeleteComment,
 } from '@/domains/front/comment/hooks/comment.hooks';
-import { 
-  useGetUserInquiries, 
-  useDeleteInquiry 
-} from '@/domains/front/inquiry/hooks/inquiry.hooks';
+import { useGetUserInquiries, useDeleteInquiry } from '@/domains/front/inquiry/hooks/inquiry.hooks';
 import { useGetUserBlogPostComments } from '@/domains/blog/hooks/blog.hooks';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { WriteCommentModal } from './components/WriteCommentModal';
-import { 
-  MessageSquare, 
-  ArrowRight, 
-  Star, 
-  Clock, 
-  Trash2, 
-  Pencil, 
-  Plus,
-  Search,
-  BookOpen
-} from 'lucide-react';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
-import Link from 'next/link';
-
 import { getFullUrl } from '@/core/utils/formatters';
+
+const TABS = [
+  { key: 'pending' as const, label: 'در انتظار نظر', icon: Clock },
+  { key: 'comments' as const, label: 'نظرات محصولات', icon: MessageSquare },
+  { key: 'inquiries' as const, label: 'پرسش‌ها', icon: Search },
+  { key: 'blogComments' as const, label: 'نظرات بلاگ', icon: BookOpen },
+] as const;
+
+type TabKey = (typeof TABS)[number]['key'];
+
 export function CommentsDashboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'pending' | 'comments' | 'inquiries' | 'blogComments'>('pending');
-  const [pendingPage, setPendingPage] = useState(1);
-  const [commentsPage, setCommentsPage] = useState(1);
-  const [inquiriesPage, setInquiriesPage] = useState(1);
-  const [blogCommentsPage, setBlogCommentsPage] = useState(1);
+  const [activeTab, setActiveTab] = React.useState<TabKey>('pending');
+  const [pendingPage, setPendingPage] = React.useState(1);
+  const [commentsPage, setCommentsPage] = React.useState(1);
+  const [inquiriesPage, setInquiriesPage] = React.useState(1);
+  const [blogCommentsPage, setBlogCommentsPage] = React.useState(1);
 
-  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [editingComment, setEditingComment] = useState<any | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState<any | null>(null);
+  const [editingComment, setEditingComment] = React.useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const { data: pendingResponse, isLoading: isPendingLoading } = useGetPendingComments(pendingPage, 10);
   const { data: commentsResponse, isLoading: isCommentsLoading } = useGetUserComments(commentsPage, 10);
@@ -74,10 +78,13 @@ export function CommentsDashboard() {
   const blogCommentsTotalPages = blogCommentsResponse?.totalPages || 1;
   const blogCommentsCount = blogCommentsResponse?.totalCount || 0;
 
-  const isPendingActive = activeTab === 'pending';
-  const isCommentsActive = activeTab === 'comments';
-  const isInquiriesActive = activeTab === 'inquiries';
-  const isBlogCommentsActive = activeTab === 'blogComments';
+  const counts: Record<TabKey, number> = {
+    pending: pendingCount,
+    comments: commentsCount,
+    inquiries: inquiriesCount,
+    blogComments: blogCommentsCount,
+  };
+
   const handleOpenWriteComment = (product: any) => {
     setSelectedProduct(product);
     setEditingComment(null);
@@ -99,7 +106,7 @@ export function CommentsDashboard() {
       await deleteComment.mutateAsync(id);
       showToast.success('نظر شما با موفقیت حذف شد');
       queryClient.invalidateQueries({ queryKey: ['user', 'comments'] });
-    } catch (error) {}
+    } catch {}
   };
 
   const handleDeleteInquiry = async (id: string) => {
@@ -107,136 +114,92 @@ export function CommentsDashboard() {
       await deleteInquiry.mutateAsync(id);
       showToast.success('پرسش شما با موفقیت حذف شد');
       queryClient.invalidateQueries({ queryKey: ['user', 'inquiries'] });
-    } catch (error) {}
+    } catch {}
   };
 
   return (
-    <div className="flex-1 flex flex-col gap-6 w-full text-right select-none" dir="rtl">
-      
-      <div className="lg:hidden flex items-center gap-3 border-b pb-3 mb-1 shrink-0">
-        <button 
+    <div className="flex w-full flex-1 flex-col gap-6 select-none">
+      <div className="mb-1 flex items-center gap-3 border-b border-border pb-3 lg:hidden">
+        <button
+          type="button"
           onClick={() => router.push('/profile')}
-          className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
-          aria-label="Back"
+          aria-label="بازگشت"
+          className="-me-1 flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
         >
-          <ArrowRight className="h-5 w-5 text-foreground" />
+          <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
         </button>
-        <span className="text-sm font-bold font-iran-yekan text-foreground">نظرات و پرسش‌ها</span>
+        <span className="text-sm font-bold text-foreground">نظرات و پرسش‌ها</span>
       </div>
 
-      <div className="w-full flex flex-col gap-2 border-b pb-5">
+      <div className="flex w-full flex-col gap-2 border-b border-border pb-5">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary shrink-0" />
-          <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">نظرات و پرسش‌ها</span>
+          <MessageSquare aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+          <span className="text-xl font-bold text-foreground">نظرات و پرسش‌ها</span>
         </div>
-        <p className="text-xs text-muted-foreground font-iran-yekan">
-          مدیریت نظرات، امتیازها و پرسش‌های ثبت‌شده در مورد محصولات و مقالات مختلف
+        <p className="text-xs text-muted-foreground">
+          مدیریت نظرات محصولات، پرسش‌های ثبت‌شده در بخش پرسش و پاسخ، و نظرات وبلاگ
         </p>
       </div>
 
-      {/* تب‌های انتخاب نوع نظر */}
-      <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-2 w-full shrink-0 select-none px-1">
-        
-        {/* ۱. در انتظار نظر */}
-        <button
-          onClick={() => setActiveTab('pending')}
-          className={cn(
-            "w-32 h-24 md:w-36 md:h-24 shrink-0 flex flex-col items-center justify-center gap-1.5 border rounded-2xl bg-background transition-all outline-none shadow-sm px-3",
-            isPendingActive 
-              ? "border-primary bg-primary/5 text-primary scale-105 font-bold" 
-              : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:border-zinc-300 hover:text-foreground"
-          )}
-        >
-          <Clock className={cn("h-5 w-5 shrink-0", isPendingActive ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] md:text-xs font-bold font-iran-yekan">در انتظار نظر</span>
-          <span className={cn(
-            "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full mt-0.5",
-            isPendingActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-          )}>
-            {pendingCount} کالا
-          </span>
-        </button>
-
-        {/* ۲. نظرات کالاها */}
-        <button
-          onClick={() => setActiveTab('comments')}
-          className={cn(
-            "w-32 h-24 md:w-36 md:h-24 shrink-0 flex flex-col items-center justify-center gap-1.5 border rounded-2xl bg-background transition-all outline-none shadow-sm px-3",
-            isCommentsActive 
-              ? "border-primary bg-primary/5 text-primary scale-105 font-bold" 
-              : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:border-zinc-300 hover:text-foreground"
-          )}
-        >
-          <MessageSquare className={cn("h-5 w-5 shrink-0", isCommentsActive ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] md:text-xs font-bold font-iran-yekan">نظرات کالاها</span>
-          <span className={cn(
-            "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full mt-0.5",
-            isCommentsActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-          )}>
-            {commentsCount} نظر
-          </span>
-        </button>
-
-        {/* ۳. پرسش‌های کالاها */}
-        <button
-          onClick={() => setActiveTab('inquiries')}
-          className={cn(
-            "w-32 h-24 md:w-36 md:h-24 shrink-0 flex flex-col items-center justify-center gap-1.5 border rounded-2xl bg-background transition-all outline-none shadow-sm px-3",
-            isInquiriesActive 
-              ? "border-primary bg-primary/5 text-primary scale-105 font-bold" 
-              : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:border-zinc-300 hover:text-foreground"
-          )}
-        >
-          <Search className={cn("h-5 w-5 shrink-0", isInquiriesActive ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] md:text-xs font-bold font-iran-yekan">پرسش‌های من</span>
-          <span className={cn(
-            "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full mt-0.5",
-            isInquiriesActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-          )}>
-            {inquiriesCount} پرسش
-          </span>
-        </button>
-
-        {/* ۴. نظرات مقالات مجله */}
-        <button
-          onClick={() => setActiveTab('blogComments')}
-          className={cn(
-            "w-32 h-24 md:w-36 md:h-24 shrink-0 flex flex-col items-center justify-center gap-1.5 border rounded-2xl bg-background transition-all outline-none shadow-sm px-3",
-            isBlogCommentsActive 
-              ? "border-primary bg-primary/5 text-primary scale-105 font-bold" 
-              : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:border-zinc-300 hover:text-foreground"
-          )}
-        >
-          <BookOpen className={cn("h-5 w-5 shrink-0", isBlogCommentsActive ? "text-primary" : "text-muted-foreground")} />
-          <span className="text-[10px] md:text-xs font-bold font-iran-yekan">نظرات مقالات</span>
-          <span className={cn(
-            "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full mt-0.5",
-            isBlogCommentsActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-          )}>
-            {blogCommentsCount} نظر
-          </span>
-        </button>
-
+      <div className="flex w-full shrink-0 select-none items-center gap-4 overflow-x-auto px-1 py-2 scrollbar-none">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          const TabIcon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              aria-pressed={isActive}
+              className={cn(
+                'flex h-24 w-32 shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg border bg-card px-3 text-center outline-none shadow-xs transition-colors duration-fast md:h-24 md:w-36',
+                isActive
+                  ? 'border-primary bg-accent font-bold text-accent-foreground'
+                  : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+              )}
+            >
+              <TabIcon
+                aria-hidden="true"
+                className={cn('h-5 w-5 shrink-0', isActive ? 'text-primary' : 'text-muted-foreground')}
+              />
+              <span className="text-xs font-bold">{tab.label}</span>
+              <span
+                className={cn(
+                  'mt-0.5 rounded-full px-2 py-0.5 text-2xs font-bold',
+                  isActive ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                )}
+              >
+                {counts[tab.key]}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* ۱. تب منتظر ثبت نظر */}
-      {activeTab === 'pending' && (
-        <div className="w-full flex flex-col gap-5 animate-in fade-in duration-200">
+      {activeTab === 'pending' ? (
+        <div className="flex w-full flex-col gap-5">
           {isPendingLoading ? (
-            <PageLoading message="در حال دریافت کالاهای منتظر نظر..." />
+            <PageLoading label="در حال بارگذاری کالاها..." />
           ) : pendingItems.length > 0 ? (
-            <div className="flex flex-col gap-4 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="flex w-full flex-col gap-4">
+              <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
                 {pendingItems.map((item: any) => (
-                  <Card key={item.productId} className="w-full border rounded-xl p-5 bg-background shadow-sm hover:border-primary/25 transition-all flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                      <div className="w-16 h-16 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden p-0.5">
-                        <img src={getFullUrl(item.productImage)} className="w-full h-full object-contain" alt="" />
+                  <Card
+                    key={item.productId}
+                    className="flex w-full flex-col items-stretch justify-between gap-4 p-5 transition-colors hover:border-primary/40 sm:flex-row sm:items-center"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-3.5">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-0.5">
+                        <img src={getFullUrl(item.productImage)} className="h-full w-full object-contain" alt="" />
                       </div>
-                      <div className="flex-1 min-w-0 text-right flex flex-col gap-1">
-                        <span className="text-xs md:text-sm font-bold text-foreground truncate block">{item.productTitle}</span>
-                        <span className="text-[10px] text-muted-foreground block">خریداری شده از فروشگاه {item.shopTitle}</span>
-                        <span className="text-[9px] text-muted-foreground/80 block mt-1">سفارش در: {item.lastSaleDateFormatted}</span>
+                      <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className="block truncate text-sm font-bold text-foreground">{item.productTitle}</span>
+                        <span className="block text-2xs text-muted-foreground">
+                          خریداری شده از فروشگاه {item.shopTitle}
+                        </span>
+                        <span className="mt-1 block text-2xs text-muted-foreground/80">
+                          تاریخ خرید: {item.lastSaleDateFormatted}
+                        </span>
                       </div>
                     </div>
 
@@ -244,9 +207,9 @@ export function CommentsDashboard() {
                       variant="primary"
                       size="sm"
                       onClick={() => handleOpenWriteComment(item)}
-                      className="rounded-xl font-iran-yekan font-bold text-[10px] h-9 px-4 shrink-0 shadow-sm"
+                      className="h-9 shrink-0 px-4 text-2xs font-bold shadow-xs"
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus aria-hidden="true" className="h-4 w-4" />
                       <span>ثبت نظر و امتیاز</span>
                     </Button>
                   </Card>
@@ -260,72 +223,76 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
-              <Clock className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">کالای در انتظار نظری یافت نشد.</span>
+            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
+              <Clock aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
+              <span className="text-xs font-bold text-muted-foreground">کالایی در انتظار نظر شما وجود ندارد.</span>
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
-      {/* ۲. تب نظرات کالاها */}
-      {activeTab === 'comments' && (
-        <div className="w-full flex flex-col gap-5 animate-in fade-in duration-200">
+      {activeTab === 'comments' ? (
+        <div className="flex w-full flex-col gap-5">
           {isCommentsLoading ? (
-            <PageLoading message="در حال دریافت نظرات شما..." />
+            <PageLoading label="در حال بارگذاری نظرات..." />
           ) : commentItems.length > 0 ? (
-            <div className="flex flex-col gap-4 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="flex w-full flex-col gap-4">
+              <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
                 {commentItems.map((comment: any) => (
-                  <Card key={comment.id} className="w-full border rounded-xl p-5 bg-background shadow-sm hover:border-primary/25 transition-all flex flex-col justify-between gap-4">
-                    <div className="flex items-center gap-3.5 border-b pb-3 w-full">
-                      <div className="w-10 h-10 shrink-0 rounded-lg border bg-muted/10 flex items-center justify-center overflow-hidden p-0.5">
-                        <img src={getFullUrl(comment.productImage)} className="w-full h-full object-contain" alt="" />
+                  <Card key={comment.id} className="flex w-full flex-col justify-between gap-4 p-5">
+                    <div className="flex w-full items-center gap-3.5 border-b border-border pb-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-0.5">
+                        <img src={getFullUrl(comment.productImage)} className="h-full w-full object-contain" alt="" />
                       </div>
-                      <div className="flex-1 min-w-0 text-right">
-                        <span className="text-xs font-bold text-foreground truncate block">{comment.productTitle}</span>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span className={cn(
-                            "font-bold text-[9px] px-2 py-0.5 rounded-full",
-                            comment.isConfirmed ? "bg-success-50 text-success-600 dark:bg-success-950/20" : "bg-warning-50 text-warning-600 dark:bg-warning-950/20"
-                          )}>
-                            {comment.isConfirmed ? "تایید شده" : "در انتظار تایید"}
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-bold text-foreground">{comment.productTitle}</span>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'rounded-full px-2 py-0.5 text-2xs font-bold',
+                              comment.isConfirmed ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                            )}
+                          >
+                            {comment.isConfirmed ? 'تایید شده' : 'در حال بررسی'}
                           </span>
-                          <span className="text-[10px] text-muted-foreground/80">{comment.createDateFormatted}</span>
+                          <span className="text-2xs text-muted-foreground/80">{comment.createDateFormatted}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-0.5">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star 
-                            key={i} 
+                          <Star
+                            key={i}
+                            aria-hidden="true"
                             className={cn(
-                              "h-3.5 w-3.5 shrink-0", 
-                              i < comment.rate ? "fill-yellow-400 text-yellow-400" : "text-zinc-200 dark:text-zinc-800"
-                            )} 
+                              'h-3.5 w-3.5 shrink-0',
+                              i < comment.rate ? 'fill-warning text-warning' : 'text-border'
+                            )}
                           />
                         ))}
                       </div>
-                      <p className="text-xs md:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-iran-yekan break-words mt-1">{comment.comment}</p>
+                      <p className="mt-1 break-words text-sm leading-relaxed text-foreground">{comment.comment}</p>
                     </div>
 
-                    <div className="flex items-center justify-end gap-2.5 border-t border-dashed pt-3 mt-1.5">
+                    <div className="mt-1.5 flex items-center justify-end gap-2.5 border-t border-dashed border-border pt-3">
                       <button
+                        type="button"
                         onClick={() => handleOpenEditComment(comment)}
-                        className="p-1.5 border hover:border-primary/20 hover:bg-primary/5 text-muted-foreground hover:text-primary rounded-lg transition-all"
-                        aria-label="Edit"
+                        aria-label="ویرایش"
+                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-primary"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil aria-hidden="true" className="h-4 w-4" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleDeleteComment(comment.id)}
                         disabled={deleteComment.isPending}
-                        className="p-1.5 border hover:border-destructive/20 hover:bg-destructive/5 text-muted-foreground hover:text-destructive rounded-lg transition-all"
-                        aria-label="Delete"
+                        aria-label="حذف"
+                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 aria-hidden="true" className="h-4 w-4" />
                       </button>
                     </div>
                   </Card>
@@ -339,56 +306,60 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
-              <MessageSquare className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز هیچ نظری ثبت نکرده‌اید.</span>
+            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
+              <MessageSquare aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
+              <span className="text-xs font-bold text-muted-foreground">هنوز نظری ثبت نکرده‌اید.</span>
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
-      {/* ۳. تب پرسش‌های کالاها */}
-      {activeTab === 'inquiries' && (
-        <div className="w-full flex flex-col gap-5 animate-in fade-in duration-200">
+      {activeTab === 'inquiries' ? (
+        <div className="flex w-full flex-col gap-5">
           {isInquiriesLoading ? (
-            <PageLoading message="در حال دریافت پرسش‌های شما..." />
+            <PageLoading label="در حال بارگذاری پرسش‌ها..." />
           ) : inquiryItems.length > 0 ? (
-            <div className="flex flex-col gap-4 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="flex w-full flex-col gap-4">
+              <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
                 {inquiryItems.map((inquiry: any) => (
-                  <Card key={inquiry.id} className="w-full border rounded-xl p-5 bg-background shadow-sm hover:border-primary/25 transition-all flex flex-col justify-between gap-4">
-                    <div className="flex items-center gap-3.5 border-b pb-3 w-full">
-                      <div className="w-10 h-10 shrink-0 rounded-lg border bg-muted/10 flex items-center justify-center overflow-hidden p-0.5">
-                        <img src={getFullUrl(inquiry.productImage)} className="w-full h-full object-contain" alt="" />
+                  <Card key={inquiry.id} className="flex w-full flex-col justify-between gap-4 p-5">
+                    <div className="flex w-full items-center gap-3.5 border-b border-border pb-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-0.5">
+                        <img src={getFullUrl(inquiry.productImage)} className="h-full w-full object-contain" alt="" />
                       </div>
-                      <div className="flex-1 min-w-0 text-right">
-                        <span className="text-xs font-bold text-foreground truncate block">{inquiry.productTitle}</span>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span className={cn(
-                            "font-bold text-[9px] px-2 py-0.5 rounded-full",
-                            inquiry.isConfirmed ? "bg-success-50 text-success-600 dark:bg-success-950/20" : "bg-warning-50 text-warning-600 dark:bg-warning-950/20"
-                          )}>
-                            {inquiry.isConfirmed ? "تایید شده" : "در انتظار تایید"}
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-bold text-foreground">{inquiry.productTitle}</span>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'rounded-full px-2 py-0.5 text-2xs font-bold',
+                              inquiry.isConfirmed ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                            )}
+                          >
+                            {inquiry.isConfirmed ? 'تایید شده' : 'در حال بررسی'}
                           </span>
-                          <span className="text-[10px] text-muted-foreground/80">{inquiry.createDateFormatted}</span>
+                          <span className="text-2xs text-muted-foreground/80">{inquiry.createDateFormatted}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right flex flex-col gap-1.5">
-                      <span className="text-[10px] font-bold text-primary">سوال شما:</span>
-                      <p className="text-xs md:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-iran-yekan break-words">{inquiry.comment}</p>
-                      <span className="text-[10px] text-muted-foreground font-bold mt-1.5">{inquiry.replyCount} پاسخ ثبت شده</span>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-2xs font-bold text-primary">متن پرسش:</span>
+                      <p className="break-words text-sm leading-relaxed text-foreground">{inquiry.comment}</p>
+                      <span className="mt-1.5 text-2xs font-bold text-muted-foreground">
+                        {inquiry.replyCount} پاسخ ثبت شده
+                      </span>
                     </div>
 
-                    <div className="flex items-center justify-end border-t border-dashed pt-3 mt-1.5">
+                    <div className="mt-1.5 flex items-center justify-end border-t border-dashed border-border pt-3">
                       <button
+                        type="button"
                         onClick={() => handleDeleteInquiry(inquiry.id)}
                         disabled={deleteInquiry.isPending}
-                        className="p-1.5 border hover:border-destructive/20 hover:bg-destructive/5 text-muted-foreground hover:text-destructive rounded-lg transition-all"
-                        aria-label="Delete"
+                        aria-label="حذف"
+                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 aria-hidden="true" className="h-4 w-4" />
                       </button>
                     </div>
                   </Card>
@@ -402,61 +373,60 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
-              <Search className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز هیچ پرسشی ثبت نکرده‌اید.</span>
+            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
+              <Search aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
+              <span className="text-xs font-bold text-muted-foreground">هنوز پرسشی ثبت نکرده‌اید.</span>
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
-      {/* ۴. تب نظرات ثبت شده در مقالات وبلاگ */}
-      {activeTab === 'blogComments' && (
-        <div className="w-full flex flex-col gap-5 animate-in fade-in duration-200">
+      {activeTab === 'blogComments' ? (
+        <div className="flex w-full flex-col gap-5">
           {isBlogCommentsLoading ? (
-            <PageLoading message="در حال دریافت نظرات مقالات شما..." />
+            <PageLoading label="در حال بارگذاری نظرات بلاگ..." />
           ) : blogCommentItems.length > 0 ? (
-            <div className="flex flex-col gap-4 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                {blogCommentItems.map((comment) => (
-                  <Card key={comment.id} className="w-full border rounded-xl p-5 bg-background shadow-sm hover:border-primary/25 transition-all flex flex-col justify-between gap-4">
-                    <div className="flex items-center gap-3.5 border-b pb-3 w-full">
-                      <div className="w-10 h-10 shrink-0 rounded-lg border bg-primary/5 flex items-center justify-center text-primary overflow-hidden p-0.5">
-                        <BookOpen className="h-5 w-5" />
+            <div className="flex w-full flex-col gap-4">
+              <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+                {blogCommentItems.map((comment: any) => (
+                  <Card key={comment.id} className="flex w-full flex-col justify-between gap-4 p-5">
+                    <div className="flex w-full items-center gap-3.5 border-b border-border pb-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-accent bg-accent p-0.5 text-primary">
+                        <BookOpen aria-hidden="true" className="h-5 w-5" />
                       </div>
-                      <div className="flex-1 min-w-0 text-right">
-                        <Link 
-                          href={comment.blogPostEnglishTitle ? `/blog/${encodeURIComponent(comment.blogPostEnglishTitle)}` : '/blog'} 
-                          className="text-xs font-bold text-foreground truncate block hover:text-primary transition-colors"
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={comment.blogPostEnglishTitle ? `/blog/${encodeURIComponent(comment.blogPostEnglishTitle)}` : '/blog'}
+                          className="block truncate text-xs font-bold text-foreground transition-colors hover:text-primary"
                         >
                           {comment.blogPostTitle}
                         </Link>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span className={cn(
-                            "font-bold text-[9px] px-2 py-0.5 rounded-full",
-                            comment.isConfirmed ? "bg-success-50 text-success-600 dark:bg-success-950/20" : "bg-warning-50 text-warning-600 dark:bg-warning-950/20"
-                          )}>
-                            {comment.isConfirmed ? "تایید شده" : "در انتظار تایید"}
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              'rounded-full px-2 py-0.5 text-2xs font-bold',
+                              comment.isConfirmed ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                            )}
+                          >
+                            {comment.isConfirmed ? 'تایید شده' : 'در حال بررسی'}
                           </span>
-                          <span className="text-[10px] text-muted-foreground/80">{comment.createDateFormatted}</span>
+                          <span className="text-2xs text-muted-foreground/80">{comment.createDateFormatted}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right flex flex-col gap-1.5">
-                      <span className="text-[10px] font-bold text-primary">دیدگاه شما:</span>
-                      <p className="text-xs md:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-iran-yekan break-words">
-                        {comment.comment}
-                      </p>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-2xs font-bold text-primary">متن دیدگاه:</span>
+                      <p className="break-words text-sm leading-relaxed text-foreground">{comment.comment}</p>
                     </div>
 
-                    <div className="flex items-center justify-end border-t border-dashed pt-3 mt-1.5">
-                      <Link 
+                    <div className="mt-1.5 flex items-center justify-end border-t border-dashed border-border pt-3">
+                      <Link
                         href={comment.blogPostEnglishTitle ? `/blog/${encodeURIComponent(comment.blogPostEnglishTitle)}` : '/blog'}
-                        className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                        className="flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                       >
                         <span>مشاهده مقاله</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </Card>
@@ -470,21 +440,20 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
-              <BookOpen className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز دیدگاهی در مقالات وبلاگ ثبت نکرده‌اید.</span>
+            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
+              <BookOpen aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
+              <span className="text-xs font-bold text-muted-foreground">هنوز دیدگاهی برای مقالات ثبت نکرده‌اید.</span>
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
-      <WriteCommentModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <WriteCommentModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         product={selectedProduct}
         editingComment={editingComment}
       />
-
     </div>
   );
 }

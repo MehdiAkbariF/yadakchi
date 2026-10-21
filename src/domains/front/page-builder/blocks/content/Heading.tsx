@@ -35,7 +35,7 @@ function HeadingComponent(props: HeadingProps) {
       className={cn(
         SIZE_MAP[level],
         ALIGN_MAP[align],
-        'leading-tight my-3 font-iran-yekan'
+        'leading-tight my-3 '
       )}
     >
       {text || 'عنوان خود را وارد کنید'}

@@ -3,7 +3,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { queryKeys } from '@/lib/react-query/query-keys';
-import { getBasketService, UserDiscountCodeItem } from '../services/basket.service';
+import { getBasketService, UserDiscountCodeItem, BasketShipmentMethodItem } from '../services/basket.service';
 import { AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
 
 const basketService = getBasketService();
@@ -110,23 +110,27 @@ export function useSetBasketLocationAndPrice() {
   return useTypedMutation(
     (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
     {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
   );
 }
 
-/*
-  هوک سازگار برای سایر کامپوننت‌ها (مانند AddressesList در پروفایل)
-  که بدون نیاز به تغییر در آن‌ها، آدرس را مستقیماً به سبد خرید وصل می‌کند
-*/
 export function useChangeBasketLocation() {
   const queryClient = useQueryClient();
   return useTypedMutation(
     (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
     {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
@@ -136,10 +140,13 @@ export function useChangeBasketLocation() {
 export function useSetBasketShipment() {
   const queryClient = useQueryClient();
   return useTypedMutation(
-    ({ locationId, methods }: { locationId: string; methods: Array<{ subBasketId: string; shipmentMethod: string }> }) =>
-      basketService.setBasketShipment(locationId, methods),
+    (methods: BasketShipmentMethodItem[]) => basketService.setBasketShipment(methods),
     {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
@@ -193,7 +200,11 @@ export function useCheckoutBasket() {
   return useTypedMutation<any, void>(
     () => basketService.checkoutBasket(),
     {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }

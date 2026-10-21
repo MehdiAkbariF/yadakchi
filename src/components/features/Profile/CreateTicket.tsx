@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -70,22 +70,22 @@ export function CreateTicket() {
   };
 
   return (
-    <div className="flex-1 flex flex-col gap-6 w-full text-right" dir="rtl">
+    <div className="flex-1 flex flex-col gap-6 w-full" dir="rtl">
       
       <div className="flex items-center gap-3 border-b pb-3 mb-1 shrink-0">
         <button 
           onClick={() => router.push('/profile/support')}
-          className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
+          className="p-1 -me-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
           aria-label="Back"
         >
           <ArrowRight className="h-5 w-5 text-foreground" />
         </button>
-        <span className="text-sm font-bold font-iran-yekan text-foreground">ثبت تیکت پشتیبانی جدید</span>
+        <span className="text-sm font-bold text-foreground">ثبت تیکت پشتیبانی جدید</span>
       </div>
 
-      <Card className="w-full border rounded-xl bg-background shadow-sm">
+      <Card className="w-full border rounded-xl bg-card shadow-sm">
         <CardBody className="p-5 md:p-6">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4.5 w-full text-right">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4.5 w-full">
             
             <div className="w-full">
               <Select
@@ -107,7 +107,7 @@ export function CreateTicket() {
                 placeholder="مثال: عدم واریز موجودی کیف پول"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="text-xs font-iran-yekan"
+                className="text-xs "
                 required
               />
             </div>
@@ -119,7 +119,7 @@ export function CreateTicket() {
                 type="number"
                 value={orderNumberStr}
                 onChange={(e) => setOrderNumberStr(e.target.value)}
-                className="text-xs font-iran-yekan"
+                className="text-xs "
               />
             </div>
 
@@ -129,15 +129,15 @@ export function CreateTicket() {
                 placeholder="جزئیات کامل مشکل خود را همراه با اطلاعات کافی بنویسید..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="h-32 text-xs font-iran-yekan"
+                className="h-32 text-xs "
                 required
               />
             </div>
 
             <div className="flex flex-col gap-2 w-full mt-1 border-t border-dashed pt-4">
-              <span className="text-xs font-bold text-foreground font-iran-yekan mb-1">فایل‌های ضمیمه (حداکثر ۵ فایل)</span>
+              <span className="text-xs font-bold text-foreground mb-1">فایل‌های ضمیمه (حداکثر ۵ فایل)</span>
               <div className="flex flex-wrap gap-2.5 items-center">
-                <label className="h-10 px-5 py-2 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold font-iran-yekan flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
+                <label className="h-10 px-5 py-2 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
                   <Paperclip className="h-4 w-4" />
                   <span>انتخاب فایل ضمیمه</span>
                   <input
@@ -152,10 +152,10 @@ export function CreateTicket() {
                 {attachments.map((file, idx) => (
                   <div 
                     key={idx}
-                    className="h-10 px-3 rounded-xl border bg-muted/20 text-[10px] font-bold font-iran-yekan text-foreground flex items-center gap-2 max-w-[150px] shrink-0"
+                    className="h-10 px-3 rounded-xl border bg-muted/20 text-[10px] font-bold text-foreground flex items-center gap-2 max-w-[150px] shrink-0"
                   >
                     <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="truncate flex-1 text-right">{file.name}</span>
+                    <span className="truncate flex-1">{file.name}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveFile(idx)}
@@ -173,7 +173,7 @@ export function CreateTicket() {
               variant="primary"
               fullWidth
               isLoading={createTicket.isPending}
-              className="rounded-xl font-iran-yekan font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 px-5 py-3"
+              className="rounded-xl font-bold text-xs h-11 mt-4 shadow-md shadow-primary/10 px-5 py-3"
             >
               ثبت و ارسال تیکت
             </Button>

@@ -20,9 +20,9 @@ const WIDTH_MAP: Record<ImageProps['width'], string> = {
 };
 
 const ALIGN_MAP: Record<ImageProps['align'], string> = {
-  right: 'mr-0 ml-auto',
+  right: 'me-0 ms-auto',
   center: 'mx-auto',
-  left: 'ml-0 mr-auto',
+  left: 'ms-0 me-auto',
 };
 
 function ImageComponent(props: ImageProps) {
@@ -31,7 +31,7 @@ function ImageComponent(props: ImageProps) {
   if (!src) {
     return (
       <div className="w-full my-4 p-8 border-2 border-dashed border-muted rounded-xl flex items-center justify-center">
-        <span className="text-xs text-muted-foreground font-iran-yekan">
+        <span className="text-xs text-muted-foreground ">
           تصویری انتخاب نشده است
         </span>
       </div>
@@ -47,7 +47,7 @@ function ImageComponent(props: ImageProps) {
           className={cn('w-full h-auto object-cover', rounded && 'rounded-xl')}
         />
         {caption && (
-          <figcaption className="text-xs text-muted-foreground text-center mt-2 font-iran-yekan">
+          <figcaption className="text-xs text-muted-foreground text-center mt-2 ">
             {caption}
           </figcaption>
         )}

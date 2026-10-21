@@ -3,34 +3,32 @@
 import { Store } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '@/components/composites/Card';
 import { BasketItemRow } from './BasketItemRow';
-
 import { getFullUrl } from '@/core/utils/formatters';
-interface BasketMerchantGroupProps {
+
+export interface BasketMerchantGroupProps {
   sub: any;
 }
 
 export function BasketMerchantGroup({ sub }: BasketMerchantGroupProps) {
   return (
-    <Card className="w-full overflow-hidden border rounded-xl shadow-sm bg-background">
-      <CardHeader className="border-b bg-muted/20 px-4 py-3.5 flex items-center justify-between">
+    <Card className="w-full overflow-hidden shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
         <div className="flex items-center gap-2">
-          <Store className="h-4.5 w-4.5 text-primary shrink-0" />
-          <span className="text-xs font-bold font-iran-yekan text-foreground">
-            ارسال از فروشگاه: {sub.shop.title}
-          </span>
+          <Store aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+          <span className="text-xs font-bold text-foreground">ارسال از فروشگاه: {sub.shop.title}</span>
         </div>
-        {sub.shop.logo && (
-          <div className="w-8 h-8 rounded-lg overflow-hidden border bg-background shrink-0">
+        {sub.shop.logo ? (
+          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-border bg-card">
             <img
               src={getFullUrl(sub.shop.logo)}
               alt={sub.shop.title}
-              className="w-full h-full object-contain"
+              className="h-full w-full object-contain"
             />
           </div>
-        )}
+        ) : null}
       </CardHeader>
 
-      <CardBody className="divide-y p-0">
+      <CardBody className="divide-y divide-border p-0">
         {sub.items.map((item: any) => (
           <BasketItemRow key={item.id} item={item} />
         ))}

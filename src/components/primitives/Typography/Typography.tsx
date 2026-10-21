@@ -1,125 +1,108 @@
-// src/components/primitives/Typography/Typography.tsx
-
-import { cva } from 'class-variance-authority';
+import * as React from 'react';
 import { cn } from '@/design-system/utils/cn';
+import {
+  typographyVariants,
+  type TypographyVariantProps,
+} from '@/design-system/variants/typography.variants';
 
-const typographyVariants = cva('', {
-  variants: {
-    variant: {
-      h1: 'font-iran-yekan scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl',
-      h2: 'font-iran-yekan scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0',
-      h3: 'font-iran-yekan scroll-m-20 text-2xl font-semibold tracking-tight',
-      h4: 'font-iran-yekan scroll-m-20 text-xl font-semibold tracking-tight',
-      h5: 'font-iran-yekan scroll-m-20 text-lg font-semibold tracking-tight',
-      h6: 'font-iran-yekan scroll-m-20 text-base font-semibold tracking-tight',
-      p: 'font-iran-yekan leading-7 [&:not(:first-child)]:mt-6',
-      lead: 'font-iran-yekan text-xl text-muted-foreground',
-      large: 'font-iran-yekan text-lg font-semibold',
-      small: 'font-iran-yekan text-sm font-medium leading-none',
-      muted: 'font-iran-yekan text-sm text-muted-foreground',
-      code: 'font-mono relative rounded bg-muted px-[0.3rem] py-[0.2rem] text-sm font-semibold',
-      blockquote: 'font-iran-yekan mt-6 border-l-2 pl-6 italic',
-    },
-    align: {
-      left: 'text-left',
-      center: 'text-center',
-      right: 'text-right',
-      justify: 'text-justify',
-    },
-    color: {
-      default: 'text-foreground',
-      muted: 'text-muted-foreground',
-      primary: 'text-primary',
-      destructive: 'text-destructive',
-      success: 'text-success-500',
-      warning: 'text-warning-500',
-    },
-    weight: {
-      thin: 'font-thin',
-      extralight: 'font-extralight',
-      light: 'font-light',
-      normal: 'font-normal',
-      medium: 'font-medium',
-      semibold: 'font-semibold',
-      bold: 'font-bold',
-      extrabold: 'font-extrabold',
-      black: 'font-black',
-    },
-  },
-  defaultVariants: {
-    variant: 'p',
-    align: 'left',
-    color: 'default',
-    weight: 'normal',
-  },
-});
+type VariantKey = NonNullable<TypographyVariantProps['variant']>;
+
+const defaultElement: Record<VariantKey, React.ElementType> = {
+  h1: 'h1',
+  h2: 'h2',
+  h3: 'h3',
+  h4: 'h4',
+  h5: 'h5',
+  h6: 'h6',
+  p: 'p',
+  lead: 'p',
+  large: 'div',
+  small: 'span',
+  muted: 'p',
+  code: 'code',
+  blockquote: 'blockquote',
+};
 
 export interface TypographyProps
-  extends Omit<React.HTMLAttributes<HTMLElement>, 'color'> {
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'lead' | 'large' | 'small' | 'muted' | 'code' | 'blockquote';
-  align?: 'left' | 'center' | 'right' | 'justify';
-  color?: 'default' | 'muted' | 'primary' | 'destructive' | 'success' | 'warning';
-  weight?: 'thin' | 'extralight' | 'light' | 'normal' | 'medium' | 'semibold' | 'bold' | 'extrabold' | 'black';
-  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span' | 'div';
+  extends Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
+    TypographyVariantProps {
+  as?: React.ElementType;
   children: React.ReactNode;
 }
 
-export function Typography({
-  className,
-  variant = 'p',
-  align = 'left',
-  color = 'default',
-  weight = 'normal',
-  as: Component = 'p',
-  children,
-  ...props
-}: TypographyProps) {
-  return (
-    <Component
-      className={cn(
-        typographyVariants({ variant, align, color, weight }),
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </Component>
-  );
-}
+export const Typography = React.forwardRef<HTMLElement, TypographyProps>(
+  (
+    {
+      className,
+      variant = 'p',
+      align,
+      color = 'default',
+      weight,
+      as,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const Component = (as ?? defaultElement[variant as VariantKey] ?? 'p') as React.ElementType;
+    return (
+      <Component
+        ref={ref}
+        className={cn(
+          typographyVariants({ variant, align, color, weight }),
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </Component>
+    );
+  }
+);
 
-// Shorthand components
-export function H1(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="h1" as="h1" />;
-}
+Typography.displayName = 'Typography';
 
-export function H2(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="h2" as="h2" />;
-}
+export const H1 = React.forwardRef<HTMLHeadingElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="h1" variant="h1" {...props} />
+);
+H1.displayName = 'H1';
 
-export function H3(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="h3" as="h3" />;
-}
+export const H2 = React.forwardRef<HTMLHeadingElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="h2" variant="h2" {...props} />
+);
+H2.displayName = 'H2';
 
-export function H4(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="h4" as="h4" />;
-}
+export const H3 = React.forwardRef<HTMLHeadingElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="h3" variant="h3" {...props} />
+);
+H3.displayName = 'H3';
 
-export function P(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="p" as="p" />;
-}
+export const H4 = React.forwardRef<HTMLHeadingElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="h4" variant="h4" {...props} />
+);
+H4.displayName = 'H4';
 
-export function Lead(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="lead" as="p" />;
-}
+export const P = React.forwardRef<HTMLParagraphElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="p" variant="p" {...props} />
+);
+P.displayName = 'P';
 
-export function Large(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="large" as="div" />;
-}
+export const Lead = React.forwardRef<HTMLParagraphElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="p" variant="lead" {...props} />
+);
+Lead.displayName = 'Lead';
 
-export function Small(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="small" as="span" />;
-}
+export const Large = React.forwardRef<HTMLDivElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="div" variant="large" {...props} />
+);
+Large.displayName = 'Large';
 
-export function Muted(props: Omit<TypographyProps, 'variant'>) {
-  return <Typography {...props} variant="muted" as="p" />;
-}
+export const Small = React.forwardRef<HTMLSpanElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="span" variant="small" {...props} />
+);
+Small.displayName = 'Small';
+
+export const Muted = React.forwardRef<HTMLParagraphElement, Omit<TypographyProps, 'variant' | 'as'>>(
+  (props, ref) => <Typography ref={ref} as="p" variant="muted" {...props} />
+);
+Muted.displayName = 'Muted';

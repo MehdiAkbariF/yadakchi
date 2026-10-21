@@ -1,7 +1,6 @@
-// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\Header.tsx
-'use client';
+﻿'use client';
 
-import { useEffect } from 'react';
+import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
@@ -18,36 +17,39 @@ import { CitySelector } from './components/CitySelector/CitySelector';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useAppStore } from '@/shared/store/useAppStore';
 
-interface HeaderProps {
+export interface HeaderProps {
   className?: string;
 }
 
 export function Header({ className }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  useAuth(); 
+  useAuth();
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
   const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
   const { scrollY } = useScroll();
 
-  useEffect(() => {
+  React.useEffect(() => {
     setIsHeaderMinimized(false);
   }, [pathname, setIsHeaderMinimized]);
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    const prev = scrollY.getPrevious() || 0;
-    let nextState = false;
+  // باز شدن فوری با کمترین اسکرول به سمت بالا در هر کجای صفحه
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const prev = scrollY.getPrevious() ?? 0;
+    const diff = latest - prev;
 
-    if (latest < 120) {
-      nextState = false;
-    } else if (latest > prev) {
-      nextState = true;
-    } else {
-      nextState = false;
+    if (latest < 40) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+      return;
     }
 
-    if (nextState !== isHeaderMinimized) {
-      setIsHeaderMinimized(nextState);
+    // با کوچکترین حرکت به بالا (بیش از ۸ پیکسل) سریعاً هدر باز می‌شود
+    if (diff < -8) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+    } 
+    // با اسکرول به پایین جمع می‌شود
+    else if (diff > 10 && latest > 80) {
+      if (!isHeaderMinimized) setIsHeaderMinimized(true);
     }
   });
 
@@ -58,57 +60,57 @@ export function Header({ className }: HeaderProps) {
   };
 
   return (
-    <header className={cn('lg:sticky lg:top-0 z-50 w-full bg-background border-b lg:bg-transparent lg:border-b-0 transition-colors duration-300', className)}>
-      <div className="hidden lg:block h-[116px] w-full pointer-events-none relative">
-        <motion.div 
-          className="w-full bg-background border-b pointer-events-auto flex flex-col shadow-xs"
+    <header className={cn('z-40 w-full select-none', className)}>
+      {/* هدر نسخه دسکتاپ */}
+      <div className="pointer-events-none relative hidden h-28 w-full lg:block">
+        <motion.div
+          className="pointer-events-auto fixed inset-x-0 top-0 z-40 flex w-full flex-col border-b border-border/60 bg-card/95 shadow-xs backdrop-blur-md"
           initial={false}
-          animate={isHeaderMinimized ? "collapsed" : "expanded"}
+          animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
           variants={{
-            expanded: { height: '116px', transition: { duration: 0.18, ease: 'easeInOut' } },
-            collapsed: { height: '68px', transition: { duration: 0.18, ease: 'easeInOut' } }
+            expanded: { height: '112px', transition: { duration: 0.2, ease: 'easeInOut' } },
+            collapsed: { height: '68px', transition: { duration: 0.2, ease: 'easeInOut' } },
           }}
         >
-          <div className="w-full px-4 lg:px-8 py-3 h-[68px] flex items-center">
-            <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto gap-4">
-              {/* ۱. لوگو */}
-              <Logo className="pt-0 shrink-0" />
-              
-              {/* ۲. باکس سرچ عریض‌تر شده (طبق ایشو YF-25) */}
-              <div className="flex-1 max-w-3xl xl:max-w-4xl mx-2">
-                <SearchBar 
+          {/* ردیف اول دسکتاپ: لوگو، جستجو و اکشن‌ها */}
+          <div className="flex h-[68px] w-full items-center px-4 py-3 lg:px-8">
+            <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-4">
+              <Logo className="shrink-0 pt-0" />
+
+              <div className="mx-2 max-w-3xl flex-1 xl:max-w-4xl">
+                <SearchBar
                   placeholder="جستجوی هوشمند قطعات..."
                   onSearch={handleSearch}
                   isMobile={false}
                 />
               </div>
-              
-              {/* ۳. چیدمان دقیق طبق عکس (فروشنده شو -> احراز هویت -> سبد خرید -> تغییر تم) */}
-              <div className="flex items-center gap-3 shrink-0">
+
+              <div className="flex shrink-0 items-center gap-3">
                 <SellerButton />
                 <AuthButton />
                 <CartButton />
-                <div className="mr-1 pl-1 border-r border-border/60">
+                <div className="ms-1 border-s border-border/70 pe-1">
                   <ThemeToggle />
                 </div>
               </div>
             </div>
           </div>
 
+          {/* ردیف دوم دسکتاپ: منوی ناوبری و اطلاعات خودرو */}
           <motion.div
             initial={false}
-            animate={isHeaderMinimized ? "collapsed" : "expanded"}
+            animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
             variants={{
-              expanded: { height: '48px', opacity: 1, transition: { duration: 0.18, ease: 'easeInOut' } },
-              collapsed: { height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeInOut' } }
+              expanded: { height: '44px', opacity: 1, transition: { duration: 0.2, ease: 'easeInOut' } },
+              collapsed: { height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeInOut' } },
             }}
             className={cn(
-              "w-full border-t bg-muted/30",
-              isHeaderMinimized ? "overflow-hidden pointer-events-none" : "overflow-visible"
+              'w-full border-t border-border/50 bg-secondary/30',
+              isHeaderMinimized ? 'pointer-events-none overflow-hidden' : 'overflow-visible'
             )}
           >
-            <div className="max-w-screen-2xl mx-auto px-4 lg:px-8">
-              <div className="flex items-center justify-between h-12">
+            <div className="mx-auto max-w-screen-2xl px-4 lg:px-8">
+              <div className="flex h-11 items-center justify-between">
                 <DesktopNavigation />
                 <div className="flex items-center gap-4">
                   <MyCarButton />
@@ -120,9 +122,10 @@ export function Header({ className }: HeaderProps) {
         </motion.div>
       </div>
 
-      <div className="lg:hidden h-[166px] w-full" />
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-2 w-full shadow-sm">
-        <div className="max-w-screen-2xl mx-auto">
+      {/* هدر نسخه موبایل */}
+      <div className="h-36 w-full lg:hidden" />
+      <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
+        <div className="mx-auto max-w-screen-2xl">
           <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
         </div>
       </div>

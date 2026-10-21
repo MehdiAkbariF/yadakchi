@@ -84,7 +84,7 @@ export default function NotFoundPage() {
   const isLoading = isVisitedLoading || (displayProducts.length === 0 && isNominatedLoading);
 
   return (
-    <div className="w-full min-h-[85vh] flex flex-col items-center justify-start py-8 md:py-12 px-4 select-none font-iran-yekan text-right" dir="rtl">
+    <div className="w-full min-h-[85vh] flex flex-col items-center justify-start py-8 md:py-12 px-4 select-none" dir="rtl">
       
       {/* ۱. سکشن انیمیشن لوتی ارسالی و متون تیکت */}
       <div className="w-full max-w-2xl flex flex-col items-center text-center mx-auto">
@@ -119,7 +119,7 @@ export default function NotFoundPage() {
           <Link href="/search">
             <Button
               variant="outline"
-              className="rounded-xl font-bold text-xs sm:text-sm h-11 px-6 flex items-center gap-2 border-zinc-200 dark:border-zinc-800 hover:border-primary/40"
+              className="rounded-xl font-bold text-xs sm:text-sm h-11 px-6 flex items-center gap-2 border-border hover:border-primary/40"
             >
               <Search className="h-4 w-4 text-primary" />
               <span>جستجوی قطعات</span>

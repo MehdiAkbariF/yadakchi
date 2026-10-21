@@ -1,78 +1,69 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { Eye, ArrowRight, ShoppingBag } from 'lucide-react';
 import { useGetRecentlyViewedProducts } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Button } from '@/components/primitives/Button/Button';
-import { Eye, ArrowRight, ShoppingBag } from 'lucide-react';
 
 export function RecentlyViewedList() {
   const router = useRouter();
-  const { data: products = [], isLoading, isError, error } = useGetRecentlyViewedProducts();
-
-  console.log('[RecentlyViewed Debug] Products:', products);
-  console.log('[RecentlyViewed Debug] Loading:', isLoading);
-
-  if (isError) {
-    console.error('[RecentlyViewed Debug] Query Error:', error);
-  }
+  const { data: products = [], isLoading } = useGetRecentlyViewedProducts();
 
   if (isLoading) {
-    return <PageLoading message="در حال دریافت آخرین کالاهای بازدید شده..." />;
+    return <PageLoading label="در حال دریافت آخرین کالاهای بازدید شده..." />;
   }
 
   return (
-    <div className="flex-1 flex flex-col gap-6 w-full text-right" dir="rtl">
-      
-      <div className="lg:hidden flex items-center justify-between border-b pb-3 mb-1 shrink-0">
+    <div className="flex w-full flex-1 flex-col gap-6">
+      <div className="mb-1 flex items-center justify-between border-b border-border pb-3 lg:hidden">
         <div className="flex items-center gap-3">
-          <button 
+          <button
+            type="button"
             onClick={() => router.push('/profile')}
-            className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
-            aria-label="Back"
+            aria-label="بازگشت"
+            className="-me-1 flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
           >
-            <ArrowRight className="h-5 w-5 text-foreground" />
+            <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
           </button>
-          <span className="text-sm font-bold font-iran-yekan text-foreground">کالاهای دیده شده اخیر</span>
+          <span className="text-sm font-bold text-foreground">کالاهای دیده شده اخیر</span>
         </div>
       </div>
 
-      <div className="w-full flex flex-col gap-2 border-b pb-5">
+      <div className="flex w-full flex-col gap-2 border-b border-border pb-5">
         <div className="flex items-center gap-2">
-          <Eye className="h-5 w-5 text-primary shrink-0" />
-          <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">کالاهای دیده شده اخیر</span>
+          <Eye aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+          <span className="text-xl font-bold text-foreground">کالاهای دیده شده اخیر</span>
         </div>
-        <p className="text-xs text-muted-foreground font-iran-yekan">
+        <p className="text-xs text-muted-foreground">
           تاریخچه محصولاتی که اخیراً در فروشگاه یدک‌چی از آن‌ها بازدید کرده‌اید
         </p>
       </div>
 
       {products.length > 0 ? (
-        <div className="w-full flex flex-col gap-5 animate-in fade-in duration-200">
-          {/* گرید فوق حرفه‌ای با قابلیت لود ۵ کارت در دسکتاپ‌های عریض و روزآمد */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 w-full">
-            {products.map((product) => (
-              <ProductSearchCard key={product.id} product={product} />
-            ))}
-          </div>
+        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          {products.map((product: any) => (
+            <ProductSearchCard key={product.id} product={product} />
+          ))}
         </div>
       ) : (
-        <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3.5">
-          <Eye className="h-12 w-12 text-muted-foreground/60 stroke-[1.5] animate-pulse" />
-          <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هنوز تاریخچه بازدیدی برای حساب شما ثبت نشده است.</span>
+        <div className="flex w-full flex-col items-center justify-center gap-3.5 rounded-lg border border-dashed border-border bg-card py-16 text-center">
+          <Eye aria-hidden="true" className="h-12 w-12 text-muted-foreground/60" />
+          <span className="text-xs font-bold text-muted-foreground">
+            هنوز تاریخچه بازدیدی برای حساب شما ثبت نشده است.
+          </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.push('/search')}
-            className="rounded-xl mt-2 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1.5"
+            className="mt-2 flex h-10 items-center justify-center gap-1.5 px-6 py-2 text-xs font-bold"
           >
-            <ShoppingBag className="h-4 w-4" />
+            <ShoppingBag aria-hidden="true" className="h-4 w-4" />
             <span>مشاهده و خرید کالاها</span>
           </Button>
         </div>
       )}
-
     </div>
   );
 }

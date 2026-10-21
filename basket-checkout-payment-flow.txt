@@ -1,0 +1,2378 @@
+﻿================================================================================
+FILE PATH: src\domains\front\basket\types\domain.types.ts
+================================================================================
+// src/domains/front/basket/types/domain.types.ts
+
+export interface Basket {
+  id: string;
+  userId: string;
+  items: BasketItem[];
+  total: BasketTotal;
+  summary: BasketSummary;
+  metadata: BasketMetadata;
+}
+
+export interface BasketItem {
+  shopProductId: string;
+  product: BasketProduct;
+  shop: BasketShop;
+  quantity: number;
+  price: BasketPrice;
+  inventory: BasketInventory;
+  type: 'NEW' | 'STOCK' | 'TAKEOFF';
+}
+
+export interface BasketProduct {
+  id: string;
+  name: string;
+  code: number;
+  image: string;
+}
+
+export interface BasketShop {
+  id: string;
+  name: string;
+}
+
+export interface BasketPrice {
+  unitPrice: number;
+  discountPrice?: number;
+  hasDiscount: boolean;
+  discountPercent?: number;
+  totalPrice: number;
+  totalDiscount: number;
+  finalPrice: number;
+}
+
+export interface BasketInventory {
+  maxQuantity: number;
+  isInStock: boolean;
+}
+
+export interface BasketTotal {
+  totalPrice: number;
+  totalDiscount: number;
+  finalPrice: number;
+}
+
+export interface BasketSummary {
+  itemCount: number;
+  shopCount: number;
+  uniqueProductCount: number;
+}
+
+export interface BasketMetadata {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+
+================================================================================
+FILE PATH: src\domains\front\basket\types\dto.types.ts
+================================================================================
+// src/domains/front/basket/types/dto.types.ts
+
+export interface BasketItemApiDto {
+  shopProductId: string;
+  productId: string;
+  productName: string;
+  productCode: number;
+  productImage: string;
+  shopId: string;
+  shopName: string;
+  quantity: number;
+  price: number;
+  discountPrice?: number;
+  hasDiscount: boolean;
+  discountPercent?: number;
+  maxQuantity: number;
+  isInStock: boolean;
+  type: 'New' | 'Stock' | 'TakeOff';
+}
+
+export interface BasketApiDto {
+  id: string;
+  userId: string;
+  items: BasketItemApiDto[];
+  totalPrice: number;
+  totalDiscount: number;
+  finalPrice: number;
+  itemCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddToBasketRequestDto {
+  shopProductId: string;
+  quantity: number;
+}
+
+export interface DeleteFromBasketRequestDto {
+  shopProductId: string;
+  quantity: number;
+}
+
+
+================================================================================
+FILE PATH: src\domains\front\basket\types\view.types.ts
+================================================================================
+// src/domains/front/basket/types/view.types.ts
+
+export interface BasketViewModel {
+  id: string;
+  items: BasketItemViewModel[];
+  total: {
+    totalPrice: string;
+    totalDiscount: string;
+    finalPrice: string;
+    totalPriceRaw: number;
+    totalDiscountRaw: number;
+    finalPriceRaw: number;
+  };
+  summary: {
+    itemCount: number;
+    shopCount: number;
+    uniqueProductCount: number;
+  };
+  isEmpty: boolean;
+}
+
+export interface BasketItemViewModel {
+  shopProductId: string;
+  product: {
+    id: string;
+    name: string;
+    code: number;
+    image: string;
+  };
+  shop: {
+    id: string;
+    name: string;
+  };
+  quantity: number;
+  price: {
+    unitPrice: string;
+    discountPrice: string | null;
+    hasDiscount: boolean;
+    discountPercent: number | null;
+    totalPrice: string;
+    totalDiscount: string;
+    finalPrice: string;
+    unitPriceRaw: number;
+    discountPriceRaw: number | null;
+    totalPriceRaw: number;
+    totalDiscountRaw: number;
+    finalPriceRaw: number;
+  };
+  inventory: {
+    maxQuantity: number;
+    isInStock: boolean;
+    statusText: string;
+  };
+  type: {
+    value: 'NEW' | 'STOCK' | 'TAKEOFF';
+    label: string;
+    badge: 'success' | 'info' | 'warning';
+  };
+  canIncrease: boolean;
+  canDecrease: boolean;
+}
+
+export interface AddToBasketRequest {
+  shopProductId: string;
+  quantity: number;
+}
+
+export interface DeleteFromBasketRequest {
+  shopProductId: string;
+  quantity: number;
+}
+
+
+================================================================================
+FILE PATH: src\domains\front\basket\endpoints\basket.endpoints.ts
+================================================================================
+// src/domains/front/basket/endpoints/basket.endpoints.ts
+
+export const BASKET_ENDPOINTS = {
+  GET_BASKET: '/api/Front/GetFrontBasket',
+  ADD_TO_BASKET: '/api/Front/AddToBasket',
+  DELETE_FROM_BASKET: '/api/Front/DeleteFromBasket',
+  GET_LOCATIONS: '/api/UserPanel/UserLocations',
+  POST_LOCATION: '/api/UserPanel/UserLocation',
+  PUT_LOCATION: '/api/UserPanel/UserLocation',
+  DELETE_LOCATION: '/api/UserPanel/UserLocation',
+  CHECKOUT_BASKET: '/api/UserPanel/CheckoutBasket',
+  BASKET_SHIPMENT_PRICE: '/api/UserPanel/BasketShipmentPrice',
+  BASKET_SHIPMENT: '/api/UserPanel/BasketShipment',
+  BASKET_PAYMENT: '/api/UserPanel/BasketPayment',
+  APPLY_DISCOUNT: '/api/UserPanel/ApplyDiscountCodeToBasket',
+  APPLY_REFERRAL: '/api/UserPanel/ApplyReferalCodeToBasket',
+  GET_DISCOUNT_CODES: '/api/UserPanel/GetDiscountCodes',
+  CALLBACK_URL: '/api/UserPanel/CallBackUrl',
+} as const;
+
+
+================================================================================
+FILE PATH: src\domains\front\basket\services\basket.service.ts
+================================================================================
+// src/domains/front/basket/services/basket.service.ts
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { BASKET_ENDPOINTS } from '../endpoints/basket.endpoints';
+import { BasketMapper } from '../mappers/basket.mapper';
+import { BasketApiDto } from '../types/dto.types';
+import { BasketViewModel, AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
+
+export interface UserDiscountCodeItem {
+  id: string;
+  code: string;
+  minSum: number;
+  amount: number;
+  startDate: string;
+  expiretDate: string;
+  count: number;
+}
+
+export class BasketService {
+  private readonly httpClient = getHttpClient();
+
+  async getBasket(): Promise<BasketViewModel> {
+    try {
+      logger.debug('[BasketService] Getting basket');
+      const response = await this.httpClient.get<BasketApiDto>(
+        BASKET_ENDPOINTS.GET_BASKET
+      );
+      const domain = BasketMapper.toDomain(response.data);
+      return BasketMapper.toView(domain);
+    } catch (error) {
+      logger.error('[BasketService] Get basket failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async addToBasket(request: AddToBasketRequest): Promise<BasketViewModel> {
+    try {
+      logger.debug('[BasketService] Adding to basket:', request);
+      const dto = BasketMapper.toAddRequest(request);
+      const response = await this.httpClient.post<BasketApiDto>(
+        BASKET_ENDPOINTS.ADD_TO_BASKET,
+        dto
+      );
+      const domain = BasketMapper.toDomain(response.data);
+      return BasketMapper.toView(domain);
+    } catch (error) {
+      logger.error('[BasketService] Add to basket failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async deleteFromBasket(request: DeleteFromBasketRequest): Promise<BasketViewModel> {
+    try {
+      logger.debug('[BasketService] Deleting from basket:', request);
+      const dto = BasketMapper.toDeleteRequest(request);
+      const response = await this.httpClient.delete<BasketApiDto>(
+        BASKET_ENDPOINTS.DELETE_FROM_BASKET,
+        dto
+      );
+      const domain = BasketMapper.toDomain(response.data);
+      return BasketMapper.toView(domain);
+    } catch (error) {
+      logger.error('[BasketService] Delete from basket failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async clearBasket(): Promise<BasketViewModel> {
+    try {
+      logger.debug('[BasketService] Clearing basket');
+      const currentBasket = await this.getBasket();
+      const itemsToDelete: any[] = [];
+      if ((currentBasket as any).subBaskets) {
+        (currentBasket as any).subBaskets.forEach((sb: any) => {
+          if (sb.items) {
+            itemsToDelete.push(...sb.items);
+          }
+        });
+      }
+      for (const item of itemsToDelete) {
+        await this.deleteFromBasket({
+          shopProductId: item.shopProductId,
+          quantity: item.quantity,
+        });
+      }
+      return await this.getBasket();
+    } catch (error) {
+      logger.error('[BasketService] Clear basket failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async updateQuantity(shopProductId: string, quantity: number): Promise<BasketViewModel> {
+    try {
+      logger.debug('[BasketService] Updating quantity:', { shopProductId, quantity });
+      const basket = await this.getBasket();
+      let item: any = null;
+      if ((basket as any).subBaskets) {
+        for (const sub of (basket as any).subBaskets) {
+          if (sub.items) {
+            const found = sub.items.find((i: any) => i.shopProductId === shopProductId);
+            if (found) {
+              item = found;
+              break;
+            }
+          }
+        }
+      }
+      if (!item) {
+        throw new Error('Item not found in basket');
+      }
+      if (quantity > item.quantity) {
+        return await this.addToBasket({
+          shopProductId,
+          quantity: quantity - item.quantity,
+        });
+      } else if (quantity < item.quantity) {
+        return await this.deleteFromBasket({
+          shopProductId,
+          quantity: item.quantity - quantity,
+        });
+      }
+      return basket;
+    } catch (error) {
+      logger.error('[BasketService] Update quantity failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getUserLocations(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(BASKET_ENDPOINTS.GET_LOCATIONS);
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async createUserLocation(formData: FormData): Promise<void> {
+    try {
+      await this.httpClient.post(BASKET_ENDPOINTS.POST_LOCATION, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async updateUserLocation(formData: FormData): Promise<void> {
+    try {
+      await this.httpClient.put(BASKET_ENDPOINTS.PUT_LOCATION, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async deleteUserLocation(id: string): Promise<void> {
+    try {
+      await this.httpClient.delete(BASKET_ENDPOINTS.DELETE_LOCATION, { id });
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getCheckoutBasket(): Promise<any> {
+    try {
+      const response = await this.httpClient.post(BASKET_ENDPOINTS.CHECKOUT_BASKET);
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async setBasketLocationAndPrice(locationId: string): Promise<any> {
+    try {
+      const response = await this.httpClient.post(
+        BASKET_ENDPOINTS.BASKET_SHIPMENT_PRICE,
+        { locationId }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async setBasketShipment(
+    locationId: string, 
+    methods: Array<{ subBasketId: string; shipmentMethod: string }>
+  ): Promise<any> {
+    try {
+      const response = await this.httpClient.post(
+        BASKET_ENDPOINTS.BASKET_SHIPMENT, 
+        { locationId, methods }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async initiatePayment(isLegalReceipt: boolean = false): Promise<{ link?: string; paymentUrl?: string }> {
+    try {
+      const response = await this.httpClient.post<{ link?: string; paymentUrl?: string }>(
+        BASKET_ENDPOINTS.BASKET_PAYMENT,
+        { isLegalReceipt: Boolean(isLegalReceipt) }
+      );
+      return response.data;
+    } catch (error: any) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async applyDiscountCode(code: string): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('DiscountCode', code);
+      const response = await this.httpClient.put(
+        BASKET_ENDPOINTS.APPLY_DISCOUNT,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async applyReferralCode(code: string): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('ReferralCode', code);
+      const response = await this.httpClient.post(
+        BASKET_ENDPOINTS.APPLY_REFERRAL,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getUserDiscountCodes(): Promise<UserDiscountCodeItem[]> {
+    try {
+      const response = await this.httpClient.get<UserDiscountCodeItem[]>(
+        BASKET_ENDPOINTS.GET_DISCOUNT_CODES
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async checkoutBasket(): Promise<any> {
+    return this.getCheckoutBasket();
+  }
+}
+
+let basketServiceInstance: BasketService | null = null;
+
+export function getBasketService(): BasketService {
+  if (!basketServiceInstance) {
+    basketServiceInstance = new BasketService();
+  }
+  return basketServiceInstance;
+}
+
+
+================================================================================
+FILE PATH: src\domains\front\basket\hooks\basket.hooks.ts
+================================================================================
+// src/domains/front/basket/hooks/basket.hooks.ts
+
+import { useQueryClient } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { getBasketService, UserDiscountCodeItem } from '../services/basket.service';
+import { AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
+
+const basketService = getBasketService();
+
+export function useGetBasket() {
+  return useTypedQuery(
+    queryKeys.front.basket.current,
+    () => basketService.getBasket(),
+    {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    }
+  );
+}
+
+export function useAddToBasket() {
+  const queryClient = useQueryClient();
+
+  return useTypedMutation(
+    (request: AddToBasketRequest) => basketService.addToBasket(request),
+    {
+      onSuccess: (data) => {
+        queryClient.setQueryData(queryKeys.front.basket.current, data);
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useDeleteFromBasket() {
+  const queryClient = useQueryClient();
+
+  return useTypedMutation(
+    (request: DeleteFromBasketRequest) => basketService.deleteFromBasket(request),
+    {
+      onSuccess: (data) => {
+        queryClient.setQueryData(queryKeys.front.basket.current, data);
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useGetUserLocations() {
+  return useTypedQuery(
+    ['user', 'locations'],
+    () => basketService.getUserLocations(),
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+export function useCreateUserLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (formData: FormData) => basketService.createUserLocation(formData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
+      },
+    }
+  );
+}
+
+export function useUpdateUserLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (formData: FormData) => basketService.updateUserLocation(formData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
+      },
+    }
+  );
+}
+
+export function useDeleteUserLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (id: string) => basketService.deleteUserLocation(id),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
+      },
+    }
+  );
+}
+
+export function useGetCheckoutBasket() {
+  return useTypedQuery(
+    ['front', 'basket', 'checkout'],
+    () => basketService.getCheckoutBasket(),
+    {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    }
+  );
+}
+
+export function useSetBasketLocationAndPrice() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+/*
+  هوک سازگار برای سایر کامپوننت‌ها (مانند AddressesList در پروفایل)
+  که بدون نیاز به تغییر در آن‌ها، آدرس را مستقیماً به سبد خرید وصل می‌کند
+*/
+export function useChangeBasketLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useSetBasketShipment() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ locationId, methods }: { locationId: string; methods: Array<{ subBasketId: string; shipmentMethod: string }> }) =>
+      basketService.setBasketShipment(locationId, methods),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useInitiatePayment() {
+  return useTypedMutation(
+    (isLegalReceipt: boolean) => basketService.initiatePayment(isLegalReceipt)
+  );
+}
+
+export function useApplyDiscountCode() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (code: string) => basketService.applyDiscountCode(code),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
+      },
+    }
+  );
+}
+
+export function useApplyReferralCode() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (code: string) => basketService.applyReferralCode(code),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
+      },
+    }
+  );
+}
+
+export function useGetUserDiscountCodes() {
+  return useTypedQuery<UserDiscountCodeItem[]>(
+    ['user', 'discount-codes'],
+    () => basketService.getUserDiscountCodes(),
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+export function useCheckoutBasket() {
+  const queryClient = useQueryClient();
+  return useTypedMutation<any, void>(
+    () => basketService.checkoutBasket(),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+
+================================================================================
+FILE PATH: src\domains\front\basket\mappers\basket.mapper.ts
+================================================================================
+import { 
+  AddToBasketRequestDto,
+  DeleteFromBasketRequestDto
+} from '../types/dto.types';
+
+import { 
+  AddToBasketRequest,
+  DeleteFromBasketRequest
+} from '../types/view.types';
+
+export class BasketMapper {
+  static toDomain(dto: any): any {
+    const subBaskets = (dto.subBaskets || []).map((sb: any) => ({
+      id: sb.id,
+      shop: {
+        title: sb.shop?.shopTitle || '',
+        logo: sb.shop?.logo || '',
+      },
+      items: (sb.subBasketItems || []).map((item: any) => {
+        const sp = item.shopProduct || {};
+        const prod = sp.product || {};
+        return {
+          id: item.id,
+          shopProductId: sp.id,
+          quantity: item.quantity,
+          originalPrice: item.originalPrice,
+          discountAmount: item.discountAmount,
+          finalUnitPrice: item.finalUnitPrice,
+          finalTotalPrice: item.finalTotalPrice,
+          warranty: sp.warrantySupport?.title || '',
+          maxQuantity: sp.maxQuantityPerOrder || sp.quantity || 10,
+          partNumber: sp.partNumber || '',
+          type: sp.type || 'New',
+          dayOfDelivery: sp.dayOfDelivery || 1,
+          isTipaxShipping: !!sp.isTipaxShipping,
+          isDirectShipping: !!sp.isDirectShipping,
+          product: {
+            code: prod.productCode,
+            title: prod.title,
+            image: prod.image,
+          }
+        };
+      })
+    }));
+
+    let totalPrice = 0;
+    let totalDiscount = 0;
+    let finalPrice = 0;
+
+    subBaskets.forEach((sb: any) => {
+      sb.items.forEach((item: any) => {
+        totalPrice += item.originalPrice * item.quantity;
+        totalDiscount += item.discountAmount * item.quantity;
+        finalPrice += item.finalTotalPrice;
+      });
+    });
+
+    return {
+      id: dto.id,
+      userLocationId: dto.userLocationId,
+      subBaskets,
+      total: {
+        totalPrice,
+        totalDiscount,
+        finalPrice,
+      },
+      summary: {
+        itemCount: subBaskets.reduce((acc: number, sb: any) => acc + sb.items.reduce((sum: number, item: any) => sum + item.quantity, 0), 0),
+      },
+      isEmpty: subBaskets.length === 0 || subBaskets.every((sb: any) => sb.items.length === 0),
+    };
+  }
+
+  static toView(domain: any): any {
+    const subBaskets = domain.subBaskets.map((sb: any) => ({
+      id: sb.id,
+      shop: {
+        title: sb.shop.title,
+        logo: sb.shop.logo,
+      },
+      items: sb.items.map((item: any) => ({
+        id: item.id,
+        shopProductId: item.shopProductId,
+        quantity: item.quantity,
+        warranty: item.warranty,
+        maxQuantity: item.maxQuantity,
+        partNumber: item.partNumber || '',
+        type: item.type === 'New' ? 'نو' : item.type === 'Stock' ? 'استوک' : 'زیرصفری',
+        dayOfDelivery: item.dayOfDelivery || 1,
+        isTipaxShipping: !!item.isTipaxShipping,
+        isDirectShipping: !!item.isDirectShipping,
+        canIncrease: item.quantity < item.maxQuantity,
+        canDecrease: item.quantity > 1,
+        product: {
+          code: item.product.code,
+          title: item.product.title,
+          image: item.product.image,
+        },
+        price: {
+          unitPrice: this.formatPrice(item.originalPrice),
+          discountPrice: item.discountAmount > 0 ? this.formatPrice(item.finalUnitPrice) : null,
+          hasDiscount: item.discountAmount > 0,
+          totalPrice: this.formatPrice(item.originalPrice * item.quantity),
+          finalTotalPrice: this.formatPrice(item.finalTotalPrice),
+          originalPriceRaw: item.originalPrice,
+          finalTotalPriceRaw: item.finalTotalPrice,
+        }
+      }))
+    }));
+
+    return {
+      id: domain.id,
+      userLocationId: domain.userLocationId,
+      subBaskets,
+      total: {
+        totalPrice: this.formatPrice(domain.total.totalPrice),
+        totalDiscount: this.formatPrice(domain.total.totalDiscount),
+        finalPrice: this.formatPrice(domain.total.finalPrice),
+        totalPriceRaw: domain.total.totalPrice,
+        totalDiscountRaw: domain.total.totalDiscount,
+        finalPriceRaw: domain.total.finalPrice,
+      },
+      summary: domain.summary,
+      isEmpty: domain.isEmpty,
+    };
+  }
+
+  static toAddRequest(request: AddToBasketRequest): AddToBasketRequestDto {
+    return {
+      shopProductId: request.shopProductId,
+      quantity: request.quantity,
+    };
+  }
+
+  static toDeleteRequest(request: DeleteFromBasketRequest): DeleteFromBasketRequestDto {
+    return {
+      shopProductId: request.shopProductId,
+      quantity: request.quantity,
+    };
+  }
+
+  private static formatPrice(price: number): string {
+    const toman = price / 10;
+    return new Intl.NumberFormat('fa-IR').format(toman) + ' تومان';
+  }
+}
+
+
+================================================================================
+FILE PATH: src\app\(public)\basket\page.tsx
+================================================================================
+
+import dynamic from 'next/dynamic';
+
+const BasketSummary = dynamic(
+  () => import('@/components/features/BasketSummary/BasketSummary'),
+  { ssr: false }
+);
+
+export default async function BasketPage() {
+  return (
+    
+      <BasketSummary />
+ 
+  );
+}
+
+
+================================================================================
+FILE PATH: src\app\(public)\checkout\page.tsx
+================================================================================
+
+import dynamic from 'next/dynamic';
+
+const CheckoutContent = dynamic(
+  () => import('@/components/features/Checkout/CheckoutContent'),
+  { ssr: false }
+);
+
+export default async function CheckoutPage() {
+  return (
+    
+      <CheckoutContent />
+    
+  );
+}
+
+
+================================================================================
+FILE PATH: src\app\(public)\basket-payment\page.tsx
+================================================================================
+
+import dynamic from 'next/dynamic';
+
+const BasketPaymentContent = dynamic(
+  () => import('@/components/features/BasketPayment/BasketPaymentContent'),
+  { ssr: false }
+);
+
+export default async function BasketPaymentPage() {
+  return (
+ 
+      <BasketPaymentContent />
+
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\BasketSummary\BasketSummary.tsx
+================================================================================
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ShoppingCart, ArrowLeft, Sparkles, Flame } from 'lucide-react';
+import { useGetBasket, useCheckoutBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { BasketItemRow } from './components/BasketItemRow';
+import { BasketInvoice } from './components/BasketInvoice';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { Button } from '@/components/primitives/Button';
+import { Typography } from '@/components/primitives/Typography';
+import { showToast } from '@/core/utils/toast';
+
+export function BasketSummary() {
+  const router = useRouter();
+  const { data: basketData, isLoading, isFetching } = useGetBasket();
+  const checkoutBasket = useCheckoutBasket();
+  const basket = basketData as any;
+
+  if (isLoading || (isFetching && !basket)) {
+    return <PageLoading label="در حال بارگذاری سبد خرید..." />;
+  }
+
+  if (!basket || basket.isEmpty) {
+    return (
+      <div className="flex w-full select-none flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card px-4 py-20 text-center">
+        <ShoppingCart aria-hidden="true" className="mb-4 h-16 w-16 text-muted-foreground/60" />
+        <Typography variant="h3" className="font-bold text-foreground">
+          سبد خرید شما خالی است
+        </Typography>
+        <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">
+          هیچ قطعه‌ای در سبد خرید شما وجود ندارد. می‌توانید برای جستجوی لوازم یدکی موردنیاز خود به صفحه قطعات مراجعه کنید.
+        </p>
+        <Link href="/search" prefetch={false} className="mt-4">
+          <Button variant="primary" className="h-10 px-6 text-xs font-bold">
+            شروع خرید قطعات
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const allItems = basket.subBaskets?.flatMap((sub: any) => sub.items) || [];
+
+  const handleContinue = async () => {
+    try {
+      await checkoutBasket.mutateAsync(undefined);
+      router.push('/checkout');
+    } catch (err: any) {
+      if (err?.status === 401 || err?.type === 'unauthorized') {
+        router.push(`/login?redirect=${encodeURIComponent('/basket')}`);
+        return;
+      }
+      showToast.error('خطا در فرآیند آماده‌سازی فاکتور خرید');
+    }
+  };
+
+  const leftPriceContent = (
+    <div className="flex flex-col">
+      <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ قابل پرداخت:</span>
+      <span className="text-sm font-bold text-foreground">{basket.total?.finalPrice}</span>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full select-none flex-col gap-8">
+      <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
+        <div className="flex w-full flex-1 flex-col">
+          <div className="mb-2 flex w-fit items-center justify-between border-b-2 border-primary pb-3">
+            <span className="flex items-center gap-2 text-sm font-bold text-primary md:text-base">
+              سبد خرید
+              <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
+                {allItems.length} کالا
+              </span>
+            </span>
+          </div>
+
+          <div className="w-full overflow-hidden rounded-lg border border-border bg-card shadow-xs">
+            {allItems.map((item: any) => (
+              <BasketItemRow key={item.id} item={item} />
+            ))}
+          </div>
+        </div>
+
+        <BasketInvoice basket={basket} />
+      </div>
+
+      <div className="mt-4 flex w-full flex-col gap-6">
+        <div className="w-full rounded-lg border border-border bg-card p-4 shadow-xs md:p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Sparkles aria-hidden="true" className="h-4 w-4 text-warning" />
+              خریداران این کالاها، کالاهای زیر را نیز خریده‌اند
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center gap-2 rounded-md border border-border p-3 text-center transition-colors hover:border-primary/40"
+              >
+                <div className="flex h-20 w-20 items-center justify-center rounded-md bg-muted p-1">
+                  <img src="/Ylogo.png" className="h-12 w-12 object-contain opacity-70" alt="" />
+                </div>
+                <span className="line-clamp-2 text-2xs font-bold leading-tight text-foreground">
+                  دیسک و صفحه کلاچ والئو اصل
+                </span>
+                <span className="mt-auto text-xs font-bold text-primary">۳,۴۵۰,۰۰۰ تومان</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full rounded-lg border border-border bg-card p-4 shadow-xs md:p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Flame aria-hidden="true" className="h-4 w-4 text-destructive" />
+              پرفروش‌ترین کالاها
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <div
+                key={idx}
+                className="flex flex-col items-center gap-2 rounded-md border border-border p-3 text-center transition-colors hover:border-primary/40"
+              >
+                <div className="flex h-20 w-20 items-center justify-center rounded-md bg-muted p-1">
+                  <img src="/Ylogo.png" className="h-12 w-12 object-contain opacity-70" alt="" />
+                </div>
+                <span className="line-clamp-2 text-2xs font-bold leading-tight text-foreground">
+                  لنت ترمز سرامیکی جلو پژو ۲۰۶
+                </span>
+                <span className="mt-auto text-xs font-bold text-primary">۱,۲۵۰,۰۰۰ تومان</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <MobileBottomAction
+        label="ادامه فرآیند خرید"
+        leftContent={leftPriceContent}
+        onClick={handleContinue}
+        isLoading={checkoutBasket.isPending}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+      />
+    </div>
+  );
+}
+
+export default BasketSummary;
+
+
+
+================================================================================
+FILE PATH: src\components\features\BasketSummary\components\BasketInvoice.tsx
+================================================================================
+'use client';
+
+import Link from 'next/link';
+import { ShoppingCart, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Card, CardTitle } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button';
+
+export interface BasketInvoiceProps {
+  basket: any;
+}
+
+export function BasketInvoice({ basket }: BasketInvoiceProps) {
+  const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
+
+  return (
+    <Card className="h-fit w-full shrink-0 p-5 shadow-xs lg:w-[360px]">
+      <CardTitle className="mb-4 flex items-center gap-2 border-b border-border pb-3 font-bold text-foreground">
+        <ShoppingCart aria-hidden="true" className="h-5 w-5 text-primary" />
+        <span>صورتحساب</span>
+      </CardTitle>
+
+      <div className="mb-4 space-y-4 border-b border-border pb-4">
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <span>قیمت محصولات ({formatNumber(basket.summary.itemCount)} قطعه)</span>
+          <span>{basket.total.totalPrice}</span>
+        </div>
+
+        {basket.total.totalDiscountRaw > 0 ? (
+          <div className="flex items-center justify-between text-xs font-bold text-destructive">
+            <span>تخفیف‌ها</span>
+            <span>- {basket.total.totalDiscount}</span>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mb-5 flex items-center justify-between">
+        <span className="text-xs font-bold text-muted-foreground">جمع کل</span>
+        <span className="text-lg font-bold text-foreground">{basket.total.finalPrice}</span>
+      </div>
+
+      <Link href="/checkout" className="block w-full">
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          className="flex h-11 items-center justify-center gap-1 text-xs font-bold shadow-xs"
+        >
+          <span>ادامه فرآیند خرید</span>
+          <ArrowLeft aria-hidden="true" className="me-1 h-4 w-4" />
+        </Button>
+      </Link>
+
+      <div className="mt-5 flex flex-col gap-3 border-t border-dashed border-border pt-4">
+        <div className="flex items-start gap-2 text-2xs leading-relaxed text-muted-foreground sm:text-xs">
+          <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p>
+            در صورتی که کالایی در سبد خرید، ناموجود یا غیر فعال شده است، با ادامه دادن به خرید، کالا به صورت خودکار از سبد خرید شما حذف می‌شود.
+          </p>
+        </div>
+        <div className="flex items-start gap-2 text-2xs leading-relaxed text-muted-foreground sm:text-xs">
+          <AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <p>
+            هزینه این سفارش هنوز پرداخت نشده‌ و در صورت اتمام موجودی، کالاها از سبد حذف می‌شوند.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\BasketSummary\components\BasketItemRow.tsx
+================================================================================
+'use client';
+
+import * as React from 'react';
+import { Store, ShieldCheck, ShieldAlert, Truck, Trash2, Plus, Minus, Loader2 } from 'lucide-react';
+import { useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { showToast } from '@/core/utils/toast';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+
+export interface BasketItemRowProps {
+  item: any;
+}
+
+export function BasketItemRow({ item }: BasketItemRowProps) {
+  const [activeLoading, setActiveLoading] = React.useState(false);
+  const addToBasket = useAddToBasket();
+  const deleteFromBasket = useDeleteFromBasket();
+
+  const originalPrice = item.price?.originalPriceRaw || 0;
+  const finalPrice = item.price?.finalTotalPriceRaw / item.quantity || 0;
+  const discountPercentage =
+    originalPrice > finalPrice
+      ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100)
+      : 0;
+
+  const handleIncrease = async () => {
+    if (activeLoading || !item.canIncrease) return;
+    setActiveLoading(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: item.shopProductId, quantity: 1 });
+      showToast.success('تعداد کالا افزایش یافت');
+    } catch {} finally {
+      setActiveLoading(false);
+    }
+  };
+
+  const handleDecrease = async () => {
+    if (activeLoading || !item.canDecrease) return;
+    setActiveLoading(true);
+    try {
+      await deleteFromBasket.mutateAsync({ shopProductId: item.shopProductId, quantity: 1 });
+      showToast.success('تعداد کالا کاهش یافت');
+    } catch {} finally {
+      setActiveLoading(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (activeLoading) return;
+    setActiveLoading(true);
+    try {
+      await deleteFromBasket.mutateAsync({ shopProductId: item.shopProductId, quantity: item.quantity });
+      showToast.success('کالا از سبد خرید حذف شد');
+    } catch {} finally {
+      setActiveLoading(false);
+    }
+  };
+
+  const formatPersianNumber = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  return (
+    <div className="relative flex select-none flex-col items-start justify-between gap-4 border-b border-border bg-card p-4 last:border-b-0 md:flex-row md:gap-6 md:p-5">
+      <div className="flex shrink-0 flex-row items-center gap-3 md:flex-col">
+        <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-2 md:h-28 md:w-28">
+          <img
+            src={getFullUrl(item.product?.image)}
+            alt={item.product?.title || 'محصول'}
+            className="h-full w-full object-contain"
+          />
+        </div>
+
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex h-8 items-center gap-2 rounded-sm border border-border bg-card px-1 py-0.5 shadow-xs">
+            <button
+              type="button"
+              onClick={handleIncrease}
+              disabled={!item.canIncrease || activeLoading}
+              aria-label="افزایش تعداد"
+              className="p-1 text-muted-foreground transition-colors hover:text-primary disabled:opacity-30"
+            >
+              <Plus aria-hidden="true" className="h-3.5 w-3.5" />
+            </button>
+            <span className="w-5 text-center text-xs font-bold text-primary">
+              {activeLoading ? (
+                <Loader2 aria-hidden="true" className="mx-auto h-3 w-3 animate-spin text-primary" />
+              ) : (
+                formatPersianNumber(item.quantity)
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={handleDecrease}
+              disabled={!item.canDecrease || activeLoading}
+              aria-label="کاهش تعداد"
+              className="p-1 text-muted-foreground transition-colors hover:text-primary disabled:opacity-30"
+            >
+              <Minus aria-hidden="true" className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <span className="text-2xs text-muted-foreground">
+            حداکثر {formatPersianNumber(item.maxQuantity || 5)} عدد
+          </span>
+        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <h3 className="text-xs font-bold leading-6 text-foreground md:text-sm">{item.product?.title}</h3>
+
+        <div className="flex flex-col gap-2 text-2xs text-muted-foreground md:text-xs">
+          <div className="flex items-center gap-1.5">
+            <Store aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span>فروشنده: {item.shop?.title || item.product?.shopName || 'پیروز یدک'}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {item.warranty ? (
+              <>
+                <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-success" />
+                <span>{item.warranty}</span>
+              </>
+            ) : (
+              <>
+                <ShieldAlert aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span>گارانتی اصالت و سلامت فیزیکی کالا</span>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Truck aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
+            {item.isTipaxShipping ? (
+              <span>ارسال توسط تیپاکس</span>
+            ) : item.isDirectShipping ? (
+              <span>ارسال مستقیم توسط فروشنده</span>
+            ) : (
+              <span>ارسال فوری با یدکچی اکسپرس</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex w-full items-end justify-between gap-3 self-stretch border-t border-dashed border-border pt-2 md:w-auto md:flex-col md:justify-between md:border-t-0 md:pt-0">
+        <button
+          type="button"
+          onClick={handleRemove}
+          disabled={activeLoading}
+          className="order-2 flex items-center gap-1 text-2xs text-muted-foreground transition-colors hover:text-destructive md:order-1"
+        >
+          <Trash2 aria-hidden="true" className="h-4 w-4" />
+          <span>حذف</span>
+        </button>
+
+        <div className="order-1 flex flex-col items-end gap-1 md:order-2">
+          {item.price?.hasDiscount && discountPercentage > 0 ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-2xs text-muted-foreground line-through">{item.price.unitPrice}</span>
+              <span className="rounded-full bg-destructive px-1.5 py-0.5 text-2xs font-bold text-destructive-foreground">
+                {toPersianDigits(discountPercentage)}٪
+              </span>
+            </div>
+          ) : null}
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm font-bold text-foreground md:text-base">{item.price?.finalTotalPrice}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+FILE PATH: src\components\features\BasketSummary\components\BasketMerchantGroup.tsx
+================================================================================
+'use client';
+
+import { Store } from 'lucide-react';
+import { Card, CardHeader, CardBody } from '@/components/composites/Card';
+import { BasketItemRow } from './BasketItemRow';
+import { getFullUrl } from '@/core/utils/formatters';
+
+export interface BasketMerchantGroupProps {
+  sub: any;
+}
+
+export function BasketMerchantGroup({ sub }: BasketMerchantGroupProps) {
+  return (
+    <Card className="w-full overflow-hidden shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
+        <div className="flex items-center gap-2">
+          <Store aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+          <span className="text-xs font-bold text-foreground">ارسال از فروشگاه: {sub.shop.title}</span>
+        </div>
+        {sub.shop.logo ? (
+          <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-border bg-card">
+            <img
+              src={getFullUrl(sub.shop.logo)}
+              alt={sub.shop.title}
+              className="h-full w-full object-contain"
+            />
+          </div>
+        ) : null}
+      </CardHeader>
+
+      <CardBody className="divide-y divide-border p-0">
+        {sub.items.map((item: any) => (
+          <BasketItemRow key={item.id} item={item} />
+        ))}
+      </CardBody>
+    </Card>
+  );
+}
+
+
+
+================================================================================
+FILE PATH: src\components\features\Checkout\CheckoutContent.tsx
+================================================================================
+'use client';
+
+import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import {
+  useGetCheckoutBasket,
+  useGetUserLocations,
+  useSetBasketShipment,
+  useSetBasketLocationAndPrice,
+} from '@/domains/front/basket/hooks/basket.hooks';
+import { CheckoutAddress } from './components/CheckoutAddress';
+import { CheckoutShipmentGroup } from './components/CheckoutShipmentGroup';
+import { CheckoutInvoice } from './components/CheckoutInvoice';
+import { AddressModal } from './components/AddressModal';
+import { AddressMapModal } from '@/components/composites/AddressMapModal/AddressMapModal';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { showToast } from '@/core/utils/toast';
+
+export function CheckoutContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
+  const { data: rawBasket, isLoading: isBasketLoading } = useGetCheckoutBasket();
+  const { data: locations = [], isLoading: isLocationsLoading } = useGetUserLocations();
+
+  const setBasketLocation = useSetBasketLocationAndPrice();
+  const setBasketShipment = useSetBasketShipment();
+
+  const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = React.useState(false);
+  const [isNewAddressOpen, setIsNewAddressOpen] = React.useState(false);
+  const [selectedMethods, setSelectedMethods] = React.useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const [mapAddressData, setMapAddressData] = React.useState<{
+    address: string;
+    latitude: number;
+    longitude: number;
+    cityId: string;
+    cityName: string;
+    provinceName: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      showToast.error('لطفاً ابتدا وارد حساب کاربری خود شوید');
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isAuthenticated, isAuthLoading, router, pathname]);
+
+  const basket = rawBasket as any;
+
+  React.useEffect(() => {
+    if (basket?.subBaskets) {
+      const initial: Record<string, string> = {};
+      basket.subBaskets.forEach((sub: any) => {
+        const directPrice = sub.directShipmentPrice ?? sub.sellerShipmentPrice ?? 0;
+        const snappPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+
+        if (sub.shipmentMethod) {
+          initial[sub.id] = sub.shipmentMethod === 'Seller' ? 'DirectShipment' : sub.shipmentMethod;
+        } else if (sub.tipaxShipmentPrice > 0) {
+          initial[sub.id] = 'Tipax';
+        } else if (directPrice > 0) {
+          initial[sub.id] = 'DirectShipment';
+        } else if (snappPrice > 0) {
+          initial[sub.id] = 'SnappBox';
+        } else if (sub.isLocalShipmentAvailable) {
+          initial[sub.id] = 'Local';
+        }
+      });
+      setSelectedMethods(initial);
+    }
+  }, [basket]);
+
+  if (isAuthLoading || isBasketLoading || isLocationsLoading) {
+    return <PageLoading label="در حال بارگذاری اطلاعات فاکتور و آدرس‌ها..." />;
+  }
+
+  if (!isAuthenticated || !basket || !basket.subBaskets?.length) return null;
+
+  const activeAddress =
+    locations.find((l: any) => l.id === basket.userLocationId) ||
+    locations.find((l: any) => l.isDefault) ||
+    locations[0];
+
+  const handleSelectShipment = (subBasketId: string, method: string) => {
+    setSelectedMethods((prev) => ({ ...prev, [subBasketId]: method }));
+  };
+
+  const handlePayment = async () => {
+    if (!activeAddress) {
+      showToast.error('لطفاً ابتدا آدرس تحویل سفارش خود را انتخاب کنید');
+      setIsAddressModalOpen(true);
+      return;
+    }
+
+    const unselectedSubBasket = basket.subBaskets.find((sub: any) => !selectedMethods[sub.id]);
+    if (unselectedSubBasket) {
+      showToast.error(
+        `لطفاً شیوه ارسال مرسوله فروشگاه «${unselectedSubBasket.shop?.shopTitle || ''}» را انتخاب کنید`
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      try {
+        await setBasketLocation.mutateAsync(activeAddress.id);
+      } catch (locErr: any) {
+        console.warn('[Checkout] Shipment price query warning:', locErr);
+      }
+
+      const methodsPayload = basket.subBaskets.map((sub: any) => ({
+        subBasketId: sub.id,
+        shipmentMethod: selectedMethods[sub.id] || 'Tipax',
+      }));
+
+      await setBasketShipment.mutateAsync({
+        locationId: activeAddress.id,
+        methods: methodsPayload,
+      });
+
+      showToast.success('اطلاعات نحوه ارسال با موفقیت تایید شد');
+      router.push('/basket-payment');
+    } catch (err: any) {
+      showToast.error(err.userMessage || 'خطا در ثبت نهایی شیوه ارسال');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const calculateShipmentTotals = () => {
+    let total = 0;
+    basket.subBaskets.forEach((sub: any) => {
+      const method = selectedMethods[sub.id];
+      const directPrice = sub.directShipmentPrice ?? sub.sellerShipmentPrice ?? 0;
+      const snappPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+
+      if (method === 'Tipax') total += sub.tipaxShipmentPrice || 0;
+      else if (method === 'DirectShipment' || method === 'Seller') total += directPrice;
+      else if (method === 'SnappBox') total += snappPrice;
+    });
+    return total;
+  };
+
+  const handleConfirmMapAddress = (data: {
+    address: string;
+    latitude: number;
+    longitude: number;
+    cityId: string;
+    cityName: string;
+    provinceName: string;
+  }) => {
+    setMapAddressData(data);
+    setIsNewAddressOpen(true);
+    setIsAddressModalOpen(true);
+  };
+
+  const totalShipment = calculateShipmentTotals();
+  const finalPayablePrice = (basket.totalFinalPrice || 0) + totalShipment;
+
+  const leftPriceContent = (
+    <div className="flex flex-col">
+      <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ کل قابل پرداخت:</span>
+      <span className="text-sm font-bold text-foreground">
+        {new Intl.NumberFormat('fa-IR').format(finalPayablePrice / 10)} تومان
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full select-none flex-col items-start gap-6 lg:flex-row md:gap-8">
+      <div className="flex w-full flex-1 flex-col gap-6">
+        <CheckoutAddress
+          activeAddress={activeAddress}
+          onOpenModal={() => setIsAddressModalOpen(true)}
+        />
+
+        {basket.subBaskets.map((sub: any, index: number) => (
+          <CheckoutShipmentGroup
+            key={sub.id}
+            sub={sub}
+            index={index}
+            totalSubBaskets={basket.subBaskets.length}
+            selectedMethod={selectedMethods[sub.id] || null}
+            onSelectMethod={(method) => handleSelectShipment(sub.id, method)}
+          />
+        ))}
+      </div>
+
+      <CheckoutInvoice
+        basket={basket}
+        totalShipment={totalShipment}
+        finalPayablePrice={finalPayablePrice}
+        onSubmit={handlePayment}
+        isLoading={isSubmitting}
+      />
+
+      <MobileBottomAction
+        label="تایید و ادامه خرید"
+        leftContent={leftPriceContent}
+        onClick={handlePayment}
+        isLoading={isSubmitting}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+      />
+
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        locations={locations}
+        activeAddress={activeAddress}
+        onOpenMapModal={() => {
+          setIsAddressModalOpen(false);
+          setIsMapModalOpen(true);
+        }}
+        mapAddressData={mapAddressData}
+        isNewAddressOpen={isNewAddressOpen}
+        setIsNewAddressOpen={setIsNewAddressOpen}
+      />
+
+      <AddressMapModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        onConfirmAddress={handleConfirmMapAddress}
+      />
+    </div>
+  );
+}
+
+export default CheckoutContent;
+
+
+================================================================================
+FILE PATH: src\components\features\Checkout\components\CheckoutAddress.tsx
+================================================================================
+'use client';
+
+import { MapPin } from 'lucide-react';
+import { Card, CardBody, CardHeader } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button';
+
+export interface CheckoutAddressProps {
+  activeAddress: any;
+  onOpenModal: () => void;
+}
+
+export function CheckoutAddress({ activeAddress, onOpenModal }: CheckoutAddressProps) {
+  return (
+    <Card className="w-full overflow-hidden shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
+        <div className="flex items-center gap-2">
+          <MapPin aria-hidden="true" className="h-4 w-4 text-primary" />
+          <span className="text-xs font-bold text-foreground">آدرس تحویل سفارش</span>
+        </div>
+      </CardHeader>
+      <CardBody className="flex flex-col gap-2 p-5">
+        {activeAddress ? (
+          <>
+            <p className="text-sm font-bold leading-relaxed text-foreground">
+              {activeAddress.province}، {activeAddress.city}، {activeAddress.address}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
+              <span>پلاک: {new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.plaque || 0)}</span>
+              <span>واحد: {new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.unit || 0)}</span>
+              <span>کد پستی: {new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.postalCode || 0)}</span>
+              <span>
+                تحویل‌گیرنده: {activeAddress.receiverFullName} (
+                {new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.receiverMobile || 0)})
+              </span>
+            </div>
+            <div className="mt-4 flex w-full justify-end border-t border-dashed border-border pt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenModal}
+                className="h-10 w-full px-5 py-2 text-xs font-bold sm:w-auto"
+              >
+                انتخاب یا ویرایش آدرس
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="flex w-full flex-col items-center justify-center py-6 text-center">
+            <p className="text-xs text-muted-foreground">هیچ آدرسی ثبت نشده است. لطفا آدرس خود را ثبت کنید.</p>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onOpenModal}
+              className="mt-4 h-10 w-full px-6 py-2.5 text-xs font-bold sm:w-auto"
+            >
+              ثبت اولین آدرس
+            </Button>
+          </div>
+        )}
+      </CardBody>
+    </Card>
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\Checkout\components\CheckoutInvoice.tsx
+================================================================================
+'use client';
+
+import { CreditCard, ChevronLeft } from 'lucide-react';
+import { Card, CardTitle } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button';
+
+export interface CheckoutInvoiceProps {
+  basket: any;
+  totalShipment: number;
+  finalPayablePrice: number;
+  onSubmit: () => void;
+  isLoading: boolean;
+}
+
+export function CheckoutInvoice({
+  basket,
+  totalShipment,
+  finalPayablePrice,
+  onSubmit,
+  isLoading,
+}: CheckoutInvoiceProps) {
+  const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
+
+  return (
+    <Card className="h-fit w-full shrink-0 p-5 shadow-xs lg:w-[360px]">
+      <CardTitle className="mb-4 flex items-center gap-2 border-b border-border pb-3 font-bold text-foreground">
+        <CreditCard aria-hidden="true" className="h-5 w-5 text-primary" />
+        <span>صورتحساب تسویه حساب</span>
+      </CardTitle>
+
+      <div className="mb-4 space-y-4 border-b border-border pb-4">
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <span>قیمت محصولات</span>
+          <span>{formatNumber(basket.totalOriginalPrice / 10)} تومان</span>
+        </div>
+
+        {basket.totalDiscountValue > 0 ? (
+          <div className="flex items-center justify-between text-xs font-bold text-destructive">
+            <span>تخفیف‌ها</span>
+            <span>- {formatNumber(basket.totalDiscountValue / 10)} تومان</span>
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <span>هزینه ارسال</span>
+          <span>{totalShipment > 0 ? `${formatNumber(totalShipment / 10)} تومان` : 'انتخاب نشده'}</span>
+        </div>
+      </div>
+
+      <div className="mb-6 flex items-center justify-between">
+        <span className="text-xs font-bold text-muted-foreground">مبلغ نهایی قابل پرداخت</span>
+        <span className="text-lg font-bold text-foreground">{formatNumber(finalPayablePrice / 10)} تومان</span>
+      </div>
+
+      <Button
+        variant="primary"
+        size="lg"
+        fullWidth
+        onClick={onSubmit}
+        isLoading={isLoading}
+        className="flex h-11 items-center justify-center gap-1 text-xs font-bold shadow-xs"
+      >
+        <span>ثبت نهایی و پرداخت</span>
+        <ChevronLeft aria-hidden="true" className="me-1 h-4 w-4" />
+      </Button>
+    </Card>
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\Checkout\components\CheckoutShipmentGroup.tsx
+================================================================================
+'use client';
+
+import { Truck, Store, Zap } from 'lucide-react';
+import { Card, CardHeader, CardBody } from '@/components/composites/Card';
+import { Typography } from '@/components/primitives/Typography';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
+
+export interface CheckoutShipmentGroupProps {
+  sub: any;
+  index: number;
+  totalSubBaskets: number;
+  selectedMethod: string | null;
+  onSelectMethod: (method: string) => void;
+}
+
+export function CheckoutShipmentGroup({
+  sub,
+  index,
+  totalSubBaskets,
+  selectedMethod,
+  onSelectMethod,
+}: CheckoutShipmentGroupProps) {
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value / 10) + ' تومان';
+
+  const isTipaxAvailable = typeof sub.tipaxShipmentPrice === 'number' && sub.tipaxShipmentPrice > 0;
+  const directPrice = sub.directShipmentPrice ?? sub.sellerShipmentPrice;
+  const isDirectAvailable = typeof directPrice === 'number' && directPrice > 0;
+  const snappBoxPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice;
+  const isSnappBoxAvailable = typeof snappBoxPrice === 'number' && snappBoxPrice > 0;
+  const isLocalAvailable = !!sub.isLocalShipmentAvailable;
+
+  return (
+    <Card className="w-full overflow-hidden shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
+        <span className="text-xs font-bold text-foreground">
+          مرسوله {new Intl.NumberFormat('fa-IR').format(index + 1)} از{' '}
+          {new Intl.NumberFormat('fa-IR').format(totalSubBaskets)}
+        </span>
+        <span className="text-2xs font-bold text-muted-foreground">
+          ارسال از فروشگاه: {sub.shop?.shopTitle || ''}
+        </span>
+      </CardHeader>
+
+      <CardBody className="flex flex-col gap-5 p-5">
+        <div className="flex w-full flex-col gap-3">
+          <Typography variant="h6" className="mb-2 border-b border-border pb-1.5 font-bold text-foreground">
+            شیوه دریافت سفارش را انتخاب کنید
+          </Typography>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            {isTipaxAvailable ? (
+              <button
+                type="button"
+                onClick={() => onSelectMethod('Tipax')}
+                className={cn(
+                  'flex items-center justify-between rounded-md border border-border p-3.5 outline-none transition-colors',
+                  selectedMethod === 'Tipax'
+                    ? 'border-primary bg-accent font-bold text-primary ring-1 ring-primary'
+                    : 'bg-card text-foreground hover:border-primary/40'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <Truck aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-bold">ارسال با تیپاکس</span>
+                </div>
+                <span className="text-xs font-bold">{formatPrice(sub.tipaxShipmentPrice)}</span>
+              </button>
+            ) : null}
+
+            {isDirectAvailable ? (
+              <button
+                type="button"
+                onClick={() => onSelectMethod('DirectShipment')}
+                className={cn(
+                  'flex items-center justify-between rounded-md border border-border p-3.5 outline-none transition-colors',
+                  selectedMethod === 'DirectShipment'
+                    ? 'border-primary bg-accent font-bold text-primary ring-1 ring-primary'
+                    : 'bg-card text-foreground hover:border-primary/40'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <Truck aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-bold">ارسال فروشنده</span>
+                </div>
+                <span className="text-xs font-bold">{formatPrice(directPrice)}</span>
+              </button>
+            ) : null}
+
+            {isSnappBoxAvailable ? (
+              <button
+                type="button"
+                onClick={() => onSelectMethod('SnappBox')}
+                className={cn(
+                  'flex items-center justify-between rounded-md border border-border p-3.5 outline-none transition-colors',
+                  selectedMethod === 'SnappBox'
+                    ? 'border-primary bg-accent font-bold text-primary ring-1 ring-primary'
+                    : 'bg-card text-foreground hover:border-primary/40'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <Zap aria-hidden="true" className="h-4 w-4 shrink-0 text-warning" />
+                  <span className="text-xs font-bold">اسنپ‌باکس (فوری)</span>
+                </div>
+                <span className="text-xs font-bold">{formatPrice(snappBoxPrice)}</span>
+              </button>
+            ) : null}
+
+            {isLocalAvailable ? (
+              <button
+                type="button"
+                onClick={() => onSelectMethod('Local')}
+                className={cn(
+                  'flex items-center justify-between rounded-md border border-border p-3.5 outline-none transition-colors',
+                  selectedMethod === 'Local'
+                    ? 'border-primary bg-accent font-bold text-primary ring-1 ring-primary'
+                    : 'bg-card text-foreground hover:border-primary/40'
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <Store aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  <span className="text-xs font-bold">دریافت حضوری</span>
+                </div>
+                <span className="text-xs font-bold text-success">رایگان</span>
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-3 w-full divide-y divide-border border-t border-dashed border-border pt-3">
+          {sub.subBasketItems?.map((item: any) => (
+            <div key={item.id} className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+                <img
+                  src={getFullUrl(item.shopProduct?.product?.image)}
+                  alt={item.shopProduct?.product?.title || ''}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="truncate text-xs font-bold text-foreground">
+                  {item.shopProduct?.product?.title}
+                </h4>
+                <span className="mt-1.5 block text-2xs font-bold text-muted-foreground">
+                  تعداد: {new Intl.NumberFormat('fa-IR').format(item.quantity)} عدد
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+
+
+================================================================================
+FILE PATH: src\components\features\BasketPayment\BasketPaymentContent.tsx
+================================================================================
+'use client';
+
+import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import {
+  useGetBasket,
+  useInitiatePayment,
+} from '@/domains/front/basket/hooks/basket.hooks';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { PaymentMethodCard } from './components/PaymentMethodCard';
+import { DiscountCard } from './components/DiscountCard';
+import { ReferralCard } from './components/ReferralCard';
+import { ItemsSummaryCard } from './components/ItemsSummaryCard';
+import { PaymentInvoice } from './components/PaymentInvoice';
+import { TrackingDetailsModal } from './components/TrackingDetailsModal';
+import { showToast } from '@/core/utils/toast';
+
+export default function BasketPaymentContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { data: basketData, isLoading: isBasketLoading } = useGetBasket();
+  const initiatePayment = useInitiatePayment();
+
+  const [isLegalInvoice, setIsLegalInvoice] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      showToast.error('لطفاً ابتدا وارد حساب کاربری خود شوید');
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isAuthenticated, isAuthLoading, router, pathname]);
+
+  const basket = basketData as any;
+
+  if (isAuthLoading || isBasketLoading) {
+    return <PageLoading label="در حال راه‌اندازی امن درگاه پرداخت..." />;
+  }
+
+  if (!isAuthenticated || !basket) return null;
+
+  const isLegalUser = !!user?.isOrganizationInfoConfirmed;
+
+  const handlePayment = async () => {
+    setIsSubmitting(true);
+    try {
+      const paymentResponse = await initiatePayment.mutateAsync(isLegalInvoice);
+      const targetUrl = paymentResponse?.link || paymentResponse?.paymentUrl;
+      if (targetUrl) {
+        showToast.success('در حال انتقال به درگاه بانکی...');
+        window.location.href = targetUrl;
+      } else {
+        showToast.error('خطا در دریافت درگاه بانکی');
+      }
+    } catch {
+      showToast.error('خطا در اتصال به درگاه پرداخت. لطفاً مجدداً تلاش کنید');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCompleteLegalInfo = () => {
+    router.push('/profile/legal');
+  };
+
+  const productPriceRaw = basket.total.totalPriceRaw || 0;
+  const discountPriceRaw = basket.total.totalDiscountRaw || 0;
+  const finalPriceRaw = basket.total.finalPriceRaw || 0;
+  const shippingPriceRaw = Math.max(0, finalPriceRaw - (productPriceRaw - discountPriceRaw));
+
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  const leftPriceContent = (
+    <div className="flex flex-col">
+      <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ نهایی قابل پرداخت:</span>
+      <span className="text-sm font-bold text-foreground">{formatPrice(finalPriceRaw / 10)} تومان</span>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full select-none flex-col items-start gap-6 lg:flex-row">
+      <div className="flex w-full flex-1 flex-col gap-4">
+        <div className="flex w-full items-center justify-between rounded-md border border-warning/30 bg-warning/10 px-4 py-3 text-xs font-medium text-warning">
+          <span>
+            توجه: قیمت و موجودی قطعات در این مرحله به مدت <strong>۱۵ دقیقه</strong> برای شما رزرو شده است.
+          </span>
+        </div>
+
+        <PaymentMethodCard />
+        <DiscountCard />
+        <ReferralCard />
+        <ItemsSummaryCard onOpenTracking={() => setIsTrackingModalOpen(true)} />
+      </div>
+
+      <PaymentInvoice
+        productPrice={productPriceRaw / 10}
+        discountPrice={discountPriceRaw / 10}
+        shippingPrice={shippingPriceRaw / 10}
+        finalPrice={finalPriceRaw / 10}
+        isLegalInvoice={isLegalInvoice}
+        isLegalUser={isLegalUser}
+        isSubmitting={isSubmitting}
+        onLegalInvoiceChange={(checked) => setIsLegalInvoice(checked)}
+        onPayment={handlePayment}
+        onCompleteLegalInfo={handleCompleteLegalInfo}
+      />
+
+      <MobileBottomAction
+        label="پرداخت و تکمیل سفارش"
+        leftContent={leftPriceContent}
+        onClick={handlePayment}
+        isLoading={isSubmitting}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+      />
+
+      <TrackingDetailsModal
+        isOpen={isTrackingModalOpen}
+        onClose={() => setIsTrackingModalOpen(false)}
+      />
+    </div>
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\BasketPayment\components\PaymentMethodCard.tsx
+================================================================================
+'use client';
+
+import { CreditCard, CheckCircle2 } from 'lucide-react';
+import { Card, CardBody, CardHeader } from '@/components/composites/Card';
+
+export function PaymentMethodCard() {
+  return (
+    <Card className="w-full overflow-hidden shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
+        <div className="flex items-center gap-2">
+          <CreditCard aria-hidden="true" className="h-4 w-4 text-primary" />
+          <span className="text-sm font-bold text-foreground">انتخاب شیوه پرداخت</span>
+        </div>
+      </CardHeader>
+      <CardBody className="flex flex-col gap-4 p-5">
+        <div className="flex items-start gap-3 rounded-md border border-primary bg-accent p-4">
+          <div className="mt-0.5 shrink-0 text-primary">
+            <CheckCircle2 aria-hidden="true" className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-foreground md:text-base">
+              درگاه بانکی (پرداخت اینترنتی)
+            </span>
+            <span className="mt-1 block text-xs text-muted-foreground">
+              پرداخت از تمامی بانک‌های عضو شتاب
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-start gap-2.5 pt-3">
+          <span className="text-xs font-bold text-muted-foreground">بانک‌های منتخب:</span>
+          <div className="flex flex-wrap gap-2">
+            {['سامان', 'پارسیان', 'ملت', 'پاسارگاد', 'سایر بانک‌ها'].map((bank) => (
+              <div
+                key={bank}
+                className="rounded-sm border border-border bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground"
+              >
+                {bank}
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\BasketPayment\components\PaymentInvoice.tsx
+================================================================================
+'use client';
+
+import { CreditCard, ArrowLeft, Briefcase } from 'lucide-react';
+import { Card, CardTitle } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+
+export interface PaymentInvoiceProps {
+  productPrice: number;
+  discountPrice: number;
+  shippingPrice: number;
+  finalPrice: number;
+  isLegalInvoice: boolean;
+  isLegalUser: boolean;
+  isSubmitting: boolean;
+  onLegalInvoiceChange: (checked: boolean) => void;
+  onPayment: () => void;
+  onCompleteLegalInfo: () => void;
+}
+
+export function PaymentInvoice({
+  productPrice,
+  discountPrice,
+  shippingPrice,
+  finalPrice,
+  isLegalInvoice,
+  isLegalUser,
+  isSubmitting,
+  onLegalInvoiceChange,
+  onPayment,
+  onCompleteLegalInfo,
+}: PaymentInvoiceProps) {
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  return (
+    <Card className="h-fit w-full shrink-0 p-5 shadow-xs lg:w-[360px]">
+      <CardTitle className="mb-4 flex items-center gap-2 border-b border-border pb-3 font-bold text-foreground">
+        <CreditCard aria-hidden="true" className="h-5 w-5 text-primary" />
+        <span>صورتحساب</span>
+      </CardTitle>
+
+      <div className="mb-4 space-y-4 border-b border-border pb-4">
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground md:text-sm">
+          <span>قیمت محصولات</span>
+          <span>{formatPrice(productPrice)} تومان</span>
+        </div>
+
+        <div className="flex items-center justify-between text-xs font-bold text-destructive md:text-sm">
+          <span>تخفیف‌ها</span>
+          <span>{formatPrice(discountPrice)} تومان</span>
+        </div>
+
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground md:text-sm">
+          <span>هزینه ارسال</span>
+          <span>{formatPrice(shippingPrice)} تومان</span>
+        </div>
+      </div>
+
+      <div className="mb-5 flex items-center justify-between">
+        <span className="text-xs font-bold text-muted-foreground md:text-sm">جمع کل</span>
+        <span className="text-lg font-bold text-foreground">{formatPrice(finalPrice)} تومان</span>
+      </div>
+
+      <Button
+        variant="primary"
+        size="lg"
+        fullWidth
+        onClick={onPayment}
+        isLoading={isSubmitting}
+        className="flex h-11 items-center justify-center gap-1 text-xs font-bold shadow-xs"
+      >
+        <span>پرداخت و تکمیل سفارش</span>
+        <ArrowLeft aria-hidden="true" className="me-1 h-4 w-4" />
+      </Button>
+
+      <span className="mt-2.5 block text-center text-2xs text-muted-foreground">
+        ارسال در سریع‌ترین زمان ممکن انجام خواهد شد
+      </span>
+
+      <div className="mt-5 w-full space-y-3.5 border-t border-dashed border-border pt-4">
+        <div className="flex w-full items-start gap-2.5">
+          <Checkbox
+            checked={isLegalInvoice}
+            disabled={!isLegalUser}
+            onChange={onLegalInvoiceChange}
+          />
+          <div>
+            <p className="select-none text-xs leading-relaxed text-muted-foreground">
+              با انتخاب این گزینه، فاکتور خرید شما به صورت حقوقی صادر خواهد شد. شما می‌توانید از قسمت سفارش در حساب کاربری خود، فاکتور خود را دریافت کنید.
+            </p>
+            {!isLegalUser ? (
+              <span className="mt-1 block text-2xs text-destructive">
+                جهت فعال‌سازی فاکتور حقوقی، ابتدا باید اطلاعات حقوقی خود را تکمیل کنید.
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex w-full justify-start">
+          <button
+            type="button"
+            onClick={onCompleteLegalInfo}
+            className="mt-1 flex items-center gap-1 text-xs font-bold text-primary outline-none hover:underline"
+          >
+            <Briefcase aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+            <span>تکمیل اطلاعات حقوقی</span>
+          </button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\BasketPayment\components\ItemsSummaryCard.tsx
+================================================================================
+'use client';
+
+import { Truck, ChevronLeft } from 'lucide-react';
+import { Card, CardBody, CardHeader } from '@/components/composites/Card';
+
+export interface ItemsSummaryCardProps {
+  onOpenTracking: () => void;
+}
+
+export function ItemsSummaryCard({ onOpenTracking }: ItemsSummaryCardProps) {
+  return (
+    <Card className="w-full overflow-hidden shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
+        <div className="flex items-center gap-2">
+          <Truck aria-hidden="true" className="h-4 w-4 text-primary" />
+          <span className="text-sm font-bold text-foreground">کالاها و ارسال</span>
+        </div>
+        <span className="rounded-sm bg-muted px-2.5 py-0.5 text-2xs font-bold text-muted-foreground">
+          ۱ عدد کالا ۱ مرسوله
+        </span>
+      </CardHeader>
+      <CardBody className="flex flex-col gap-4 p-5">
+        <div
+          className="group flex cursor-pointer items-center justify-between border-b border-border pb-4"
+          onClick={onOpenTracking}
+        >
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-foreground md:text-sm">
+              کالاها در ۱ ارسال (مرسوله) به دست شما خواهد رسید.
+            </span>
+            <span className="mt-0.5 text-2xs text-muted-foreground md:text-xs">
+              اطلاع از روند ارسال و پردازش
+            </span>
+          </div>
+          <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-primary">
+            <ChevronLeft
+              aria-hidden="true"
+              className="h-4 w-4 transition-transform group-hover:-translate-x-1"
+            />
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-3 pt-2">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <span className="text-xs font-bold text-foreground md:text-sm">مرسوله یک</span>
+            <span className="text-2xs font-bold text-primary md:text-xs">ارسال یدکچی</span>
+          </div>
+
+          <div className="flex items-center gap-4 pt-2">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+              <div className="text-2xs font-bold text-muted-foreground">Product</div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-bold text-foreground md:text-sm">
+                ۱ عدد | قطعه نو
+              </span>
+              <span className="mt-1 block text-2xs text-muted-foreground md:text-xs">پیروز یدک</span>
+            </div>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  );
+}
+
+
+================================================================================
+FILE PATH: src\components\features\BasketPayment\components\DiscountCard.tsx
+================================================================================
+'use client';
+
+import * as React from 'react';
+import { Tag, Sparkles, Check } from 'lucide-react';
+import { Card, CardBody, CardHeader } from '@/components/composites/Card';
+import { Input } from '@/components/primitives/Input/Input';
+import { Button } from '@/components/primitives/Button';
+import { useApplyDiscountCode, useGetUserDiscountCodes } from '@/domains/front/basket/hooks/basket.hooks';
+import { showToast } from '@/core/utils/toast';
+
+export function DiscountCard() {
+  const applyDiscount = useApplyDiscountCode();
+  const { data: discountCodes = [] } = useGetUserDiscountCodes();
+  const [code, setCode] = React.useState('');
+
+  const handleApply = async (codeToApply: string) => {
+    const finalCode = (codeToApply || code).trim();
+    if (!finalCode) {
+      showToast.error('لطفاً کد تخفیف را وارد کنید');
+      return;
+    }
+    try {
+      await applyDiscount.mutateAsync(finalCode);
+      showToast.success('کد تخفیف با موفقیت بر روی سفارش اعمال شد');
+      setCode('');
+    } catch (err: any) {
+      showToast.error(err.userMessage || 'کد تخفیف وارد شده معتبر نیست یا منقضی شده است');
+    }
+  };
+
+  const formatPrice = (val: number) =>
+    new Intl.NumberFormat('fa-IR').format(val / 10) + ' تومان';
+
+  return (
+    <Card className="w-full overflow-hidden shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
+        <div className="flex items-center gap-2">
+          <Tag aria-hidden="true" className="h-4 w-4 text-primary" />
+          <span className="text-sm font-bold text-foreground">کد تخفیف</span>
+        </div>
+      </CardHeader>
+      <CardBody className="flex flex-col gap-4 p-5">
+        <span className="text-xs text-muted-foreground">
+          اگر کد تخفیف اختصاصی دارید، آن را در کادر زیر وارد کنید:
+        </span>
+
+        <div className="flex w-full gap-2">
+          <Input
+            placeholder="کد تخفیف را وارد کنید..."
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className="h-10 w-full flex-1 text-xs"
+          />
+          <Button
+            variant="outline"
+            onClick={() => handleApply(code)}
+            isLoading={applyDiscount.isPending}
+            className="h-10 px-5 text-xs font-bold"
+          >
+            ثبت کد
+          </Button>
+        </div>
+
+        {discountCodes && discountCodes.length > 0 ? (
+          <div className="mt-2 flex flex-col gap-2.5 border-t border-dashed border-border pt-3">
+            <span className="flex items-center gap-1.5 text-2xs font-bold text-foreground">
+              <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-warning" />
+              کدهای تخفیف فعال در حساب شما:
+            </span>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {discountCodes.map((d: any) => (
+                <div
+                  key={d.id}
+                  onClick={() => handleApply(d.code)}
+                  className="flex cursor-pointer items-center justify-between rounded-md border border-dashed border-border bg-muted/60 p-2.5 transition-colors hover:border-primary hover:bg-accent/50"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-foreground">{d.code}</span>
+                    <span className="text-2xs text-muted-foreground">مبلغ: {formatPrice(d.amount)}</span>
+                  </div>
+                  <Button size="icon-sm" variant="ghost" className="h-7 w-7 text-primary">
+                    <Check aria-hidden="true" className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </CardBody>
+    </Card>
+  );
+}
+
+

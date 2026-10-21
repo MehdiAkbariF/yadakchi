@@ -12,7 +12,7 @@ const PuckRender = dynamic(
     ssr: false,
     loading: () => (
       <div className="w-full py-12 flex items-center justify-center">
-        <span className="text-xs text-muted-foreground font-iran-yekan">
+        <span className="text-xs text-muted-foreground ">
           در حال بارگذاری محتوا...
         </span>
       </div>
@@ -27,7 +27,7 @@ interface PuckSchemaRendererProps {
 export function PuckSchemaRenderer({ schema }: PuckSchemaRendererProps) {
   if (!schema || !schema.content || schema.content.length === 0) {
     return (
-      <div className="w-full py-12 text-center text-muted-foreground font-iran-yekan text-sm">
+      <div className="w-full py-12 text-center text-muted-foreground text-sm">
         محتوایی برای این صفحه ثبت نشده است.
       </div>
     );

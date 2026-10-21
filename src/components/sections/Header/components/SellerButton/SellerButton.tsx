@@ -16,8 +16,8 @@ export function SellerButton({ className, size = 'md' }: SellerButtonProps) {
     <Link
       href="/seller/register"
       className={cn(
-        "relative inline-flex items-center justify-center select-none overflow-hidden rounded-xl font-iran-yekan font-bold text-white transition-all active:scale-95 shadow-sm",
-        "bg-[#f05023] hover:bg-[#f05023]", // دقیقاً رنگ و بدون تغییر در هاور
+        "relative inline-flex items-center justify-center select-none overflow-hidden rounded-md font-bold text-primary-foreground transition-all active:scale-95 shadow-sm",
+        "bg-primary hover:bg-primary", // دقیقاً رنگ و بدون تغییر در هاور
         size === 'sm' ? "h-9 px-3 text-xs gap-1.5" : "h-10 px-4 text-xs sm:text-sm gap-2",
         className
       )}
@@ -37,7 +37,7 @@ export function SellerButton({ className, size = 'md' }: SellerButtonProps) {
       />
 
       {/* آیکون مرتبط فروشگاه مشابه تصویر */}
-      <Store className={cn("shrink-0 text-white", size === 'sm' ? "h-4 w-4" : "h-4.5 w-4.5")} />
+      <Store className={cn("shrink-0 text-primary-foreground", size === 'sm' ? "h-4 w-4" : "h-4 w-4")} />
 
       {/* متن دکمه */}
       <span className="leading-none pt-0.5 whitespace-nowrap">

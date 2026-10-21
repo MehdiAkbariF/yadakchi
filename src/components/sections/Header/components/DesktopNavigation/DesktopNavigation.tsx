@@ -1,5 +1,3 @@
-// src/components/sections/Header/components/DesktopNavigation/DesktopNavigation.tsx
-
 'use client';
 
 import { useState } from 'react';
@@ -11,7 +9,7 @@ export function DesktopNavigation() {
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
 
   return (
-    <nav className="flex items-center gap-2 lg:gap-4 xl:gap-6">
+    <nav className="flex items-center gap-1 lg:gap-3 xl:gap-5">
       {NAV_ITEMS.map((item) => {
         const hasDropdown = item.hasDropdown;
         const isOpen = openCategoryId === item.id;
@@ -29,7 +27,7 @@ export function DesktopNavigation() {
               href={item.href}
               hasDropdown={hasDropdown}
               isOpen={isOpen}
-              className="text-xs lg:text-sm whitespace-nowrap"
+              className="text-xs font-medium text-foreground/90 transition-colors hover:text-primary lg:text-sm whitespace-nowrap"
             />
             {hasDropdown && <CategoryDropdown isOpen={isOpen} />}
           </div>

@@ -17,7 +17,7 @@ export default function OfflinePage() {
         <WifiOff className="h-10 w-10" />
       </div>
       
-      <h1 className="text-base md:text-lg font-black font-iran-yekan mb-2">ارتباط شما با اینترنت قطع شده است</h1>
+      <h1 className="text-base md:text-lg font-black mb-2">ارتباط شما با اینترنت قطع شده است</h1>
       
       <p className="text-xs md:text-sm text-muted-foreground font-iran-sans max-w-xs leading-relaxed mb-6">
         برای استفاده از امکانات یدک‌چی نیاز به اتصال فعال شبکه دارید. لطفا اتصال دیتا یا وای‌فای گوشی خود را بررسی کنید.
@@ -28,7 +28,7 @@ export default function OfflinePage() {
         variant="outline"
         size="sm"
         onClick={handleReload}
-        className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 border-zinc-200 hover:bg-muted text-foreground flex items-center justify-center gap-1.5 shadow-sm"
+        className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 border-border hover:bg-muted text-foreground flex items-center justify-center gap-1.5 shadow-sm"
       >
         <RotateCcw className="h-4 w-4" />
         <span>تلاش مجدد</span>

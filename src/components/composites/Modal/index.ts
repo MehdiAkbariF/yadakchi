@@ -1,5 +1,3 @@
-// src/components/composites/Modal/index.ts
-
 export {
   Modal,
   ModalHeader,

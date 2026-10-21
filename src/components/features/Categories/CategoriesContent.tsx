@@ -1,31 +1,32 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useGetMegaMenu } from '@/domains/front/banner/hooks/banner.hooks';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Search, Settings, ArrowLeft } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
-import Link from 'next/link';
-
 import { getFullUrl } from '@/core/utils/formatters';
+
 export function CategoriesContent() {
   const router = useRouter();
   const { data: categories = [], isLoading } = useGetMegaMenu();
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategoryId, setActiveCategoryId] = React.useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (categories.length > 0 && !activeCategoryId) {
       setActiveCategoryId(categories[0].id);
     }
   }, [categories, activeCategoryId]);
 
   if (isLoading) {
-    return <PageLoading message="در حال بارگذاری لیست دسته‌بندی‌ها..." />;
+    return <PageLoading label="در حال بارگذاری لیست دسته‌بندی‌ها..." />;
   }
 
-  const activeCategory = categories.find(c => c.id === (activeCategoryId || categories[0]?.id)) || categories[0];
+  const activeCategory =
+    categories.find((c) => c.id === (activeCategoryId || categories[0]?.id)) || categories[0];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,115 +34,123 @@ export function CategoriesContent() {
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
+
   return (
-    <div className="w-full flex flex-col h-screen select-none text-right overflow-hidden bg-background" dir="rtl">
-      
-      <div className="w-full p-4 border-b bg-background shrink-0 z-10">
-        <form onSubmit={handleSearchSubmit} className="relative w-full">
+    <div className="flex min-h-screen w-full select-none flex-col overflow-hidden bg-card">
+      <div className="z-10 w-full shrink-0 border-b border-border bg-card p-4">
+        <form onSubmit={handleSearchSubmit} className="relative w-full" role="search">
           <input
             type="text"
             placeholder="جستجو در دسته‌بندی قطعات یدک‌چی..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-10 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-muted/20 pl-4 pr-10 text-xs font-iran-yekan text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            aria-label="جستجو در دسته‌بندی"
+            className="h-10 w-full rounded-md border border-border bg-muted px-4 pe-10 text-sm text-foreground outline-none transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           />
-          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+          />
         </form>
       </div>
 
-      <div className="flex-1 min-h-0 flex w-full relative z-0">
-        
-        <div className="w-24 sm:w-28 shrink-0 bg-zinc-50 dark:bg-zinc-900/30 border-l border-zinc-100 dark:border-zinc-800/80 overflow-y-auto flex flex-col min-h-0 py-1 no-scrollbar">
+      <div className="relative z-0 flex min-h-0 w-full flex-1">
+        <div className="flex min-h-0 w-24 shrink-0 flex-col overflow-y-auto border-e border-border bg-muted/50 py-1 scrollbar-none sm:w-28">
           {categories.map((cat) => {
             const isActive = activeCategory?.id === cat.id;
             return (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => setActiveCategoryId(cat.id)}
                 className={cn(
-                  "w-full flex flex-col items-center justify-center gap-2 py-4 px-2 text-center transition-all outline-none border-r-2",
-                  isActive 
-                    ? "bg-background text-primary border-primary font-bold" 
-                    : "text-foreground border-transparent hover:bg-muted/40"
+                  'flex w-full flex-col items-center justify-center gap-2 border-s-2 px-2 py-4 text-center outline-none transition-colors',
+                  isActive
+                    ? 'border-primary bg-card font-bold text-primary'
+                    : 'border-transparent text-foreground hover:bg-muted'
                 )}
               >
-                <div className="w-10 h-10 rounded-full border bg-background flex items-center justify-center overflow-hidden p-1 shrink-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-card p-1">
                   {cat.icon ? (
                     <img
                       src={getFullUrl(cat.icon)}
                       alt={cat.name}
                       className={cn(
-                        "w-full h-full object-contain",
-                        cat.icon.toLowerCase().endsWith('.svg') && "filter dark:invert"
+                        'h-full w-full object-contain',
+                        cat.icon.toLowerCase().endsWith('.svg') && 'filter dark:invert'
                       )}
                     />
                   ) : (
-                    <Settings className="h-5 w-5 text-muted-foreground/80" />
+                    <Settings aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                   )}
                 </div>
-                <span className="text-[10px] md:text-xs leading-relaxed font-iran-yekan font-bold block max-w-full truncate">{cat.name}</span>
+                <span className="block max-w-full truncate text-2xs font-bold leading-relaxed md:text-xs">
+                  {cat.name}
+                </span>
               </button>
             );
           })}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 min-h-0 bg-background no-scrollbar">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-card p-4 scrollbar-none">
           {activeCategory ? (
-            <div className="flex flex-col gap-5 w-full">
-              
-              <div className="flex items-center justify-between pb-2 w-full">
-                <span className="text-xs font-black text-foreground font-iran-yekan">همه قطعات {activeCategory.name}</span>
-                <Link 
+            <div className="flex w-full flex-col gap-5">
+              <div className="flex w-full items-center justify-between pb-2">
+                <span className="text-xs font-bold text-foreground">
+                  همه قطعات {activeCategory.name}
+                </span>
+                <Link
                   href={activeCategory.href}
                   prefetch={false}
-                  className="text-[10px] md:text-xs text-primary font-bold font-iran-yekan flex items-center gap-0.5 hover:underline"
+                  className="flex items-center gap-0.5 text-2xs font-bold text-primary hover:underline md:text-xs"
                 >
                   <span>مشاهده همه</span>
-                  <ArrowLeft className="h-3 w-3" />
+                  <ArrowLeft aria-hidden="true" className="h-3 w-3" />
                 </Link>
               </div>
 
               {activeCategory.parts && activeCategory.parts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3.5 w-full">
+                <div className="grid w-full grid-cols-2 gap-3.5">
                   {activeCategory.parts.map((part) => (
                     <Link
                       key={part.id}
                       href={part.href}
                       prefetch={false}
-                      className="flex flex-col items-center justify-center text-center p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800/80 bg-background hover:border-primary/20 transition-all select-none gap-2.5 h-28"
+                      className="flex h-28 select-none flex-col items-center justify-center gap-2.5 rounded-lg border border-border bg-card p-3 text-center transition-colors hover:border-primary/40"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-muted/15 flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
                         {part.icon ? (
-                          <img 
-                            src={getFullUrl(part.icon)} 
+                          <img
+                            src={getFullUrl(part.icon)}
                             className={cn(
-                              "w-full h-full object-contain",
-                              part.icon.toLowerCase().endsWith('.svg') && "filter dark:invert"
-                            )} 
-                            alt="" 
+                              'h-full w-full object-contain',
+                              part.icon.toLowerCase().endsWith('.svg') && 'filter dark:invert'
+                            )}
+                            alt=""
                           />
                         ) : (
-                          <Settings className="h-5 w-5 text-muted-foreground" />
+                          <Settings aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                         )}
                       </div>
-                      <span className="text-[10px] md:text-xs font-bold font-iran-yekan text-foreground leading-relaxed line-clamp-2 w-full">{part.name}</span>
+                      <span className="line-clamp-2 w-full text-2xs font-bold leading-relaxed text-foreground md:text-xs">
+                        {part.name}
+                      </span>
                     </Link>
                   ))}
                 </div>
               ) : (
-                <span className="text-xs text-muted-foreground font-iran-yekan py-4">قطعه‌ای برای این دسته‌بندی ثبت نشده است.</span>
+                <span className="py-4 text-xs text-muted-foreground">
+                  قطعه‌ای برای این دسته‌بندی ثبت نشده است.
+                </span>
               )}
-
             </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground font-iran-yekan">
+            <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
               یک دسته‌بندی را انتخاب کنید
             </div>
           )}
         </div>
-
       </div>
-
     </div>
   );
 }

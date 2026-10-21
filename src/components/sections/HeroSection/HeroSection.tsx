@@ -1,5 +1,3 @@
-// src/components/sections/HeroSection/HeroSection.tsx
-
 import Link from 'next/link';
 import { cn } from '@/design-system/utils/cn';
 import { Typography } from '@/components/primitives/Typography';
@@ -11,34 +9,45 @@ export interface HeroSectionProps {
 
 export function HeroSection({ className }: HeroSectionProps) {
   return (
-    <section className={cn(
-      'relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-600 to-primary-400 p-8 text-white',
-      className
-    )}>
+    <section
+      className={cn(
+        'relative overflow-hidden rounded-xl bg-gradient-to-l from-primary to-primary-hover p-8 text-primary-foreground',
+        className
+      )}
+    >
       <div className="relative z-10 flex flex-col items-start gap-4 md:max-w-2xl">
-        <Typography variant="h1" className="text-white">
+        <Typography variant="h1" className="text-primary-foreground">
           به یدکچی خوش آمدید
         </Typography>
-        <Typography variant="lead" className="text-white/90">
+        <Typography variant="lead" className="text-primary-foreground/90">
           بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران
         </Typography>
-        <div className="flex flex-wrap gap-4 mt-4">
+        <div className="mt-4 flex flex-wrap gap-4">
           <Link href="/product">
             <Button variant="secondary" size="lg">
               مشاهده محصولات
             </Button>
           </Link>
           <Link href="/shops">
-            <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-primary-foreground bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+            >
               فروشگاه‌ها
             </Button>
           </Link>
         </div>
       </div>
-      
-      {/* Decorative elements */}
-      <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute -bottom-20 -left-20 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+
+      <div
+        aria-hidden="true"
+        className="absolute -end-20 -top-20 h-64 w-64 rounded-full bg-primary-foreground/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-20 -start-20 h-48 w-48 rounded-full bg-primary-foreground/10 blur-2xl"
+      />
     </section>
   );
 }

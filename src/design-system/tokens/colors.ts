@@ -1,112 +1,93 @@
-// src/design-system/tokens/colors.ts
-
-export const colors = {
-  // Brand Primary Colors
+export const palette = {
   brand: {
-    50: '#FDE8E3',
-    100: '#FCD1C7',
-    200: '#FAA3AB',
-    300: '#F8758F',
-    400: '#F64773',
-    500: '#F56D3C', // رنگ اصلی برند
+    50:  '#FDF2EE',
+    100: '#FCE3DA',
+    200: '#F8C7B4',
+    300: '#F4A98D',
+    400: '#EE8A66',
+    500: '#E36D43',
     600: '#D95D32',
     700: '#BD4D28',
     800: '#A13D1E',
     900: '#852D14',
     950: '#691D0A',
   },
-  
-  // Neutral Colors
+  shop: {
+    50:  '#EAF2F7',
+    100: '#CFE1EC',
+    200: '#A3C6DA',
+    300: '#77ABC8',
+    400: '#4C90B6',
+    500: '#2B76A1',
+    600: '#235F82',
+    700: '#1B4863',
+    800: '#133144',
+    900: '#0B1A25',
+  },
   neutral: {
-    50: '#FFFFFF', // سفید
-    100: '#FCFCFC',
-    200: '#F8F8F8',
-    300: '#F0F0F1', // خاکستری روشن
-    400: '#E0E0E1',
-    500: '#C0C0C1',
-    600: '#A0A0A1',
-    700: '#808081',
-    800: '#606061',
-    900: '#404041',
-    950: '#202021',
+    0:   '#FFFFFF',
+    50:  '#FAFAF9',
+    100: '#F5F5F4',
+    200: '#E7E5E4',
+    300: '#D6D3D1',
+    400: '#A8A29E',
+    500: '#78716C',
+    600: '#57534E',
+    700: '#44403C',
+    800: '#292524',
+    900: '#1C1917',
+    950: '#0C0A09',
   },
-  
-  // Primary (همان برند)
-  primary: {
-    DEFAULT: '#F56D3C',
-    foreground: '#FFFFFF',
-    50: '#FDE8E3',
-    100: '#FCD1C7',
-    200: '#FAA3AB',
-    300: '#F8758F',
-    400: '#F64773',
-    500: '#F56D3C',
-    600: '#D95D32',
-    700: '#BD4D28',
-    800: '#A13D1E',
-    900: '#852D14',
-    950: '#691D0A',
+  danger: {
+    50:  '#FEF2F2',
+    100: '#FEE2E2',
+    200: '#FECACA',
+    300: '#FCA5A5',
+    400: '#F87171',
+    500: '#EF4444',
+    600: '#DC2626',
+    700: '#B91C1C',
+    800: '#991B1B',
+    900: '#7F1D1D',
   },
-  
-  // Secondary
-  secondary: {
-    DEFAULT: '#F0F0F1',
-    foreground: '#202021',
-    50: '#FFFFFF',
-    100: '#FCFCFC',
-    200: '#F8F8F8',
-    300: '#F0F0F1',
-    400: '#E0E0E1',
-    500: '#C0C0C1',
-    600: '#A0A0A1',
-    700: '#808081',
-    800: '#606061',
-    900: '#404041',
-    950: '#202021',
-  },
-  
-  // Success Colors
   success: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: '#22c55e',
-    600: '#16a34a',
-    700: '#15803d',
+    50:  '#F0FDF4',
+    100: '#DCFCE7',
+    200: '#BBF7D0',
+    300: '#86EFAC',
+    400: '#4ADE80',
+    500: '#22C55E',
+    600: '#16A34A',
+    700: '#15803D',
     800: '#166534',
-    900: '#14532d',
+    900: '#14532D',
   },
-  
-  // Warning Colors
   warning: {
-    50: '#fffbeb',
-    100: '#fef3c7',
-    200: '#fde68a',
-    300: '#fcd34d',
-    400: '#fbbf24',
-    500: '#f59e0b',
-    600: '#d97706',
-    700: '#b45309',
-    800: '#92400e',
-    900: '#78350f',
+    50:  '#FFFBEB',
+    100: '#FEF3C7',
+    200: '#FDE68A',
+    300: '#FCD34D',
+    400: '#FBBF24',
+    500: '#F59E0B',
+    600: '#D97706',
+    700: '#B45309',
+    800: '#92400E',
+    900: '#78350F',
   },
-  
-  // Error Colors
-  error: {
-    50: '#fef2f2',
-    100: '#fee2e2',
-    200: '#fecaca',
-    300: '#fca5a5',
-    400: '#f87171',
-    500: '#ef4444',
-    600: '#dc2626',
-    700: '#b91c1c',
-    800: '#991b1b',
-    900: '#7f1d1d',
+  info: {
+    50:  '#EFF6FF',
+    100: '#DBEAFE',
+    200: '#BFDBFE',
+    300: '#93C5FD',
+    400: '#60A5FA',
+    500: '#3B82F6',
+    600: '#2563EB',
+    700: '#1D4ED8',
+    800: '#1E40AF',
+    900: '#1E3A8A',
   },
 } as const;
 
-export type ColorToken = typeof colors;
-export type ColorKey = keyof typeof colors;
+export type Palette = typeof palette;
+export type PaletteFamily = keyof typeof palette;
+export type PaletteShade<F extends PaletteFamily> = keyof typeof palette[F];

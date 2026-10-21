@@ -1,8 +1,6 @@
-// src/components/primitives/OtpInput/OtpInput.tsx
+﻿'use client';
 
-'use client';
-
-import { useRef } from 'react';
+import * as React from 'react';
 import { cn } from '@/design-system/utils/cn';
 
 export interface OtpInputProps {
@@ -10,54 +8,67 @@ export interface OtpInputProps {
   value: string[];
   onChange: (value: string[]) => void;
   className?: string;
+  disabled?: boolean;
+  'aria-label'?: string;
 }
 
-export const OtpInput = ({
-  length = 5,
-  value,
-  onChange,
-  className
-}: OtpInputProps) => {
-  const inputRefs = useRef<HTMLInputElement[]>([]);
+export const OtpInput = React.forwardRef<HTMLDivElement, OtpInputProps>(
+  ({ length = 5, value, onChange, className, disabled, 'aria-label': ariaLabel = 'کد یکبار مصرف' }, ref) => {
+    const inputRefs = React.useRef<Array<HTMLInputElement | null>>([]);
 
-  const handleChange = (index: number, val: string) => {
-    // فیلتر کردن مقادیر غیر عددی جهت جلوگیری از ورود حروف متفرقه
-    if (!/^[0-9]?$/.test(val)) return;
+    const handleChange = (index: number, next: string) => {
+      if (!/^[0-9]?$/.test(next)) return;
+      const updated = [...value];
+      updated[index] = next;
+      onChange(updated);
+      if (next && index < length - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
+    };
 
-    const newValue = [...value];
-    newValue[index] = val;
-    onChange(newValue);
+    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Backspace' && !value[index] && index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
+    };
 
-    // پرش خودکار به اینپوت بعدی پس از وارد کردن عدد بدون لرزش کیبورد
-    if (val && index < length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
+    return (
+      <div
+        ref={ref}
+        role="group"
+        aria-label={ariaLabel}
+        className={cn('flex items-center justify-center gap-3', className)}
+        dir="ltr"
+      >
+        {Array.from({ length }).map((_, index) => (
+          <input
+            key={index}
+            ref={(el) => {
+              inputRefs.current[index] = el;
+            }}
+            type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="one-time-code"
+            maxLength={1}
+            disabled={disabled}
+            value={value[index] ?? ''}
+            onChange={(e) => handleChange(index, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(index, e)}
+            aria-label={`رقم ${index + 1}`}
+            className={cn(
+              'h-12 w-12 md:h-14 md:w-14',
+              'text-center text-xl md:text-2xl font-bold',
+              'rounded-md border border-input bg-card text-foreground',
+              'transition-colors duration-fast ease-in-out',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:border-primary',
+              'disabled:cursor-not-allowed disabled:opacity-50'
+            )}
+          />
+        ))}
+      </div>
+    );
+  }
+);
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // بازگشت خودکار به اینپوت قبلی در صورت فشردن دکمه پاک کردن (Backspace)
-    if (e.key === 'Backspace' && !value[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  return (
-    <div className={cn('flex items-center justify-center gap-3', className)} dir="ltr">
-      {Array.from({ length }).map((_, index) => (
-        <input
-          key={index}
-          ref={(el) => { if (el) inputRefs.current[index] = el; }}
-          type="tel" // مرورگرهای موبایل را مجبور به نمایش دائمی کیبورد عددی می‌کند
-          inputMode="numeric" // فعال‌سازی لایه عددی اختصاصی کیبورد در اندروید و iOS
-          pattern="[0-9]*" // هماهنگی کامل با گوشی‌های آیفون و سافاری
-          autoComplete="one-time-code" // فعال‌سازی قابلیت ورود خودکار کدهای پیامک شده (SMS Auto-fill)
-          maxLength={1}
-          value={value[index] || ''}
-          onChange={(e) => handleChange(index, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(index, e)}
-          className="w-12 h-12 md:w-14 md:h-14 text-center text-xl md:text-2xl font-bold rounded-xl border border-input bg-background text-foreground transition-all duration-150 focus:ring-2 focus:ring-primary focus:border-transparent outline-none shadow-sm focus:bg-primary/5 focus:scale-105"
-        />
-      ))}
-    </div>
-  );
-};
+OtpInput.displayName = 'OtpInput';

@@ -30,17 +30,21 @@ export interface SubOrderItemDto {
   feedback: any;
 }
 
+// در src/domains/userpanel/types/dto.types.ts
+
 export interface SubOrderDto {
   id: string;
   status: string;
   subOrderNumber: number;
   recieveDate: string | null;
   shipmentDate: string | null;
-  shipmentMethod: string;
+  shipmentMethod: 'Local' | 'Tipax' | 'DirectShipment' | 'SnappBox' | string;
   directShipmentOption: string | null;
+  snappBoxShipmentStatus: string | null;
   traceNumber: string | null;
   driverFullName: string | null;
   driverMobile: string | null;
+  driverImageUrl: string | null;
   shipmentCompanyName: string | null;
   shipmentReceiptImage: string | null;
   shopId: string;

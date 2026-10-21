@@ -1,23 +1,16 @@
 // src/design-system/tokens/breakpoints.ts
+//
+// Mobile-first. مقادیر استاندارد Tailwind حفظ شدهاند.
+// `xs` و `3xl` برای پروژهی فعلی لازم نیستن (به دلیل اینکه هیچجا
+// استفاده نمیشن) و حذف شدن. اگر بعداً نیاز شد، بهعنوان semantic
+// در کامپوننت تعریف کن، نه breakpoint.
 
 export const breakpoints = {
-  xs: 375,
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-  '2xl': 1536,
-  '3xl': 1920,
+  sm:  '640px',
+  md:  '768px',
+  lg:  '1024px',
+  xl:  '1280px',
+  '2xl': '1536px',
 } as const;
 
-export const mediaQueries = {
-  xs: `(min-width: ${breakpoints.xs}px)`,
-  sm: `(min-width: ${breakpoints.sm}px)`,
-  md: `(min-width: ${breakpoints.md}px)`,
-  lg: `(min-width: ${breakpoints.lg}px)`,
-  xl: `(min-width: ${breakpoints.xl}px)`,
-  '2xl': `(min-width: ${breakpoints['2xl']}px)`,
-  '3xl': `(min-width: ${breakpoints['3xl']}px)`,
-} as const;
-
-export type Breakpoint = keyof typeof breakpoints;
+export type BreakpointKey = keyof typeof breakpoints;

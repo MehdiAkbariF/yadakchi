@@ -1,18 +1,18 @@
-import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+﻿import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 
 export function ProductCardSkeleton() {
   return (
-    <div className="w-full bg-background rounded-xl border p-3.5 flex flex-col items-center gap-3">
-      <Skeleton className="w-full aspect-[4/3]" />
+    <div className="flex w-full flex-col items-center gap-3 rounded-lg border border-border bg-card p-3.5">
+      <Skeleton className="aspect-[4/3] w-full" />
       <div className="w-full space-y-2.5">
-        <Skeleton variant="text" className="w-11/12 h-4" />
-        <Skeleton variant="text" className="w-3/4 h-3.5" />
+        <Skeleton variant="text" className="h-4 w-11/12" />
+        <Skeleton variant="text" className="h-3.5 w-3/4" />
       </div>
-      <div className="w-full flex items-center justify-between mt-4">
-        <Skeleton className="w-8 h-6 rounded-lg" />
+      <div className="mt-4 flex w-full items-center justify-between">
+        <Skeleton className="h-6 w-8 rounded-sm" />
         <div className="flex flex-col items-end gap-1">
-          <Skeleton className="w-16 h-3" />
-          <Skeleton className="w-24 h-5" />
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-5 w-24" />
         </div>
       </div>
     </div>

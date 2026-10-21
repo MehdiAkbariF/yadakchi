@@ -94,7 +94,7 @@ export function PWAInstallBanner() {
               : '1.25rem'
           }}
           className={cn(
-            "fixed left-4 right-4 z-[100] bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto text-right select-none"
+            "fixed left-4 right-4 z-[100] bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto select-none"
           )}
           dir="rtl"
         >
@@ -143,12 +143,12 @@ export function PWAInstallBanner() {
 
       <Modal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} className="max-w-sm w-full animate-none">
         <ModalHeader onClose={() => setIsGuideOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
+          <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-1.5">
             <Info className="h-4.5 w-4.5 text-primary" />
             راهنمای نصب دستی اپلیکیشن
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="p-5 pt-4 text-right flex flex-col gap-4">
+        <ModalBody className="p-5 pt-4 flex flex-col gap-4">
           <p className="text-xs leading-relaxed text-muted-foreground font-iran-sans">
             مرورگر شما هنوز برای نصب اتوماتیک آماده نیست. شما می‌توانید به راحتی و به صورت دستی اپلیکیشن را روی گوشی یا کامپیوتر خود نصب کنید:
           </p>
@@ -157,7 +157,7 @@ export function PWAInstallBanner() {
             <div className="flex items-start gap-2.5 text-xs text-foreground font-iran-sans">
               <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black shrink-0">۱</span>
               <p className="leading-relaxed">
-                در بالای صفحه مرورگر، دکمه سه نقطه <MoreVertical className="h-4 w-4 inline text-zinc-400 mx-0.5" /> (یا دکمه نصب مانیتور شکل <Monitor className="h-4 w-4 inline text-zinc-400 mx-0.5" /> در کادر آدرس سیستم) را کلیک کنید.
+                در بالای صفحه مرورگر، دکمه سه نقطه <MoreVertical className="h-4 w-4 inline text-muted-foreground mx-0.5" /> (یا دکمه نصب مانیتور شکل <Monitor className="h-4 w-4 inline text-muted-foreground mx-0.5" /> در کادر آدرس سیستم) را کلیک کنید.
               </p>
             </div>
             <div className="flex items-start gap-2.5 text-xs text-foreground font-iran-sans">

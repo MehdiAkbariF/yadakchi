@@ -18,6 +18,11 @@ export interface UserDiscountCodeItem {
   count: number;
 }
 
+export interface BasketShipmentMethodItem {
+  subBasketId: string;
+  shipmentMethod: 'Local' | 'Tipax' | 'DirectShipment' | 'SnappBox' | string;
+}
+
 export class BasketService {
   private readonly httpClient = getHttpClient();
 
@@ -173,8 +178,16 @@ export class BasketService {
   async getCheckoutBasket(): Promise<any> {
     try {
       const response = await this.httpClient.post(BASKET_ENDPOINTS.CHECKOUT_BASKET);
-      return response.data;
-    } catch (error) {
+      return response.data?.basket || response.data;
+    } catch (error: any) {
+      const responseData = error?.response?.data || error?.data;
+      if (
+        (error?.response?.status === 409 || error?.status === 409) &&
+        (responseData?.basket || responseData?.code === 'basket_already_checked_out')
+      ) {
+        logger.debug('[BasketService] Basket already checked out, using active basket data');
+        return responseData.basket || responseData;
+      }
       throw errorManager.normalize(error);
     }
   }
@@ -185,22 +198,19 @@ export class BasketService {
         BASKET_ENDPOINTS.BASKET_SHIPMENT_PRICE,
         { locationId }
       );
-      return response.data;
+      return response.data?.basket || response.data;
     } catch (error) {
       throw errorManager.normalize(error);
     }
   }
 
-  async setBasketShipment(
-    locationId: string, 
-    methods: Array<{ subBasketId: string; shipmentMethod: string }>
-  ): Promise<any> {
+  async setBasketShipment(methods: BasketShipmentMethodItem[]): Promise<any> {
     try {
       const response = await this.httpClient.post(
         BASKET_ENDPOINTS.BASKET_SHIPMENT, 
-        { locationId, methods }
+        { methods }
       );
-      return response.data;
+      return response.data?.basket || response.data;
     } catch (error) {
       throw errorManager.normalize(error);
     }

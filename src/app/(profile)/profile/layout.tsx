@@ -21,7 +21,7 @@ export default async function ProfileLayout({ children }: ProfileLayoutProps) {
 
   return (
     <MainLayout>
-      <div className="w-full flex flex-col lg:flex-row gap-8 select-none text-right" dir="rtl">
+      <div className="w-full flex flex-col lg:flex-row gap-8 select-none" dir="rtl">
         <div className="w-full lg:w-[320px] shrink-0">
           <ProfileSidebar />
         </div>

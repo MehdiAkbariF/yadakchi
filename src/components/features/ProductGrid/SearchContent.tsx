@@ -1,4 +1,4 @@
-// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\ProductGrid\SearchContent.tsx
+﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\ProductGrid\SearchContent.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -135,7 +135,7 @@ export function SearchContent() {
 
           {/* نوار وضعیت دریافت نتایج جدید */}
           {isSearching && (
-            <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-iran-yekan font-bold animate-pulse">
+            <div className="flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-bold animate-pulse">
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>در حال جستجو و دریافت نتایج جدید...</span>
             </div>
@@ -150,12 +150,12 @@ export function SearchContent() {
             </div>
           ) : isError ? (
             /* ۲. وضعیت خطای ارتباط یا سرور */
-            <div className="flex flex-col items-center justify-center py-16 text-center select-none bg-background rounded-2xl border border-destructive/20 border-dashed mx-4 md:mx-0 p-6">
+            <div className="flex flex-col items-center justify-center py-16 text-center select-none bg-card rounded-2xl border border-destructive/20 border-dashed mx-4 md:mx-0 p-6">
               <AlertCircle className="h-12 w-12 text-amber-500 mb-4 stroke-[1.5]" />
-              <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">
+              <Typography variant="h4" className=" font-extrabold text-foreground">
 خطای ارتباط با سرور
               </Typography>
-              <p className="text-xs text-muted-foreground mt-2 font-iran-yekan max-w-md">
+              <p className="text-xs text-muted-foreground mt-2 max-w-md">
                 لطفا بعدا دوباره تلاش کنید یا اتصال اینترنت خود را بررسی نمایید.
               </p>
             </div>
@@ -181,11 +181,11 @@ export function SearchContent() {
                 <LottiePlayer path="/anumations/no-product.json" className="w-full h-full" />
               </div>
 
-              <Typography variant="h3" className="font-iran-yekan font-black text-foreground text-lg md:text-xl">
+              <Typography variant="h3" className=" font-black text-foreground text-lg md:text-xl">
                 چیزی پیدا نشد!
               </Typography>
 
-              <p className="text-xs md:text-sm text-muted-foreground mt-2 font-iran-yekan leading-relaxed">
+              <p className="text-xs md:text-sm text-muted-foreground mt-2 leading-relaxed">
                 {searchedKeyword ? (
                   <>برای «<span className="text-foreground font-bold">{searchedKeyword}</span>» نتیجه‌ای پیدا نکردیم.</>
                 ) : (
@@ -193,27 +193,27 @@ export function SearchContent() {
                 )}
               </p>
               
-              <p className="text-xs text-muted-foreground mt-1 font-iran-yekan">
+              <p className="text-xs text-muted-foreground mt-1 ">
                 عبارت را تغییر دهید یا جستجوی دقیق‌تری انجام دهید.
               </p>
 
               {/* باکس پیشنهادی هوشمند */}
-              <div className="mt-6 p-4 rounded-xl bg-muted/40 border border-border max-w-md w-full text-right flex flex-col gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground font-iran-yekan">
+              <div className="mt-6 p-4 rounded-xl bg-muted/40 border border-border max-w-md w-full flex flex-col gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground ">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <span>پیشنهاد می‌کنیم:</span>
                 </div>
-                <p className="text-xs text-muted-foreground font-iran-yekan leading-relaxed">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   جستجو با نام قطعه + خودرو
                 </p>
                 <div className="flex items-center justify-between gap-2 mt-1 pt-2 border-t border-dashed border-border/80">
-                  <span className="text-[11px] text-muted-foreground font-iran-yekan">
+                  <span className="text-[11px] text-muted-foreground ">
                     مثال: «لنت ترمز پژو ۲۰۶»
                   </span>
                   <button
                     type="button"
                     onClick={() => setFilter('searchTitle', 'لنت ترمز پژو ۲۰۶')}
-                    className="text-[11px] font-bold text-primary hover:underline font-iran-yekan shrink-0 cursor-pointer"
+                    className="text-[11px] font-bold text-primary hover:underline shrink-0 cursor-pointer"
                   >
                     جستجوی این نمونه
                   </button>
@@ -226,7 +226,7 @@ export function SearchContent() {
                   variant="outline"
                   size="sm"
                   onClick={clearFilters}
-                  className="rounded-xl text-xs h-10 px-5 font-bold font-iran-yekan flex items-center gap-1.5 shadow-sm"
+                  className="rounded-xl text-xs h-10 px-5 font-bold flex items-center gap-1.5 shadow-sm"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>پاک کردن فیلترها</span>
@@ -243,7 +243,7 @@ export function SearchContent() {
         onClose={() => setIsMobileSortOpen(false)}
         title="مرتب‌سازی بر اساس"
       >
-        <div className="flex flex-col w-full text-right divide-y dark:divide-zinc-800">
+        <div className="flex flex-col w-full divide-y dark:divide-zinc-800">
           {SORT_OPTIONS.map((opt) => {
             const isActive = (filters.orderType || 'Selected') === opt.value;
             return (
@@ -251,7 +251,7 @@ export function SearchContent() {
                 key={opt.value}
                 onClick={() => handleMobileSortSelect(opt.value)}
                 className={cn(
-                  "flex items-center justify-between w-full py-4 text-sm font-bold font-iran-yekan transition-colors outline-none",
+                  "flex items-center justify-between w-full py-4 text-sm font-bold transition-colors outline-none",
                   isActive ? "text-primary" : "text-foreground"
                 )}
               >

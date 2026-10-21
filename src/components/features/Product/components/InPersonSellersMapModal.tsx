@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, X, AlertTriangle, Phone, Navigation, ArrowRight, Store, Loader2 } from 'lucide-react';
@@ -11,9 +11,9 @@ import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal';
-
 import { getFullUrl } from '@/core/utils/formatters';
-interface InPersonSellersMapModalProps {
+
+export interface InPersonSellersMapModalProps {
   isOpen: boolean;
   onClose: () => void;
   sellers: any[];
@@ -26,37 +26,34 @@ export function InPersonSellersMapModal({
   onClose,
   sellers = [],
   productTitle,
-  initialActiveSellerId = null
+  initialActiveSellerId = null,
 }: InPersonSellersMapModalProps) {
-  const [mounted, setMounted] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [activeSellerId, setActiveSellerId] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [reportShop, setReportShop] = useState<any | null>(null);
+  const [mounted, setMounted] = React.useState(false);
+  const [mapLoaded, setMapLoaded] = React.useState(false);
+  const [activeSellerId, setActiveSellerId] = React.useState<string | null>(null);
+  const [reportShop, setReportShop] = React.useState<any | null>(null);
 
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [reportDescription, setReportDescription] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
 
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<Record<string, any>>({});
-  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const mapContainerRef = React.useRef<HTMLDivElement>(null);
+  const mapInstanceRef = React.useRef<any>(null);
+  const markersRef = React.useRef<Record<string, any>>({});
+  const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
 
   const { data: reportSubjects = [] } = useGetReportSubjects('ShopProductReport');
   const submitReport = useSubmitShopReport();
 
-  useEffect(() => {
+  React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) return;
-
     if ((window as any).L) {
       setMapLoaded(true);
       return;
     }
-
     const existingLink = document.getElementById('leaflet-css');
     if (!existingLink) {
       const link = document.createElement('link');
@@ -65,92 +62,68 @@ export function InPersonSellersMapModal({
       link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
       document.head.appendChild(link);
     }
-
     const existingScript = document.getElementById('leaflet-js');
     if (existingScript) {
       setMapLoaded(true);
       return;
     }
-
     const script = document.createElement('script');
     script.id = 'leaflet-js';
     script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = () => {
-      setMapLoaded(true);
-    };
+    script.onload = () => setMapLoaded(true);
     document.body.appendChild(script);
   }, [isOpen]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) return;
-
     document.body.style.overflow = 'hidden';
-
-    const handlePopState = () => {
-      onClose();
-    };
-
+    const handlePopState = () => onClose();
     window.history.pushState({ modalOpen: 'in-person-map' }, '');
     window.addEventListener('popstate', handlePopState);
-
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('popstate', handlePopState);
     };
   }, [isOpen, onClose]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!mapLoaded || !mapContainerRef.current || !isOpen || sellers.length === 0) return;
-
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
       markersRef.current = {};
     }
-
     const L = (window as any).L;
-    
     const targetSellerId = initialActiveSellerId || sellers[0]?.id;
-    const targetSeller = sellers.find(s => s.id === targetSellerId) || sellers[0];
-    
+    const targetSeller = sellers.find((s) => s.id === targetSellerId) || sellers[0];
     const initialLat = targetSeller?.shop?.latitude || 35.6892;
-    const initialLon = targetSeller?.shop?.longitude || 51.3890;
-
+    const initialLon = targetSeller?.shop?.longitude || 51.389;
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLon],
       zoom: 12,
       zoomControl: false,
     });
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
     }).addTo(map);
-
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-
     mapInstanceRef.current = map;
+    if (initialActiveSellerId) setActiveSellerId(initialActiveSellerId);
 
-    if (initialActiveSellerId) {
-      setActiveSellerId(initialActiveSellerId);
-    }
-
-    sellers.forEach(seller => {
+    sellers.forEach((seller) => {
       if (!seller.shop?.latitude || !seller.shop?.longitude) return;
-
       const customIcon = L.divIcon({
         className: 'custom-leaflet-marker',
-        html: `<div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
+        html: `<div class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
         iconSize: [32, 32],
         iconAnchor: [16, 16],
       });
-
       const marker = L.marker([seller.shop.latitude, seller.shop.longitude], { icon: customIcon })
         .addTo(map)
         .on('click', () => {
           setActiveSellerId(seller.id);
           map.flyTo([seller.shop.latitude, seller.shop.longitude], 15);
         });
-
       markersRef.current[seller.id] = marker;
     });
 
@@ -163,12 +136,12 @@ export function InPersonSellersMapModal({
     };
   }, [mapLoaded, isOpen, sellers, initialActiveSellerId]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (isOpen && activeSellerId && cardRefs.current[activeSellerId]) {
       cardRefs.current[activeSellerId]?.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
-        inline: 'center'
+        inline: 'center',
       });
     }
   }, [activeSellerId, isOpen]);
@@ -185,7 +158,6 @@ export function InPersonSellersMapModal({
       showToast.error('لطفاً دلیل گزارش را انتخاب کنید');
       return;
     }
-
     try {
       await submitReport.mutateAsync({
         shopId: reportShop.shop.id,
@@ -193,7 +165,6 @@ export function InPersonSellersMapModal({
         reportSubjectId: selectedSubjectId,
         description: reportDescription,
       });
-
       showToast.success('گزارش خطای قیمت با موفقیت ثبت شد و توسط پشتیبانی بررسی خواهد گردید');
       setReportShop(null);
       setSelectedSubjectId('');
@@ -202,22 +173,20 @@ export function InPersonSellersMapModal({
       showToast.error(error.userMessage || 'خطا در ثبت گزارش');
     }
   };
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value);
-  };
+
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
   if (!mounted || !isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[110] flex items-center justify-center text-right w-screen h-screen overflow-hidden" dir="rtl">
-      
+    <div className="fixed inset-0 z-modal flex h-screen w-screen items-center justify-center overflow-hidden">
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-foreground/40 backdrop-blur-sm"
         />
       </AnimatePresence>
 
@@ -226,34 +195,35 @@ export function InPersonSellersMapModal({
         animate={{ y: '0%', opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
         transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-        className="relative z-10 w-screen h-screen bg-background shadow-2xl flex flex-col"
+        className="relative z-10 flex h-screen w-screen flex-col bg-card shadow-lg"
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
           <div className="flex items-center gap-2">
-            <button 
+            <button
+              type="button"
               onClick={onClose}
-              className="p-1 -mr-1 hover:bg-muted rounded-full"
-              aria-label="Back"
+              aria-label="بازگشت"
+              className="-me-1 rounded-full p-1 hover:bg-muted"
             >
-              <ArrowRight className="h-5 w-5 text-foreground" />
+              <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
             </button>
-            <span className="text-sm font-bold font-iran-yekan flex items-center gap-1.5 text-foreground">
-              <MapPin className="h-4.5 w-4.5 text-primary" />
+            <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <MapPin aria-hidden="true" className="h-4 w-4 text-primary" />
               فروشگاه‌های حضوری: {productTitle}
             </span>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
-            aria-label="Close"
+            aria-label="بستن"
+            className="flex items-center justify-center rounded-full p-1.5 transition-colors hover:bg-muted"
           >
-            <X className="h-5 w-5" />
+            <X aria-hidden="true" className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col md:flex-row min-h-0 w-full relative">
-          
-          <div className="hidden md:flex w-[380px] shrink-0 border-l flex-col bg-background min-h-0 overflow-y-auto p-4 gap-3">
+        <div className="relative flex min-h-0 w-full flex-1 flex-col md:flex-row">
+          <div className="hidden min-h-0 w-[380px] shrink-0 flex-col gap-3 overflow-y-auto border-e border-border bg-card p-4 md:flex">
             {sellers.map((seller) => {
               const isSelected = activeSellerId === seller.id;
               return (
@@ -261,74 +231,78 @@ export function InPersonSellersMapModal({
                   key={seller.id}
                   onClick={() => handleSelectSeller(seller)}
                   className={cn(
-                    "rounded-xl border cursor-pointer text-right flex flex-col transition-all overflow-hidden h-fit",
-                    isSelected ? "border-primary bg-primary/5 p-4 gap-3" : "border-zinc-200 hover:border-zinc-300 bg-background p-3.5 gap-0"
+                    'flex h-fit cursor-pointer flex-col overflow-hidden rounded-md border transition-colors',
+                    isSelected
+                      ? 'border-primary bg-accent/50 p-4 gap-3'
+                      : 'border-border bg-card p-3.5 gap-0 hover:border-primary/40'
                   )}
                 >
-                  <div className="flex gap-3 items-start w-full">
-                    <div className="w-10 h-10 shrink-0 rounded-lg border bg-muted/10 flex items-center justify-center overflow-hidden">
+                  <div className="flex w-full items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
                       {seller.shop.logo ? (
-                        <img src={getFullUrl(seller.shop.logo)} className="w-full h-full object-contain" alt="" />
+                        <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
                       ) : (
-                        <Store className="h-5 w-5 text-muted-foreground/80" />
+                        <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-xs font-bold text-shop block truncate font-iran-yekan">{seller.shop.title}</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-muted-foreground font-iran-yekan">شهر ری</span>
-                        <span className="text-zinc-300">|</span>
-                        <span className="text-[10px] text-success-500 font-bold font-iran-yekan">عملکرد عالی</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-shop">{seller.shop.title}</span>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-2xs text-muted-foreground">شهر ری</span>
+                        <span className="text-muted-foreground">|</span>
+                        <span className="text-2xs font-bold text-success">عملکرد عالی</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-dashed pt-3 mt-2.5 w-full">
-                    <div className="flex flex-col text-right">
-                      {seller.hasDiscount && (
-                        <span className="text-[9px] text-zinc-400 line-through leading-none mb-1 font-iran-yekan">
+                  <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border pt-3">
+                    <div className="flex flex-col">
+                      {seller.hasDiscount ? (
+                        <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
                           {formatPrice(seller.retailPriceRaw / 10)}
                         </span>
-                      )}
-                      <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan leading-none">{seller.finalPrice}</span>
+                      ) : null}
+                      <span className="text-xs font-bold leading-none text-foreground md:text-sm">
+                        {seller.finalPrice}
+                      </span>
                     </div>
-                    
-                    {seller.hasDiscount && (
-                      <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+
+                    {seller.hasDiscount ? (
+                      <span className="rounded-sm bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground">
                         {seller.discountPercentage}% تخفیف
                       </span>
-                    )}
+                    ) : null}
 
                     <Button
-                      variant={isSelected ? "primary" : "outline"}
+                      variant={isSelected ? 'primary' : 'outline'}
                       size="sm"
-                      className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 px-3.5"
+                      className="h-8 px-3.5 text-2xs font-bold"
                     >
-                      {isSelected ? "نمایش اطلاعات" : "مشاهده جزئیات"}
+                      {isSelected ? 'نمایش اطلاعات' : 'مشاهده جزئیات'}
                     </Button>
                   </div>
 
                   <AnimatePresence>
-                    {isSelected && (
+                    {isSelected ? (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="overflow-hidden border-t border-dashed pt-3 mt-1 flex flex-col gap-3.5 text-right w-full"
+                        className="mt-1 flex w-full flex-col gap-3.5 overflow-hidden border-t border-dashed border-border pt-3"
                       >
-                        <div className="flex flex-col gap-1 w-full">
-                          <span className="text-[9px] font-bold text-muted-foreground font-iran-yekan">آدرس فروشگاه:</span>
-                          <p className="text-[11px] font-bold text-foreground font-iran-yekan leading-relaxed">{seller.shop.address}</p>
+                        <div className="flex w-full flex-col gap-1">
+                          <span className="text-2xs font-bold text-muted-foreground">آدرس فروشگاه:</span>
+                          <p className="text-xs font-bold leading-relaxed text-foreground">{seller.shop.address}</p>
                         </div>
-                        
-                        <div className="flex gap-2 w-full">
+
+                        <div className="flex w-full gap-2">
                           <a
                             href={`tel:${seller.shop.tell}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex-1 h-9 rounded-xl border border-zinc-200 hover:bg-muted text-foreground text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
+                            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border text-xs font-bold text-foreground shadow-xs transition-colors hover:bg-muted"
                           >
-                            <Phone className="h-3.5 w-3.5 shrink-0" />
+                            <Phone aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                             <span>تماس با فروشگاه</span>
                           </a>
                           <a
@@ -336,94 +310,96 @@ export function InPersonSellersMapModal({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="flex-1 h-9 rounded-xl bg-primary text-white text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
+                            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md bg-primary text-xs font-bold text-primary-foreground shadow-xs transition-colors hover:bg-primary-hover"
                           >
-                            <Navigation className="h-3.5 w-3.5 shrink-0" />
+                            <Navigation aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                             <span>مسیریابی روی نقشه</span>
                           </a>
                         </div>
                       </motion.div>
-                    )}
+                    ) : null}
                   </AnimatePresence>
                 </div>
               );
             })}
           </div>
 
-          <div className="flex-1 h-full min-h-0 relative z-0">
-            {!mapLoaded && (
-              <div className="absolute inset-0 z-50 bg-background/80 flex flex-col items-center justify-center gap-2">
-                <Loader2 className="h-7 w-7 animate-spin text-primary" />
-                <span className="text-xs font-iran-yekan text-muted-foreground">در حال بارگذاری نقشه...</span>
+          <div className="relative z-0 h-full min-h-0 flex-1">
+            {!mapLoaded ? (
+              <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-2 bg-card/80">
+                <Loader2 aria-hidden="true" className="h-7 w-7 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">در حال بارگذاری نقشه...</span>
               </div>
-            )}
-            <div ref={mapContainerRef} className="w-full h-full" />
+            ) : null}
+            <div ref={mapContainerRef} className="h-full w-full" />
           </div>
 
-          <div className="md:hidden absolute bottom-4 left-4 right-4 z-10 flex overflow-x-auto gap-3 no-scrollbar py-1 items-end">
+          <div className="absolute inset-x-4 bottom-4 z-10 flex items-end gap-3 overflow-x-auto py-1 scrollbar-none md:hidden">
             {sellers.map((seller) => {
               const isSelected = activeSellerId === seller.id;
               return (
                 <div
                   key={seller.id}
-                  ref={el => { cardRefs.current[seller.id] = el; }}
+                  ref={(el) => { cardRefs.current[seller.id] = el; }}
                   onClick={() => handleSelectSeller(seller)}
                   className={cn(
-                    "rounded-xl border bg-background shadow-lg flex flex-col shrink-0 text-right transition-all overflow-hidden min-w-[280px] max-w-[280px] h-fit",
-                    isSelected ? "border-primary p-4 gap-3" : "border-zinc-200 p-3.5 gap-0"
+                    'flex h-fit min-w-[280px] max-w-[280px] shrink-0 flex-col overflow-hidden rounded-md border bg-card shadow-lg transition-colors',
+                    isSelected ? 'border-primary p-4 gap-3' : 'border-border p-3.5 gap-0'
                   )}
                 >
-                  <div className="flex gap-3 items-start w-full">
-                    <div className="w-10 h-10 shrink-0 rounded-lg border bg-muted/10 flex items-center justify-center overflow-hidden">
+                  <div className="flex w-full items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
                       {seller.shop.logo ? (
-                        <img src={getFullUrl(seller.shop.logo)} className="w-full h-full object-contain" alt="" />
+                        <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
                       ) : (
-                        <Store className="h-5 w-5 text-muted-foreground/80" />
+                        <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-xs font-bold text-shop block truncate font-iran-yekan">{seller.shop.title}</span>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[10px] text-muted-foreground font-iran-yekan">شهر ری</span>
-                        <span className="text-zinc-300">|</span>
-                        <span className="text-[10px] text-success-500 font-bold font-iran-yekan">عملکرد عالی</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-shop">{seller.shop.title}</span>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="text-2xs text-muted-foreground">شهر ری</span>
+                        <span className="text-muted-foreground">|</span>
+                        <span className="text-2xs font-bold text-success">عملکرد عالی</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-dashed pt-3 mt-2.5 w-full">
-                    <div className="flex flex-col text-right">
-                      {seller.hasDiscount && (
-                        <span className="text-[9px] text-zinc-400 line-through leading-none mb-1 font-iran-yekan">
+                  <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border pt-3">
+                    <div className="flex flex-col">
+                      {seller.hasDiscount ? (
+                        <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
                           {formatPrice(seller.retailPriceRaw / 10)}
                         </span>
-                      )}
-                      <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan leading-none">{seller.finalPrice}</span>
+                      ) : null}
+                      <span className="text-xs font-bold leading-none text-foreground md:text-sm">
+                        {seller.finalPrice}
+                      </span>
                     </div>
 
                     <Button
-                      variant={isSelected ? "primary" : "outline"}
+                      variant={isSelected ? 'primary' : 'outline'}
                       size="sm"
-                      className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 px-3.5"
+                      className="h-8 px-3.5 text-2xs font-bold"
                     >
-                      {isSelected ? "نمایش اطلاعات" : "مشاهده جزئیات"}
+                      {isSelected ? 'نمایش اطلاعات' : 'مشاهده جزئیات'}
                     </Button>
                   </div>
 
-                  {isSelected && (
-                    <div className="border-t border-dashed pt-3 mt-1 flex flex-col gap-3 text-right w-full animate-in slide-in-from-bottom duration-200">
-                      <div className="flex flex-col gap-1 w-full">
-                        <span className="text-[9px] font-bold text-muted-foreground font-iran-yekan">آدرس فروشگاه:</span>
-                        <p className="text-[11px] font-bold text-foreground font-iran-yekan leading-relaxed">{seller.shop.address}</p>
+                  {isSelected ? (
+                    <div className="mt-1 flex w-full flex-col gap-3 border-t border-dashed border-border pt-3">
+                      <div className="flex w-full flex-col gap-1">
+                        <span className="text-2xs font-bold text-muted-foreground">آدرس فروشگاه:</span>
+                        <p className="text-xs font-bold leading-relaxed text-foreground">{seller.shop.address}</p>
                       </div>
-                      
-                      <div className="flex gap-2 w-full">
+
+                      <div className="flex w-full gap-2">
                         <a
                           href={`tel:${seller.shop.tell}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="flex-1 h-9 rounded-xl border border-zinc-200 bg-background text-foreground text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
+                          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border bg-card text-xs font-bold text-foreground shadow-xs"
                         >
-                          <Phone className="h-3.5 w-3.5 shrink-0" />
+                          <Phone aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                           <span>تماس</span>
                         </a>
                         <a
@@ -431,53 +407,45 @@ export function InPersonSellersMapModal({
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="flex-1 h-9 rounded-xl bg-primary text-white text-[10px] font-bold font-iran-yekan flex items-center justify-center gap-1 shadow-sm transition-all"
+                          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md bg-primary text-xs font-bold text-primary-foreground shadow-xs"
                         >
-                          <Navigation className="h-3.5 w-3.5 shrink-0" />
+                          <Navigation aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                           <span>مسیریابی</span>
                         </a>
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               );
             })}
           </div>
-
         </div>
 
-        <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="max-w-md w-full animate-none">
+        <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md">
           <ModalHeader onClose={() => setReportShop(null)}>
-            <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
-              <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+            <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
               گزارش خطا در قیمت فروشگاه {reportShop?.shop.title}
             </ModalTitle>
           </ModalHeader>
-          <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
-            <div className="flex flex-col gap-1 w-full">
-              <Select
-                label="دلیل گزارش *"
-                placeholder="دلیل گزارش را انتخاب کنید..."
-                value={selectedSubjectId}
-                onChange={(e) => setSelectedSubjectId(e.target.value)}
-                options={reportSubjects.map((sub: any) => ({
-                  value: sub.id,
-                  label: sub.title,
-                }))}
-              />
-            </div>
+          <ModalBody className="flex flex-col gap-4 p-0 pt-4">
+            <Select
+              label="دلیل گزارش *"
+              placeholder="دلیل گزارش را انتخاب کنید..."
+              value={selectedSubjectId}
+              onChange={(e) => setSelectedSubjectId(e.target.value)}
+              options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+            />
 
-            <div className="flex flex-col gap-1 w-full">
-              <TextArea
-                label="توضیحات (اختیاری)"
-                placeholder="توضیحات خود را اینجا بنویسید..."
-                value={reportDescription}
-                onChange={(e) => setReportDescription(e.target.value)}
-                className="h-24"
-              />
-            </div>
+            <TextArea
+              label="توضیحات (اختیاری)"
+              placeholder="توضیحات خود را اینجا بنویسید..."
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              className="h-24"
+            />
 
-            <div className="flex gap-2.5 mt-4 w-full">
+            <div className="mt-4 flex w-full gap-2.5">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -485,7 +453,7 @@ export function InPersonSellersMapModal({
                   setSelectedSubjectId('');
                   setReportDescription('');
                 }}
-                className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
+                className="h-10 flex-1 text-xs font-bold"
               >
                 انصراف
               </Button>
@@ -493,14 +461,13 @@ export function InPersonSellersMapModal({
                 variant="destructive"
                 onClick={handleReportSubmit}
                 isLoading={submitReport.isPending}
-                className="rounded-xl text-xs h-10 font-bold font-iran-yekan"
+                className="h-10 flex-1 text-xs font-bold"
               >
                 ثبت گزارش خطا
               </Button>
             </div>
           </ModalBody>
         </Modal>
-
       </motion.div>
     </div>,
     document.body

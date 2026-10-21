@@ -301,18 +301,18 @@ export default function MyCarPage() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-6 select-none text-right" dir="rtl">
+    <div className="w-full flex flex-col gap-6 select-none" dir="rtl">
       
       {/* هدر صفحه */}
       <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-5">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">گاراژ من</span>
-            <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full font-iran-yekan">
+            <span className="text-lg md:text-xl font-black text-foreground ">گاراژ من</span>
+            <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full ">
               {new Intl.NumberFormat('fa-IR').format(vehicles.length)} خودرو از ۱۰ خودرو
             </span>
           </div>
-          <p className="text-xs md:text-sm text-muted-foreground font-iran-yekan leading-relaxed">
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
             با وارد کردن مقدار کیلومتر کارکرد خودرو، یدک‌چی زمان سرویس دوره ای رو بهت یادآوری میکنه
           </p>
         </div>
@@ -320,7 +320,7 @@ export default function MyCarPage() {
         <Button
           variant="primary"
           onClick={handleAddCarClick}
-          className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 flex items-center justify-center gap-2 self-start md:self-auto shadow-sm"
+          className="rounded-xl font-bold text-xs h-10 px-5 flex items-center justify-center gap-2 self-start md:self-auto shadow-sm"
         >
           <Plus className="h-4 w-4" />
           <span>افزودن خودرو</span>
@@ -348,7 +348,7 @@ export default function MyCarPage() {
                 key={vehicle.id} 
                 className={cn(
                   "w-full border rounded-2xl bg-card shadow-sm transition-all overflow-hidden",
-                  vehicle.isDefault ? "border-primary/40 ring-1 ring-primary/20" : "hover:border-zinc-300 dark:hover:border-zinc-800"
+                  vehicle.isDefault ? "border-primary/40 ring-1 ring-primary/20" : "hover:border-border dark:hover:border-border"
                 )}
               >
                 <CardBody className="p-4 md:p-6 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5">
@@ -366,7 +366,7 @@ export default function MyCarPage() {
                       <button
                         onClick={() => handleOpenDeleteModal(vehicle)}
                         disabled={deleteVehicle.isPending}
-                        className="absolute bottom-1 right-1 p-2 bg-background/80 hover:bg-destructive hover:text-white rounded-lg text-muted-foreground shadow-sm transition-all"
+                        className="absolute bottom-1 right-1 p-2 bg-card/80 hover:bg-destructive hover:text-destructive-foreground rounded-lg text-muted-foreground shadow-sm transition-all"
                         aria-label="حذف"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -376,31 +376,31 @@ export default function MyCarPage() {
                     <div className="flex-1 min-w-0 flex flex-col gap-2">
                       {/* نام خودرو بدون کاراکتر - */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-base md:text-lg font-black text-foreground truncate font-iran-yekan">
+                        <span className="text-base md:text-lg font-black text-foreground truncate ">
                           {vehicle.carModel}
                         </span>
                         {vehicle.title && (
-                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg font-iran-yekan">
+                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg ">
                             {vehicle.title}
                           </span>
                         )}
                         {vehicle.isDefault && (
-                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full font-iran-yekan">
+                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full ">
                             پیش‌فرض
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground font-iran-yekan">
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground ">
                         <div className="flex items-center gap-2">
-                          <Gauge className="h-4 w-4 text-zinc-400 shrink-0" />
+                          <Gauge className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>کیلومتر پیمایش:</span>
                           <span className="font-bold text-foreground">
                             {vehicle.mileage !== 'ثبت نشده' && vehicle.mileage ? `${vehicle.mileage} km` : '-'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Wrench className="h-4 w-4 text-zinc-400 shrink-0" />
+                          <Wrench className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>سرویس بعدی:</span>
                           <span className="font-bold text-foreground">
                             {totalNextServiceMileage 
@@ -409,7 +409,7 @@ export default function MyCarPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-zinc-400 shrink-0" />
+                          <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>تاریخ اضافه به گاراژ:</span>
                           <span className="font-bold text-foreground">{formattedAddedDate}</span>
                         </div>
@@ -422,10 +422,10 @@ export default function MyCarPage() {
                       onClick={() => handleToggleDefault(vehicle)}
                       disabled={updateVehicle.isPending}
                       className={cn(
-                        "rounded-xl text-[10px] md:text-xs font-bold font-iran-yekan px-3 py-2 flex items-center justify-center gap-1.5 self-start sm:self-auto transition-all outline-none",
+                        "rounded-xl text-[10px] md:text-xs font-bold px-3 py-2 flex items-center justify-center gap-1.5 self-start sm:self-auto transition-all outline-none",
                         vehicle.isDefault 
                           ? "bg-success-500/10 text-success-500 border border-success-500/20 hover:bg-success-500/20" 
-                          : "border border-zinc-200 hover:border-primary/20 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                          : "border border-border hover:border-primary/20 text-muted-foreground hover:text-primary hover:bg-primary/5"
                       )}
                     >
                       {vehicle.isDefault ? (
@@ -445,7 +445,7 @@ export default function MyCarPage() {
                       {/* دکمه با ابعاد بزرگتر و بوردر آبی */}
                       <button
                         onClick={() => handleOpenUpdateModal(vehicle)}
-                        className="rounded-xl font-iran-yekan font-bold text-xs md:text-sm h-11 px-5 flex items-center justify-center gap-1.5 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all shadow-sm shrink-0"
+                        className="rounded-xl font-bold text-xs md:text-sm h-11 px-5 flex items-center justify-center gap-1.5 border-2 border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all shadow-sm shrink-0"
                       >
                         <Gauge className="h-4 w-4" />
                         <span>بروزرسانی کارکرد</span>
@@ -455,7 +455,7 @@ export default function MyCarPage() {
                         variant="primary"
                         size="sm"
                         onClick={() => router.push(`/search?carIds=${vehicle.car?.id || vehicle.carId}`)}
-                        className="rounded-xl font-iran-yekan font-bold text-xs md:text-sm h-11 px-4 flex items-center justify-center gap-1.5 shadow-sm"
+                        className="rounded-xl font-bold text-xs md:text-sm h-11 px-4 flex items-center justify-center gap-1.5 shadow-sm"
                       >
                         <Search className="h-4 w-4" />
                         <span>جستجوی قطعات</span>
@@ -470,16 +470,16 @@ export default function MyCarPage() {
         </div>
       ) : (
         /* استیت گاراژ خالی با انیمیشن لاتی و متون دقیق QA */
-        <div className="w-full py-12 px-4 text-center rounded-3xl bg-card border flex flex-col items-center justify-center gap-4">
+        <div className="w-full py-12 px-4 text-center rounded-2xl bg-card border flex flex-col items-center justify-center gap-4">
           <div className="w-64 h-64 max-w-full flex items-center justify-center">
             <EmptyGarageLottie />
           </div>
           
           <div className="flex flex-col items-center gap-2 max-w-md">
-            <h3 className="text-lg md:text-xl font-black text-foreground font-iran-yekan">
+            <h3 className="text-lg md:text-xl font-black text-foreground ">
               ! گاراژ شما خالیه
             </h3>
-            <p className="text-xs md:text-sm text-muted-foreground font-iran-yekan leading-relaxed">
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
               برای اضافه کردن خودروهای خودتون روی افزودن خودرو کلیک کنین
             </p>
           </div>
@@ -487,7 +487,7 @@ export default function MyCarPage() {
           <Button
             variant="primary"
             onClick={handleAddCarClick}
-            className="rounded-xl font-iran-yekan font-bold text-sm h-11 px-8 flex items-center justify-center gap-2 mt-2 shadow-md"
+            className="rounded-xl font-bold text-sm h-11 px-8 flex items-center justify-center gap-2 mt-2 shadow-md"
           >
             <span>افزودن خودرو +</span>
           </Button>
@@ -497,18 +497,18 @@ export default function MyCarPage() {
       {/* مودال بروزرسانی کارکرد */}
       <Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+          <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-2">
             <Gauge className="h-5 w-5 text-primary" />
             بروزرسانی کارکرد خودرو
           </ModalTitle>
         </ModalHeader>
         
-        <ModalBody className="p-5 pt-4 text-right">
+        <ModalBody className="p-5 pt-4">
           {selectedVehicle && (
-            <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full text-right">
+            <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full">
               
-              <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800">
-                <div className="w-12 h-12 shrink-0 rounded-lg border bg-background flex items-center justify-center overflow-hidden p-0.5">
+              <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border">
+                <div className="w-12 h-12 shrink-0 rounded-lg border bg-card flex items-center justify-center overflow-hidden p-0.5">
                   <img 
                     src={selectedVehicle.carCover ? getFullUrl(selectedVehicle.carCover) : DEFAULT_CAR_IMAGE} 
                     className="w-full h-full object-contain" 
@@ -540,8 +540,8 @@ export default function MyCarPage() {
                   placeholder="کیلومتر کارکرد فعلی را وارد کنید..."
                   type="number"
                   error={errorsUpdate.mileage?.message ? String(errorsUpdate.mileage.message) : undefined}
-                  rightIcon={<span className="text-xs font-bold text-muted-foreground font-iran-yekan">km</span>}
-                  className="text-xs font-iran-yekan text-left"
+                  rightIcon={<span className="text-xs font-bold text-muted-foreground ">km</span>}
+                  className="text-xs"
                   dir="ltr"
                   {...registerUpdate('mileage', { valueAsNumber: true })}
                 />
@@ -584,10 +584,10 @@ export default function MyCarPage() {
                       type="button"
                       onClick={() => setUpdateOilLimit(limit)}
                       className={cn(
-                        "py-2 rounded-xl border text-xs font-bold font-iran-yekan transition-all outline-none",
+                        "py-2 rounded-xl border text-xs font-bold transition-all outline-none",
                         updateOilLimit === limit
                           ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                          : "bg-background text-foreground hover:border-zinc-300"
+                          : "bg-card text-foreground hover:border-border"
                       )}
                     >
                       {new Intl.NumberFormat('fa-IR').format(limit)} کیلومتر
@@ -597,12 +597,12 @@ export default function MyCarPage() {
               </div>
 
               {/* نمایش عدد نهایی با رنگ مشکی */}
-              <div className="w-full bg-zinc-100/70 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3.5 flex items-center justify-between text-right">
+              <div className="w-full bg-muted/70 dark:bg-muted/60 border border-border rounded-xl p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-foreground">
                   <Wrench className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="text-xs font-bold font-iran-yekan">کیلومتر سرویس بعدی شما:</span>
+                  <span className="text-xs font-bold ">کیلومتر سرویس بعدی شما:</span>
                 </div>
-                <div className="flex items-center gap-1 font-black font-iran-yekan text-black dark:text-white text-sm" dir="ltr">
+                <div className="flex items-center gap-1 font-black text-foreground text-sm" dir="ltr">
                   <span>
                     {new Intl.NumberFormat('fa-IR').format((Number(watchMileage) || 0) + updateOilLimit)}
                   </span>
@@ -619,7 +619,7 @@ export default function MyCarPage() {
             type="button"
             variant="outline"
             onClick={() => setIsUpdateModalOpen(false)}
-            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+            className="flex-1 rounded-xl text-xs h-10 font-bold "
           >
             انصراف
           </Button>
@@ -628,7 +628,7 @@ export default function MyCarPage() {
             variant="primary"
             disabled={isFormUnchanged || updateVehicle.isPending}
             isLoading={updateVehicle.isPending}
-            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-xl text-xs h-10 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSubmitUpdate(onUpdateSubmit)}
           >
             ثبت تغییرات
@@ -639,17 +639,17 @@ export default function MyCarPage() {
       {/* مودال تأیید حذف خودرو مطابق متن QA */}
       <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsDeleteModalOpen(false)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-destructive flex items-center gap-2">
+          <ModalTitle className=" font-bold text-sm text-destructive flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             حذف خودرو از گاراژ
           </ModalTitle>
         </ModalHeader>
 
-        <ModalBody className="p-6 text-right flex flex-col gap-3">
-          <p className="text-sm font-bold text-foreground font-iran-yekan leading-relaxed">
+        <ModalBody className="p-6 flex flex-col gap-3">
+          <p className="text-sm font-bold text-foreground leading-relaxed">
             از حذف «{vehicleToDelete?.carModel || vehicleToDelete?.title}» از گاراژ مطمئنی؟
           </p>
-          <p className="text-xs text-muted-foreground font-iran-yekan leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             با انتخاب بله تمام اطلاعات مرتبط با این خودرو حذف میشه
           </p>
         </ModalBody>
@@ -659,7 +659,7 @@ export default function MyCarPage() {
             type="button"
             variant="outline"
             onClick={() => setIsDeleteModalOpen(false)}
-            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan"
+            className="flex-1 rounded-xl text-xs h-10 font-bold "
           >
             نه
           </Button>
@@ -668,7 +668,7 @@ export default function MyCarPage() {
             variant="destructive"
             isLoading={deleteVehicle.isPending}
             onClick={confirmDeleteVehicle}
-            className="flex-1 rounded-xl text-xs h-10 font-bold font-iran-yekan bg-destructive hover:bg-destructive/90 text-white"
+            className="flex-1 rounded-xl text-xs h-10 font-bold bg-destructive hover:bg-destructive/90 text-destructive-foreground"
           >
             بله حذف میکنم
           </Button>

@@ -1,13 +1,12 @@
 ﻿'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import * as React from 'react';
+import { Car, Search, Loader2, ArrowRight, X } from 'lucide-react';
 import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
-import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { Modal, ModalBody } from '@/components/composites/Modal/Modal';
 import { Button } from '@/components/primitives/Button/Button';
 import { Input } from '@/components/primitives/Input/Input';
 import { Typography } from '@/components/primitives/Typography';
-import { Car, Search, Loader2, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { getCarUrl, getFullUrl } from '@/core/utils/formatters';
 
@@ -20,114 +19,111 @@ interface CarItem {
 }
 
 export function ShopByCar() {
-  const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<CarItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [selectedCar, setSelectedCar] = React.useState<CarItem | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
-  /* 
-    بهینه‌سازی بزرگ:
-    دانلود حجیم اطلاعات ۲۰۰ خودرو و تصاویر آن‌ها فقط و فقط زمانی آغاز می‌شود 
-    که کاربر روی دکمه کلیک کرده و مودال پاپ‌آپ باز شود (enabled: isOpen)
-  */
   const { data: cars = [], isLoading } = useGetCarListFlat(1, 200, { enabled: isOpen });
+
   const handleSearchSubmit = () => {
-    if (selectedCar) {
-      window.location.href = getCarUrl(selectedCar.englishTitle);
-    }
+    if (selectedCar) window.location.href = getCarUrl(selectedCar.englishTitle);
   };
 
-  const filteredCars = cars.filter((car: CarItem) =>
-    car.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    car.englishTitle.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCars = cars.filter(
+    (car: CarItem) =>
+      car.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      car.englishTitle.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="w-full flex flex-col items-center py-1 md:py-4 gap-2.5">
-      
-      <Typography variant="h4" className="font-iran-yekan font-bold text-center text-foreground/90 text-sm sm:text-base md:text-lg">
+    <div className="flex w-full flex-col items-center gap-2.5 py-1 md:py-4">
+      <Typography variant="h4" className="text-center text-sm font-bold text-foreground sm:text-base md:text-lg">
         خرید بر اساس خودرو
       </Typography>
 
-      <div className="flex flex-col sm:flex-row items-stretch w-full max-w-2xl gap-3 px-4 sm:px-0">
-        
+      <div className="flex w-full max-w-2xl flex-col items-stretch gap-3 px-4 sm:flex-row sm:px-0">
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="flex-1 flex items-center justify-between border rounded-xl px-4 py-3 bg-background hover:border-primary/40 transition-colors text-right outline-none shadow-sm h-12"
+          className="flex h-12 flex-1 items-center justify-between rounded-md border border-border bg-card px-4 py-3 shadow-xs outline-none transition-colors hover:border-primary/40"
         >
           {selectedCar ? (
-            <div className="flex items-center gap-2 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
               <img
                 src={getFullUrl(selectedCar.cover)}
                 alt={selectedCar.model}
-                className="w-10 h-7 object-contain rounded-md"
+                className="h-7 w-10 rounded-sm object-contain"
               />
-              <span className="text-sm font-bold font-iran-sans text-foreground">{selectedCar.model}</span>
+              <span className="text-sm font-bold text-foreground">{selectedCar.model}</span>
             </div>
           ) : (
-            <span className="text-sm font-medium font-iran-sans text-muted-foreground">مدل خودروی خود را انتخاب کنید...</span>
+            <span className="text-sm font-medium text-muted-foreground">مدل خودروی خود را انتخاب کنید...</span>
           )}
-          <Car className="h-4 w-4 text-muted-foreground shrink-0 mr-2" />
+          <Car aria-hidden="true" className="me-2 h-4 w-4 shrink-0 text-muted-foreground" />
         </button>
 
         <Button
           variant="primary"
           onClick={handleSearchSubmit}
           disabled={!selectedCar}
-          className="px-8 font-iran-sans font-bold text-sm h-12 rounded-xl shrink-0 shadow-sm"
-          leftIcon={<Search className="h-4 w-4" />}
+          className="h-12 shrink-0 rounded-md px-8 text-sm font-bold shadow-xs"
+          leftIcon={<Search aria-hidden="true" className="h-4 w-4" />}
         >
           جستجوی قطعات
         </Button>
       </div>
 
-      <Modal 
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)} 
-        className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-50 bg-background md:relative md:max-w-2xl md:h-[550px] md:max-h-[90vh] md:rounded-xl md:overflow-hidden"
-        overlayClassName="bg-black/40 backdrop-blur-md"
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:rounded-lg md:overflow-hidden"
+        overlayClassName="bg-foreground/40 backdrop-blur-md"
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
           <div className="flex items-center gap-2">
-            <button 
+            <button
+              type="button"
               onClick={() => setIsOpen(false)}
-              className="md:hidden p-1 -mr-1 hover:bg-muted rounded-full"
               aria-label="بازگشت"
+              className="-me-1 rounded-full p-1 hover:bg-muted md:hidden"
             >
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight aria-hidden="true" className="h-5 w-5" />
             </button>
-            <span className="text-sm font-bold font-iran-yekan flex items-center gap-1.5 text-foreground">
-              <Car className="h-4 w-4 text-primary" />
+            <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <Car aria-hidden="true" className="h-4 w-4 text-primary" />
               انتخاب خودرو
             </span>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={() => setIsOpen(false)}
-            className="hidden md:flex p-1.5 hover:bg-muted rounded-full transition-colors"
             aria-label="بستن"
+            className="hidden rounded-full p-1.5 transition-colors hover:bg-muted md:flex"
           >
-            <X className="h-4 w-4" />
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="p-4 border-b bg-background shrink-0">
+        <div className="shrink-0 border-b border-border bg-card p-4">
           <Input
             placeholder="جستجوی مدل خودرو (مثال: پراید، تارا...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
-            className="w-full font-iran-sans"
+            leftIcon={<Search aria-hidden="true" className="h-4 w-4" />}
+            className="w-full"
           />
         </div>
 
-        <ModalBody className="flex-1 overflow-y-auto p-6 bg-background">
+        <ModalBody className="flex-1 overflow-y-auto bg-card p-6">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <Loader2 className="h-7 w-7 animate-spin text-primary" />
-              <Typography variant="small" color="muted" className="font-iran-sans">در حال لود لیست خودروها...</Typography>
+            <div className="flex flex-col items-center justify-center gap-2 py-12">
+              <Loader2 aria-hidden="true" className="h-7 w-7 animate-spin text-primary" />
+              <Typography variant="small" color="muted">
+                در حال لود لیست خودروها...
+              </Typography>
             </div>
           ) : filteredCars.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               {filteredCars.map((car: CarItem) => (
                 <div
                   key={car.id}
@@ -136,24 +132,22 @@ export function ShopByCar() {
                     setIsOpen(false);
                   }}
                   className={cn(
-                    "flex flex-col items-center gap-3 p-4 rounded-xl border cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all text-center group",
-                    selectedCar?.id === car.id ? "border-primary bg-primary/5 ring-1 ring-primary" : ""
+                    'flex cursor-pointer flex-col items-center gap-3 rounded-md border border-border p-4 text-center transition-colors hover:border-primary/50 hover:bg-accent/50',
+                    selectedCar?.id === car.id && 'border-primary bg-accent/50 ring-1 ring-primary'
                   )}
                 >
-                  <div className="w-full aspect-[4/3] relative overflow-hidden rounded-lg">
-                    <img
-                      src={getFullUrl(car.cover)}
-                      alt={car.model}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                    />
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md">
+                    <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain" />
                   </div>
-                  <span className="text-xs sm:text-sm font-bold font-iran-sans text-foreground">{car.model}</span>
+                  <span className="text-xs font-bold text-foreground sm:text-sm">{car.model}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <Typography variant="small" color="muted" className="font-iran-sans">خودرویی با مشخصات مدنظر یافت نشد.</Typography>
+            <div className="py-12 text-center">
+              <Typography variant="small" color="muted">
+                خودرویی با مشخصات مدنظر یافت نشد.
+              </Typography>
             </div>
           )}
         </ModalBody>

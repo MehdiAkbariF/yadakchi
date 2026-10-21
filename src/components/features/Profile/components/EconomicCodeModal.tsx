@@ -54,14 +54,14 @@ export function EconomicCodeModal({ isOpen, onClose, user }: EconomicCodeModalPr
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+        <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
           ویرایش کد اقتصادی حقیقی
         </ModalTitle>
       </ModalHeader>
-      <ModalBody className="p-0 pt-4 text-right">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
-          <span className="text-xs text-muted-foreground font-iran-yekan block mb-2 leading-relaxed">
+      <ModalBody className="p-0 pt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
+          <span className="text-xs text-muted-foreground block mb-2 leading-relaxed">
             در صورت داشتن کد اقتصادی شخص حقیقی در کادر زیر وارد کنید
           </span>
 
@@ -70,7 +70,7 @@ export function EconomicCodeModal({ isOpen, onClose, user }: EconomicCodeModalPr
               label="کد اقتصادی حقیقی *"
               placeholder="کد اقتصادی خود را وارد کنید"
               error={errors.naturalPersonEconomicCode?.message ? String(errors.naturalPersonEconomicCode.message) : undefined}
-              className="text-xs font-iran-yekan text-left"
+              className="text-xs"
               dir="ltr"
               {...register('naturalPersonEconomicCode')}
             />

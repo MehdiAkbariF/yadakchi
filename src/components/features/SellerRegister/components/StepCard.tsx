@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 
-interface StepCardProps {
+export interface StepCardProps {
   step: {
     number: string;
     title: string;
@@ -21,10 +21,10 @@ export function StepCard({ step, index, isLast }: StepCardProps) {
       transition={{ duration: 0.5, delay: index * 0.15, ease: 'easeOut' }}
       className="relative"
     >
-      {/* خط اتصال بین مراحل (در دسکتاپ) */}
-      {!isLast && (
+      {!isLast ? (
         <svg
-          className="hidden lg:block absolute top-10 -left-3 w-6 h-6 text-primary/30 z-0"
+          aria-hidden="true"
+          className="absolute -start-3 top-10 z-0 hidden h-6 w-6 text-primary/30 lg:block"
           viewBox="0 0 24 24"
           fill="none"
         >
@@ -39,24 +39,24 @@ export function StepCard({ step, index, isLast }: StepCardProps) {
             transition={{ duration: 0.8, delay: 0.3 + index * 0.15 }}
           />
         </svg>
-      )}
+      ) : null}
 
-      <div className="relative p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-card to-muted/30 border border-border/60 hover:border-primary/40 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 group">
-        {/* عدد مرحله با هاله */}
-        <div className="relative w-11 h-11 sm:w-12 sm:h-12 mb-4">
+      <div className="group relative rounded-lg border border-border bg-gradient-to-br from-card to-muted/30 p-5 transition-all duration-normal hover:border-primary/40 hover:shadow-md sm:p-6">
+        <div className="relative mb-4 h-12 w-12">
           <motion.div
-            className="absolute inset-0 rounded-xl bg-primary/30 blur-md"
+            aria-hidden="true"
+            className="absolute inset-0 rounded-md bg-primary/30 blur-md"
             animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
             transition={{ duration: 2.5, repeat: Infinity, delay: index * 0.3 }}
           />
-          <div className="relative w-full h-full rounded-xl bg-primary text-primary-foreground font-black text-lg flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform duration-300">
+          <div className="relative flex h-full w-full items-center justify-center rounded-md bg-primary text-lg font-bold text-primary-foreground shadow-md transition-transform duration-normal group-hover:scale-110">
             {step.number}
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <h3 className="text-sm font-extrabold text-foreground">{step.title}</h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+          <h3 className="text-sm font-bold text-foreground">{step.title}</h3>
+          <p className="text-xs leading-relaxed text-muted-foreground">{step.desc}</p>
         </div>
       </div>
     </motion.div>

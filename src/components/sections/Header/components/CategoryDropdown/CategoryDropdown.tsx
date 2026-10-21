@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -46,19 +46,19 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
   };
 
   return (
-    <div className="absolute top-full right-0 w-[800px] bg-background border rounded-xl shadow-2xl overflow-hidden z-50 flex h-[450px]">
+    <div className="absolute top-full right-0 w-[800px] bg-card border rounded-lg shadow-lg overflow-hidden z-50 flex h-[450px]">
       
       {isLoading && (
         <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <span className="text-sm font-medium font-iran-yekan">در حال بارگذاری دسته‌بندی‌ها...</span>
+          <span className="text-sm font-medium ">در حال بارگذاری دسته‌بندی‌ها...</span>
         </div>
       )}
 
       {isError && (
         <div className="flex flex-1 items-center justify-center gap-2 text-destructive p-4">
           <AlertCircle className="h-5 w-5" />
-          <span className="text-sm font-medium font-iran-yekan">خطا در بارگذاری اطلاعات. لطفاً دوباره تلاش کنید.</span>
+          <span className="text-sm font-medium ">خطا در بارگذاری اطلاعات. لطفاً دوباره تلاش کنید.</span>
         </div>
       )}
 
@@ -74,9 +74,9 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                 <button
                   key={category.id}
                   className={cn(
-                    "flex items-center justify-between w-full px-4 py-3 text-right text-sm transition-colors font-iran-yekan font-medium",
+                    "flex items-center justify-between w-full px-4 py-3 text-sm transition-colors font-medium",
                     isActive 
-                      ? "bg-background text-primary" 
+                      ? "bg-card text-primary" 
                       : "text-foreground hover:bg-muted/50"
                   )}
                   onMouseEnter={() => setActiveCategoryId(category.id)}
@@ -100,11 +100,11 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
             })}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 bg-background">
+          <div className="flex-1 overflow-y-auto p-6 bg-card">
             {activeCategory ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
-                  <span className="text-sm font-bold text-foreground font-iran-yekan flex items-center gap-2">
+                  <span className="text-sm font-bold text-foreground flex items-center gap-2">
                     {failedImages[activeCategory.id] || !activeCategory.icon ? (
                       (() => {
                         const FallbackIcon = getFallbackIcon(activeCategory.name);
@@ -122,7 +122,7 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                   </span>
                   <Link 
                     href={activeCategory.href}
-                    className="text-xs text-primary hover:underline font-iran-yekan flex items-center gap-1"
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     مشاهده همه قطعات این گروه
                     <ChevronLeft className="h-3 w-3" />
@@ -135,20 +135,20 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                       <Link
                         key={part.id}
                         href={part.href}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors py-1 truncate font-iran-yekan font-medium hover:translate-x-1 duration-150 inline-block"
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors py-1 truncate font-medium hover:translate-x-1 duration-150 inline-block"
                       >
                         {part.name}
                       </Link>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground font-iran-yekan py-4">
+                  <div className="text-sm text-muted-foreground py-4">
                     هیچ قطعه‌ای برای این دسته‌بندی یافت نشد.
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center text-muted-foreground text-sm font-iran-yekan">
+              <div className="flex h-full items-center justify-center text-muted-foreground text-sm ">
                 یک دسته‌بندی را از سمت راست انتخاب کنید.
               </div>
             )}

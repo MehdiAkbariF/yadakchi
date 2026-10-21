@@ -1,4 +1,4 @@
-// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\composites\AddressMapModal\AddressMapModal.tsx
+﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\composites\AddressMapModal\AddressMapModal.tsx
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -134,8 +134,8 @@ function getPlaceBadge(type?: string) {
     default:
       return {
         label: 'مکان',
-        icon: <MapPin className="w-3.5 h-3.5 text-zinc-500" />,
-        className: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+        icon: <MapPin className="w-3.5 h-3.5 text-muted-foreground" />,
+        className: 'bg-muted text-foreground dark:bg-muted dark:text-muted-foreground',
       };
   }
 }
@@ -784,7 +784,7 @@ function InternalMapComponent({
     return (
       <div className="relative flex h-full min-h-[420px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/50 p-6 text-center dark:border-amber-900/50 dark:bg-amber-950/20">
         <AlertTriangle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
-        <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200 font-iran-yekan">
+        <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200 ">
           مرورگر شما از شتاب‌دهنده گرافیکی WebGL پشتیبانی نمی‌کند
         </h4>
         <button
@@ -815,12 +815,12 @@ function InternalMapComponent({
           isReady ? 'opacity-0 invisible' : 'opacity-100 visible'
         }`}
       >
-        <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-background/85 backdrop-blur-md shadow-lg border border-border">
+        <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-card/85 backdrop-blur-md shadow-lg border border-border">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
           </span>
-          <span className="text-[12px] font-semibold font-iran-yekan tracking-tight text-foreground">
+          <span className="text-[12px] font-semibold tracking-tight text-foreground">
             در حال بارگذاری نقشه...
           </span>
         </div>
@@ -1194,7 +1194,7 @@ export function AddressMapModal({
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 text-right" dir="rtl">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4" dir="rtl">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -1209,8 +1209,8 @@ export function AddressMapModal({
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            'bg-background overflow-hidden flex flex-col z-10',
-            'w-full h-full md:h-[85vh] md:max-h-[750px] md:max-w-4xl md:rounded-3xl shadow-2xl border border-border'
+            'bg-card overflow-hidden flex flex-col z-10',
+            'w-full h-full md:h-[85vh] md:max-h-[750px] md:max-w-4xl md:rounded-2xl shadow-2xl border border-border'
           )}
         >
           {/* Header */}
@@ -1219,7 +1219,7 @@ export function AddressMapModal({
               <div className="p-2 rounded-xl bg-primary/10 text-primary">
                 <MapPin className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-black font-iran-yekan text-foreground">
+              <h3 className="text-sm font-black text-foreground">
                 انتخاب موقعیت روی نقشه
               </h3>
             </div>
@@ -1252,7 +1252,7 @@ export function AddressMapModal({
                     if (searchResults.length > 0) setIsDropdownOpen(true);
                   }}
                   placeholder="جستجوی نام خیابان، محله، شهر یا مکان شاخص..."
-                  className="w-full h-11 pr-10 pl-9 rounded-2xl border border-border bg-background text-xs font-bold font-iran-yekan text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all shadow-sm"
+                  className="w-full h-11 pe-10 ps-9 rounded-2xl border border-border bg-card text-xs font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all shadow-sm"
                 />
 
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -1279,7 +1279,7 @@ export function AddressMapModal({
                 type="button"
                 onClick={getCurrentLocation}
                 disabled={isLocating}
-                className="p-2.5 h-11 px-3.5 rounded-2xl border border-border bg-background text-muted-foreground hover:text-primary hover:border-primary transition-colors cursor-pointer shrink-0 shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                className="p-2.5 h-11 px-3.5 rounded-2xl border border-border bg-card text-muted-foreground hover:text-primary hover:border-primary transition-colors cursor-pointer shrink-0 shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
                 title="موقعیت فعلی من"
               >
                 {isLocating ? (
@@ -1287,7 +1287,7 @@ export function AddressMapModal({
                 ) : (
                   <LocateFixed className="w-4 h-4" />
                 )}
-                <span className="hidden sm:inline text-xs font-bold font-iran-yekan">
+                <span className="hidden sm:inline text-xs font-bold ">
                   {isLocating ? 'در حال دریافت...' : 'موقعیت من'}
                 </span>
               </button>
@@ -1300,7 +1300,7 @@ export function AddressMapModal({
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="absolute top-full left-3.5 right-3.5 sm:left-4 sm:right-4 mt-1.5 bg-background/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden z-50 max-h-64 overflow-y-auto divide-y divide-border/60"
+                  className="absolute top-full left-3.5 right-3.5 sm:left-4 sm:right-4 mt-1.5 bg-card/95 backdrop-blur-xl border border-border rounded-2xl shadow-2xl overflow-hidden z-50 max-h-64 overflow-y-auto divide-y divide-border/60"
                 >
                   {searchResults.map((result, idx) => {
                     const titleText = result.display_name || 'بدون نام';
@@ -1328,12 +1328,12 @@ export function AddressMapModal({
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-xs font-black font-iran-yekan text-foreground truncate">
+                              <p className="text-xs font-black text-foreground truncate">
                                 {titleText}
                               </p>
                               <span
                                 className={cn(
-                                  'text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 font-iran-yekan',
+                                  'text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ',
                                   badge.className
                                 )}
                               >
@@ -1341,7 +1341,7 @@ export function AddressMapModal({
                               </span>
                             </div>
                             {subtitleText && (
-                              <p className="text-[11px] text-muted-foreground font-medium font-iran-yekan truncate mt-0.5">
+                              <p className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
                                 {subtitleText}
                               </p>
                             )}
@@ -1350,7 +1350,7 @@ export function AddressMapModal({
 
                         {result.distance_meters !== null &&
                           result.distance_meters !== undefined && (
-                            <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground whitespace-nowrap bg-card border border-border px-2 py-0.5 rounded-lg shrink-0">
+                            <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap bg-card border border-border px-2 py-0.5 rounded-lg shrink-0">
                               {formatDistance(result.distance_meters)}
                             </span>
                           )}
@@ -1382,7 +1382,7 @@ export function AddressMapModal({
                 className="relative flex flex-col items-center origin-bottom z-20"
               >
                 <div className="w-7 h-7 rounded-full bg-primary shadow-md border-2 border-white flex items-center justify-center z-10">
-                  <div className="w-2.5 h-2.5 rounded-full bg-white shadow-inner" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-card shadow-inner" />
                 </div>
                 <div className="w-1.5 h-6 bg-primary -mt-1 rounded-b-full shadow-sm" />
               </motion.div>
@@ -1397,26 +1397,26 @@ export function AddressMapModal({
             </div>
 
             {/* کارت مشخصات پستی در پایین نقشه */}
-            <div className="absolute bottom-4 left-4 right-4 bg-background/95 backdrop-blur-md border border-border rounded-2xl p-3 sm:p-3.5 shadow-xl z-10">
+            <div className="absolute bottom-4 left-4 right-4 bg-card/95 backdrop-blur-md border border-border rounded-2xl p-3 sm:p-3.5 shadow-xl z-10">
               <div className="flex items-start gap-2.5">
                 <div className="mt-0.5 shrink-0">
                   {isFetchingAddress ? (
                     <Loader2 className="w-4 h-4 text-primary animate-spin" />
                   ) : (
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 ml-1 animate-pulse" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 ms-1 animate-pulse" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-black text-foreground font-iran-yekan mb-1">
+                  <p className="text-[11px] font-black text-foreground mb-1">
                     موقعیت جغرافیایی انتخابی:
                   </p>
-                  <p className="text-xs font-bold text-muted-foreground font-iran-yekan truncate">
+                  <p className="text-xs font-bold text-muted-foreground truncate">
                     {isFetchingAddress
                       ? 'در حال استخراج نشانی پستی...'
                       : address || 'نقشه را حرکت دهید تا نشانی دریافت شود'}
                   </p>
                   {(province || city) && !isFetchingAddress && (
-                    <p className="text-[10px] text-muted-foreground font-bold font-iran-yekan mt-1.5">
+                    <p className="text-[10px] text-muted-foreground font-bold mt-1.5">
                       استان: <strong className="text-foreground">{province}</strong> | شهر:{' '}
                       <strong className="text-foreground">{city}</strong>
                     </p>
@@ -1431,7 +1431,7 @@ export function AddressMapModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground hover:text-foreground font-black font-iran-yekan text-xs transition-colors cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground hover:text-foreground font-black text-xs transition-colors cursor-pointer"
             >
               انصراف
             </button>
@@ -1439,7 +1439,7 @@ export function AddressMapModal({
               type="button"
               onClick={handleConfirm}
               disabled={isFetchingAddress || !address.trim()}
-              className="flex-1 px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold font-iran-yekan text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+              className="flex-1 px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
             >
               <Check className="w-4 h-4" />
               <span>تایید این موقعیت مکانی</span>

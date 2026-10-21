@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Quote } from 'lucide-react';
 
-interface TestimonialCardProps {
+export interface TestimonialCardProps {
   testimonial: {
     initial: string;
     name: string;
@@ -23,38 +23,39 @@ export function TestimonialCard({ testimonial, index }: TestimonialCardProps) {
       whileHover={{ y: -4 }}
       className="group relative"
     >
-      {/* Glow */}
-      <div className="absolute -inset-0.5 bg-gradient-to-br from-primary/0 via-primary/20 to-primary/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-all duration-500" />
+      <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-br from-primary/0 via-primary/20 to-primary/0 opacity-0 blur-lg transition-opacity duration-slow group-hover:opacity-100" />
 
-      <div className="relative bg-card border border-border/60 rounded-2xl p-5 sm:p-6 flex flex-col gap-4 h-full overflow-hidden">
-        {/* آیکون نقل قول بزرگ تزئینی */}
-        <svg className="absolute -top-2 -left-2 w-20 h-20 text-primary/5 group-hover:text-primary/10 transition-colors duration-500" viewBox="0 0 24 24" fill="currentColor">
+      <div className="relative flex h-full flex-col gap-4 overflow-hidden rounded-lg border border-border bg-card p-5 sm:p-6">
+        <svg
+          aria-hidden="true"
+          className="absolute -left-2 -top-2 h-20 w-20 text-primary/5 transition-colors duration-slow group-hover:text-primary/10"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
           <path d="M9.5 4C6.5 4 4 6.5 4 9.5V20H14V9.5C14 6.5 11.5 4 9.5 4Z" opacity="0.5" />
           <path d="M19.5 4C16.5 4 14 6.5 14 9.5V20H24V9.5C24 6.5 21.5 4 19.5 4Z" opacity="0.3" />
         </svg>
 
-        <div className="relative flex flex-col gap-4 flex-1">
-          <Quote className="w-6 h-6 text-primary/60 rotate-180" />
-          <p className="text-xs sm:text-sm text-foreground/90 leading-loose relative z-10">
-            {testimonial.quote}
-          </p>
+        <div className="relative flex flex-1 flex-col gap-4">
+          <Quote aria-hidden="true" className="h-6 w-6 rotate-180 text-primary/60" />
+          <p className="relative z-10 text-sm leading-reading text-foreground/90">{testimonial.quote}</p>
         </div>
 
-        <div className="flex items-center gap-3 border-t border-border/40 pt-4 mt-auto">
+        <div className="mt-auto flex items-center gap-3 border-t border-border pt-4">
           <div className="relative">
-            {/* حلقه pulse دور حرف اول */}
             <motion.div
+              aria-hidden="true"
               className="absolute inset-0 rounded-full border-2 border-primary/40"
               animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
               transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
             />
-            <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 text-primary font-black text-sm flex items-center justify-center">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary/30 bg-accent text-sm font-bold text-primary">
               {testimonial.initial}
             </div>
           </div>
           <div className="flex flex-col">
             <span className="text-xs font-bold text-foreground">{testimonial.name}</span>
-            <span className="text-[10px] text-muted-foreground mt-0.5">{testimonial.shop}</span>
+            <span className="mt-0.5 text-2xs text-muted-foreground">{testimonial.shop}</span>
           </div>
         </div>
       </div>

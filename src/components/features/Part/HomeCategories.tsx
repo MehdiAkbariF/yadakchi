@@ -1,13 +1,13 @@
-﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Part\HomeCategories.tsx
-'use client';
+﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
+import { Settings, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
 import { Typography } from '@/components/primitives/Typography';
-import { ChevronLeft, ChevronRight, Settings, MoreHorizontal } from 'lucide-react';
-import { motion, useMotionValue, animate } from 'framer-motion';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { cn } from '@/design-system/utils/cn';
 import { getFullUrl } from '@/core/utils/formatters';
 
 interface PartCategoryItem {
@@ -25,60 +25,53 @@ interface PartCategoryItem {
 export function HomeCategories() {
   const { data: rawCategories = [], isLoading, isError } = useGetPartCategoriesFlat();
 
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [dragWidth, setWidth] = useState(0);
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const [dragWidth, setDragWidth] = React.useState(0);
   const x = useMotionValue(0);
-  const isDraggingRef = useRef(false);
+  const isDraggingRef = React.useRef(false);
 
-  // پاکسازی دیتای تست
   const categories = (rawCategories as PartCategoryItem[]).filter(
     (cat) => cat.name && cat.name.trim() !== '' && cat.englishTitle !== 'asd'
   );
 
-  // انتخاب ۷ دسته‌بندی برتر برای گرید موبایل
   const mobileCategories = categories.slice(0, 7);
 
-  // محاسبه حداکثر بازه حرکت اسلایدر دسکتاپ
-  useEffect(() => {
+  React.useEffect(() => {
     if (carouselRef.current) {
       const scrollW = carouselRef.current.scrollWidth;
       const offsetW = carouselRef.current.offsetWidth;
-      setWidth(Math.max(0, scrollW - offsetW));
+      setDragWidth(Math.max(0, scrollW - offsetW));
     }
   }, [categories]);
 
-  // کنترل ناوبری با دکمه‌ها
+  // در RTL: اسکرول به راست x را کم می‌کند، اسکرول به چپ x را زیاد می‌کند
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 340;
-    let newX = x.get() + (direction === 'right' ? -step : step);
-
+    let newX = x.get() + (direction === 'left' ? step : -step);
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
-
     animate(x, newX, { type: 'spring', stiffness: 220, damping: 28 });
   };
 
   if (isLoading) {
     return (
       <div className="w-full space-y-6 py-6">
-        <Typography variant="h5" className="font-iran-yekan font-bold text-center text-foreground/90">
+        <Typography variant="h5" className="text-center font-bold text-foreground">
           خرید بر اساس دسته‌بندی قطعات
         </Typography>
-        {/* اسکلتون موبایل */}
-        <div className="grid grid-cols-4 gap-y-6 gap-x-2 px-3 md:hidden">
+        <div className="grid grid-cols-4 gap-x-2 gap-y-6 px-3 md:hidden">
           {[...Array(8)].map((_, index) => (
             <div key={index} className="flex flex-col items-center gap-2">
-              <Skeleton variant="circle" className="w-16 h-16 sm:w-20 sm:h-20" />
-              <Skeleton variant="text" className="w-12 h-3" />
+              <Skeleton variant="circle" className="h-16 w-16 sm:h-20 sm:w-20" />
+              <Skeleton variant="text" className="h-3 w-12" />
             </div>
           ))}
         </div>
-        {/* اسکلتون دسکتاپ */}
-        <div className="hidden md:flex gap-8 px-12 py-2 overflow-hidden justify-center">
+        <div className="hidden justify-center gap-8 overflow-hidden px-12 py-2 md:flex">
           {[...Array(7)].map((_, index) => (
-            <div key={index} className="flex flex-col items-center shrink-0 w-28 gap-3">
-              <Skeleton variant="circle" className="w-24 h-24" />
-              <Skeleton variant="text" className="w-16 h-3.5" />
+            <div key={index} className="flex w-28 shrink-0 flex-col items-center gap-3">
+              <Skeleton variant="circle" className="h-24 w-24" />
+              <Skeleton variant="text" className="h-3.5 w-16" />
             </div>
           ))}
         </div>
@@ -89,18 +82,16 @@ export function HomeCategories() {
   if (isError || categories.length === 0) return null;
 
   return (
-    <div className="w-full space-y-6 py-6 select-none font-iran-yekan">
+    <div className="w-full select-none space-y-6 py-6">
       <Typography
         variant="h5"
-        className="font-iran-yekan font-black text-center text-foreground/90 text-base sm:text-xl"
+        className="text-center text-base font-bold text-foreground sm:text-xl"
       >
         خرید بر اساس دسته‌بندی قطعات
       </Typography>
 
-      {/* =========================================================================
-          ۱. نسخه موبایل: گرید دو ردیفه + آیتم هشتم "سایر دسته‌ها"
-          ========================================================================= */}
-      <div className="grid grid-cols-4 gap-y-6 gap-x-2 px-2 sm:px-4 md:hidden">
+      {/* نمای موبایل */}
+      <div className="grid grid-cols-4 gap-x-2 gap-y-6 px-2 sm:px-4 md:hidden">
         {mobileCategories.map((cat) => {
           const href = `/part-category/${cat.englishTitle}`;
           const imageSrc = cat.thumbnail || cat.icon;
@@ -109,71 +100,77 @@ export function HomeCategories() {
             <Link
               key={cat.id}
               href={href}
-              className="flex flex-col items-center group/cat text-center"
+              className="group/cat flex flex-col items-center text-center"
             >
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#f4ece6] dark:bg-zinc-800 p-2 flex items-center justify-center transition-transform active:scale-95 shadow-xs">
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border/80 bg-card p-2 shadow-xs transition-colors group-hover/cat:border-primary/50 sm:h-20 sm:w-20">
                 {imageSrc ? (
                   <img
                     src={getFullUrl(imageSrc)}
                     alt={cat.thumbnailAlt || cat.name}
-                    className="w-full h-full object-contain rounded-full drop-shadow-sm"
+                    className="h-full w-full rounded-full object-contain drop-shadow-sm"
                     loading="lazy"
                   />
                 ) : (
-                  <Settings className="h-7 w-7 text-zinc-400 stroke-[1.5]" />
+                  <Settings aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
                 )}
 
-                {/* لیبل نارنجی تخفیف ویژه برای موبایل */}
-                {cat.hasDiscount && (
-                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[#f04812] text-white text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm pointer-events-none">
+                {cat.hasDiscount ? (
+                  <span className="pointer-events-none absolute -bottom-2 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
                     تخفیف ویژه
                   </span>
-                )}
+                ) : null}
               </div>
 
-              <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mt-3 leading-tight line-clamp-2 min-h-[28px] flex items-center justify-center">
+              <span className="mt-3 flex min-h-[28px] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
                 {cat.name}
               </span>
             </Link>
           );
         })}
 
-        {/* دکمه هشتم در موبایل: سایر دسته‌ها با ارجاع به /categories */}
-        <Link
-          href="/categories"
-          className="flex flex-col items-center text-center"
-        >
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#f4ece6] dark:bg-zinc-800 flex items-center justify-center transition-transform active:scale-95 hover:bg-[#ebdcd3] shadow-xs">
-            <MoreHorizontal className="h-7 w-7 text-zinc-500 dark:text-zinc-400" />
+        <Link href="/categories" className="flex flex-col items-center text-center">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border/80 bg-card shadow-xs transition-colors hover:border-primary/50 sm:h-20 sm:w-20">
+            <MoreHorizontal aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
           </div>
-          <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mt-3 leading-tight line-clamp-2 min-h-[28px] flex items-center justify-center">
+          <span className="mt-3 flex min-h-[28px] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
             سایر دسته‌ها
           </span>
         </Link>
       </div>
 
-      {/* =========================================================================
-          ۲. نسخه دسکتاپ: حذف group از کانتینر بیرونی جهت عدم تداخل هاور آیتم‌ها
-          ========================================================================= */}
-      <div className="hidden md:block relative w-full">
-        {/* دکمه حرکت به راست */}
-        {categories.length > 6 && (
-          <button
-            onClick={() => handleScroll('right')}
-            className="absolute right-3 top-12 -translate-y-1/2 z-20 p-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all shadow-md outline-none cursor-pointer"
-            aria-label="Previous"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        )}
+      {/* نمای دسکتاپ */}
+      <div className="relative hidden w-full md:block">
+        {categories.length > 6 ? (
+          <>
+            {/* دکمه سمت راست (شروع در RTL): رفتن به دسته‌های قبلی */}
+            <button
+              type="button"
+              onClick={() => handleScroll('right')}
+              className="absolute start-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="دسته‌بندی‌های قبلی"
+            >
+              <ChevronRight aria-hidden="true" className="h-5 w-5" />
+            </button>
 
-        <div ref={carouselRef} className="w-full overflow-hidden relative z-10">
+            {/* دکمه سمت چپ (پایان در RTL): رفتن به دسته‌های بعدی */}
+            <button
+              type="button"
+              onClick={() => handleScroll('left')}
+              className="absolute end-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="دسته‌بندی‌های بعدی"
+            >
+              <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+            </button>
+          </>
+        ) : null}
+
+        <div ref={carouselRef} className="relative z-10 w-full overflow-hidden">
           <motion.div
             drag="x"
             style={{ x }}
             dragConstraints={{ left: 0, right: dragWidth }}
             dragElastic={0.12}
-            dragMomentum={true}
+            dragMomentum
             onDragStart={() => {
               isDraggingRef.current = true;
             }}
@@ -182,7 +179,7 @@ export function HomeCategories() {
                 isDraggingRef.current = false;
               }, 80);
             }}
-            className="flex gap-8 px-14 py-2 cursor-grab active:cursor-grabbing justify-start"
+            className="flex cursor-grab justify-start gap-8 px-14 py-2 active:cursor-grabbing"
           >
             {categories.map((cat) => {
               const href = `/part-category/${cat.englishTitle}`;
@@ -196,32 +193,32 @@ export function HomeCategories() {
                   onClick={(e) => {
                     if (isDraggingRef.current) e.preventDefault();
                   }}
-                  className="flex flex-col items-center shrink-0 w-28 group/cat text-center cursor-pointer"
+                  className="group/cat flex w-28 shrink-0 cursor-pointer flex-col items-center text-center"
                 >
-                  {/* دایره تصویر قطعه - فقط با هاور روی این آیتم زوم می‌شود */}
-                  <div className="relative w-24 h-24 rounded-full bg-[#f4ece6] dark:bg-zinc-800 p-2.5 flex items-center justify-center shadow-xs transition-transform duration-300 ease-out group-hover/cat:scale-105">
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-border/80 bg-card p-2.5 shadow-xs transition-all duration-fast group-hover/cat:border-primary/50 group-hover/cat:shadow-sm">
                     {imageSrc ? (
                       <img
                         src={getFullUrl(imageSrc)}
                         alt={cat.thumbnailAlt || cat.name}
                         draggable={false}
-                        className="w-full h-full object-contain rounded-full transition-transform duration-300 group-hover/cat:scale-110 pointer-events-none drop-shadow-sm"
+                        className="pointer-events-none h-full w-full rounded-full object-contain drop-shadow-sm transition-transform duration-fast group-hover/cat:scale-105"
                         loading="lazy"
                       />
                     ) : (
-                      <Settings className="h-9 w-9 text-zinc-400 group-hover/cat:text-black dark:group-hover/cat:text-white transition-colors stroke-[1.5]" />
+                      <Settings
+                        aria-hidden="true"
+                        className="h-9 w-9 text-muted-foreground transition-transform duration-fast group-hover/cat:rotate-45"
+                      />
                     )}
 
-                    {/* لیبل نارنجی تخفیف ویژه مطابق تصویر پیوست */}
-                    {cat.hasDiscount && (
-                      <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 bg-[#f04812] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-sm pointer-events-none">
+                    {cat.hasDiscount ? (
+                      <span className="pointer-events-none absolute -bottom-2.5 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
                         تخفیف ویژه
                       </span>
-                    )}
+                    ) : null}
                   </div>
 
-                  {/* عنوان دسته‌بندی - واکنش رنگ و فونت فقط برای آیتم هاور شده */}
-                  <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 group-hover/cat:text-black dark:group-hover/cat:text-white group-hover/cat:font-extrabold transition-all duration-200 mt-3.5 line-clamp-2 min-h-[34px] flex items-center justify-center leading-relaxed">
+                  <span className="mt-3.5 flex min-h-[34px] items-center justify-center text-xs font-semibold leading-relaxed text-muted-foreground line-clamp-2 transition-colors group-hover/cat:text-foreground">
                     {cat.name}
                   </span>
                 </Link>
@@ -229,17 +226,6 @@ export function HomeCategories() {
             })}
           </motion.div>
         </div>
-
-        {/* دکمه حرکت به چپ */}
-        {categories.length > 6 && (
-          <button
-            onClick={() => handleScroll('left')}
-            className="absolute left-3 top-12 -translate-y-1/2 z-20 p-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all shadow-md outline-none cursor-pointer"
-            aria-label="Next"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-        )}
       </div>
     </div>
   );

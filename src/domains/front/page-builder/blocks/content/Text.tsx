@@ -32,7 +32,7 @@ function TextComponent(props: TextProps) {
       className={cn(
         SIZE_MAP[size],
         ALIGN_MAP[align],
-        'leading-loose text-foreground/90 font-iran-yekan my-2 whitespace-pre-wrap'
+        'leading-loose text-foreground/90 my-2 whitespace-pre-wrap'
       )}
     >
       {content || 'متن خود را وارد کنید'}

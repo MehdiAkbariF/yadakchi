@@ -1,39 +1,39 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  Bell,
+  ArrowRight,
+  Tag,
+  Info,
+  Settings,
+  Sparkles,
+  ShieldAlert,
+  Radio,
+  Clock,
+  Store,
+} from 'lucide-react';
 import { useGetUserNotifications } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { Card, CardBody } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { Select } from '@/components/primitives/Select/Select';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
-import { 
-  Bell, 
-  ArrowRight, 
-  Tag, 
-  Info, 
-  Settings, 
-  Sparkles, 
-  ShieldAlert, 
-  Radio, 
-  Clock, 
-  Store 
-} from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 
-function LottiePlayer({ path, className = "w-48 h-48", loop = true }: { path: string; className?: string; loop?: boolean }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: { path: string; className?: string; loop?: boolean }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     let anim: any = null;
     let isMounted = true;
-
     const init = async () => {
       try {
-        const altPath = path.includes('/anumations/') ? path.replace('/anumations/', '/animations/') : path.replace('/animations/', '/anumations/');
+        const altPath = path.includes('/anumations/')
+          ? path.replace('/anumations/', '/animations/')
+          : path.replace('/animations/', '/anumations/');
         let animationData: any = null;
-
         for (const p of [path, altPath]) {
           try {
             const res = await fetch(p);
@@ -43,12 +43,9 @@ function LottiePlayer({ path, className = "w-48 h-48", loop = true }: { path: st
             }
           } catch {}
         }
-
         if (!animationData || !isMounted || !containerRef.current) return;
-
         const lottieModule = await import('lottie-web');
         const lottie = lottieModule.default || lottieModule;
-
         if (containerRef.current && isMounted) {
           anim = lottie.loadAnimation({
             container: containerRef.current,
@@ -58,11 +55,9 @@ function LottiePlayer({ path, className = "w-48 h-48", loop = true }: { path: st
             animationData,
           });
         }
-      } catch (e) {}
+      } catch {}
     };
-
     init();
-
     return () => {
       isMounted = false;
       anim?.destroy();
@@ -72,13 +67,44 @@ function LottiePlayer({ path, className = "w-48 h-48", loop = true }: { path: st
   return <div ref={containerRef} className={className} />;
 }
 
+const PRIORITY_OPTIONS = [
+  { value: '', label: 'همه اولویت‌ها' },
+  { value: 'Important', label: 'مهم' },
+  { value: 'VeryImportant', label: 'خیلی مهم' },
+] as const;
+
+const ORDER_OPTIONS = [
+  { value: 'Latest', label: 'جدیدترین' },
+  { value: 'Oldest', label: 'قدیمی‌ترین' },
+] as const;
+
+function getChannelIcon(channel: string) {
+  switch (channel) {
+    case 'Discount':
+      return <Tag aria-hidden="true" className="h-5 w-5 text-primary" />;
+    case 'System':
+      return <Settings aria-hidden="true" className="h-5 w-5 text-muted-foreground" />;
+    case 'Information':
+      return <Info aria-hidden="true" className="h-5 w-5 text-info" />;
+    case 'AdminMessage':
+      return <ShieldAlert aria-hidden="true" className="h-5 w-5 text-destructive" />;
+    case 'SellerMessage':
+      return <Store aria-hidden="true" className="h-5 w-5 text-warning" />;
+    case 'Advertise':
+      return <Sparkles aria-hidden="true" className="h-5 w-5 text-warning" />;
+    case 'WebBroadcastMessage':
+      return <Radio aria-hidden="true" className="h-5 w-5 text-primary" />;
+    default:
+      return <Bell aria-hidden="true" className="h-5 w-5 text-muted-foreground" />;
+  }
+}
+
 export function NotificationsList() {
   const router = useRouter();
-
-  const [activeTab, setActiveTab] = useState<'all' | 'discounts'>('all');
-  const [priority, setPriority] = useState('');
-  const [orderBy, setOrderBy] = useState<'Latest' | 'Oldest'>('Latest');
-  const [page, setPage] = useState(1);
+  const [activeTab, setActiveTab] = React.useState<'all' | 'discounts'>('all');
+  const [priority, setPriority] = React.useState('');
+  const [orderBy, setOrderBy] = React.useState<'Latest' | 'Oldest'>('Latest');
+  const [page, setPage] = React.useState(1);
 
   const selectedChannel = activeTab === 'discounts' ? 'Discount' : '';
 
@@ -91,196 +117,169 @@ export function NotificationsList() {
   );
 
   const { data: countsResponse } = useGetUserNotifications(1, '', '', undefined, 'Latest');
-
   const notifications = notificationsResponse?.items || [];
   const totalPages = notificationsResponse?.totalPages || 1;
-
   const allItems = countsResponse?.items || [];
   const totalCount = allItems.length;
-  const discountCount = allItems.filter(n => n.channel === 'Discount').length;
+  const discountCount = allItems.filter((n: any) => n.channel === 'Discount').length;
 
   const handleTabChange = (tab: 'all' | 'discounts') => {
     setActiveTab(tab);
     setPage(1);
   };
 
-  const priorityOptions = [
-    { value: '', label: 'همه پیام‌ها' },
-    { value: 'Important', label: 'مهم' },
-    { value: 'VeryImportant', label: 'خیلی مهم' }
-  ];
-
-  const orderOptions = [
-    { value: 'Latest', label: 'جدیدترین‌ها' },
-    { value: 'Oldest', label: 'قدیمی‌ترین‌ها' }
-  ];
-
-  const getChannelIcon = (channel: string) => {
-    switch (channel) {
-      case 'Discount':
-        return <Tag className="h-5 w-5 text-primary" />;
-      case 'System':
-        return <Settings className="h-5 w-5 text-zinc-500" />;
-      case 'Information':
-        return <Info className="h-5 w-5 text-blue-500" />;
-      case 'AdminMessage':
-        return <ShieldAlert className="h-5 w-5 text-destructive" />;
-      case 'SellerMessage':
-        return <Store className="h-5 w-5 text-orange-500" />;
-      case 'Advertise':
-        return <Sparkles className="h-5 w-5 text-yellow-500" />;
-      case 'WebBroadcastMessage':
-        return <Radio className="h-5 w-5 text-purple-500" />;
-      default:
-        return <Bell className="h-5 w-5 text-zinc-500" />;
-    }
-  };
-
   return (
-    <div className="flex-1 flex flex-col gap-6 w-full text-right" dir="rtl">
-      <div className="lg:hidden flex items-center justify-between border-b pb-3 mb-1 shrink-0">
+    <div className="flex w-full flex-1 flex-col gap-6">
+      <div className="mb-1 flex items-center justify-between border-b border-border pb-3 lg:hidden">
         <div className="flex items-center gap-3">
-          <button 
+          <button
+            type="button"
             onClick={() => router.push('/profile')}
-            className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
-            aria-label="Back"
+            aria-label="بازگشت"
+            className="-me-1 flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
           >
-            <ArrowRight className="h-5 w-5 text-foreground" />
+            <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
           </button>
-          <span className="text-sm font-bold font-iran-yekan text-foreground">پیام‌ها و اطلاعیه‌ها</span>
+          <span className="text-sm font-bold text-foreground">پیام‌ها و اعلان‌ها</span>
         </div>
       </div>
 
-      <div className="w-full flex flex-col gap-2 border-b pb-5">
+      <div className="flex w-full flex-col gap-2 border-b border-border pb-5">
         <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary shrink-0" />
-          <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">پیام‌ها و اطلاعیه‌ها</span>
+          <Bell aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+          <span className="text-xl font-bold text-foreground">پیام‌ها و اعلان‌ها</span>
         </div>
-        <p className="text-xs text-muted-foreground font-iran-yekan">
-          آخرین اطلاعیه‌ها، کدهای تخفیف، اخبار و پیام‌های سیستمی حساب کاربری شما
+        <p className="text-xs text-muted-foreground">
+          تمام اطلاع‌رسانی‌های مربوط به سفارش و تخفیف‌های ویژه در این بخش قابل مشاهده است
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none mt-2 border-b">
-        <div className="flex items-center gap-5 pb-px w-full sm:w-auto shrink-0">
+      <div className="mt-2 flex flex-col justify-between gap-4 border-b border-border select-none sm:flex-row sm:items-center">
+        <div className="flex w-full shrink-0 items-center gap-5 pb-px sm:w-auto">
           <button
+            type="button"
             onClick={() => handleTabChange('all')}
             className={cn(
-              "text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 transition-all outline-none flex items-center gap-1.5",
-              activeTab === 'all' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
+              'flex items-center gap-1.5 border-b-2 pb-2 text-sm font-bold outline-none transition-colors',
+              activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             )}
           >
-            <span>همه پیام‌ها</span>
-            <span className={cn(
-              "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full shrink-0",
-              activeTab === 'all' ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-            )}>
+            <span>همه اعلان‌ها</span>
+            <span
+              className={cn(
+                'shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold',
+                activeTab === 'all' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+              )}
+            >
               {totalCount}
             </span>
           </button>
 
           <button
+            type="button"
             onClick={() => handleTabChange('discounts')}
             className={cn(
-              "text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 transition-all outline-none flex items-center gap-1.5",
-              activeTab === 'discounts' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
+              'flex items-center gap-1.5 border-b-2 pb-2 text-sm font-bold outline-none transition-colors',
+              activeTab === 'discounts' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
             )}
           >
             <span>تخفیف‌ها</span>
-            <span className={cn(
-              "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full shrink-0",
-              activeTab === 'discounts' ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-            )}>
+            <span
+              className={cn(
+                'shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold',
+                activeTab === 'discounts' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+              )}
+            >
               {discountCount}
             </span>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 pb-3 sm:pb-2.5 w-full sm:w-auto justify-start sm:justify-end">
-          <div className="w-28 sm:w-36 shrink-0">
+        <div className="flex w-full items-center justify-start gap-2 pb-3 sm:w-auto sm:justify-end sm:pb-2.5">
+          <div className="w-28 shrink-0 sm:w-36">
             <Select
-              placeholder="اهمیت پیام"
+              placeholder="اولویت"
               value={priority}
               onChange={(e) => {
                 setPriority(e.target.value);
                 setPage(1);
               }}
-              options={priorityOptions}
+              options={[...PRIORITY_OPTIONS]}
             />
           </div>
 
-          <div className="w-28 sm:w-36 shrink-0">
+          <div className="w-28 shrink-0 sm:w-36">
             <Select
-              placeholder="مرتب‌سازی"
+              placeholder="ترتیب"
               value={orderBy}
               onChange={(e) => {
                 setOrderBy(e.target.value as any);
                 setPage(1);
               }}
-              options={orderOptions}
+              options={[...ORDER_OPTIONS]}
             />
           </div>
         </div>
       </div>
 
       {isLoading ? (
-        <PageLoading message="در حال دریافت پیام‌های شما..." />
+        <PageLoading label="در حال بارگذاری اعلان‌ها..." />
       ) : notifications.length > 0 ? (
-        <div className="flex flex-col gap-5 w-full animate-in fade-in duration-200">
-          <div className="flex flex-col gap-4 w-full">
-            {notifications.map((notif) => (
-              <Card key={notif.id} className={cn(
-                "w-full border rounded-2xl bg-card shadow-sm hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors p-4 md:p-5 relative",
-                !notif.isRead && "border-primary/20 bg-primary/5"
-              )}>
-                <CardBody className="p-0 flex items-start gap-4 text-right">
-                  <div className="w-10 h-10 shrink-0 rounded-full border bg-background flex items-center justify-center shadow-sm relative">
+        <div className="flex w-full flex-col gap-5">
+          <div className="flex w-full flex-col gap-4">
+            {notifications.map((notif: any) => (
+              <Card
+                key={notif.id}
+                className={cn(
+                  'relative w-full p-4 transition-colors md:p-5',
+                  !notif.isRead && 'border-primary/30 bg-accent/30'
+                )}
+              >
+                <CardBody className="flex items-start gap-4 p-0">
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-xs">
                     {getChannelIcon(notif.channel)}
-                    {!notif.isRead && (
-                      <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-primary rounded-full ring-2 ring-background animate-pulse" />
-                    )}
+                    {!notif.isRead ? (
+                      <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-primary ring-2 ring-background" />
+                    ) : null}
                   </div>
 
-                  <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between gap-4 w-full">
-                      <span className="text-xs md:text-sm font-black text-foreground block truncate">{notif.title}</span>
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground shrink-0 font-iran-yekan">
-                        <Clock className="h-3.5 w-3.5" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <div className="flex w-full items-center justify-between gap-4">
+                      <span className="block truncate text-sm font-bold text-foreground">{notif.title}</span>
+                      <div className="flex shrink-0 items-center gap-1.5 text-2xs text-muted-foreground">
+                        <Clock aria-hidden="true" className="h-3.5 w-3.5" />
                         <span>{notif.createDateFormatted}</span>
                       </div>
                     </div>
 
-                    <p className="text-xs md:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-iran-yekan whitespace-pre-wrap break-words">{notif.body}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+                      {notif.body}
+                    </p>
 
-                    {notif.linkType && notif.linkText && (
-                      <div className="flex justify-start mt-2">
+                    {notif.linkType && notif.linkText ? (
+                      <div className="mt-2 flex justify-start">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(notif.linkType as string)}
-                          className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 px-4"
+                          className="h-8 px-4 text-2xs font-bold"
                         >
                           {notif.linkText}
                         </Button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </CardBody>
               </Card>
             ))}
           </div>
 
-          <Pagination
-            currentPage={page}
-            totalPages={totalPages}
-            onPageChange={(p) => setPage(p)}
-          />
+          <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => setPage(p)} />
         </div>
       ) : (
-        /* استیت خالی با لاتی notif-bell.json */
-        <div className="w-full py-12 px-4 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3">
-          <LottiePlayer path="/anumations/notif-bell.json" className="w-48 h-48 max-w-full mx-auto" />
-          <span className="text-xs md:text-sm font-bold font-iran-yekan text-muted-foreground">هیچ پیامی در این بخش یافت نشد.</span>
+        <div className="flex w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card px-4 py-12 text-center">
+          <LottiePlayer path="/anumations/notif-bell.json" className="mx-auto h-48 w-48 max-w-full" />
+          <span className="text-sm font-bold text-muted-foreground">هیچ اعلانی در این دسته یافت نشد.</span>
         </div>
       )}
     </div>

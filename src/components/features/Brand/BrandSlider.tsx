@@ -1,31 +1,31 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import Link from 'next/link';
+import { Award, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 import { useGetMainBrands } from '@/domains/front/reference/brand/hooks/brand.hooks';
 import { Typography } from '@/components/primitives/Typography';
-import { ChevronLeft, ChevronRight, Award } from 'lucide-react';
-import { motion, useMotionValue, animate } from 'framer-motion';
-import { cn } from '@/design-system/utils/cn';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
-
+import { cn } from '@/design-system/utils/cn';
 import { getFullUrl } from '@/core/utils/formatters';
+
 export function BrandSlider() {
   const { data: brands = [], isLoading, isError } = useGetMainBrands();
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [dragWidth, setWidth] = useState(0);
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const [dragWidth, setDragWidth] = React.useState(0);
   const x = useMotionValue(0);
-  const isDraggingRef = useRef(false);
+  const isDraggingRef = React.useRef(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (carouselRef.current) {
-      setWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+      setDragWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
     }
   }, [brands]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 350;
-    let newX = x.get() + (direction === 'right' ? -step : step);
+    let newX = x.get() + (direction === 'left' ? step : -step);
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
     animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
@@ -47,16 +47,17 @@ export function BrandSlider() {
       e.stopPropagation();
     }
   };
+
   if (isLoading) {
     return (
       <div className="w-full space-y-4 py-4">
         <div className="flex items-center gap-2 px-1">
-          <Skeleton className="w-5 h-5" variant="circle" />
-          <Skeleton className="w-32 h-5" />
+          <Skeleton className="h-5 w-5" variant="circle" />
+          <Skeleton className="h-5 w-32" />
         </div>
-        <div className="w-full bg-background rounded-xl border p-4 flex gap-4 overflow-hidden justify-center">
+        <div className="flex w-full justify-center gap-4 overflow-hidden rounded-lg border border-border bg-card p-4">
           {[...Array(8)].map((_, index) => (
-            <Skeleton key={index} className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl" />
+            <Skeleton key={index} className="h-24 w-24 shrink-0 rounded-md sm:h-28 sm:w-28" />
           ))}
         </div>
       </div>
@@ -66,51 +67,50 @@ export function BrandSlider() {
   if (isError || brands.length === 0) return null;
 
   return (
-    <div className="w-full flex flex-col space-y-3.5 py-4 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between w-full px-1">
+    <div className="flex w-full flex-col space-y-3.5 py-4">
+      <div className="flex w-full items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <Award className="h-5 w-5 text-primary shrink-0" />
-          <Typography variant="h4" className="font-iran-yekan font-extrabold text-foreground">
+          <Award aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+          <Typography variant="h4" className="font-bold text-foreground">
             برندهای محبوب
           </Typography>
         </div>
       </div>
 
-      <div className="w-full bg-background rounded-xl  p-4 relative group overflow-hidden">
-        {brands.length > 6 && (
+      <div className="group relative w-full overflow-hidden rounded-lg border border-border bg-card p-4">
+        {brands.length > 6 ? (
           <>
             <button
+              type="button"
               onClick={() => handleScroll('right')}
-              className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Previous"
+              className="absolute start-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-border bg-card p-2 text-foreground shadow-sm transition-colors duration-fast hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              aria-label="برندهای قبلی"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight aria-hidden="true" className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => handleScroll('left')}
-              className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full border bg-background hover:bg-muted text-foreground transition-all shadow-md outline-none cursor-pointer"
-              aria-label="Next"
+              className="absolute end-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-border bg-card p-2 text-foreground shadow-sm transition-colors duration-fast hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              aria-label="برندهای بعدی"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
             </button>
           </>
-        )}
+        ) : null}
 
-        <div 
-          ref={carouselRef}
-          className="w-full overflow-hidden relative z-10 select-none"
-        >
-          <motion.div 
+        <div ref={carouselRef} className="relative z-10 w-full select-none overflow-hidden">
+          <motion.div
             drag="x"
             style={{ x }}
             dragConstraints={{ left: 0, right: dragWidth }}
             dragElastic={0.15}
-            dragMomentum={true}
+            dragMomentum
             dragTransition={{ power: 0.2, bounceStiffness: 200, bounceDamping: 25 }}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onClickCapture={handleDragClickCapture}
-            className="flex gap-4 py-1 cursor-grab active:cursor-grabbing"
+            className="flex cursor-grab gap-4 py-1 active:cursor-grabbing"
           >
             {brands.map((brand: any) => (
               <Link
@@ -118,13 +118,13 @@ export function BrandSlider() {
                 href={`/search?brandIds=${brand.id}`}
                 draggable={false}
                 onDragStart={(e) => e.preventDefault()}
-                className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-xl border bg-background hover:border-primary/40 p-2 flex items-center justify-center transition-all select-none hover:scale-[1.02]"
+                className="flex h-24 w-24 shrink-0 select-none items-center justify-center rounded-md border border-border bg-card p-2 transition-colors duration-fast hover:border-primary/40 sm:h-28 sm:w-28"
               >
                 <img
                   src={getFullUrl(brand.logo)}
                   alt={brand.imageAlt || brand.name}
                   draggable={false}
-                  className="w-full h-full object-contain rounded-lg select-none pointer-events-none"
+                  className="pointer-events-none h-full w-full select-none rounded-sm object-contain"
                 />
               </Link>
             ))}
@@ -134,3 +134,4 @@ export function BrandSlider() {
     </div>
   );
 }
+

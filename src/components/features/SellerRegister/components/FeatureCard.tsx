@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { FeatureIconMap } from '../svgs/FeatureIcons';
 
-interface FeatureCardProps {
+export interface FeatureCardProps {
   feat: {
     id: string;
     title: string;
@@ -26,15 +26,14 @@ export function FeatureCard({ feat, index }: FeatureCardProps) {
       whileHover={{ y: -6 }}
       className="group relative"
     >
-      {/* Glow پشت کارت */}
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-lg transition-all duration-500" />
-      
-      {/* Border گرادیانت */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-border/80 to-border/40 group-hover:from-primary/30 group-hover:to-primary/10 transition-all duration-500" />
-      
-      <div className="relative bg-card rounded-2xl p-5 sm:p-6 flex flex-col gap-4 overflow-hidden">
-        {/* الگوی نقطه‌ای تزئینی */}
-        <svg className="absolute top-0 left-0 w-32 h-32 opacity-5 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none">
+      <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 opacity-0 blur-lg transition-opacity duration-slow group-hover:opacity-100" />
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-border to-border/60 transition-colors duration-slow group-hover:from-primary/30 group-hover:to-primary/10" />
+
+      <div className="relative flex flex-col gap-4 overflow-hidden rounded-lg bg-card p-5 sm:p-6">
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 h-32 w-32 opacity-5 transition-opacity duration-slow group-hover:opacity-10"
+        >
           <defs>
             <pattern id={`dots-${feat.id}`} width="12" height="12" patternUnits="userSpaceOnUse">
               <circle cx="2" cy="2" r="1" fill="currentColor" className="text-primary" />
@@ -43,21 +42,23 @@ export function FeatureCard({ feat, index }: FeatureCardProps) {
           <rect width="100%" height="100%" fill={`url(#dots-${feat.id})`} />
         </svg>
 
-        <div className={cn(
-          'relative w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3',
-          feat.color
-        )}>
-          {IconComponent && <IconComponent className="h-6 w-6" size={24} />}
+        <div
+          className={cn(
+            'relative flex h-12 w-12 shrink-0 items-center justify-center rounded-md transition-transform duration-slow group-hover:scale-110 group-hover:rotate-3',
+            feat.color
+          )}
+        >
+          {IconComponent ? <IconComponent className="h-6 w-6" size={24} /> : null}
         </div>
 
         <div className="flex flex-col gap-2">
-          <h3 className="text-sm sm:text-base font-extrabold text-foreground">{feat.title}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feat.desc}</p>
+          <h3 className="text-base font-bold text-foreground">{feat.title}</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">{feat.desc}</p>
         </div>
 
-        {/* خط تزئینی پایین */}
         <motion.div
-          className="absolute bottom-0 right-0 left-0 h-0.5 bg-gradient-to-r from-primary via-primary/50 to-transparent origin-right"
+          aria-hidden="true"
+          className="absolute bottom-0 start-0 end-0 h-0.5 origin-right bg-gradient-to-l from-transparent via-primary/50 to-primary"
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true }}

@@ -1,4 +1,4 @@
-// src/components/sections/Header/components/SearchResults/SearchResults.tsx
+﻿// src/components/sections/Header/components/SearchResults/SearchResults.tsx
 
 'use client';
 
@@ -33,7 +33,7 @@ export function SearchResults({ isOpen, onClose, keywords, isMobile }: SearchRes
 
   return (
     <div className={cn(
-      "bg-background border rounded-xl shadow-2xl overflow-hidden flex flex-col",
+      "bg-card border rounded-xl shadow-2xl overflow-hidden flex flex-col",
       isMobile ? "w-full h-full fixed inset-0 z-50 rounded-none" : "max-h-[70vh] w-full"
     )}>
       {/* هدر مینیمال */}
@@ -82,7 +82,7 @@ export function SearchResults({ isOpen, onClose, keywords, isMobile }: SearchRes
                   // هدایت مستقیم به صفحه سرچ با کلمه کلیدی
                   window.location.href = `/search?q=${encodeURIComponent(kw.suggestion)}`;
                 }}
-                className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted/50 transition-colors text-right group"
+                className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted/50 transition-colors group"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

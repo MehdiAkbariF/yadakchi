@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { cn } from '@/design-system/utils/cn';
 import { Typography } from '@/components/primitives/Typography';
@@ -70,11 +70,11 @@ export function SearchHeader({
         style={{
           top: isHeaderMinimized ? '56px' : '122px'
         }}
-        className="md:hidden sticky z-40 bg-background border-b py-2.5 px-4 w-full flex items-center justify-between  select-none gap-3 transition-all duration-300 mt-5"
+        className="md:hidden sticky z-40 bg-card border-b py-2.5 px-4 w-full flex items-center justify-between  select-none gap-3 transition-all duration-300 mt-5"
       >
         <button
           onClick={onOpenMobileFilters}
-          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-background hover:bg-muted text-xs font-bold font-iran-yekan text-foreground flex-1 h-9 shadow-sm select-none outline-none"
+          className="flex items-center justify-center gap-1.5 border rounded-xl py-2 px-3 bg-card hover:bg-muted text-xs font-bold text-foreground flex-1 h-9 shadow-sm select-none outline-none"
         >
           <SlidersHorizontal className="h-4 w-4 text-primary shrink-0" />
           <span className="truncate whitespace-nowrap">فیلترها</span>
@@ -87,7 +87,7 @@ export function SearchHeader({
           variant="trigger"
         />
 
-        <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center select-none">
+        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2.5 py-2 rounded-xl shrink-0 h-9 flex items-center justify-center select-none">
           {formatNumber(totalCount)} کالا
         </span>
       </div>
@@ -97,10 +97,10 @@ export function SearchHeader({
   return (
     <div className="w-full flex flex-col gap-4 pb-2 select-none">
       <div className="flex items-center justify-between w-full md:border-b md:pb-3">
-        <Typography variant="h3" className="font-iran-yekan font-extrabold text-foreground">
+        <Typography variant="h3" className=" font-extrabold text-foreground">
           {searchTitle ? `نتایج جستجو برای «${searchTitle}»` : 'لیست قطعات یدکی'}
         </Typography>
-        <span className="hidden md:inline-block text-xs font-bold font-iran-yekan text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
+        <span className="hidden md:inline-block text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
           {formatNumber(totalCount)} کالا
         </span>
       </div>

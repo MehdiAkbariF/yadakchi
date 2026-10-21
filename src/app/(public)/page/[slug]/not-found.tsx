@@ -14,18 +14,18 @@ export default function StaticPageNotFound() {
         <FileQuestion className="h-10 w-10 text-muted-foreground" />
       </div>
 
-      <h1 className="text-lg md:text-xl font-black font-iran-yekan text-foreground">
+      <h1 className="text-lg md:text-xl font-black text-foreground">
         صفحه مورد نظر یافت نشد
       </h1>
 
-      <p className="text-xs md:text-sm text-muted-foreground font-iran-yekan max-w-md leading-relaxed">
+      <p className="text-xs md:text-sm text-muted-foreground max-w-md leading-relaxed">
         صفحه‌ای که به دنبال آن هستید حذف شده یا آدرس آن تغییر کرده است.
       </p>
 
       <Link href="/" className="mt-2">
         <Button
           variant="primary"
-          className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-6"
+          className="rounded-xl font-bold text-xs h-10 px-6"
         >
           بازگشت به صفحه اصلی
         </Button>

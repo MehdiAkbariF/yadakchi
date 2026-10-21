@@ -1,4 +1,4 @@
-// src/components/sections/Header/components/MobileMenu/MobileMenu.tsx
+﻿// src/components/sections/Header/components/MobileMenu/MobileMenu.tsx
 
 'use client';
 
@@ -28,7 +28,7 @@ export function MobileMenu({ isOpen, isAuthenticated, onClose }: MobileMenuProps
   };
 
   return (
-    <div className="md:hidden border-t p-4 space-y-4 bg-background">
+    <div className="md:hidden border-t p-4 space-y-4 bg-card">
       {/* منوی اصلی (بدون جستجو) */}
       <div className="space-y-2">
         {NAV_ITEMS.map((item) => (
@@ -50,7 +50,7 @@ export function MobileMenu({ isOpen, isAuthenticated, onClose }: MobileMenuProps
           <Car className="h-4 w-4" />
           ماشین من
         </Link>
-        <button className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors w-full text-right">
+        <button className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors w-full">
           <MapPin className="h-4 w-4" />
           شهر خود را انتخاب کنید
         </button>
@@ -75,7 +75,7 @@ export function MobileMenu({ isOpen, isAuthenticated, onClose }: MobileMenuProps
         {isAuthenticated ? (
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 py-2 text-sm text-destructive hover:text-destructive/80 transition-colors w-full text-right"
+            className="flex items-center gap-2 py-2 text-sm text-destructive hover:text-destructive/80 transition-colors w-full"
           >
             <LogOut className="h-4 w-4" />
             خروج از حساب

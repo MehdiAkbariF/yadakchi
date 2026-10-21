@@ -1,8 +1,6 @@
-// src/components/features/Blog/components/BlogCommentsSection.tsx
-
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,7 +16,7 @@ import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { showToast } from '@/core/utils/toast';
 import { toPersianDigits } from '@/core/utils/formatters';
 
-interface BlogCommentsSectionProps {
+export interface BlogCommentsSectionProps {
   blogPostId: string;
 }
 
@@ -26,7 +24,7 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
-  const [page, setPage] = useState(1);
+  const [page, setPage] = React.useState(1);
 
   const { data: commentsResponse, isLoading } = useGetBlogPostComments(blogPostId, page);
   const createComment = useCreateBlogPostComment();
@@ -35,7 +33,14 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
   const totalPages = commentsResponse?.totalPages || 1;
   const totalCount = commentsResponse?.totalCount || 0;
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<CreateBlogPostCommentRequest>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<CreateBlogPostCommentRequest>({
     resolver: zodResolver(blogValidators.createComment.getSchema() as any),
     defaultValues: {
       blogPostId,
@@ -56,38 +61,34 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
     try {
       await createComment.mutateAsync(data);
       showToast.success('دیدگاه شما ثبت شد و پس از بازبینی منتشر خواهد شد');
-      reset({
-        blogPostId,
-        comment: '',
-        isIncognito: false,
-      });
+      reset({ blogPostId, comment: '', isIncognito: false });
     } catch (err: any) {
       showToast.error(err.userMessage || 'خطا در ثبت دیدگاه. لطفاً مجدداً تلاش کنید.');
     }
   };
 
   return (
-    <section aria-labelledby="comments-heading" className="w-full flex flex-col gap-6 border-t border-dashed border-border/80 pt-8 mt-6">
-      
-      {/* عنوان بخش نظرات */}
-      <div className="flex items-center justify-between border-b border-border/60 pb-3">
+    <section
+      aria-labelledby="comments-heading"
+      className="mt-6 flex w-full flex-col gap-6 border-t border-dashed border-border pt-8"
+    >
+      <div className="flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-primary shrink-0" />
-          <h2 id="comments-heading" className="text-base sm:text-lg font-black text-foreground">
+          <MessageSquare aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+          <h2 id="comments-heading" className="text-lg font-bold text-foreground">
             دیدگاه‌ها و نظرات کاربران
           </h2>
         </div>
-        <span className="text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
+        <span className="rounded-sm bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">
           {toPersianDigits(totalCount)} نظر
         </span>
       </div>
 
-      {/* فرم ثبت دیدگاه جدید */}
-      <div className="w-full bg-card border border-border/70 rounded-2xl p-4 sm:p-6 shadow-2xs">
-        <h3 className="text-xs sm:text-sm font-bold text-foreground mb-1">
+      <div className="w-full rounded-lg border border-border bg-card p-4 shadow-xs sm:p-6">
+        <h3 className="mb-1 text-sm font-bold text-foreground">
           دیدگاه یا پرسش خود را درباره این مقاله بنویسید
         </h3>
-        <p className="text-xs text-muted-foreground mb-4">
+        <p className="mb-4 text-xs text-muted-foreground">
           دیدگاه شما پس از تایید مدیریت در سایت نمایش داده خواهد شد.
         </p>
 
@@ -96,13 +97,12 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
             placeholder="متن دیدگاه خود را بنویسید..."
             rows={4}
             error={errors.comment?.message}
-            className="text-xs sm:text-sm leading-relaxed"
+            className="text-sm leading-relaxed"
             {...register('comment')}
           />
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-            {/* چک‌باکس با رویکرد ارگونومیک (برچسب قابل لمس و کلیک) */}
-            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+          <div className="flex flex-col justify-between gap-4 pt-1 sm:flex-row sm:items-center">
+            <label className="inline-flex cursor-pointer select-none items-center gap-2">
               <Checkbox
                 checked={watchIncognito}
                 onChange={(checked) => setValue('isIncognito', checked)}
@@ -117,56 +117,54 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
               variant="primary"
               size="sm"
               isLoading={createComment.isPending}
-              className="h-10 px-6 rounded-xl text-xs font-bold shadow-xs inline-flex items-center justify-center gap-2 self-start sm:self-auto active:scale-95 transition-transform"
+              className="inline-flex h-10 items-center justify-center gap-2 px-6 text-xs font-bold shadow-xs self-start sm:self-auto"
             >
-              {/* آیکون Send بدون باگ برعکس‌شدن عمودی؛ اصلاح شده برای RTL */}
-              <Send className="h-3.5 w-3.5 rtl:-scale-x-100" />
+              <Send aria-hidden="true" className="h-3.5 w-3.5 rtl:-scale-x-100" />
               <span>ارسال دیدگاه</span>
             </Button>
           </div>
         </form>
       </div>
 
-      {/* لیست دیدگاه‌ها */}
-      <div className="flex flex-col gap-4 mt-2">
+      <div className="mt-2 flex flex-col gap-4">
         {isLoading ? (
-          /* اسکلتون لودینگ برای جلوگیری از پرش چیدمان */
           <div className="flex flex-col gap-3">
             {[1, 2].map((i) => (
-              <div key={i} className="p-4 sm:p-5 border border-border/50 rounded-2xl bg-card space-y-3 animate-pulse">
-                <div className="flex justify-between items-center pb-2 border-b border-border/40">
+              <div
+                key={i}
+                className="animate-pulse space-y-3 rounded-lg border border-border bg-card p-4 sm:p-5"
+              >
+                <div className="flex items-center justify-between border-b border-border pb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-muted" />
-                    <div className="w-24 h-3 bg-muted rounded-md" />
+                    <div className="h-8 w-8 rounded-full bg-muted" />
+                    <div className="h-3 w-24 rounded-sm bg-muted" />
                   </div>
-                  <div className="w-16 h-3 bg-muted rounded-md" />
+                  <div className="h-3 w-16 rounded-sm bg-muted" />
                 </div>
-                <div className="w-full h-3 bg-muted rounded-md" />
-                <div className="w-2/3 h-3 bg-muted rounded-md" />
+                <div className="h-3 w-full rounded-sm bg-muted" />
+                <div className="h-3 w-2/3 rounded-sm bg-muted" />
               </div>
             ))}
           </div>
         ) : comments.length > 0 ? (
           <>
-            <ol className="flex flex-col gap-3.5 list-none p-0 m-0">
+            <ol className="m-0 flex list-none flex-col gap-3.5 p-0">
               {comments.map((c) => (
                 <li key={c.id}>
-                  <article className="p-4 sm:p-5 border border-border/60 rounded-2xl bg-card flex flex-col gap-3 shadow-2xs">
-                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                  <article className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-xs sm:p-5">
+                    <div className="flex items-center justify-between border-b border-border pb-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
-                          <User className="h-4 w-4" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
+                          <User aria-hidden="true" className="h-4 w-4" />
                         </div>
-                        <span className="text-xs font-bold text-foreground">
-                          {c.creatorName}
-                        </span>
+                        <span className="text-xs font-bold text-foreground">{c.creatorName}</span>
                       </div>
-                      <time className="text-[11px] text-muted-foreground font-medium">
+                      <time className="text-2xs font-medium text-muted-foreground">
                         {c.createDateFormatted}
                       </time>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-foreground/90 leading-loose whitespace-pre-wrap">
+                    <p className="whitespace-pre-wrap text-sm leading-reading text-foreground/90">
                       {c.comment}
                     </p>
                   </article>
@@ -174,22 +172,18 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
               ))}
             </ol>
 
-            {totalPages > 1 && (
+            {totalPages > 1 ? (
               <div className="pt-2">
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  onPageChange={(p) => setPage(p)}
-                />
+                <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => setPage(p)} />
               </div>
-            )}
+            ) : null}
           </>
         ) : (
-          <div className="w-full py-12 text-center border border-dashed border-border/80 rounded-2xl bg-card flex flex-col items-center justify-center gap-2 px-4">
-            <div className="p-3 bg-muted rounded-full text-muted-foreground">
-              <MessageSquare className="h-6 w-6" />
+          <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card px-4 py-12 text-center">
+            <div className="rounded-full bg-muted p-3 text-muted-foreground">
+              <MessageSquare aria-hidden="true" className="h-6 w-6" />
             </div>
-            <p className="text-xs sm:text-sm font-bold text-foreground mt-1">
+            <p className="mt-1 text-sm font-bold text-foreground">
               هنوز دیدگاهی برای این مقاله ثبت نشده است
             </p>
             <span className="text-xs text-muted-foreground">
@@ -198,7 +192,6 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
           </div>
         )}
       </div>
-
     </section>
   );
 }

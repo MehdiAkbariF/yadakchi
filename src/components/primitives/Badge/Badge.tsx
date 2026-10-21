@@ -1,26 +1,24 @@
-// src/components/primitives/Badge/Badge.tsx
-
-import { forwardRef } from 'react';
+import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/design-system/utils/cn';
 
-const badgeVariants = cva(
-  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+export const badgeVariants = cva(
+  'inline-flex items-center gap-1 rounded-full font-medium whitespace-nowrap transition-colors',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/80',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/80',
-        outline: 'text-foreground border border-input',
-        success: 'bg-success-500 text-white hover:bg-success-600',
-        warning: 'bg-warning-500 text-white hover:bg-warning-600',
-        info: 'bg-primary-500 text-white hover:bg-primary-600',
+        default: 'bg-primary text-primary-foreground',
+        secondary: 'bg-secondary text-secondary-foreground',
+        destructive: 'bg-destructive text-destructive-foreground',
+        success: 'bg-success text-success-foreground',
+        warning: 'bg-warning text-warning-foreground',
+        info: 'bg-info text-info-foreground',
+        outline: 'border border-border text-foreground bg-transparent',
       },
       size: {
-        sm: 'text-xs px-1.5 py-0.5',
-        md: 'text-sm px-2.5 py-0.5',
-        lg: 'text-base px-3 py-1',
+        sm: 'h-5 px-2 text-2xs',
+        md: 'h-6 px-2.5 text-xs',
+        lg: 'h-7 px-3 text-sm',
       },
     },
     defaultVariants: {
@@ -36,21 +34,22 @@ export interface BadgeProps
   dot?: boolean;
 }
 
-export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className, variant, size, dot, children, ...props }, ref) => {
-    return (
-      <span
-        className={cn(badgeVariants({ variant, size }), className)}
-        ref={ref}
-        {...props}
-      >
-        {dot && (
-          <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-current" />
-        )}
-        {children}
-      </span>
-    );
-  }
+export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
+  ({ className, variant, size, dot, children, ...props }, ref) => (
+    <span
+      ref={ref}
+      className={cn(badgeVariants({ variant, size }), className)}
+      {...props}
+    >
+      {dot ? (
+        <span
+          aria-hidden="true"
+          className="inline-block h-1.5 w-1.5 rounded-full bg-current"
+        />
+      ) : null}
+      {children}
+    </span>
+  )
 );
 
 Badge.displayName = 'Badge';

@@ -1,150 +1,155 @@
 ﻿'use client';
 
 import { useRouter } from 'next/navigation';
-import { 
-  ShoppingBag, 
-  ChevronLeft, 
-  CreditCard, 
-  Truck, 
-  CheckCircle2, 
+import {
+  ShoppingBag,
+  ChevronLeft,
+  CreditCard,
+  Truck,
+  CheckCircle2,
   RotateCcw,
   Car,
   Gauge,
   Wrench,
   Calendar,
   Check,
-  Plus
+  Plus,
 } from 'lucide-react';
 import { Card, CardBody } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { useGetOrders, useGetUserVehicles } from '@/domains/userpanel/hooks/userpanel.hooks';
-
 import { getFullUrl } from '@/core/utils/formatters';
+
+const ORDER_STATUSES = [
+  { id: 'WaitingForPayment', label: 'در انتظار پرداخت', icon: CreditCard },
+  { id: 'InProgress', label: 'جاری', icon: Truck },
+  { id: 'Delivered', label: 'تحویل شده', icon: CheckCircle2 },
+  { id: 'ReturnRequest', label: 'مرجوع شده', icon: RotateCcw },
+] as const;
+
 export function ProfileDashboard() {
   const router = useRouter();
   const { data: ordersData } = useGetOrders('', '', '', 1);
-  const { data: vehicles = [], isLoading, isError, error } = useGetUserVehicles();
+  const { data: vehicles = [] } = useGetUserVehicles();
 
-  console.log('[Dashboard Debug] Vehicles Array:', vehicles);
-  console.log('[Dashboard Debug] Loading State:', isLoading);
-  
-  if (isError) {
-    console.error('[Dashboard Debug] React Query Error:', error);
-  }
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
-  const orderStatuses = [
-    { id: 'WaitingForPayment', label: 'در انتظار پرداخت', count: 2, icon: CreditCard },
-    { id: 'InProgress', label: 'جاری', count: 0, icon: Truck },
-    { id: 'Delivered', label: 'تحویل شده', count: 0, icon: CheckCircle2 },
-    { id: 'ReturnRequest', label: 'مرجوع شده', count: 0, icon: RotateCcw },
-  ];
-
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value);
+  const getStatusCount = (statusId: string): number => {
+    const orders = (ordersData as any)?.items || [];
+    return orders.filter((o: any) => o.status === statusId).length;
   };
+
   return (
-    <div className="w-full flex flex-col gap-6">
-      
-      <Card className="w-full border rounded-xl bg-background shadow-sm">
-        <CardBody className="p-5 flex flex-col gap-5">
-          <div className="flex items-center justify-between w-full">
+    <div className="flex w-full flex-col gap-6">
+      <Card className="w-full">
+        <CardBody className="flex flex-col gap-5 p-5">
+          <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-primary shrink-0" />
-              <span className="text-xs md:text-sm font-bold text-foreground font-iran-yekan">سفارش‌های من</span>
+              <ShoppingBag aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+              <span className="text-sm font-bold text-foreground">سفارش‌های من</span>
             </div>
-            <button 
+            <button
+              type="button"
               onClick={() => router.push('/profile/orders')}
-              className="text-xs font-bold font-iran-yekan text-primary hover:underline flex items-center gap-0.5 outline-none"
+              className="flex items-center gap-0.5 text-xs font-bold text-primary outline-none hover:underline"
             >
               <span>مشاهده همه</span>
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-            {orderStatuses.map((status) => {
+          <div className="grid w-full grid-cols-2 gap-4 sm:grid-cols-4">
+            {ORDER_STATUSES.map((status) => {
               const StatusIcon = status.icon;
+              const count = getStatusCount(status.id);
               return (
-                <div 
+                <button
                   key={status.id}
+                  type="button"
                   onClick={() => router.push(`/profile/orders?status=${status.id}`)}
-                  className="p-4 border rounded-xl bg-background hover:border-primary/25 transition-all text-center flex flex-col items-center justify-center gap-2 cursor-pointer"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-border bg-card p-4 text-center transition-colors hover:border-primary/40 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <StatusIcon className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-[10px] md:text-xs font-bold text-foreground font-iran-yekan">{status.label}</span>
-                  <span className="text-[10px] font-bold text-muted-foreground font-iran-yekan bg-muted px-2.5 py-0.5 rounded-full mt-1">
-                    {status.count} سفارش
+                  <StatusIcon aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs font-bold text-foreground">{status.label}</span>
+                  <span className="mt-1 rounded-full bg-muted px-2.5 py-0.5 text-2xs font-bold text-muted-foreground">
+                    {count} سفارش
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
         </CardBody>
       </Card>
 
-      <Card className="w-full border rounded-xl bg-background shadow-sm">
-        <CardBody className="p-5 flex flex-col gap-5">
-          <div className="flex items-center justify-between w-full">
+      <Card className="w-full">
+        <CardBody className="flex flex-col gap-5 p-5">
+          <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
-              <Car className="h-5 w-5 text-primary" />
-              <span className="text-xs md:text-sm font-bold text-foreground font-iran-yekan">گاراژ من</span>
+              <Car aria-hidden="true" className="h-5 w-5 text-primary" />
+              <span className="text-sm font-bold text-foreground">گاراژ من</span>
             </div>
-            <button 
+            <button
+              type="button"
               onClick={() => router.push('/my-car')}
-              className="text-xs font-bold font-iran-yekan text-primary hover:underline flex items-center gap-0.5 outline-none"
+              className="flex items-center gap-0.5 text-xs font-bold text-primary outline-none hover:underline"
             >
               <span>مدیریت گاراژ ({formatPrice(vehicles.length)} از ۱۰)</span>
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
             </button>
           </div>
 
           {vehicles.length > 0 ? (
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex w-full flex-col gap-4">
               {vehicles.map((vehicle: any) => (
-                <div key={vehicle.id} className="w-full flex flex-col md:flex-row items-stretch justify-between gap-5 border rounded-xl p-4 bg-background hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors">
-                  <div className="flex-1 flex gap-4 items-start min-w-0">
-                    <div className="w-16 h-16 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden">
+                <div
+                  key={vehicle.id}
+                  className="flex w-full flex-col items-stretch justify-between gap-5 rounded-md border border-border bg-card p-4 transition-colors hover:border-primary/40 md:flex-row"
+                >
+                  <div className="flex min-w-0 flex-1 items-start gap-4">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
                       {vehicle.carCover ? (
-                        <img src={getFullUrl(vehicle.carCover)} className="w-full h-full object-contain" alt="" />
+                        <img src={getFullUrl(vehicle.carCover)} className="h-full w-full object-contain" alt="" />
                       ) : (
-                        <Car className="h-6 w-6 text-muted-foreground" />
+                        <Car aria-hidden="true" className="h-6 w-6 text-muted-foreground" />
                       )}
                     </div>
-                    <div className="flex-1 min-w-0 text-right flex flex-col gap-1">
-                      <div className="flex items-center gap-2 w-full">
-                        <span className="text-xs md:text-sm font-bold text-foreground truncate font-iran-yekan">{vehicle.carModel}</span>
-                        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md font-iran-yekan">- {vehicle.title}</span>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <div className="flex w-full items-center gap-2">
+                        <span className="truncate text-sm font-bold text-foreground">{vehicle.carModel}</span>
+                        <span className="rounded-sm bg-muted px-2 py-0.5 text-2xs font-bold text-muted-foreground">
+                          - {vehicle.title}
+                        </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 mt-2 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
+                      <div className="mt-2 grid grid-cols-1 gap-x-6 gap-y-2 text-2xs text-muted-foreground sm:grid-cols-2">
                         <div className="flex items-center gap-1.5">
-                          <Gauge className="h-4 w-4 text-zinc-400" />
+                          <Gauge aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                           <span>کارکرد خودرو: {vehicle.mileage}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Wrench className="h-4 w-4 text-zinc-400" />
+                          <Wrench aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                           <span>سرویس بعدی: {vehicle.oilKmLimit}</span>
                         </div>
                         <div className="flex items-center gap-1.5 sm:col-span-2">
-                          <Calendar className="h-4 w-4 text-zinc-400" />
+                          <Calendar aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                           <span>تاریخ اضافه به گاراژ: {vehicle.lastServiceDateFormatted}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end justify-between gap-3 shrink-0 border-t md:border-t-0 border-dashed pt-3 md:pt-0">
-                    {vehicle.isDefault && (
-                      <span className="text-[9px] font-bold text-success-500 bg-success-50 dark:bg-success-950/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 font-iran-yekan animate-in zoom-in duration-150">
-                        <Check className="h-3 w-3" />
-                        خودروی پیش فرض
+                  <div className="flex flex-col items-end justify-between gap-3 border-t border-dashed border-border pt-3 md:border-t-0 md:pt-0 shrink-0">
+                    {vehicle.isDefault ? (
+                      <span className="flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-2xs font-bold text-success">
+                        <Check aria-hidden="true" className="h-3 w-3" />
+                        خودروی پیش‌فرض
                       </span>
-                    )}
+                    ) : null}
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => router.push('/my-car')}
-                      className="rounded-xl text-[10px] font-bold font-iran-yekan h-8 w-full md:w-auto"
+                      className="h-8 w-full text-2xs font-bold md:w-auto"
                     >
                       بروزرسانی کارکرد
                     </Button>
@@ -153,22 +158,21 @@ export function ProfileDashboard() {
               ))}
             </div>
           ) : (
-            <div className="w-full py-8 text-center flex flex-col items-center justify-center">
-              <p className="text-xs text-muted-foreground font-iran-yekan">هیچ خودرویی در گاراژ شما ثبت نشده است.</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
+            <div className="flex w-full flex-col items-center justify-center py-8 text-center">
+              <p className="text-xs text-muted-foreground">هیچ خودرویی در گاراژ شما ثبت نشده است.</p>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => router.push('/my-car/add')}
-                className="rounded-xl mt-4 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1"
+                className="mt-4 flex h-10 items-center justify-center gap-1 px-6 py-2 text-xs font-bold"
               >
-                <Plus className="h-4 w-4" />
+                <Plus aria-hidden="true" className="h-4 w-4" />
                 <span>ثبت اولین خودرو در گاراژ</span>
               </Button>
             </div>
           )}
         </CardBody>
       </Card>
-
     </div>
   );
 }

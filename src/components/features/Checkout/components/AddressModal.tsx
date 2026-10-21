@@ -1,19 +1,17 @@
-// src/components/features/Checkout/components/AddressModal.tsx
+﻿'use client';
 
-'use client';
-
-import { useEffect, useState } from 'react';
+import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { MapPin, X, Plus, CheckCircle2, Circle, ArrowRight, Loader2, Navigation } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCreateUserLocation, useSetBasketLocationAndPrice } from '@/domains/front/basket/hooks/basket.hooks';
 import { Input } from '@/components/primitives/Input/Input';
 import { Button } from '@/components/primitives/Button/Button';
-import { MapPin, X, Plus, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const addressFormSchema = z.object({
   title: z.string().min(2, 'عنوان باید حداقل ۲ کاراکتر باشد'),
@@ -24,7 +22,7 @@ const addressFormSchema = z.object({
 
 type AddressFormData = z.infer<typeof addressFormSchema>;
 
-interface AddressModalProps {
+export interface AddressModalProps {
   isOpen: boolean;
   onClose: () => void;
   locations: any[];
@@ -42,63 +40,53 @@ interface AddressModalProps {
   setIsNewAddressOpen: (open: boolean) => void;
 }
 
-export function AddressModal({ 
-  isOpen, 
-  onClose, 
-  locations, 
-  activeAddress, 
+export function AddressModal({
+  isOpen,
+  onClose,
+  locations = [],
+  activeAddress,
   onOpenMapModal,
   mapAddressData,
   isNewAddressOpen,
-  setIsNewAddressOpen
+  setIsNewAddressOpen,
 }: AddressModalProps) {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = React.useState(false);
+  const [selectingLocationId, setSelectingLocationId] = React.useState<string | null>(null);
+
   const setBasketLocation = useSetBasketLocationAndPrice();
   const createLocation = useCreateUserLocation();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<AddressFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<AddressFormData>({
     resolver: zodResolver(addressFormSchema),
-    defaultValues: {
-      title: '',
-      postalCode: '',
-      plaque: '',
-      unit: '',
-    }
+    defaultValues: { title: '', postalCode: '', plaque: '', unit: '' },
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (mapAddressData) {
-      reset({
-        title: '',
-        postalCode: '',
-        plaque: '',
-        unit: '',
-      });
+      reset({ title: '', postalCode: '', plaque: '', unit: '' });
     }
   }, [mapAddressData, reset]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) return;
-
-    const handlePopState = () => {
-      onClose();
-    };
-
+    const handlePopState = () => onClose();
     window.history.pushState({ modalOpen: 'address-modal' }, '');
     window.addEventListener('popstate', handlePopState);
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [isOpen, onClose]);
 
   const handleCreateAddress = async (data: AddressFormData) => {
     if (!mapAddressData) {
-      showToast.error('خطا در همگام‌سازی موقعیت جغرافیایی نقشه');
+      showToast.error('موقعیت مکانی روی نقشه مشخص نشده است');
       return;
     }
 
@@ -120,22 +108,27 @@ export function AddressModal({
       setIsNewAddressOpen(false);
       reset();
       onClose();
-    } catch (err: any) {}
+    } catch {}
   };
 
+  // انتخاب آدرس همراه با نمایش لودینگ اختصاصی و مهار کلیک‌های مکرر
   const handleSelectLocation = async (id: string) => {
+    if (selectingLocationId) return;
+    setSelectingLocationId(id);
+
     try {
-      // ارسال آدرس انتخابی به اندپوینت رسمی /api/UserPanel/BasketShipmentPrice
       await setBasketLocation.mutateAsync(id);
-      showToast.success('آدرس تحویل سفارش با موفقیت انتخاب شد');
-    } catch (err: any) {
-      console.warn('استعلام قیمت ارسال برای آدرس با اخطار مواجه شد:', err);
-    } finally {
+      showToast.success('آدرس تحویل با موفقیت انتخاب شد');
       onClose();
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در ثبت آدرس یا استعلام کرایه حمل');
+    } finally {
+      setSelectingLocationId(null);
     }
   };
 
   const handleClose = () => {
+    if (selectingLocationId) return;
     setIsNewAddressOpen(false);
     onClose();
   };
@@ -143,14 +136,15 @@ export function AddressModal({
   if (!mounted || !isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center text-right" dir="rtl">
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-0 md:p-4">
+      {/* بک‌دراپ شیشه‌ای */}
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleClose}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-foreground/45 backdrop-blur-xs"
         />
       </AnimatePresence>
 
@@ -158,131 +152,178 @@ export function AddressModal({
         initial={{ y: '100%', opacity: 0 }}
         animate={{ y: '0%', opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-        className="relative z-10 w-full h-full max-h-full max-w-none md:max-w-lg md:h-[500px] md:max-h-[90vh] md:rounded-xl p-0 overflow-hidden flex flex-col fixed inset-0 md:relative bg-background shadow-2xl"
+        transition={{ type: 'spring', stiffness: 350, damping: 32 }}
+        className="relative z-10 flex h-full max-h-full w-full max-w-none flex-col overflow-hidden bg-card shadow-2xl md:h-[580px] md:max-h-[90vh] md:max-w-xl md:rounded-2xl border border-border/80"
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
-          <div className="flex items-center gap-2">
-            <button 
+        {/* هدر شفاف و استاندارد مودال */}
+        <div className="flex shrink-0 items-center justify-between border-b border-border/60 bg-card px-5 py-4">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
               onClick={handleClose}
-              className="md:hidden p-1 -mr-1 hover:bg-muted rounded-full"
-              aria-label="Back"
+              aria-label="بازگشت"
+              className="-me-1 rounded-full p-1.5 transition-colors hover:bg-secondary md:hidden"
             >
-              <ArrowRight className="h-5 w-5 text-foreground" />
+              <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
             </button>
-            <span className="text-sm font-bold font-iran-yekan flex items-center gap-1.5 text-foreground">
-              <MapPin className="h-4.5 w-4.5 text-primary" />
-              {isNewAddressOpen ? 'تکمیل جزئیات آدرس تحویل' : 'انتخاب آدرس تحویل سفارش'}
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <MapPin aria-hidden="true" className="h-4 w-4" />
+            </div>
+            <span className="text-sm font-bold text-foreground">
+              {isNewAddressOpen ? 'تکمیل جزئیات آدرس جدید' : 'انتخاب آدرس تحویل سفارش'}
             </span>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={handleClose} className="hidden md:flex rounded-full">
-            <X className="h-4 w-4" />
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={handleClose}
+            disabled={!!selectingLocationId}
+            className="hidden rounded-full hover:bg-secondary md:flex"
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className={cn("flex-1 overflow-y-auto p-5", isNewAddressOpen ? "pb-24" : "pb-5")}>
+        {/* بدنه مودال */}
+        <div className={cn('flex-1 overflow-y-auto p-5', isNewAddressOpen ? 'pb-24' : 'pb-5')}>
           {isNewAddressOpen ? (
-            <form id="addressForm" onSubmit={handleSubmit(handleCreateAddress)} className="flex flex-col gap-4 text-right w-full">
-              <div className="w-full">
+            /* فرم تکمیل آدرس */
+            <form id="addressForm" onSubmit={handleSubmit(handleCreateAddress)} className="flex w-full flex-col gap-4">
+              {/* کادر لوکیشن انتخاب‌شده روی نقشه */}
+              <div className="flex items-start gap-3 rounded-xl border border-border/70 bg-secondary/30 p-3.5">
+                <Navigation className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                  <span className="text-2xs font-bold text-muted-foreground">
+                    موقعیت مکانی: {mapAddressData?.provinceName}، {mapAddressData?.cityName}
+                  </span>
+                  <p className="text-xs font-semibold leading-relaxed text-foreground truncate">
+                    {mapAddressData?.address}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-2xs font-bold text-muted-foreground">عنوان آدرس *</label>
                 <Input
-                  placeholder="عنوان آدرس * (مثال: خانه، محل کار)"
+                  placeholder="مثال: خانه، محل کار، تعمیرگاه"
                   error={errors.title?.message}
-                  className="text-xs font-iran-yekan w-full"
+                  className="h-10 text-xs"
                   {...register('title')}
                 />
               </div>
-              <div className="w-full">
+
+              <div className="flex flex-col gap-1">
+                <label className="text-2xs font-bold text-muted-foreground">کد پستی ۱۰ رقمی *</label>
                 <Input
-                  placeholder="کد پستی * (۹ یا ۱۰ رقمی)"
+                  placeholder="کد پستی بدون خط تیره"
                   error={errors.postalCode?.message}
-                  className="text-xs font-iran-yekan text-left w-full"
+                  className="h-10 text-xs"
                   dir="ltr"
                   {...register('postalCode')}
                 />
               </div>
-              <div className="w-full">
-                <Input
-                  placeholder="شماره پلاک *"
-                  error={errors.plaque?.message}
-                  className="text-xs font-iran-yekan w-full"
-                  {...register('plaque')}
-                />
-              </div>
-              <div className="w-full">
-                <Input
-                  placeholder="شماره واحد *"
-                  error={errors.unit?.message}
-                  className="text-xs font-iran-yekan w-full"
-                  {...register('unit')}
-                />
-              </div>
-              <div className="space-y-1 w-full">
-                <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground mr-1">موقعیت جغرافیایی قفل‌شده روی نقشه</span>
-                <Input
-                  value={mapAddressData?.cityName || ''}
-                  className="text-xs font-iran-yekan bg-muted/30 border-zinc-200 w-full"
-                  disabled
-                  readOnly
-                />
-              </div>
-              <div className="space-y-1 w-full">
-                <span className="text-[10px] font-bold font-iran-yekan text-muted-foreground mr-1">نشانی پستی قفل‌شده روی نقشه</span>
-                <Input
-                  value={mapAddressData?.address || ''}
-                  className="text-xs font-iran-yekan bg-muted/30 border-zinc-200 w-full"
-                  disabled
-                  readOnly
-                />
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-2xs font-bold text-muted-foreground">شماره پلاک *</label>
+                  <Input
+                    placeholder="پلاک"
+                    error={errors.plaque?.message}
+                    className="h-10 text-xs"
+                    {...register('plaque')}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-2xs font-bold text-muted-foreground">واحد *</label>
+                  <Input
+                    placeholder="واحد"
+                    error={errors.unit?.message}
+                    className="h-10 text-xs"
+                    {...register('unit')}
+                  />
+                </div>
               </div>
             </form>
           ) : (
-            <>
+            /* لیست آدرس‌های کاربر */
+            <div className="flex flex-col gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 fullWidth
+                disabled={!!selectingLocationId}
                 onClick={onOpenMapModal}
-                className="rounded-xl text-xs font-bold font-iran-yekan h-10 border-primary/20 text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
+                className="flex h-11 items-center justify-center gap-2 rounded-xl border-dashed border-primary/60 bg-primary/[0.02] text-xs font-bold text-primary transition-colors hover:bg-primary/10"
               >
-                <Plus className="h-4 w-4" />
+                <Plus aria-hidden="true" className="h-4 w-4" />
                 <span>ثبت آدرس جدید روی نقشه</span>
               </Button>
 
-              <div className="space-y-2 pt-2">
+              <div className="flex flex-col gap-2.5 pt-2">
                 {locations.map((loc: any) => {
                   const isCurrent = activeAddress?.id === loc.id;
+                  const isThisSelecting = selectingLocationId === loc.id;
+                  const isAnySelecting = Boolean(selectingLocationId);
+
                   return (
                     <div
                       key={loc.id}
-                      onClick={() => handleSelectLocation(loc.id)}
+                      onClick={() => !isAnySelecting && handleSelectLocation(loc.id)}
                       className={cn(
-                        "p-4 rounded-xl border cursor-pointer text-right flex items-start justify-between gap-4 transition-all hover:border-primary/30",
-                        isCurrent ? "border-primary bg-primary/5" : "bg-background"
+                        'group relative flex items-start justify-between gap-4 rounded-xl border p-4 transition-all duration-fast',
+                        isAnySelecting ? 'cursor-wait pointer-events-none' : 'cursor-pointer',
+                        isCurrent
+                          ? 'border-primary bg-primary/[0.04] ring-2 ring-primary/20 shadow-xs'
+                          : 'border-border/70 bg-card hover:border-primary/40 hover:bg-secondary/30',
+                        isThisSelecting && 'border-primary/80 bg-primary/[0.08]'
                       )}
                     >
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs font-bold font-iran-yekan text-foreground block mb-1">{loc.title}</span>
-                        <p className="text-xs text-muted-foreground leading-relaxed font-iran-yekan">{loc.province}، {loc.city}، {loc.address} (پلاک {loc.plaque}، واحد {loc.unit})</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center gap-2">
+                          <span className="text-xs font-bold text-foreground">{loc.title}</span>
+                          {loc.isDefault ? (
+                            <span className="rounded-full bg-secondary px-2 py-0.5 text-2xs font-semibold text-muted-foreground">
+                              پیش‌فرض
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {loc.province}، شهر {loc.city}، {loc.address} (پلاک {loc.plaque}، واحد {loc.unit})
+                        </p>
                       </div>
-                      <div className="shrink-0 mt-0.5 text-primary">
-                        {isCurrent ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5 text-muted-foreground/40" />}
+
+                      {/* آیکون وضعیت یا لودینگ اختصاصی این کارت */}
+                      <div className="mt-0.5 shrink-0">
+                        {isThisSelecting ? (
+                          <div className="flex items-center gap-1.5 text-primary">
+                            <span className="hidden text-2xs font-semibold sm:inline">در حال استعلام...</span>
+                            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                          </div>
+                        ) : isCurrent ? (
+                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-muted-foreground/30 transition-colors group-hover:text-primary/50" />
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </>
+            </div>
           )}
         </div>
 
-        {isNewAddressOpen && (
-          <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-4 flex gap-3 shrink-0 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] pb-6 md:pb-4">
+        {/* دکمه‌های پایینی فرم ثبت آدرس جدید */}
+        {isNewAddressOpen ? (
+          <div className="absolute inset-x-0 bottom-0 z-30 flex shrink-0 gap-3 border-t border-border/60 bg-card p-4 pb-6 shadow-sm md:pb-4">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => setIsNewAddressOpen(false)}
-              className="flex-1 rounded-xl text-xs font-bold font-iran-yekan h-10"
+              className="h-10 flex-1 rounded-xl text-xs font-bold"
             >
               مرحله قبل (نقشه)
             </Button>
@@ -292,12 +333,12 @@ export function AddressModal({
               variant="primary"
               size="sm"
               isLoading={createLocation.isPending}
-              className="flex-1 rounded-xl text-xs font-bold font-iran-yekan h-10"
+              className="h-10 flex-1 rounded-xl text-xs font-bold shadow-xs"
             >
-              ثبت آدرس نهایی
+              ثبت و انتخاب این آدرس
             </Button>
           </div>
-        )}
+        ) : null}
       </motion.div>
     </div>,
     document.body

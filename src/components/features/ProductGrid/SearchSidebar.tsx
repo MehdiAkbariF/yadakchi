@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
@@ -144,7 +144,7 @@ export function SearchSidebar({
   };
 
   const renderFilterContent = (isMobile: boolean) => (
-    <div className={cn("w-full flex flex-col gap-5 text-right", isMobile && "pb-24")}>
+    <div className={cn("w-full flex flex-col gap-5", isMobile && "pb-24")}>
       <div className="flex flex-col gap-4 border-b pb-4">
         <div className="flex items-center justify-between w-full select-none">
           <span className="text-xs font-bold font-iran-sans text-foreground">فقط کالاهای موجود</span>
@@ -172,7 +172,7 @@ export function SearchSidebar({
       </div>
 
       <Accordion title={`نوع قطعه${formatCount(activeTypesCount)}`} defaultOpen={activeTypesCount > 0}>
-        <div className="flex flex-col gap-2 pt-1 pr-1">
+        <div className="flex flex-col gap-2 pt-1 pe-1">
           <Checkbox
             label="همه قطعات"
             checked={!filters.types || filters.types.length === 0}
@@ -262,11 +262,11 @@ export function SearchSidebar({
           partId={partId} 
         />
         
-        <div className="w-full border rounded-xl p-5 bg-background shadow-sm h-fit">
+        <div className="w-full border rounded-xl p-5 bg-card shadow-sm h-fit">
           <div className="flex items-center justify-between border-b pb-3 mb-4 select-none w-full">
-            <div className="flex items-center gap-2 text-right">
+            <div className="flex items-center gap-2">
               <Filter className="h-4.5 w-4.5 text-primary" />
-              <Typography variant="h5" className="font-iran-yekan font-extrabold text-foreground">فیلترها</Typography>
+              <Typography variant="h5" className=" font-extrabold text-foreground">فیلترها</Typography>
             </div>
             {hasActiveFilters && (
               <button
@@ -284,19 +284,19 @@ export function SearchSidebar({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-[80] bg-background"
+        className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-[80] bg-card"
         overlayClassName="bg-black/40 backdrop-blur-md"
       >
         <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
           <div className="flex items-center gap-2">
             <button 
               onClick={onClose}
-              className="p-1 -mr-1 hover:bg-muted rounded-full"
+              className="p-1 -me-1 hover:bg-muted rounded-full"
               aria-label="Back"
             >
               <ArrowRight className="h-5 w-5 text-muted-foreground" />
             </button>
-            <span className="text-sm font-bold font-iran-yekan flex items-center gap-1.5 text-foreground">
+            <span className="text-sm font-bold flex items-center gap-1.5 text-foreground">
               <Filter className="h-4 w-4 text-primary" />
               فیلترها
             </span>
@@ -314,7 +314,7 @@ export function SearchSidebar({
           {renderFilterContent(true)}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 border-t bg-background p-4 flex gap-3 shrink-0 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <div className="absolute bottom-0 left-0 right-0 border-t bg-card p-4 flex gap-3 shrink-0 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
           {hasActiveFilters && (
             <Button
               variant="outline"

@@ -46,7 +46,7 @@ export function AnimatedBackground() {
       />
       <motion.div
         style={{ y: y2 }}
-        className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px]"
+        className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px]"
       />
 
       {/* ذرات شناور */}

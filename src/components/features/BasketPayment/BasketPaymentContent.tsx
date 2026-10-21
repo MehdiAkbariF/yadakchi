@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useGetBasket, useInitiatePayment, useApplyDiscountCode, useApplyReferralCode } from '@/domains/front/basket/hooks/basket.hooks';
-
+import { ArrowLeft, Clock, CheckCircle2, Truck, CreditCard } from 'lucide-react';
+import {
+  useGetBasket,
+  useInitiatePayment,
+} from '@/domains/front/basket/hooks/basket.hooks';
 import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
@@ -13,7 +16,6 @@ import { ReferralCard } from './components/ReferralCard';
 import { ItemsSummaryCard } from './components/ItemsSummaryCard';
 import { PaymentInvoice } from './components/PaymentInvoice';
 import { TrackingDetailsModal } from './components/TrackingDetailsModal';
-import { ArrowLeft } from 'lucide-react';
 import { showToast } from '@/core/utils/toast';
 
 export default function BasketPaymentContent() {
@@ -23,11 +25,11 @@ export default function BasketPaymentContent() {
   const { data: basketData, isLoading: isBasketLoading } = useGetBasket();
   const initiatePayment = useInitiatePayment();
 
-  const [isLegalInvoice, setIsLegalInvoice] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+  const [isLegalInvoice, setIsLegalInvoice] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
       showToast.error('لطفاً ابتدا وارد حساب کاربری خود شوید');
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
@@ -37,12 +39,10 @@ export default function BasketPaymentContent() {
   const basket = basketData as any;
 
   if (isAuthLoading || isBasketLoading) {
-    return <PageLoading message="در حال راه‌اندازی امن درگاه پرداخت..." />;
+    return <PageLoading label="در حال آماده‌سازی امن درگاه پرداخت..." />;
   }
 
-  if (!isAuthenticated || !basket) {
-    return null;
-  }
+  if (!isAuthenticated || !basket) return null;
 
   const isLegalUser = !!user?.isOrganizationInfoConfirmed;
 
@@ -51,14 +51,13 @@ export default function BasketPaymentContent() {
     try {
       const paymentResponse = await initiatePayment.mutateAsync(isLegalInvoice);
       const targetUrl = paymentResponse?.link || paymentResponse?.paymentUrl;
-
       if (targetUrl) {
-        showToast.success('در حال انتقال به درگاه بانکی...');
+        showToast.success('در حال انتقال به درگاه شاپرک...');
         window.location.href = targetUrl;
       } else {
-        showToast.error('خطا در دریافت درگاه بانکی');
+        showToast.error('خطا در دریافت آدرس درگاه پرداخت');
       }
-    } catch (err: any) {
+    } catch {
       showToast.error('خطا در اتصال به درگاه پرداخت. لطفاً مجدداً تلاش کنید');
     } finally {
       setIsSubmitting(false);
@@ -69,65 +68,95 @@ export default function BasketPaymentContent() {
     router.push('/profile/legal');
   };
 
-  const productPriceRaw = basket.total.totalPriceRaw || 0;
-  const discountPriceRaw = basket.total.totalDiscountRaw || 0;
-  const finalPriceRaw = basket.total.finalPriceRaw || 0;
+  const productPriceRaw = basket.total?.totalPriceRaw || 0;
+  const discountPriceRaw = basket.total?.totalDiscountRaw || 0;
+  const finalPriceRaw = basket.total?.finalPriceRaw || 0;
   const shippingPriceRaw = Math.max(0, finalPriceRaw - (productPriceRaw - discountPriceRaw));
 
-  const formatPrice = (value: number) => {
-    return new Intl.NumberFormat('fa-IR').format(value);
-  };
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat('fa-IR').format(Math.round(value / 10));
 
   const leftPriceContent = (
-    <div className="flex flex-col text-right">
-      <span className="text-[10px] text-muted-foreground font-iran-yekan mb-0.5">مبلغ نهایی قابل پرداخت:</span>
-      <span className="text-sm font-black text-foreground font-iran-yekan">
-        {formatPrice(finalPriceRaw / 10)} تومان
-      </span>
+    <div className="flex flex-col">
+      <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ نهایی سفارش:</span>
+      <span className="text-sm font-bold text-foreground">{formatPrice(finalPriceRaw)} تومان</span>
     </div>
   );
 
- return (
-  <div className="w-full flex flex-col lg:flex-row items-start gap-6 select-none text-right" dir="rtl">
-    
-    <div className="flex-1 flex flex-col gap-4 w-full">
-      {/* بنر اطلاع‌رسانی رزرو کالاها مطابق تصویر ۳ دیزاین */}
-      <div className="w-full bg-rose-50/80 border border-rose-200/90 text-rose-700 px-4 py-3 rounded-xl flex items-center justify-between text-xs font-iran-yekan font-medium">
-        <span>توجه: قیمت و موجودی قطعات در این مرحله به مدت <strong>۱۵ دقیقه</strong> برای شما رزرو شده است.</span>
+  return (
+    <div className="flex w-full select-none flex-col gap-6 py-2">
+      {/* مرحله‌بندی پیشرفت خرید (Checkout Stepper - مرحله آخر فعال) */}
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 pb-2">
+        <div className="flex items-center gap-2 text-success font-semibold">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-success/15 text-success">
+            <CheckCircle2 className="h-4 w-4" />
+          </div>
+          <span className="text-xs">سبد خرید</span>
+        </div>
+
+        <div className="h-[2px] flex-1 bg-success/50 mx-3" />
+
+        <div className="flex items-center gap-2 text-success font-semibold">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-success/15 text-success">
+            <CheckCircle2 className="h-4 w-4" />
+          </div>
+          <span className="text-xs">زمان و شیوه ارسال</span>
+        </div>
+
+        <div className="h-[2px] flex-1 bg-primary/50 mx-3" />
+
+        <div className="flex items-center gap-2 text-primary font-bold">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+            <CreditCard className="h-3.5 w-3.5" />
+          </div>
+          <span className="text-xs">پرداخت نهایی</span>
+        </div>
       </div>
 
-      <PaymentMethodCard />
-      <DiscountCard />
-      <ReferralCard />
-      <ItemsSummaryCard onOpenTracking={() => setIsTrackingModalOpen(true)} />
-    </div>
+      <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
+        {/* ستون اصلی کارت‌ها */}
+        <div className="flex w-full flex-1 flex-col gap-5">
+          {/* نوار رزرو زمان‌دار شیک */}
+          <div className="flex items-center gap-2.5 rounded-xl border border-warning/40 bg-warning/[0.08] p-3.5 text-xs font-semibold text-warning">
+            <Clock className="h-4 w-4 shrink-0" />
+            <span>
+              قیمت و موجودی قطعات سبد شما به مدت <strong>۱۵ دقیقه</strong> در انبار رزرو شده است.
+            </span>
+          </div>
 
-    <PaymentInvoice
-      productPrice={productPriceRaw / 10}
-      discountPrice={discountPriceRaw / 10}
-      shippingPrice={shippingPriceRaw / 10}
-      finalPrice={finalPriceRaw / 10}
-      isLegalInvoice={isLegalInvoice}
-      isLegalUser={isLegalUser}
-      isSubmitting={isSubmitting}
-      onLegalInvoiceChange={(checked) => setIsLegalInvoice(checked)}
-      onPayment={handlePayment}
-      onCompleteLegalInfo={handleCompleteLegalInfo}
-    />
+          <PaymentMethodCard />
+          <DiscountCard />
+          <ReferralCard />
+          <ItemsSummaryCard onOpenTracking={() => setIsTrackingModalOpen(true)} />
+        </div>
+
+        {/* سایدبار فاکتور نهایی */}
+        <PaymentInvoice
+          productPrice={productPriceRaw / 10}
+          discountPrice={discountPriceRaw / 10}
+          shippingPrice={shippingPriceRaw / 10}
+          finalPrice={finalPriceRaw / 10}
+          isLegalInvoice={isLegalInvoice}
+          isLegalUser={isLegalUser}
+          isSubmitting={isSubmitting}
+          onLegalInvoiceChange={(checked) => setIsLegalInvoice(checked)}
+          onPayment={handlePayment}
+          onCompleteLegalInfo={handleCompleteLegalInfo}
+        />
+      </div>
 
       <MobileBottomAction
         label="پرداخت و تکمیل سفارش"
         leftContent={leftPriceContent}
         onClick={handlePayment}
         isLoading={isSubmitting}
-        icon={<ArrowLeft className="h-4 w-4" />}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
       />
 
       <TrackingDetailsModal
         isOpen={isTrackingModalOpen}
         onClose={() => setIsTrackingModalOpen(false)}
       />
-
     </div>
   );
 }

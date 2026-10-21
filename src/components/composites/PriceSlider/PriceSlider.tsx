@@ -1,10 +1,9 @@
-'use client';
+﻿'use client';
 
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/primitives/Button/Button';
-import { cn } from '@/design-system/utils/cn';
+import * as React from 'react';
+import { Button } from '@/components/primitives/Button';
 
-interface PriceSliderProps {
+export interface PriceSliderProps {
   min: number;
   max: number;
   value: [number, number];
@@ -13,51 +12,47 @@ interface PriceSliderProps {
 }
 
 export function PriceSlider({ min, max, value, onChange, onApply }: PriceSliderProps) {
-  const [minVal, setMinVal] = useState(value[0]);
-  const [maxVal, setMaxVal] = useState(value[1]);
+  const [minVal, setMinVal] = React.useState(value[0]);
+  const [maxVal, setMaxVal] = React.useState(value[1]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setMinVal(value[0]);
     setMaxVal(value[1]);
   }, [value]);
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Math.min(Number(e.target.value), maxVal - 50000);
-    setMinVal(val);
-    onChange([val, maxVal]);
+    const next = Math.min(Number(e.target.value), maxVal - 50000);
+    setMinVal(next);
+    onChange([next, maxVal]);
   };
 
   const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Math.max(Number(e.target.value), minVal + 50000);
-    setMaxVal(val);
-    onChange([minVal, val]);
+    const next = Math.max(Number(e.target.value), minVal + 50000);
+    setMaxVal(next);
+    onChange([minVal, next]);
   };
 
-  const formatPrice = (val: number) => {
-    return new Intl.NumberFormat('fa-IR').format(val / 10);
-  };
+  const formatPrice = (val: number) => new Intl.NumberFormat('fa-IR').format(val / 10);
 
   const minPercent = ((minVal - min) / (max - min)) * 100;
   const maxPercent = ((maxVal - min) / (max - min)) * 100;
 
   return (
-    <div className="w-full flex flex-col gap-5 pt-3 select-none">
-      <div className="relative w-full h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center" dir="ltr">
+    <div className="flex w-full flex-col gap-5 pt-3 select-none">
+      <div className="relative flex h-1.5 w-full items-center rounded-full bg-border" dir="ltr">
         <div
-          style={{
-            left: `${minPercent}%`,
-            width: `${maxPercent - minPercent}%`,
-          }}
-          className="absolute h-full bg-primary rounded-full"
+          style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
+          className="absolute h-full rounded-full bg-primary"
         />
-        
+
         <input
           type="range"
           min={min}
           max={max}
           value={minVal}
           onChange={handleMinChange}
-          className="absolute pointer-events-none appearance-none z-20 h-1.5 w-full opacity-0 cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5"
+          aria-label="حداقل قیمت"
+          className="pointer-events-none absolute z-20 h-1.5 w-full cursor-pointer appearance-none opacity-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5"
         />
         <input
           type="range"
@@ -65,32 +60,28 @@ export function PriceSlider({ min, max, value, onChange, onApply }: PriceSliderP
           max={max}
           value={maxVal}
           onChange={handleMaxChange}
-          className="absolute pointer-events-none appearance-none z-20 h-1.5 w-full opacity-0 cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5"
+          aria-label="حداکثر قیمت"
+          className="pointer-events-none absolute z-20 h-1.5 w-full cursor-pointer appearance-none opacity-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5"
         />
-        
+
         <div
           style={{ left: `${minPercent}%` }}
-          className="absolute w-4.5 h-4.5 rounded-full bg-white border-2 border-primary -translate-x-1/2 z-30 pointer-events-none shadow-md hover:scale-110 transition-transform"
+          className="pointer-events-none absolute z-30 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-primary bg-card shadow-sm"
+          aria-hidden="true"
         />
         <div
           style={{ left: `${maxPercent}%` }}
-          className="absolute w-4.5 h-4.5 rounded-full bg-white border-2 border-primary -translate-x-1/2 z-30 pointer-events-none shadow-md hover:scale-110 transition-transform"
+          className="pointer-events-none absolute z-30 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-primary bg-card shadow-sm"
+          aria-hidden="true"
         />
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground font-iran-yekan font-bold px-1 mt-1">
+      <div className="flex items-center justify-between px-1 text-2xs font-semibold text-muted-foreground">
         <span>از {formatPrice(minVal)} تومان</span>
         <span>تا {formatPrice(maxVal)} تومان</span>
       </div>
 
-      <Button
-        type="button"
-        variant="primary"
-        size="sm"
-        onClick={onApply}
-        fullWidth
-        className="rounded-xl font-iran-yekan font-bold text-xs h-9 mt-1"
-      >
+      <Button type="button" variant="primary" size="sm" onClick={onApply} fullWidth>
         اعمال محدوده قیمت
       </Button>
     </div>

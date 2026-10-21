@@ -1,38 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  useGetWalletBalances, 
-  useGetTransactions, 
-  useGetWithdrawRequests 
+import {
+  Wallet,
+  CreditCard,
+  ArrowRight,
+  ArrowRightLeft,
+  Clock,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Scale,
+} from 'lucide-react';
+import {
+  useGetWalletBalances,
+  useGetTransactions,
+  useGetWithdrawRequests,
 } from '@/domains/userpanel/hooks/userpanel.hooks';
-import { Card, CardBody } from '@/components/composites/Card';
+import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { Select } from '@/components/primitives/Select/Select';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { WithdrawModal } from './components/WithdrawModal';
-import { 
-  Wallet, 
-  CreditCard, 
-  ArrowRight, 
-  ArrowRightLeft, 
-  Clock, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Scale 
-} from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'همه وضعیت‌ها' },
+  { value: 'Pending', label: 'در انتظار' },
+  { value: 'Paid', label: 'پرداخت شده' },
+  { value: 'Cancelled', label: 'لغو شده' },
+] as const;
 
 export function WalletDashboard() {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'withdraws' | 'transactions'>('withdraws');
-  const [withdrawStatus, setWithdrawStatus] = useState('');
-  const [withdrawPage, setWithdrawPage] = useState(1);
-  const [transactionPage, setTransactionPage] = useState(1);
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = React.useState<'withdraws' | 'transactions'>('withdraws');
+  const [withdrawStatus, setWithdrawStatus] = React.useState('');
+  const [withdrawPage, setWithdrawPage] = React.useState(1);
+  const [transactionPage, setTransactionPage] = React.useState(1);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = React.useState(false);
 
   const { data: wallet, isLoading: isWalletLoading } = useGetWalletBalances();
   const { data: transactionsResponse, isLoading: isTransactionsLoading } = useGetTransactions(transactionPage);
@@ -40,44 +47,36 @@ export function WalletDashboard() {
 
   const transactions = transactionsResponse?.items || [];
   const transactionsTotalPages = transactionsResponse?.totalPages || 1;
-
   const withdraws = withdrawsResponse?.items || [];
   const withdrawsTotalPages = withdrawsResponse?.totalPages || 1;
 
-  const statusOptions = [
-    { value: '', label: 'همه درخواست‌ها' },
-    { value: 'Pending', label: 'در انتظار' },
-    { value: 'Paid', label: 'پرداخت شده' },
-    { value: 'Cancelled', label: 'لغو شده' }
-  ];
-
   if (isWalletLoading) {
-    return <PageLoading message="در حال لود اطلاعات کیف پول..." />;
+    return <PageLoading label="در حال لود کیف پول شما..." />;
   }
 
   return (
-    <div className="w-full flex flex-col gap-6 select-none text-right" dir="rtl">
-      
-      <div className="lg:hidden flex items-center gap-3 border-b pb-3 mb-1 shrink-0">
-        <button 
+    <div className="flex w-full flex-col gap-6 select-none">
+      <div className="mb-1 flex items-center gap-3 border-b border-border pb-3 lg:hidden">
+        <button
+          type="button"
           onClick={() => router.push('/profile')}
-          className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
-          aria-label="Back"
+          aria-label="بازگشت"
+          className="-me-1 flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
         >
-          <ArrowRight className="h-5 w-5 text-foreground" />
+          <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
         </button>
-        <span className="text-sm font-bold font-iran-yekan text-foreground">کیف پول من</span>
+        <span className="text-sm font-bold text-foreground">کیف پول من</span>
       </div>
 
-      <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-5 border-b pb-5">
+      <div className="flex w-full flex-col justify-between gap-5 border-b border-border pb-5 md:flex-row md:items-center">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <Wallet className="h-5 w-5 text-primary shrink-0" />
-            <span className="text-lg md:text-xl font-black text-foreground font-iran-yekan">کیف پول</span>
+            <Wallet aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
+            <span className="text-xl font-bold text-foreground">کیف پول</span>
           </div>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground font-iran-yekan">
-            <span>موجودی کیف پول:</span>
-            <span className="font-bold text-foreground text-sm mr-1">{wallet?.totalBalance}</span>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>موجودی کل:</span>
+            <span className="me-1 text-sm font-bold text-foreground">{wallet?.totalBalance}</span>
           </div>
         </div>
 
@@ -86,9 +85,9 @@ export function WalletDashboard() {
             variant="outline"
             size="sm"
             onClick={() => router.push('/terms?section=wallet')}
-            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 hover:bg-muted text-foreground flex items-center justify-center gap-1.5 shadow-sm"
+            className="flex h-10 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs"
           >
-            <Scale className="h-4 w-4" />
+            <Scale aria-hidden="true" className="h-4 w-4" />
             <span>قوانین</span>
           </Button>
 
@@ -96,37 +95,39 @@ export function WalletDashboard() {
             variant="primary"
             size="sm"
             onClick={() => setIsWithdrawModalOpen(true)}
-            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 flex items-center justify-center gap-1.5 shadow-sm"
+            className="flex h-10 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs"
           >
-            <CreditCard className="h-4 w-4" />
-            <span>برداشت موجودی</span>
+            <CreditCard aria-hidden="true" className="h-4 w-4" />
+            <span>درخواست برداشت</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex items-center gap-5 border-b pb-2.5 w-full mt-2">
+      <div className="mt-2 flex w-full items-center gap-5 border-b border-border pb-2.5">
         <button
+          type="button"
           onClick={() => setActiveTab('withdraws')}
           className={cn(
-            "text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 transition-all outline-none",
-            activeTab === 'withdraws' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
+            'border-b-2 pb-2 text-sm font-bold outline-none transition-colors',
+            activeTab === 'withdraws' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
           )}
         >
           درخواست‌های برداشت
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('transactions')}
           className={cn(
-            "text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 transition-all outline-none",
-            activeTab === 'transactions' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
+            'border-b-2 pb-2 text-sm font-bold outline-none transition-colors',
+            activeTab === 'transactions' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
           )}
         >
-          تراکنش‌های اخیر
+          تراکنش‌های مالی
         </button>
       </div>
 
       {activeTab === 'withdraws' ? (
-        <div className="w-full flex flex-col gap-5 animate-in fade-in duration-200">
+        <div className="flex w-full flex-col gap-5">
           <div className="w-full max-w-xs self-start">
             <Select
               placeholder="فیلتر وضعیت درخواست"
@@ -135,39 +136,43 @@ export function WalletDashboard() {
                 setWithdrawStatus(e.target.value);
                 setWithdrawPage(1);
               }}
-              options={statusOptions}
+              options={[...STATUS_OPTIONS]}
             />
           </div>
 
           {isWithdrawsLoading ? (
-            <PageLoading message="در حال دریافت درخواست‌های برداشت..." />
+            <PageLoading label="در حال بارگذاری درخواست‌ها..." />
           ) : withdraws.length > 0 ? (
-            <div className="flex flex-col gap-4 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="flex w-full flex-col gap-4">
+              <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
                 {withdraws.map((w: any) => (
-                  <Card key={w.id} className="w-full border rounded-xl p-5 bg-background shadow-sm hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors flex flex-col justify-between gap-4">
-                    <div className="flex items-center justify-between border-b border-dashed pb-3 w-full">
-                      <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan">مبلغ برداشت: {w.amount}</span>
-                      <span className={cn(
-                        "font-bold text-[10px] md:text-xs px-2.5 py-0.5 rounded-full",
-                        w.statusColor === 'warning' && "bg-warning-50 text-warning-600 dark:bg-warning-950/20 dark:text-warning-400",
-                        w.statusColor === 'success' && "bg-success-50 text-success-600 dark:bg-success-950/20 dark:text-success-400",
-                        w.statusColor === 'destructive' && "bg-destructive/10 text-destructive"
-                      )}>
+                  <Card key={w.id} className="flex w-full flex-col justify-between gap-4 p-5">
+                    <div className="flex w-full items-center justify-between border-b border-dashed border-border pb-3">
+                      <span className="text-sm font-bold text-foreground">مبلغ درخواست: {w.amount}</span>
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-0.5 text-xs font-bold',
+                          w.statusColor === 'warning' && 'bg-warning/10 text-warning',
+                          w.statusColor === 'success' && 'bg-success/10 text-success',
+                          w.statusColor === 'destructive' && 'bg-destructive/10 text-destructive'
+                        )}
+                      >
                         {w.statusLabel}
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2 text-xs text-muted-foreground font-iran-yekan text-right">
-                      {w.cardNumber && (
+                    <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                      {w.cardNumber ? (
                         <div className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-zinc-400" />
-                          <span>واریز به کارت:</span>
-                          <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{w.cardNumber}</span>
+                          <CreditCard aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+                          <span>شماره کارت:</span>
+                          <span className="font-bold text-foreground" dir="ltr">
+                            {w.cardNumber}
+                          </span>
                         </div>
-                      )}
+                      ) : null}
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-zinc-400" />
+                        <Clock aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
                         <span>تاریخ درخواست:</span>
                         <span className="font-bold text-foreground">{w.createDateFormatted}</span>
                       </div>
@@ -183,50 +188,60 @@ export function WalletDashboard() {
               />
             </div>
           ) : (
-            <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
-              <ArrowRightLeft className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ درخواست برداشتی در این بخش یافت نشد.</span>
+            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
+              <ArrowRightLeft aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
+              <span className="text-xs font-bold text-muted-foreground">
+                هیچ درخواست برداشتی در این دسته یافت نشد.
+              </span>
             </div>
           )}
         </div>
       ) : (
-        <div className="w-full flex flex-col gap-5 animate-in fade-in duration-200">
+        <div className="flex w-full flex-col gap-5">
           {isTransactionsLoading ? (
-            <PageLoading message="در حال دریافت تراکنش‌ها..." />
+            <PageLoading label="در حال بارگذاری تراکنش‌ها..." />
           ) : transactions.length > 0 ? (
-            <div className="flex flex-col gap-4 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="flex w-full flex-col gap-4">
+              <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
                 {transactions.map((t: any, idx: number) => (
-                  <Card key={idx} className="w-full border rounded-xl p-5 bg-background shadow-sm hover:border-zinc-300 dark:hover:border-zinc-800 transition-colors flex flex-col justify-between gap-4">
-                    <div className="flex items-center justify-between border-b border-dashed pb-3 w-full">
+                  <Card key={idx} className="flex w-full flex-col justify-between gap-4 p-5">
+                    <div className="flex w-full items-center justify-between border-b border-dashed border-border pb-3">
                       <div className="flex items-center gap-2">
                         {t.isSuccess ? (
-                          <ArrowDownLeft className="h-5 w-5 text-success-500 bg-success-50 dark:bg-success-950/20 p-1 rounded-full shrink-0" />
+                          <ArrowDownLeft
+                            aria-hidden="true"
+                            className="h-5 w-5 shrink-0 rounded-full bg-success/10 p-1 text-success"
+                          />
                         ) : (
-                          <ArrowUpRight className="h-5 w-5 text-destructive bg-destructive/10 p-1 rounded-full shrink-0" />
+                          <ArrowUpRight
+                            aria-hidden="true"
+                            className="h-5 w-5 shrink-0 rounded-full bg-destructive/10 p-1 text-destructive"
+                          />
                         )}
-                        <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan">{t.typeLabel}</span>
+                        <span className="text-sm font-bold text-foreground">{t.typeLabel}</span>
                       </div>
-                      <span className={cn(
-                        "font-bold text-[10px] md:text-xs px-2.5 py-0.5 rounded-full",
-                        t.isSuccess ? "bg-success-50 text-success-600 dark:bg-success-950/20" : "bg-destructive/10 text-destructive"
-                      )}>
-                        {t.isSuccess ? "موفق" : "ناموفق"}
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-0.5 text-xs font-bold',
+                          t.isSuccess ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
+                        )}
+                      >
+                        {t.isSuccess ? 'موفق' : 'ناموفق'}
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2.5 text-xs text-muted-foreground font-iran-yekan text-right">
-                      <div className="flex items-center justify-between w-full">
+                    <div className="flex flex-col gap-2.5 text-xs text-muted-foreground">
+                      <div className="flex w-full items-center justify-between">
                         <span>مبلغ تراکنش:</span>
                         <span className="font-bold text-foreground">{t.amount}</span>
                       </div>
-                      {t.traceNo && (
-                        <div className="flex items-center justify-between w-full">
-                          <span>کد رهگیری:</span>
+                      {t.traceNo ? (
+                        <div className="flex w-full items-center justify-between">
+                          <span>شماره پیگیری:</span>
                           <span className="font-bold text-foreground">{t.traceNo}</span>
                         </div>
-                      )}
-                      <div className="flex items-center justify-between w-full">
+                      ) : null}
+                      <div className="flex w-full items-center justify-between">
                         <span>تاریخ تراکنش:</span>
                         <span className="font-bold text-foreground">{t.createDateFormatted}</span>
                       </div>
@@ -242,20 +257,17 @@ export function WalletDashboard() {
               />
             </div>
           ) : (
-            <div className="w-full py-16 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-2">
-              <ArrowRightLeft className="h-10 w-10 text-muted-foreground/60 stroke-[1.5]" />
-              <span className="text-xs font-bold font-iran-yekan text-muted-foreground">هیچ تراکنشی در حساب شما ثبت نشده است.</span>
+            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
+              <ArrowRightLeft aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
+              <span className="text-xs font-bold text-muted-foreground">
+                هیچ تراکنشی در این دسته یافت نشد.
+              </span>
             </div>
           )}
         </div>
       )}
 
-      <WithdrawModal 
-        isOpen={isWithdrawModalOpen} 
-        onClose={() => setIsWithdrawModalOpen(false)} 
-        wallet={wallet}
-      />
-
+      <WithdrawModal isOpen={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)} wallet={wallet} />
     </div>
   );
 }

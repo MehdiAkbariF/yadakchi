@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -105,17 +105,17 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
   ];
 
   return (
-    <div className="flex-1 flex flex-col gap-6 w-full text-right" dir="rtl">
+    <div className="flex-1 flex flex-col gap-6 w-full" dir="rtl">
       <div className="lg:hidden flex items-center justify-between border-b pb-3 mb-1 shrink-0">
         <div className="flex items-center gap-3">
           <button 
             onClick={() => router.push('/profile')}
-            className="p-1 -mr-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
+            className="p-1 -me-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
             aria-label="Back"
           >
             <ArrowRight className="h-5 w-5 text-foreground" />
           </button>
-          <span className="text-sm font-bold font-iran-yekan text-foreground">پشتیبانی و تیکت‌ها</span>
+          <span className="text-sm font-bold text-foreground">پشتیبانی و تیکت‌ها</span>
         </div>
         <Button
           variant="outline"
@@ -129,7 +129,7 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
       </div>
 
       <div className="hidden lg:flex items-center justify-between w-full border-b pb-3">
-        <span className="text-sm font-black text-foreground font-iran-yekan">پشتیبانی و تیکت‌ها</span>
+        <span className="text-sm font-black text-foreground ">پشتیبانی و تیکت‌ها</span>
         <Button
           variant="primary"
           size="sm"
@@ -149,16 +149,16 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
               key={tab.id}
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "w-32 h-24 md:w-40 md:h-26 shrink-0 flex flex-col items-center justify-center gap-2 border rounded-2xl bg-background transition-all outline-none shadow-sm px-4",
+                "w-32 h-24 md:w-40 md:h-26 shrink-0 flex flex-col items-center justify-center gap-2 border rounded-2xl bg-card transition-all outline-none shadow-sm px-4",
                 isActive 
                   ? "border-primary bg-primary/5 text-primary scale-105 font-bold" 
-                  : "border-zinc-200 dark:border-zinc-800 text-muted-foreground hover:border-zinc-300 hover:text-foreground"
+                  : "border-border text-muted-foreground hover:border-border hover:text-foreground"
               )}
             >
               <MessageSquare className={cn("h-5 w-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-              <span className="text-[10px] md:text-xs font-bold font-iran-yekan leading-none truncate w-full">{tab.label}</span>
+              <span className="text-[10px] md:text-xs font-bold leading-none truncate w-full">{tab.label}</span>
               <span className={cn(
-                "text-[9px] md:text-[10px] font-bold font-iran-yekan px-2 py-0.5 rounded-full shrink-0 mt-0.5",
+                "text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 mt-0.5",
                 isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
               )}>
                 {tab.count} مورد
@@ -174,9 +174,9 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
         <div className="flex flex-col gap-6 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             {tickets.map((ticket) => (
-              <Card key={ticket.id} className="w-full border rounded-xl p-5 md:p-6 bg-background shadow-sm hover:border-primary/25 transition-all flex flex-col justify-between gap-4">
+              <Card key={ticket.id} className="w-full border rounded-xl p-5 md:p-6 bg-card shadow-sm hover:border-primary/25 transition-all flex flex-col justify-between gap-4">
                 <div className="flex items-center justify-between border-b border-dashed pb-3 w-full">
-                  <span className="text-xs md:text-sm font-black text-foreground font-iran-yekan">شماره تیکت: {ticket.ticketNumberFormatted}</span>
+                  <span className="text-xs md:text-sm font-black text-foreground ">شماره تیکت: {ticket.ticketNumberFormatted}</span>
                   <span className={cn(
                     "font-bold text-[10px] md:text-xs px-2.5 py-0.5 rounded-full",
                     ticket.status === 'WaitingForAnswer' && "bg-warning-50 text-warning-600 dark:bg-warning-950/20 dark:text-warning-400",
@@ -187,7 +187,7 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
                   </span>
                 </div>
                 
-                <div className="flex flex-col gap-1 w-full text-right font-iran-yekan text-xs text-muted-foreground">
+                <div className="flex flex-col gap-1 w-full text-xs text-muted-foreground">
                   <h4 className="text-xs md:text-sm font-bold text-foreground line-clamp-1">{ticket.title}</h4>
                   <div className="flex items-center justify-between mt-2.5 w-full text-[10px] md:text-xs">
                     <span>ثبت: {ticket.createDateFormatted}</span>
@@ -211,7 +211,7 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => router.push(`/profile/support/${ticket.id}`)}
-                    className="rounded-xl text-[10px] md:text-xs h-9.5 px-5 py-1.5 border-zinc-200 hover:bg-muted text-foreground flex items-center justify-center gap-1 shrink-0"
+                    className="rounded-xl text-[10px] md:text-xs h-9.5 px-5 py-1.5 border-border hover:bg-muted text-foreground flex items-center justify-center gap-1 shrink-0"
                   >
                     <span>مشاهده گفتگو</span>
                     <ChevronLeft className="h-4 w-4" />
@@ -234,12 +234,12 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
         /* استیت خالی با لاتی ticket.json */
         <div className="w-full py-12 px-4 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3">
           <LottiePlayer path="/anumations/ticket.json" className="w-48 h-48 max-w-full mx-auto" />
-          <p className="text-xs md:text-sm font-bold text-muted-foreground font-iran-yekan">هیچ تیکت پشتیبانی یافت نشد.</p>
+          <p className="text-xs md:text-sm font-bold text-muted-foreground ">هیچ تیکت پشتیبانی یافت نشد.</p>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => router.push('/profile/support/new')}
-            className="rounded-xl mt-2 text-xs font-bold font-iran-yekan h-10 px-6 py-2 flex items-center justify-center gap-1 shadow-sm"
+            className="rounded-xl mt-2 text-xs font-bold h-10 px-6 py-2 flex items-center justify-center gap-1 shadow-sm"
           >
             <Plus className="h-4 w-4" />
             <span>ثبت اولین تیکت پشتیبانی</span>

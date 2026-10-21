@@ -50,9 +50,9 @@ export function AnimatedWaves({ className = '' }: { className?: string }) {
     >
       <defs>
         <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#F56D3C" stopOpacity="0.15" />
-          <stop offset="50%" stopColor="#F56D3C" stopOpacity="0.05" />
-          <stop offset="100%" stopColor="#F56D3C" stopOpacity="0.15" />
+          <stop offset="0%" stopColor="#D95D32" stopOpacity="0.15" />
+          <stop offset="50%" stopColor="#D95D32" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="#D95D32" stopOpacity="0.15" />
         </linearGradient>
       </defs>
       <motion.path

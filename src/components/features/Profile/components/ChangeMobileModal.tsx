@@ -98,14 +98,14 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+        <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-2">
           <Smartphone className="h-5 w-5 text-primary" />
           ویرایش شماره موبایل
         </ModalTitle>
       </ModalHeader>
-      <ModalBody className="p-0 pt-4 text-right">
+      <ModalBody className="p-0 pt-4">
         {phoneStep === 1 && (
-          <form onSubmit={handleSubmit(onPhoneSubmit)} className="flex flex-col gap-4 w-full text-right">
+          <form onSubmit={handleSubmit(onPhoneSubmit)} className="flex flex-col gap-4 w-full">
             <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 text-xs text-primary leading-relaxed">
               مالکیت شماره همراه باید با نام و نام خانوادگی شما همخوانی داشته باشد
             </div>
@@ -114,12 +114,12 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
               label="شماره همراه جدید *"
               placeholder="مثال: 09121234567"
               error={errors.phoneNumber?.message ? String(errors.phoneNumber.message) : undefined}
-              className="text-xs font-iran-yekan text-left"
+              className="text-xs"
               dir="ltr"
               {...register('phoneNumber')}
             />
 
-            <span className="text-[10px] text-muted-foreground font-iran-yekan leading-relaxed mr-1 block">
+            <span className="text-[10px] text-muted-foreground leading-relaxed me-1 block">
               برای ثبت شماره موبایل جدید، ابتدا شماره فعلی شما تایید می‌شود.
             </span>
 
@@ -145,8 +145,8 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
         )}
 
         {phoneStep === 2 && (
-          <form onSubmit={onConfirmCurrentOTP} className="flex flex-col gap-5 w-full text-right">
-            <span className="text-xs text-muted-foreground font-iran-yekan text-center block">
+          <form onSubmit={onConfirmCurrentOTP} className="flex flex-col gap-5 w-full">
+            <span className="text-xs text-muted-foreground text-center block">
               کد تایید پیامک شده به شماره فعلی خود را وارد کنید
             </span>
 
@@ -178,8 +178,8 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
         )}
 
         {phoneStep === 3 && (
-          <form onSubmit={onConfirmNewOTP} className="flex flex-col gap-5 w-full text-right">
-            <span className="text-xs text-muted-foreground font-iran-yekan text-center block">
+          <form onSubmit={onConfirmNewOTP} className="flex flex-col gap-5 w-full">
+            <span className="text-xs text-muted-foreground text-center block">
               کد تایید پیامک شده به شماره جدید <span className="font-bold text-foreground" dir="ltr">{targetPhone}</span> را وارد کنید
             </span>
 

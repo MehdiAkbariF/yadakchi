@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useRef, useState } from 'react';
+import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { X, ArrowRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
@@ -25,14 +25,14 @@ export function Modal({
   closeOnOverlayClick = true,
   closeOnEscape = true,
 }: ModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       modalRef.current?.focus();
@@ -42,45 +42,37 @@ export function Modal({
     };
   }, [isOpen]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen || !closeOnEscape) return;
-
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      if (e.key === 'Escape') onClose();
     };
-
     document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
+    return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, closeOnEscape, onClose]);
-
-  const handleClose = () => {
-    onClose();
-  };
 
   if (!isOpen || !mounted) return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center text-right"
+      className="fixed inset-0 z-modal flex items-center justify-center"
       role="dialog"
       aria-modal="true"
-      dir="rtl"
     >
       <div
         className={cn(
-          'fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity',
+          'fixed inset-0 bg-foreground/40 backdrop-blur-sm animate-fade-in',
           overlayClassName
         )}
-        onClick={closeOnOverlayClick ? handleClose : undefined}
+        onClick={closeOnOverlayClick ? onClose : undefined}
+        aria-hidden="true"
       />
       <div
         ref={modalRef}
         className={cn(
-          'relative z-10 w-full h-full max-h-full max-w-none rounded-none p-0 flex flex-col fixed inset-0 bg-background overflow-hidden md:relative md:w-full md:max-w-2xl md:h-auto md:max-h-[90vh] md:rounded-2xl md:p-6 md:shadow-xl md:overflow-y-auto',
+          'relative z-10 flex flex-col bg-background overflow-hidden',
+          'w-full h-full max-h-full max-w-none rounded-none',
+          'md:w-full md:max-w-2xl md:h-auto md:max-h-[90vh] md:rounded-xl md:shadow-lg',
           className
         )}
         tabIndex={-1}
@@ -96,47 +88,42 @@ export interface ModalHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   onClose?: () => void;
 }
 
-export const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(
+export const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
   ({ className, children, onClose, ...props }, ref) => {
-    const handleClose = () => {
-      if (onClose) {
-        onClose();
-      }
-    };
-
     return (
       <div
         ref={ref}
         className={cn(
-          'flex items-center justify-between space-x-4 rtl:space-x-reverse border-b md:border-b-0 pb-3 md:pb-0 px-4 py-3 md:px-0 md:py-0 bg-muted/10 md:bg-transparent shrink-0 w-full',
+          'flex items-center justify-between gap-3 shrink-0 w-full',
+          'px-4 py-3 md:px-6 md:py-4',
+          'border-b border-border md:border-b md:border-border',
           className
         )}
         {...props}
       >
-        <div className="flex items-center gap-2 flex-1">
-          {onClose && (
-            <button 
-              onClick={handleClose}
-              className="md:hidden p-1 -mr-1 hover:bg-muted rounded-full"
-              aria-label="Back"
-            >
-              <ArrowRight className="h-5 w-5 text-foreground" />
-            </button>
-          )}
-          <div className="flex-1">{children}</div>
-        </div>
-        {onClose && (
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="بازگشت"
+          >
+            <ArrowRight aria-hidden="true" className="h-5 w-5" />
+          </button>
+        ) : null}
+        <div className="flex-1 min-w-0">{children}</div>
+        {onClose ? (
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="hidden md:flex shrink-0 rounded-full"
-            onClick={handleClose}
+            className="hidden md:inline-flex shrink-0 rounded-full"
+            onClick={onClose}
           >
-            <X className="h-4 w-4" />
+            <X aria-hidden="true" className="h-4 w-4" />
             <span className="sr-only">بستن</span>
           </Button>
-        )}
+        ) : null}
       </div>
     );
   }
@@ -145,60 +132,58 @@ ModalHeader.displayName = 'ModalHeader';
 
 export interface ModalTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
 
-export const ModalTitle = forwardRef<HTMLHeadingElement, ModalTitleProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <h2
-        ref={ref}
-        className={cn('text-sm md:text-base font-bold font-iran-yekan text-foreground', className)}
-        {...props}
-      />
-    );
-  }
+export const ModalTitle = React.forwardRef<HTMLHeadingElement, ModalTitleProps>(
+  ({ className, ...props }, ref) => (
+    <h2
+      ref={ref}
+      className={cn('text-base font-semibold text-foreground', className)}
+      {...props}
+    />
+  )
 );
 ModalTitle.displayName = 'ModalTitle';
 
 export interface ModalDescriptionProps
   extends React.HTMLAttributes<HTMLParagraphElement> {}
 
-export const ModalDescription = forwardRef<
+export const ModalDescription = React.forwardRef<
   HTMLParagraphElement,
   ModalDescriptionProps
->(({ className, ...props }, ref) => {
-  return (
-    <p
-      ref={ref}
-      className={cn('text-xs md:text-sm text-muted-foreground', className)}
-      {...props}
-    />
-  );
-});
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn('text-sm text-muted-foreground', className)}
+    {...props}
+  />
+));
 ModalDescription.displayName = 'ModalDescription';
 
 export interface ModalBodyProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export const ModalBody = forwardRef<HTMLDivElement, ModalBodyProps>(
-  ({ className, ...props }, ref) => {
-    return <div ref={ref} className={cn('flex-1 overflow-y-auto p-6 md:p-0 md:py-4 w-full', className)} {...props} />;
-  }
+export const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn('flex-1 overflow-y-auto p-4 md:p-6 w-full', className)}
+      {...props}
+    />
+  )
 );
 ModalBody.displayName = 'ModalBody';
 
 export interface ModalFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-export const ModalFooter = forwardRef<HTMLDivElement, ModalFooterProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          'flex shrink-0 p-4 md:p-0 border-t md:border-t-0 w-full',
-          // حذف کلاس‌های قبلی و استفاده از کلاس‌های جدید
-          className
-        )}
-        {...props}
-      />
-    );
-  }
+export const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(
+        'flex items-center gap-2 shrink-0 w-full',
+        'p-4 md:p-6 md:pt-0 border-t border-border md:border-t-0',
+        className
+      )}
+      {...props}
+    />
+  )
 );
 ModalFooter.displayName = 'ModalFooter';

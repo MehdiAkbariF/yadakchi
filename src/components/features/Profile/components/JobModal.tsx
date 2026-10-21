@@ -54,19 +54,19 @@ export function JobModal({ isOpen, onClose, user }: JobModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-2">
+        <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-2">
           <Briefcase className="h-5 w-5 text-primary" />
           ویرایش شغل / سمت
         </ModalTitle>
       </ModalHeader>
-      <ModalBody className="p-0 pt-4 text-right">
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full text-right">
+      <ModalBody className="p-0 pt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 w-full">
           <div className="w-full">
             <Input
               label="شغل یا سمت خود را وارد کنید *"
               placeholder="شغل خود را انتخاب کنید"
               error={errors.job?.message ? String(errors.job.message) : undefined}
-              className="text-xs font-iran-yekan"
+              className="text-xs "
               {...register('job')}
             />
           </div>

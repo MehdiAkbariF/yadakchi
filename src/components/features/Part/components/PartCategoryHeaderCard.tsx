@@ -1,31 +1,32 @@
-﻿'use client';
+'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { ChangeCategoryModal } from './ChangeCategoryModal';
 import { SelectPartModal } from './SelectPartModal';
-
 import { getFullUrl } from '@/core/utils/formatters';
-interface PartCategoryHeaderCardProps {
+
+export interface PartCategoryHeaderCardProps {
   slug: string;
   categoryName: string;
   thumbnail: string | null;
 }
 
 export function PartCategoryHeaderCard({ slug, categoryName, thumbnail }: PartCategoryHeaderCardProps) {
-  const [isChangeCatOpen, setIsChangeCatOpen] = useState(false);
-  const [isSelectPartOpen, setIsSelectPartOpen] = useState(false);
+  const [isChangeCatOpen, setIsChangeCatOpen] = React.useState(false);
+  const [isSelectPartOpen, setIsSelectPartOpen] = React.useState(false);
+
   return (
     <div className="w-full">
-      <Card className="w-full border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
-        <div className="flex items-center gap-4 text-right">
-          <div className="w-16 h-16 shrink-0 rounded-2xl border border-zinc-150 dark:border-zinc-800 bg-muted/10 flex items-center justify-center overflow-hidden">
-            <img src={getFullUrl(thumbnail)} className="w-full h-full object-contain" alt="" />
+      <Card className="flex w-full flex-col justify-between gap-5 p-4 md:flex-row md:items-center shadow-xs">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+            <img src={getFullUrl(thumbnail)} className="h-full w-full object-contain" alt="" />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] md:text-xs text-muted-foreground font-bold">دسته‌بندی انتخاب شده:</span>
-            <h2 className="text-sm md:text-base font-black text-foreground font-iran-yekan">{categoryName}</h2>
+            <span className="text-2xs font-bold text-muted-foreground md:text-xs">دسته‌بندی انتخاب شده:</span>
+            <h2 className="text-sm font-bold text-foreground md:text-base">{categoryName}</h2>
           </div>
         </div>
 
@@ -34,7 +35,7 @@ export function PartCategoryHeaderCard({ slug, categoryName, thumbnail }: PartCa
             variant="outline"
             size="sm"
             onClick={() => setIsChangeCatOpen(true)}
-            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
+            className="h-10 px-5 text-xs font-bold"
           >
             تغییر دسته‌بندی
           </Button>
@@ -42,17 +43,14 @@ export function PartCategoryHeaderCard({ slug, categoryName, thumbnail }: PartCa
             variant="primary"
             size="sm"
             onClick={() => setIsSelectPartOpen(true)}
-            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 shadow-sm"
+            className="h-10 px-5 text-xs font-bold shadow-xs"
           >
             انتخاب قطعه
           </Button>
         </div>
       </Card>
 
-      <ChangeCategoryModal
-        isOpen={isChangeCatOpen}
-        onClose={() => setIsChangeCatOpen(false)}
-      />
+      <ChangeCategoryModal isOpen={isChangeCatOpen} onClose={() => setIsChangeCatOpen(false)} />
 
       <SelectPartModal
         isOpen={isSelectPartOpen}

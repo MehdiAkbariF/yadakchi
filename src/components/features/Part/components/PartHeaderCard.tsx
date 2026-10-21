@@ -1,29 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { SelectPartModal } from './SelectPartModal';
 
-interface PartHeaderCardProps {
+export interface PartHeaderCardProps {
   partSlug: string;
   categorySlug: string;
   partName: string;
 }
 
 export function PartHeaderCard({ partSlug, categorySlug, partName }: PartHeaderCardProps) {
-  const [isSelectPartOpen, setIsSelectPartOpen] = useState(false);
+  const [isSelectPartOpen, setIsSelectPartOpen] = React.useState(false);
 
   return (
     <div className="w-full">
-      <Card className="w-full border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm">
-        <div className="flex items-center gap-4 text-right">
-          <div className="w-16 h-16 shrink-0 rounded-2xl border border-zinc-150 dark:border-zinc-800 bg-muted/10 flex items-center justify-center overflow-hidden">
-            <span className="text-xs font-black text-primary font-iran-yekan">یدک‌چی</span>
+      <Card className="flex w-full flex-col justify-between gap-5 p-4 md:flex-row md:items-center shadow-xs">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+            <span className="text-xs font-bold text-primary">یدک‌چی</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] md:text-xs text-muted-foreground font-bold">قطعه انتخاب شده:</span>
-            <h2 className="text-sm md:text-base font-black text-foreground font-iran-yekan">{partName}</h2>
+            <span className="text-2xs font-bold text-muted-foreground md:text-xs">قطعه انتخاب شده:</span>
+            <h2 className="text-sm font-bold text-foreground md:text-base">{partName}</h2>
           </div>
         </div>
 
@@ -33,7 +33,7 @@ export function PartHeaderCard({ partSlug, categorySlug, partName }: PartHeaderC
             variant="outline"
             size="sm"
             onClick={() => setIsSelectPartOpen(true)}
-            className="rounded-xl font-iran-yekan font-bold text-xs h-10 px-5 border-zinc-200 text-foreground"
+            className="h-10 px-5 text-xs font-bold"
           >
             تغییر قطعه
           </Button>

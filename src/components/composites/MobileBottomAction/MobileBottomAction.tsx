@@ -1,20 +1,19 @@
-'use client';
+﻿'use client';
 
-import { ReactNode, useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/primitives/Button/Button';
-import { cn } from '@/design-system/utils/cn';
+import * as React from 'react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/primitives/Button';
+import { cn } from '@/design-system/utils/cn';
 
-interface MobileBottomActionProps {
+export interface MobileBottomActionProps {
   label: string;
   onClick: () => void;
   isLoading?: boolean;
   disabled?: boolean;
-  leftContent?: ReactNode;
-  icon?: ReactNode;
+  leftContent?: React.ReactNode;
+  icon?: React.ReactNode;
   className?: string;
-  forceShowKey?: any;
-  /** ✅ حالت جدید برای دکمه «موجود شد خبرم کن» */
+  forceShowKey?: unknown;
   variant?: 'default' | 'notify';
 }
 
@@ -29,10 +28,10 @@ export function MobileBottomAction({
   forceShowKey,
   variant = 'default',
 }: MobileBottomActionProps) {
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
+  const [isVisible, setIsVisible] = React.useState(true);
+  const lastScrollY = React.useRef(0);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const diff = Math.abs(currentScrollY - lastScrollY.current);
@@ -40,11 +39,7 @@ export function MobileBottomAction({
       if (currentScrollY < 10) {
         setIsVisible(true);
       } else if (diff > 5) {
-        if (currentScrollY > lastScrollY.current) {
-          setIsVisible(false);
-        } else {
-          setIsVisible(true);
-        }
+        setIsVisible(currentScrollY <= lastScrollY.current);
       }
       lastScrollY.current = currentScrollY;
     };
@@ -53,45 +48,34 @@ export function MobileBottomAction({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setIsVisible(true);
   }, [forceShowKey]);
 
   return (
     <motion.div
       initial={{ y: 0, opacity: 1 }}
-      animate={{
-        y: isVisible ? 0 : 150,
-        opacity: isVisible ? 1 : 0,
-      }}
+      animate={{ y: isVisible ? 0 : 150, opacity: isVisible ? 1 : 0 }}
       transition={{ type: 'spring', stiffness: 260, damping: 26 }}
       className={cn(
-        "lg:hidden fixed bottom-16 left-0 right-0 z-40 bg-background border-t border-zinc-100 dark:border-zinc-800/80 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] flex items-center justify-between gap-4",
+        'lg:hidden fixed bottom-16 inset-x-0 z-fixed bg-card border-t border-border px-4 py-3 shadow-sm',
+        'flex items-center justify-between gap-4',
         className
       )}
     >
-      {leftContent && (
-        <div className="flex flex-col items-start text-right min-w-0">
-          {leftContent}
-        </div>
-      )}
-      <div className={cn("flex-1", leftContent ? "max-w-[60%]" : "w-full")}>
+      {leftContent ? (
+        <div className="flex min-w-0 flex-col items-start text-start">{leftContent}</div>
+      ) : null}
+      <div className={cn('flex-1', leftContent ? 'max-w-[60%]' : 'w-full')}>
         <Button
-          variant={variant === 'notify' ? 'primary' : disabled ? 'outline' : 'primary'}
+          variant={variant === 'notify' ? 'destructive' : disabled ? 'outline' : 'primary'}
           size="lg"
           fullWidth
           onClick={onClick}
           isLoading={isLoading}
           disabled={variant === 'notify' ? false : disabled}
           leftIcon={icon}
-          className={cn(
-            "rounded-xl font-iran-yekan font-bold text-xs transition-all duration-200",
-            variant === 'notify'
-              ? "h-12 bg-[#E94057] hover:bg-[#D63650] text-white text-sm md:text-base font-bold shadow-sm"
-              : "h-11",
-            variant === 'default' && disabled &&
-              "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700 opacity-85 cursor-not-allowed hover:bg-zinc-100 hover:text-zinc-400 dark:hover:bg-zinc-800"
-          )}
+          className="h-11 rounded-md text-sm font-semibold"
         >
           {label}
         </Button>

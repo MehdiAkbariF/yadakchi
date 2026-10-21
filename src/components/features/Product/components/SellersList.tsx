@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useMemo } from 'react';
+import * as React from 'react';
 import { Store, ShieldCheck, MapPin, Truck, AlertTriangle, Phone, Plus, Loader2, ChevronDown } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
@@ -13,7 +13,7 @@ import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 
-interface SellersListProps {
+export interface SellersListProps {
   activeSellers: any;
   selectedSellerId: string | null;
   onSelectSeller: (id: string) => void;
@@ -22,16 +22,21 @@ interface SellersListProps {
 
 const MAX_VISIBLE_SELLERS = 4;
 
-export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, productTitle = 'قطعه یدکی' }: SellersListProps) {
-  const [activeTab, setActiveTab] = useState<'online' | 'local'>('online');
-  const [reportShop, setReportShop] = useState<any | null>(null);
-  const [loadingSellerId, setLoadingSellerId] = useState<string | null>(null);
-  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
-  const [mapInitialSellerId, setMapInitialSellerId] = useState<string | null>(null);
-  const [showAllOnline, setShowAllOnline] = useState(false);
+export function SellersList({
+  activeSellers,
+  selectedSellerId,
+  onSelectSeller,
+  productTitle = 'قطعه یدکی',
+}: SellersListProps) {
+  const [activeTab, setActiveTab] = React.useState<'online' | 'local'>('online');
+  const [reportShop, setReportShop] = React.useState<any | null>(null);
+  const [loadingSellerId, setLoadingSellerId] = React.useState<string | null>(null);
+  const [isMapModalOpen, setIsMapModalOpen] = React.useState(false);
+  const [mapInitialSellerId, setMapInitialSellerId] = React.useState<string | null>(null);
+  const [showAllOnline, setShowAllOnline] = React.useState(false);
 
-  const [selectedSubjectId, setSelectedSubjectId] = useState('');
-  const [reportDescription, setReportDescription] = useState('');
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
 
   const addToBasket = useAddToBasket();
   const { data: reportSubjects = [] } = useGetReportSubjects('ShopProductReport');
@@ -41,8 +46,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
   const localList = activeSellers.local || [];
   const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
-  // ✅ QA #19: نمایش فقط 4 فروشنده اول + دکمه مشاهده بیشتر
-  const visibleOnline = useMemo(() => {
+  const visibleOnline = React.useMemo(() => {
     if (onlineList.length <= MAX_VISIBLE_SELLERS || showAllOnline) return onlineList;
     return onlineList.slice(0, MAX_VISIBLE_SELLERS);
   }, [onlineList, showAllOnline]);
@@ -56,8 +60,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
     try {
       await addToBasket.mutateAsync({ shopProductId: seller.id, quantity: 1 });
       showToast.success('قطعه با موفقیت به سبد خرید افزوده شد');
-    } catch (err: any) {
-    } finally {
+    } catch {} finally {
       setLoadingSellerId(null);
     }
   };
@@ -79,7 +82,6 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
       showToast.error('لطفاً دلیل گزارش را انتخاب کنید');
       return;
     }
-
     try {
       await submitReport.mutateAsync({
         shopId: reportShop.shop.id,
@@ -87,7 +89,6 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
         reportSubjectId: selectedSubjectId,
         description: reportDescription,
       });
-
       showToast.success('گزارش خطای قیمت با موفقیت ثبت شد و توسط پشتیبانی بررسی خواهد گردید');
       setReportShop(null);
       setSelectedSubjectId('');
@@ -119,70 +120,74 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
         key={seller.id}
         onClick={() => isOnline && onSelectSeller(seller.id)}
         className={cn(
-          "p-4 md:p-5 rounded-2xl border flex items-start justify-between gap-4 transition-all w-full",
-          isSelected ? "border-shop/40 bg-shop/5" : "bg-background",
-          isOnline ? "cursor-pointer hover:border-shop/30" : "cursor-default"
+          'flex w-full items-start justify-between gap-4 rounded-lg border border-border p-4 transition-colors md:p-5',
+          isSelected ? 'border-shop/40 bg-shop/5' : 'bg-card',
+          isOnline ? 'cursor-pointer hover:border-shop/40' : 'cursor-default'
         )}
       >
-        <div className="flex-1 flex gap-3.5 items-start min-w-0">
-          <div className="w-12 h-12 shrink-0 rounded-xl border bg-muted/10 flex items-center justify-center overflow-hidden">
+        <div className="flex min-w-0 flex-1 items-start gap-3.5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
             {seller.shop.logo ? (
-              <img src={getFullUrl(seller.shop.logo)} className="w-full h-full object-contain" alt="" />
+              <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
             ) : (
-              <Store className="h-5 w-5 text-muted-foreground/80" />
+              <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
             )}
           </div>
 
-          <div className="flex-1 min-w-0 text-right flex flex-col gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              {/* ✅ QA #1: نام فروشگاه آبی و بزرگ‌تر */}
-              <span className="text-sm md:text-base font-bold text-shop truncate">{seller.shop.title}</span>
-              <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md">{seller.typeLabel}</span>
-              {seller.isAdvertised && (
-                <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">آگهی</span>
-              )}
+              <span className="truncate text-sm font-bold text-shop md:text-base">
+                {seller.shop.title}
+              </span>
+              <span className="rounded-sm bg-muted px-2 py-0.5 text-2xs font-bold text-muted-foreground">
+                {seller.typeLabel}
+              </span>
+              {seller.isAdvertised ? (
+                <span className="rounded-sm bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground">
+                  آگهی
+                </span>
+              ) : null}
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] md:text-xs text-muted-foreground font-iran-yekan">
-              <span className="font-bold text-success-500">عملکرد عالی</span>
-              <span className="text-zinc-300">|</span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-2xs text-muted-foreground md:text-xs">
+              <span className="font-bold text-success">عملکرد عالی</span>
+              <span className="text-muted-foreground">|</span>
               <span className="flex items-center gap-1">
-                <Truck className="h-3.5 w-3.5 text-zinc-400" />
+                <Truck aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
                 {seller.dayOfDeliveryLabel}
               </span>
-              <span className="text-zinc-300">|</span>
-              <span className="flex items-center gap-1 text-success-600 dark:text-success-400">
-                <ShieldCheck className="h-3.5 w-3.5" />
+              <span className="text-muted-foreground">|</span>
+              <span className="flex items-center gap-1 text-success">
+                <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5" />
                 {seller.warrantyTitle || 'ضمانت اصالت کالا'}
               </span>
             </div>
 
-            {/* ✅ QA #18: فقط شهر، نه آدرس کامل */}
-            {!isOnline && (
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-iran-yekan mt-1.5">
-                <MapPin className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+            {!isOnline ? (
+              <div className="mt-1.5 flex items-center gap-1 text-2xs text-muted-foreground">
+                <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="truncate">
                   {(seller.shop as any).cityName || seller.shop.address?.split('،')[0] || ''}
                 </span>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
-        <div className="flex flex-col items-end justify-start gap-3 shrink-0">
+        <div className="flex shrink-0 flex-col items-end justify-start gap-3">
           {isOnline ? (
             <Button
-              variant={isSelected ? "primary" : "outline"}
+              variant={isSelected ? 'primary' : 'outline'}
               size="sm"
               onClick={(e) => handleAddOnlineToBasket(e, seller)}
               disabled={loadingSellerId === seller.id}
-              className="rounded-xl text-xs font-bold font-iran-yekan h-10 px-5 w-auto min-w-[110px] md:min-w-[130px] shrink-0 flex items-center justify-center gap-1.5 shadow-sm"
+              className="flex h-10 w-auto min-w-[110px] shrink-0 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs md:min-w-[130px]"
             >
               {loadingSellerId === seller.id ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <>
-                  <Plus className="h-3.5 w-3.5" />
+                  <Plus aria-hidden="true" className="h-3.5 w-3.5" />
                   <span>افزودن به سبد</span>
                 </>
               )}
@@ -192,28 +197,26 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               variant="outline"
               size="sm"
               onClick={(e) => handleOpenMapWithSeller(e, seller)}
-              className="rounded-xl text-xs font-bold font-iran-yekan h-10 px-5 w-auto min-w-[110px] md:min-w-[130px] border-zinc-200 hover:bg-muted text-foreground shrink-0 flex items-center justify-center gap-1.5 shadow-sm"
+              className="flex h-10 w-auto min-w-[110px] shrink-0 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs md:min-w-[130px]"
             >
-              <Phone className="h-3.5 w-3.5" />
+              <Phone aria-hidden="true" className="h-3.5 w-3.5" />
               <span>اطلاعات تماس</span>
             </Button>
           )}
 
-          {/* ✅ QA #7/#8/#9/#20: قیمت‌ها در راستای دکمه (بالا سمت راست دکمه) */}
-          <div className="flex flex-col items-end text-right mt-1">
-            {hasDiscount && (
-              <div className="flex items-center gap-1.5 mb-1 select-none">
-                <span className="bg-destructive/10 text-destructive text-[10px] md:text-[11px] font-black font-iran-yekan px-1.5 py-0.5 rounded-full leading-none">
+          <div className="mt-1 flex flex-col items-end">
+            {hasDiscount ? (
+              <div className="mb-1 flex select-none items-center gap-1.5">
+                <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-2xs font-bold leading-none text-destructive md:text-xs">
                   ٪{toPersianDigits(discountPercent)}
                 </span>
-                <span className="text-[10px] md:text-xs text-muted-foreground/70 line-through font-iran-yekan leading-none">
+                <span className="text-2xs leading-none text-muted-foreground line-through md:text-xs">
                   {seller.retailPrice}
                 </span>
               </div>
-            )}
+            ) : null}
 
-            {/* ✅ QA #20: قیمت بزرگ‌تر */}
-            <span className="text-base md:text-lg font-black text-foreground font-iran-yekan leading-none">
+            <span className="text-base font-bold leading-none text-foreground md:text-lg">
               {seller.finalPrice}
             </span>
 
@@ -224,11 +227,9 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 e.stopPropagation();
                 setReportShop(seller);
               }}
-              className="text-[9px] md:text-[10px] font-bold font-iran-yekan 
-              text-muted-foreground hover:text-destructive flex items-center
-               gap-0.5 mt-2 outline-none p-1 rounded-md transition-colors"
+              className="mt-2 flex items-center gap-0.5 rounded-md p-1 text-2xs font-bold text-muted-foreground outline-none transition-colors hover:text-destructive md:text-xs"
             >
-              <AlertTriangle className="h-3.5 w-3.5" />
+              <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5" />
               <span>گزارش خطای قیمت</span>
             </button>
           </div>
@@ -238,22 +239,24 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 text-right mt-4 select-none relative">
-      <div className="sticky top-[64px] lg:top-[76px] z-20 bg-background border-b pb-2 flex items-center gap-6 w-full shadow-sm px-1 transition-all duration-300">
+    <div className="relative mt-4 flex w-full select-none flex-col gap-4">
+      <div className="sticky top-[64px] z-20 flex w-full items-center gap-6 border-b border-border bg-card px-1 pb-2 shadow-xs transition-colors duration-normal lg:top-[76px]">
         <button
+          type="button"
           onClick={() => setActiveTab('online')}
           className={cn(
-            "text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 transition-all outline-none",
-            activeTab === 'online' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
+            'border-b-2 pb-2 text-xs font-bold outline-none transition-colors md:text-sm',
+            activeTab === 'online' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
           )}
         >
           خرید اینترنتی ({onlineList.length} فروشگاه)
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('local')}
           className={cn(
-            "text-xs md:text-sm font-bold font-iran-yekan pb-2 border-b-2 transition-all outline-none",
-            activeTab === 'local' ? "text-primary border-primary" : "text-muted-foreground border-transparent"
+            'border-b-2 pb-2 text-xs font-bold outline-none transition-colors md:text-sm',
+            activeTab === 'local' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
           )}
         >
           خرید حضوری ({localList.length} فروشگاه)
@@ -266,80 +269,83 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
             <>
               {visibleOnline.map((s: any) => renderSellerRow(s))}
 
-              {/* ✅ QA #19: مشاهده بیشتر بدون گراند، آبی، فلش، فاصله مناسب */}
-              {hasMoreOnline && (
-                <div className="w-full flex justify-end pt-2">
+              {hasMoreOnline ? (
+                <div className="flex w-full justify-end pt-2">
                   <button
                     type="button"
                     onClick={() => setShowAllOnline(true)}
-                    className="flex items-center gap-1 text-xs font-bold text-shop hover:underline outline-none"
+                    className="flex items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
                   >
-                    <span>مشاهده بیشتر ({toPersianDigits(onlineList.length - MAX_VISIBLE_SELLERS)} فروشنده دیگر)</span>
-                    <ChevronDown className="h-4 w-4" />
+                    <span>
+                      مشاهده بیشتر ({toPersianDigits(onlineList.length - MAX_VISIBLE_SELLERS)} فروشنده دیگر)
+                    </span>
+                    <ChevronDown aria-hidden="true" className="h-4 w-4" />
                   </button>
                 </div>
-              )}
+              ) : null}
             </>
           ) : (
-            <span className="text-xs text-muted-foreground font-iran-yekan py-4">فروشگاه اینترنتی فعالی برای این قطعه موجود نیست.</span>
+            <span className="py-4 text-xs text-muted-foreground">
+              فروشگاه اینترنتی فعالی برای این قطعه موجود نیست.
+            </span>
           )
         ) : (
           <>
             {localList.length > 0 ? (
               localList.map((s: any) => renderSellerRow(s))
             ) : (
-              <span className="text-xs text-muted-foreground font-iran-yekan py-4">فروشگاه حضوری فعالی برای این قطعه ثبت نشده است.</span>
+              <span className="py-4 text-xs text-muted-foreground">
+                فروشگاه حضوری فعالی برای این قطعه ثبت نشده است.
+              </span>
             )}
-            {localList.length > 0 && (
+            {localList.length > 0 ? (
               <div
                 onClick={handleOpenGeneralMap}
-                className="w-full h-36 border border-zinc-150 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 relative overflow-hidden flex flex-col items-center justify-center p-6 gap-3 cursor-pointer shadow-sm group hover:border-shop/30 transition-all mt-2 select-none"
+                className="group mt-2 flex h-36 w-full cursor-pointer select-none flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-border bg-muted/40 p-6 shadow-xs transition-colors hover:border-shop/40"
               >
-                <div className="p-3 bg-shop/10 rounded-full border border-shop/20 text-shop group-hover:scale-105 transition-transform duration-300 z-10 shrink-0">
-                  <MapPin className="h-6 w-6 stroke-[2]" />
+                <div className="z-10 shrink-0 rounded-full border border-shop/40 bg-accent p-3 text-shop">
+                  <MapPin aria-hidden="true" className="h-6 w-6" />
                 </div>
-                <span className="text-xs md:text-sm font-black font-iran-yekan text-foreground z-10">مشاهده تمام فروشگاه‌های حضوری روی نقشه</span>
+                <span className="z-10 text-xs font-bold text-foreground md:text-sm">
+                  مشاهده تمام فروشگاه‌های حضوری روی نقشه
+                </span>
                 <button
                   type="button"
-                  className="text-[10px] font-bold font-iran-yekan border-b border-shop text-shop pb-0.5 hover:opacity-80 transition-opacity z-10 outline-none"
+                  className="z-10 border-b border-shop pb-0.5 text-2xs font-bold text-shop outline-none transition-opacity hover:opacity-80"
                 >
                   مشاهده نقشه
                 </button>
               </div>
-            )}
+            ) : null}
           </>
         )}
       </div>
 
-      <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="max-w-md w-full">
+      <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md">
         <ModalHeader onClose={() => setReportShop(null)}>
-          <ModalTitle className="font-iran-yekan font-bold text-sm text-foreground text-right flex items-center gap-1.5">
-            <AlertTriangle className="h-4.5 w-4.5 text-destructive" />
+          <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
             گزارش خطا در قیمت فروشگاه {reportShop?.shop.title}
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="p-0 pt-4 text-right flex flex-col gap-4">
-          <div className="flex flex-col gap-1 w-full">
-            <Select
-              label="دلیل گزارش *"
-              placeholder="دلیل گزارش را انتخاب کنید..."
-              value={selectedSubjectId}
-              onChange={(e) => setSelectedSubjectId(e.target.value)}
-              options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
-            />
-          </div>
+        <ModalBody className="flex flex-col gap-4 p-0 pt-4">
+          <Select
+            label="دلیل گزارش *"
+            placeholder="دلیل گزارش را انتخاب کنید..."
+            value={selectedSubjectId}
+            onChange={(e) => setSelectedSubjectId(e.target.value)}
+            options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+          />
 
-          <div className="flex flex-col gap-1 w-full">
-            <TextArea
-              label="توضیحات (اختیاری)"
-              placeholder="توضیحات خود را اینجا بنویسید..."
-              value={reportDescription}
-              onChange={(e) => setReportDescription(e.target.value)}
-              className="h-24"
-            />
-          </div>
+          <TextArea
+            label="توضیحات (اختیاری)"
+            placeholder="توضیحات خود را اینجا بنویسید..."
+            value={reportDescription}
+            onChange={(e) => setReportDescription(e.target.value)}
+            className="h-24"
+          />
 
-          <div className="flex gap-2.5 mt-4 w-full">
+          <div className="mt-4 flex w-full gap-2.5">
             <Button
               variant="outline"
               onClick={() => {
@@ -347,7 +353,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
                 setSelectedSubjectId('');
                 setReportDescription('');
               }}
-              className="rounded-xl text-xs h-10 font-bold font-iran-yekan flex-1"
+              className="h-10 flex-1 text-xs font-bold"
             >
               انصراف
             </Button>
@@ -355,7 +361,7 @@ export function SellersList({ activeSellers, selectedSellerId, onSelectSeller, p
               variant="destructive"
               onClick={handleReportSubmit}
               isLoading={submitReport.isPending}
-              className="rounded-xl text-xs h-10 font-bold font-iran-yekan flex-1"
+              className="h-10 flex-1 text-xs font-bold"
             >
               ثبت گزارش خطا
             </Button>

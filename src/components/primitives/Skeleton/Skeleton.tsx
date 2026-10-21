@@ -1,24 +1,29 @@
+import * as React from 'react';
 import { cn } from '@/design-system/utils/cn';
 
-interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'rect' | 'circle' | 'text';
 }
 
 const variantClasses = {
+  rect: 'rounded-lg',
   circle: 'rounded-full',
-  rect: 'rounded-xl',
-  text: 'rounded h-4 w-full'
-};
+  text: 'rounded h-4 w-full',
+} as const;
 
-export function Skeleton({ className, variant = 'rect', ...props }: SkeletonProps) {
-  return (
+export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
+  ({ className, variant = 'rect', ...props }, ref) => (
     <div
+      ref={ref}
+      aria-hidden="true"
       className={cn(
-        'shimmer-effect',
+        'animate-pulse bg-muted',
         variantClasses[variant],
         className
       )}
       {...props}
     />
-  );
-}
+  )
+);
+
+Skeleton.displayName = 'Skeleton';

@@ -43,7 +43,7 @@ export function AddBankCardForm({ onCancel }: AddBankCardFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(handleCreateBankSubmit)} className="flex flex-col gap-4 w-full text-right">
+    <form onSubmit={handleSubmit(handleCreateBankSubmit)} className="flex flex-col gap-4 w-full">
       
       <div className="w-full">
         <Input
@@ -52,7 +52,7 @@ export function AddBankCardForm({ onCancel }: AddBankCardFormProps) {
           type="text"
           maxLength={16}
           error={errors.cardNumber?.message ? String(errors.cardNumber.message) : undefined}
-          className="text-xs font-iran-yekan text-left"
+          className="text-xs"
           dir="ltr"
           {...register('cardNumber')}
         />
@@ -65,7 +65,7 @@ export function AddBankCardForm({ onCancel }: AddBankCardFormProps) {
           type="text"
           maxLength={24}
           error={errors.shebaNumber?.message ? String(errors.shebaNumber.message) : undefined}
-          className="text-xs font-iran-yekan text-left"
+          className="text-xs"
           dir="ltr"
           {...register('shebaNumber')}
         />

@@ -1,56 +1,97 @@
 'use client';
 
-import { MapPin } from 'lucide-react';
+import { MapPin, User, Phone, CheckCircle, ChevronLeft, Plus } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button';
 
-interface CheckoutAddressProps {
+export interface CheckoutAddressProps {
   activeAddress: any;
   onOpenModal: () => void;
 }
 
 export function CheckoutAddress({ activeAddress, onOpenModal }: CheckoutAddressProps) {
+  const formatPersian = (val: any) => new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(val || 0);
+
   return (
-    <Card className="w-full overflow-hidden border rounded-xl shadow-sm bg-background text-right">
-      <CardHeader className="border-b bg-muted/20 px-4 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4.5 w-4.5 text-primary" />
-          <span className="text-xs font-bold font-iran-yekan text-foreground">آدرس تحویل سفارش</span>
+    <Card className="w-full overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs">
+      <CardHeader className="flex items-center justify-between border-b border-border/60 bg-card px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <MapPin aria-hidden="true" className="h-4 w-4 shrink-0" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-foreground">آدرس تحویل سفارش</span>
+            {activeAddress ? (
+              <span className="hidden items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success sm:flex">
+                <CheckCircle className="h-3 w-3" />
+                تایید شده
+              </span>
+            ) : null}
+          </div>
         </div>
-      </CardHeader>
-      <CardBody className="p-5 flex flex-col gap-2">
+
         {activeAddress ? (
-          <>
-            <p className="text-sm font-bold text-foreground font-iran-yekan leading-relaxed">
-              {activeAddress.province}، {activeAddress.city}، {activeAddress.address}
+          <button
+            type="button"
+            onClick={onOpenModal}
+            className="flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary-hover"
+          >
+            <span>تغییر یا ویرایش آدرس</span>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </CardHeader>
+
+      <CardBody className="p-5">
+        {activeAddress ? (
+          <div className="flex flex-col gap-3.5">
+            {/* متن آدرس کامل */}
+            <p className="text-sm font-semibold leading-relaxed text-foreground">
+              {activeAddress.province}، شهر {activeAddress.city}، {activeAddress.address}
             </p>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground mt-2 font-iran-yekan">
-              <span>پلاک: {new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.plaque || 0)}</span>
-              <span>واحد: {new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.unit || 0)}</span>
-              <span>کد پستی: {new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.postalCode || 0)}</span>
-              <span>تحویل‌گیرنده: {activeAddress.receiverFullName} ({new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(activeAddress.receiverMobile || 0)})</span>
+
+            {/* جزییات گیرنده و مشخصات پستی در قالب چیپ‌های منظم */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5 rounded-lg bg-secondary/50 px-2.5 py-1 text-foreground/80">
+                <User className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>گیرنده: {activeAddress.receiverFullName}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 rounded-lg bg-secondary/50 px-2.5 py-1 text-foreground/80">
+                <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                <span dir="ltr">{formatPersian(activeAddress.receiverMobile)}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 rounded-lg bg-secondary/40 px-2.5 py-1">
+                <span>کد پستی: {formatPersian(activeAddress.postalCode)}</span>
+              </div>
+
+              {activeAddress.plaque ? (
+                <div className="flex items-center gap-1.5 rounded-lg bg-secondary/40 px-2 py-1">
+                  <span>پلاک: {formatPersian(activeAddress.plaque)}</span>
+                </div>
+              ) : null}
+
+              {activeAddress.unit ? (
+                <div className="flex items-center gap-1.5 rounded-lg bg-secondary/40 px-2 py-1">
+                  <span>واحد: {formatPersian(activeAddress.unit)}</span>
+                </div>
+              ) : null}
             </div>
-            <div className="flex justify-end border-t border-dashed pt-4 mt-4 w-full">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onOpenModal}
-                className="rounded-xl border font-iran-yekan font-bold text-xs h-10 px-5 py-2 w-full sm:w-auto"
-              >
-                انتخاب یا ویرایش آدرس
-              </Button>
-            </div>
-          </>
+          </div>
         ) : (
-          <div className="w-full py-6 text-center flex flex-col items-center justify-center">
-            <p className="text-xs text-muted-foreground font-iran-yekan">هیچ آدرسی ثبت نشده است. لطفا آدرس خود را ثبت کنید.</p>
-            <Button 
-              variant="primary" 
-              size="sm" 
-              onClick={onOpenModal} 
-              className="rounded-xl mt-4 text-xs font-bold font-iran-yekan h-10.5 px-6 py-2.5 w-full sm:w-auto"
+          <div className="flex flex-col items-center justify-center gap-2 py-4 text-center">
+            <p className="text-xs text-muted-foreground">
+              هنوز آدرسی برای دریافت کالاها انتخاب نکرده‌اید.
+            </p>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onOpenModal}
+              className="mt-2 flex h-9 items-center gap-1.5 px-4 text-xs font-bold"
             >
-              ثبت اولین آدرس
+              <Plus className="h-4 w-4" />
+              <span>انتخاب یا ثبت آدرس تحویل</span>
             </Button>
           </div>
         )}

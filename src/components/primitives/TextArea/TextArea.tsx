@@ -1,32 +1,71 @@
-'use client';
-
-import { forwardRef } from 'react';
+import * as React from 'react';
 import { cn } from '@/design-system/utils/cn';
+import { inputVariants } from '@/design-system/variants/input.variants';
 
-export interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextAreaProps
+  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'> {
   error?: string;
   label?: string;
+  description?: string;
+  containerClassName?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({ className, error, label, ...props }, ref) => {
+export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
+  (
+    {
+      className,
+      containerClassName,
+      error,
+      label,
+      description,
+      size = 'md',
+      id,
+      rows = 4,
+      ...props
+    },
+    ref
+  ) => {
+    const generatedId = React.useId();
+    const textareaId = id ?? generatedId;
+    const descriptionId = `${textareaId}-description`;
+    const errorId = `${textareaId}-error`;
+    const hasError = Boolean(error);
+
     return (
-      <div className="w-full space-y-1.5 text-right">
-        {label && (
-          <label className="text-xs md:text-sm font-medium leading-none text-foreground">
+      <div className={cn('w-full space-y-1.5', containerClassName)}>
+        {label ? (
+          <label
+            htmlFor={textareaId}
+            className="text-sm font-medium text-foreground"
+          >
             {label}
           </label>
-        )}
+        ) : null}
         <textarea
+          ref={ref}
+          id={textareaId}
+          rows={rows}
+          aria-invalid={hasError || undefined}
+          aria-describedby={
+            hasError ? errorId : description ? descriptionId : undefined
+          }
           className={cn(
-            "flex w-full rounded-xl border bg-background px-3 py-2 text-xs md:text-sm transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 outline-none resize-none",
-            error ? 'border-destructive' : 'border-zinc-200 dark:border-zinc-800',
+            inputVariants({ variant: hasError ? 'error' : 'default', size }),
+            'min-h-[80px] resize-y py-2',
             className
           )}
-          ref={ref}
           {...props}
         />
-        {error && <p className="text-xs text-destructive">{error}</p>}
+        {hasError ? (
+          <p id={errorId} role="alert" className="text-xs text-destructive">
+            {error}
+          </p>
+        ) : description ? (
+          <p id={descriptionId} className="text-xs text-muted-foreground">
+            {description}
+          </p>
+        ) : null}
       </div>
     );
   }

@@ -1,37 +1,35 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { toPersianDigits } from '@/core/utils/formatters';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { toPersianDigits } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
 
-interface SpecHighlightsProps {
+export interface SpecHighlightsProps {
   specGroups: any[];
   onSeeAll?: () => void;
 }
 
 function TruncatedSpec({ name, value }: { name: string; value: string }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isTruncated, setIsTruncated] = useState(false);
-  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
-  const textRef = useRef<HTMLSpanElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [isTruncated, setIsTruncated] = React.useState(false);
+  const [tooltipPos, setTooltipPos] = React.useState({ top: 0, left: 0 });
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [mounted, setMounted] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const checkTruncation = () => {
       if (textRef.current) {
         const element = textRef.current;
-        const truncated = element.scrollWidth > element.clientWidth;
-        setIsTruncated(truncated);
+        setIsTruncated(element.scrollWidth > element.clientWidth);
       }
     };
-
     checkTruncation();
     window.addEventListener('resize', checkTruncation);
     return () => window.removeEventListener('resize', checkTruncation);
@@ -62,7 +60,7 @@ function TruncatedSpec({ name, value }: { name: string; value: string }) {
     setIsOpen((prev) => !prev);
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = () => setIsOpen(false);
     document.addEventListener('click', handleClickOutside);
@@ -73,15 +71,15 @@ function TruncatedSpec({ name, value }: { name: string; value: string }) {
     };
   }, [isOpen]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
   return (
-    <div className="rounded-xl p-3 bg-muted/40 dark:bg-zinc-900/50 flex flex-col gap-1 text-right border border-zinc-100 dark:border-zinc-800 animate-in fade-in duration-200 min-w-0">
-      <span className="text-[11px] md:text-xs font-bold text-muted-foreground font-iran-yekan truncate block">
+    <div className="flex min-w-0 flex-col gap-1 rounded-md border border-border bg-muted/60 p-3">
+      <span className="block truncate text-2xs font-bold text-muted-foreground md:text-xs">
         {toPersianDigits(name)}
       </span>
 
@@ -91,43 +89,42 @@ function TruncatedSpec({ name, value }: { name: string; value: string }) {
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "text-xs md:text-sm font-medium text-foreground mt-0.5 truncate block",
-          isTruncated && "cursor-help"
+          'mt-0.5 block truncate text-xs font-medium text-foreground md:text-sm',
+          isTruncated && 'cursor-help'
         )}
       >
         {toPersianDigits(value)}
       </span>
 
-      {mounted && isOpen && isTruncated &&
-        createPortal(
-          <div
-            style={{
-              position: 'fixed',
-              top: tooltipPos.top,
-              left: tooltipPos.left,
-              transform: 'translateX(-50%)',
-              zIndex: 9999,
-            }}
-            className="pointer-events-none animate-in fade-in zoom-in-95 duration-150"
-            dir="rtl"
-          >
-            <div className="relative bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-[11px] font-iran-yekan font-bold px-3 py-2 rounded-lg shadow-xl max-w-xs break-words">
-              {toPersianDigits(value)}
-              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900 dark:bg-zinc-100 rotate-45" />
-            </div>
-          </div>,
-          document.body
-        )}
+      {mounted && isOpen && isTruncated
+        ? createPortal(
+            <div
+              style={{
+                position: 'fixed',
+                top: tooltipPos.top,
+                left: tooltipPos.left,
+                transform: 'translateX(-50%)',
+                zIndex: 9999,
+              }}
+              className="pointer-events-none"
+              dir="rtl"
+            >
+              <div className="relative max-w-xs break-words rounded-md bg-foreground px-3 py-2 text-2xs font-bold text-background shadow-lg">
+                {toPersianDigits(value)}
+                <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-foreground" />
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }
 
 export function SpecHighlights({ specGroups, onSeeAll }: SpecHighlightsProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
-  const mainSpecs = (specGroups || [])
-    .flatMap((g) => g.specs || [])
-    .filter((s: any) => s.isMain === true);
+  const mainSpecs = (specGroups || []).flatMap((g) => g.specs || []).filter((s: any) => s.isMain === true);
 
   if (mainSpecs.length === 0) return null;
 
@@ -135,35 +132,36 @@ export function SpecHighlights({ specGroups, onSeeAll }: SpecHighlightsProps) {
   const hasMoreThanFour = mainSpecs.length > 4;
 
   return (
-    <div className="w-full flex flex-col gap-2.5 text-right select-none">
-      <span className="text-sm md:text-base font-bold text-foreground mr-1">
-        ویژگی‌های مهم محصول
-      </span>
+    <div className="flex w-full select-none flex-col gap-2.5">
+      <span className="me-1 text-sm font-bold text-foreground md:text-base">ویژگی‌های مهم محصول</span>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
+      <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
         {visibleSpecs.map((spec: any, idx: number) => (
           <TruncatedSpec key={idx} name={spec.name} value={spec.value} />
         ))}
       </div>
 
-      {hasMoreThanFour && (
-        <div className="flex justify-start mt-1">
+      {hasMoreThanFour ? (
+        <div className="mt-1 flex justify-start">
           <button
             type="button"
             onClick={() => {
               setIsExpanded(!isExpanded);
               if (!isExpanded && onSeeAll) {
-                // بعد از بزرگ شدن به لیست ویژگی‌ها اسکرول شود
                 setTimeout(() => onSeeAll(), 50);
               }
             }}
-            className="flex items-center gap-0.5 text-xs font-bold text-foreground hover:underline outline-none"
+            className="flex items-center gap-0.5 text-xs font-bold text-foreground outline-none hover:underline"
           >
             <span>{isExpanded ? 'بستن ویژگی‌ها' : 'مشاهده همه ویژگی‌ها'}</span>
-            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isExpanded ? (
+              <ChevronUp aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <ChevronDown aria-hidden="true" className="h-4 w-4" />
+            )}
           </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

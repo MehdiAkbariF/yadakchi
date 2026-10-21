@@ -1,15 +1,12 @@
-// src/components/features/Blog/components/BlogSidebar.tsx
+﻿'use client';
 
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Search, FolderKanban, Car, Wrench, X } from 'lucide-react';
+import * as React from 'react';
+import { Search, FolderKanban, Car, Wrench } from 'lucide-react';
 import { Input } from '@/components/primitives/Input/Input';
 import { BlogCategoryViewModel, BlogPostFiltersAvailable } from '@/domains/blog/types/view.types';
 import { cn } from '@/design-system/utils/cn';
 
-interface BlogSidebarProps {
+export interface BlogSidebarProps {
   categories: BlogCategoryViewModel[];
   availableFilters?: BlogPostFiltersAvailable;
   selectedCategory?: string;
@@ -32,7 +29,11 @@ export function BlogSidebar({
   onClearAll,
   isMobile = false,
 }: BlogSidebarProps) {
-  const [localSearch, setLocalSearch] = useState(searchQuery);
+  const [localSearch, setLocalSearch] = React.useState(searchQuery);
+
+  React.useEffect(() => {
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,48 +54,47 @@ export function BlogSidebar({
     onFilterChange('partIds', next.length ? next : undefined);
   };
 
-  const hasAnyFilter = !!selectedCategory || selectedCarTypes.length > 0 || selectedParts.length > 0 || !!searchQuery;
+  const hasAnyFilter =
+    Boolean(selectedCategory) || selectedCarTypes.length > 0 || selectedParts.length > 0 || Boolean(searchQuery);
 
   return (
-    <div className="w-full flex flex-col gap-6 text-right select-none" dir="rtl">
-      
-      {/* جستجو در مقالات */}
-      <div className="w-full bg-card border rounded-2xl p-4 shadow-sm">
-        <span className="text-xs font-black text-foreground font-iran-yekan block mb-3">جستجو در مقالات</span>
+    <div className={cn('flex w-full select-none flex-col gap-6', isMobile && 'gap-4')}>
+      <div className="w-full rounded-lg border border-border bg-card p-4 shadow-xs">
+        <span className="mb-3 block text-xs font-bold text-foreground">جستجو در مقالات</span>
         <form onSubmit={handleSearchSubmit} className="relative">
           <Input
             placeholder="عنوان مقاله یا کلمه کلیدی..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
-            className="text-xs font-iran-yekan"
+            leftIcon={<Search aria-hidden="true" className="h-4 w-4" />}
           />
         </form>
       </div>
 
-      {/* دسته‌بندی‌ها */}
-      <div className="w-full bg-card border rounded-2xl p-4 shadow-sm flex flex-col gap-2">
-        <div className="flex items-center justify-between border-b pb-2 mb-1">
-          <span className="text-xs font-black text-foreground font-iran-yekan flex items-center gap-1.5">
-            <FolderKanban className="h-4 w-4 text-primary" />
+      <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-4 shadow-xs">
+        <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+          <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+            <FolderKanban aria-hidden="true" className="h-4 w-4 text-primary" />
             دسته‌بندی‌های وبلاگ
           </span>
-          {selectedCategory && (
-            <button 
-              onClick={() => onFilterChange('blogCategoryId', undefined)} 
-              className="text-[10px] text-destructive hover:underline font-bold"
+          {selectedCategory ? (
+            <button
+              type="button"
+              onClick={() => onFilterChange('blogCategoryId', undefined)}
+              className="text-2xs font-bold text-destructive hover:underline"
             >
               پاک کردن
             </button>
-          )}
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-1">
           <button
+            type="button"
             onClick={() => onFilterChange('blogCategoryId', undefined)}
             className={cn(
-              "w-full text-right px-3 py-2 rounded-xl text-xs font-bold font-iran-yekan transition-all",
-              !selectedCategory ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+              'w-full rounded-md px-3 py-2 text-start text-xs font-bold transition-colors',
+              !selectedCategory ? 'bg-muted text-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
             )}
           >
             همه مقالات
@@ -102,10 +102,13 @@ export function BlogSidebar({
           {categories.map((cat) => (
             <button
               key={cat.id}
+              type="button"
               onClick={() => onFilterChange('blogCategoryId', cat.id)}
               className={cn(
-                "w-full text-right px-3 py-2 rounded-xl text-xs font-bold font-iran-yekan transition-all flex items-center justify-between",
-                selectedCategory === cat.id ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted"
+                'flex w-full items-center justify-between rounded-md px-3 py-2 text-start text-xs font-bold transition-colors',
+                selectedCategory === cat.id
+                  ? 'bg-muted text-foreground font-bold'
+                  : 'text-muted-foreground hover:bg-muted'
               )}
             >
               <span>{cat.title}</span>
@@ -114,12 +117,11 @@ export function BlogSidebar({
         </div>
       </div>
 
-      {/* فیلتر خودروها */}
-      {availableFilters.carTypes.length > 0 && (
-        <div className="w-full bg-card border rounded-2xl p-4 shadow-sm flex flex-col gap-2">
-          <div className="flex items-center justify-between border-b pb-2 mb-1">
-            <span className="text-xs font-black text-foreground font-iran-yekan flex items-center gap-1.5">
-              <Car className="h-4 w-4 text-primary" />
+      {availableFilters.carTypes.length > 0 ? (
+        <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-4 shadow-xs">
+          <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+              <Car aria-hidden="true" className="h-4 w-4 text-primary" />
               خودروهای مرتبط
             </span>
           </div>
@@ -129,10 +131,13 @@ export function BlogSidebar({
               return (
                 <button
                   key={car.id}
+                  type="button"
                   onClick={() => handleToggleCar(car.id)}
                   className={cn(
-                    "text-xs px-3 py-1.5 rounded-xl border font-bold font-iran-yekan transition-all",
-                    active ? "bg-primary text-white border-primary shadow-sm" : "bg-background text-muted-foreground hover:border-primary/30"
+                    'rounded-md border px-3 py-1.5 text-xs font-bold transition-colors',
+                    active
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/40'
                   )}
                 >
                   {car.name}
@@ -141,14 +146,13 @@ export function BlogSidebar({
             })}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* فیلتر قطعات */}
-      {availableFilters.parts.length > 0 && (
-        <div className="w-full bg-card border rounded-2xl p-4 shadow-sm flex flex-col gap-2">
-          <div className="flex items-center justify-between border-b pb-2 mb-1">
-            <span className="text-xs font-black text-foreground font-iran-yekan flex items-center gap-1.5">
-              <Wrench className="h-4 w-4 text-primary" />
+      {availableFilters.parts.length > 0 ? (
+        <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-4 shadow-xs">
+          <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+              <Wrench aria-hidden="true" className="h-4 w-4 text-primary" />
               قطعات مرتبط
             </span>
           </div>
@@ -158,10 +162,13 @@ export function BlogSidebar({
               return (
                 <button
                   key={part.id}
+                  type="button"
                   onClick={() => handleTogglePart(part.id)}
                   className={cn(
-                    "text-xs px-3 py-1.5 rounded-xl border font-bold font-iran-yekan transition-all",
-                    active ? "bg-primary text-white border-primary shadow-sm" : "bg-background text-muted-foreground hover:border-primary/30"
+                    'rounded-md border px-3 py-1.5 text-xs font-bold transition-colors',
+                    active
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/40'
                   )}
                 >
                   {part.name}
@@ -170,17 +177,17 @@ export function BlogSidebar({
             })}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {hasAnyFilter && (
+      {hasAnyFilter ? (
         <button
+          type="button"
           onClick={onClearAll}
-          className="w-full text-center py-2.5 rounded-xl border border-destructive/20 text-destructive text-xs font-bold font-iran-yekan hover:bg-destructive/5 transition-all"
+          className="w-full rounded-md border border-destructive/30 py-2.5 text-center text-xs font-bold text-destructive transition-colors hover:bg-destructive/5"
         >
           حذف تمام فیلترها
         </button>
-      )}
-
+      ) : null}
     </div>
   );
 }
