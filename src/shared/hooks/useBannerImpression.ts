@@ -1,4 +1,5 @@
 // src/shared/hooks/useBannerImpression.ts
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -6,16 +7,20 @@ import { bannerTracker } from '@/core/utils/banner-tracker';
 
 export function useBannerImpression(bannerId?: string | null, shopProductId?: string | null) {
   const elementRef = useRef<HTMLDivElement>(null);
+  const hasTrackedRef = useRef(false); // ✅ جلوگیری از ثبت تکراری
 
   useEffect(() => {
-    // اصلاح: حداقل یکی از bannerId یا shopProductId باید وجود داشته باشد
     if ((!bannerId && !shopProductId) || typeof window === 'undefined' || !('IntersectionObserver' in window)) {
       return;
     }
 
+    // ✅ ریست کردن وضعیت در صورت تغییر شناسه‌ها
+    hasTrackedRef.current = false;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && !hasTrackedRef.current) {
+          hasTrackedRef.current = true; // ✅ علامت‌گذاری به عنوان ثبت شده
           bannerTracker.track(bannerId, shopProductId);
           
           if (elementRef.current) {

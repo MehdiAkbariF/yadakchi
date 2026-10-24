@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl } from '@/core/utils/formatters';
 import { useBannerImpression } from '@/shared/hooks/useBannerImpression';
@@ -56,14 +55,12 @@ export function Banner({
           aspectRatio === 'h-full' ? 'h-full min-h-full' : aspectRatio
         )}
       >
-        <Image
+        {/* ✅ استفاده از img معمولی به جای next/image */}
+        <img
           src={fullSrc}
           alt={alt}
-          fill
-          priority={priority}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="rounded-lg object-cover"
-          unoptimized={fullSrc.endsWith('.gif')}
+          className="h-full w-full rounded-lg object-cover"
+          loading={priority ? 'eager' : 'lazy'}
         />
       </div>
     );

@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Tag, Sparkles, Check, ArrowLeft } from 'lucide-react';
-import { Card, CardBody, CardHeader } from '@/components/composites/Card';
+import { Tag, Sparkles, ArrowLeft } from 'lucide-react';
+import { Card, CardBody } from '@/components/composites/Card';
 import { Input } from '@/components/primitives/Input/Input';
 import { Button } from '@/components/primitives/Button';
 import { useApplyDiscountCode, useGetUserDiscountCodes } from '@/domains/front/basket/hooks/basket.hooks';
@@ -32,39 +32,47 @@ export function DiscountCard() {
     new Intl.NumberFormat('fa-IR').format(val / 10) + ' تومان';
 
   return (
-    <Card className="w-full overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs">
-      <CardHeader className="flex items-center justify-between border-b border-border/60 bg-card px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Tag aria-hidden="true" className="h-4 w-4" />
+    <Card className="w-full overflow-hidden rounded-lg border border-border bg-card shadow-none">
+      <CardBody className="flex flex-col gap-4 p-4 sm:p-5">
+        
+        {/* بخش بالایی: عنوان و توضیحات - راست‌چین */}
+        <div className="flex w-full flex-col items-start justify-start text-right gap-1">
+          <div className="flex items-center gap-2">
+            <Tag className="h-5 w-5 text-shop" />
+            <span className="text-sm font-bold text-shop">کد تخفیف</span>
           </div>
-          <span className="text-sm font-bold text-foreground">کد تخفیف</span>
+          <span className="text-xs text-muted-foreground">
+            اگر کد تخفیف دارین لطفا وارد کنین
+          </span>
         </div>
-      </CardHeader>
 
-      <CardBody className="flex flex-col gap-4 p-5">
-        <div className="flex w-full items-center gap-2">
-          <Input
-            placeholder="کد تخفیف خود را اینجا وارد کنید..."
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleApply()}
-            className="h-10.5 flex-1 rounded-lg text-xs"
-          />
+        {/* بخش پایین: فیلد ورودی و دکمه */}
+        <div className="flex w-full flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 mt-2">
+          {/* فیلد ورودی اول می‌آید تا در راست قرار بگیرد */}
+          <div className="w-full sm:max-w-md">
+            <Input
+              placeholder="کد تخفیف را وارد کنید"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleApply()}
+              className="h-10 rounded-md border-border/80 text-xs text-left dir-ltr placeholder:text-right"
+            />
+          </div>
+          
           <Button
             variant="primary"
             onClick={() => handleApply()}
             isLoading={applyDiscount.isPending}
-            className="h-10 rounded-lg px-6 text-xs font-bold shadow-xs"
+            className="h-10 rounded-md px-8 text-xs font-bold bg-shop text-shop-foreground hover:bg-shop-hover shrink-0"
           >
-            اعمال کد
+            ثبت کد
           </Button>
         </div>
 
-        {/* کدهای تخفیف اختصاصی کاربر با ظاهر ووچر مدرن */}
+        {/* کدهای تخفیف اختصاصی کاربر (در صورت وجود) */}
         {discountCodes && discountCodes.length > 0 ? (
-          <div className="mt-1 flex flex-col gap-2.5 border-t border-dashed border-border/70 pt-3.5">
-            <span className="flex items-center gap-1.5 text-2xs font-bold text-foreground">
+          <div className="mt-3 flex flex-col gap-2.5 border-t border-dashed border-border pt-4">
+            <span className="flex items-center justify-start gap-1.5 text-2xs font-bold text-foreground">
               <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-warning" />
               کدهای تخفیف فعال در کیف شما:
             </span>
@@ -74,20 +82,20 @@ export function DiscountCard() {
                 <div
                   key={d.id}
                   onClick={() => handleApply(d.code)}
-                  className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-xl border border-dashed border-primary/40 bg-primary/[0.03] p-3 transition-all duration-fast hover:border-primary hover:bg-primary/[0.07]"
+                  className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-md border border-dashed border-shop/40 bg-shop/5 p-3 transition-all duration-fast hover:border-shop hover:bg-shop/10"
                 >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-mono text-xs font-bold text-primary tracking-wider">
+                  <div className="flex flex-col items-start gap-0.5 text-right">
+                    <span className="font-mono text-xs font-bold text-shop tracking-wider dir-ltr">
                       {d.code}
                     </span>
                     <span className="text-2xs text-muted-foreground">
                       مبلغ تخفیف: <strong className="text-foreground">{formatPrice(d.amount)}</strong>
                     </span>
                   </div>
-
-                  <span className="flex items-center gap-1 text-2xs font-bold text-primary transition-transform group-hover:-translate-x-1">
-                    <span>اعمال</span>
+                  
+                  <span className="flex items-center gap-1 text-2xs font-bold text-shop transition-transform group-hover:-translate-x-1">
                     <ArrowLeft className="h-3 w-3" />
+                    <span>اعمال</span>
                   </span>
                 </div>
               ))}

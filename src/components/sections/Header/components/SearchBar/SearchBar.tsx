@@ -29,16 +29,17 @@ import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
 import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
 import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { getFullUrl } from '@/core/utils/formatters';
 
 const DEFAULT_ROTATING_KEYWORDS = [
-  'لنت ترمز ۲۰۶',
-  'شمع سوزنی بوش',
-  'دیسک و صفحه پراید',
-  'تسمه تایم رنو ال ۹۰',
-  'فیلتر روغن دنا پلاس',
-  'کمک فنر جلو پژو پارس',
-  'کوئل دوبل تیبا',
-  'لوازم جلوبندی سمند',
+  'قطعه موتور خودرو',
+  'قطعه گیربکس خودرو',
+  'روغن و مایعات خودرو',
+  'قطعه بدنه خودرو',
+  'دستگیره درب خودرو',
+  'چراغ جلو خودرو',
+  'فیلتر هوای خودرو',
+  'کمک فنر خودرو',
 ];
 
 export interface SearchBarProps {
@@ -49,7 +50,7 @@ export interface SearchBarProps {
 }
 
 export function SearchBar({
-  placeholder = 'جستجو در یدکچی...',
+  placeholder = 'جستجو در یدک‌چی...',
   className = '',
   onSearch,
   isMobile = false,
@@ -96,12 +97,18 @@ export function SearchBar({
   const { data: searchBanners = [] } = useGetBanners('SearchResult');
   const removeHistoryMutation = useRemoveSearchHistory();
 
-  const desktopBanner = searchBanners.find(
-    (b) => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Desktop'
+  // ✅ اصلاح ساختار داده‌های بنر
+  const searchBannerGroup = searchBanners.find(
+    (b: any) => b.name === 'Search-Suggest'
   );
-  const mobileBanner = searchBanners.find(
-    (b) => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Mobile'
-  );
+
+  const desktopBanner = searchBannerGroup?.banners?.find(
+    (b: any) => b.size === 'Desktop'
+  ) || searchBannerGroup?.banners?.[0];
+
+  const mobileBanner = searchBannerGroup?.banners?.find(
+    (b: any) => b.size === 'Mobile'
+  ) || searchBannerGroup?.banners?.[0];
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -171,7 +178,7 @@ export function SearchBar({
     if (query) return null;
     const currentWord = DEFAULT_ROTATING_KEYWORDS[keywordIndex];
     return (
-      <div className="pointer-events-none flex h-5 select-none items-center overflow-hidden text-xs">
+      <div className="pointer-events-none flex h-5 select-none items-center overflow-hidden text-xs" dir="rtl">
         <span className="ms-1 shrink-0 text-muted-foreground">جستجو در</span>
         <AnimatePresence mode="wait">
           <motion.span
@@ -203,7 +210,7 @@ export function SearchBar({
     );
 
     return (
-      <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-y-auto bg-card" dir="rtl">
         {showKeywords ? (
           <div className="flex h-full flex-col space-y-4 p-4">
             {carsList.length > 0 ? (
@@ -228,8 +235,8 @@ export function SearchBar({
                       }}
                       className="flex items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:opacity-50"
                     >
-                      <Car aria-hidden="true" className="h-3.5 w-3.5" />
-                      همه کالاهای خودرو {car.model}
+                      <Car aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                      <span>قطعات خودرو {car.model}</span>
                     </button>
                   ))}
                 </div>
@@ -258,8 +265,8 @@ export function SearchBar({
                       }}
                       className="flex items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:opacity-50"
                     >
-                      <FolderKanban aria-hidden="true" className="h-3.5 w-3.5" />
-                      همه کالاهای دسته {cat.partCategoryName}
+                      <FolderKanban aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                      <span>قطعات دسته {cat.partCategoryName}</span>
                     </button>
                   ))}
                 </div>
@@ -268,13 +275,13 @@ export function SearchBar({
 
             <div className="shrink-0 space-y-2">
               <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
-                عبارات پیشنهادی
+                جستجوهای پیشنهادی
               </span>
 
               {isKeywordsLoading ? (
                 <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
                   <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin text-primary" />
-                  <span className="text-xs">در حال لود عبارات کلیدی...</span>
+                  <span className="text-xs">در حال جستجوی پیشنهادات...</span>
                 </div>
               ) : keywordsList.length > 0 ? (
                 <div className="space-y-1">
@@ -284,10 +291,10 @@ export function SearchBar({
                       type="button"
                       disabled={isGlobalSearching}
                       onClick={() => handleSearchSubmit(kw.suggestion)}
-                      className="flex w-full items-center justify-between rounded-md p-2 transition-colors hover:bg-muted disabled:opacity-50"
+                      className="flex w-full items-center justify-between rounded-md p-2.5 transition-colors hover:bg-muted/60 disabled:opacity-50"
                     >
-                      <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm text-foreground">{kw.suggestion}</span>
+                      <div className="flex min-w-0 flex-col text-right">
+                        <span className="truncate text-sm font-medium text-foreground">{kw.suggestion}</span>
                         {kw.partCategoryName ? (
                           <span className="mt-0.5 truncate text-2xs text-muted-foreground">
                             در دسته {kw.partCategoryName}
@@ -300,7 +307,7 @@ export function SearchBar({
                 </div>
               ) : (
                 <div className="py-4 text-center text-sm text-muted-foreground">
-                  نتیجه مناسبی یافت نشد.
+                  پیشنهادی یافت نشد.
                 </div>
               )}
             </div>
@@ -309,24 +316,31 @@ export function SearchBar({
               {isMobile
                 ? mobileBanner && (
                     <Link
-                      href={mobileBanner.link || '#'}
+                      href={mobileBanner.targetURL || '#'}
                       onClick={handleCloseMobileSearch}
-                      className="block overflow-hidden rounded-lg"
+                      className="block w-full overflow-hidden rounded-lg border border-border"
                     >
-                      <img
-                        src={mobileBanner.imageUrl}
-                        alt={mobileBanner.title}
-                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
-                      />
+                      <div className="relative w-full aspect-[3/1]">
+                        <img
+                          src={getFullUrl(mobileBanner.image)}
+                          alt={mobileBanner.imageAlt || mobileBanner.title}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
                     </Link>
                   )
                 : desktopBanner && (
-                    <Link href={desktopBanner.link || '#'} className="block overflow-hidden rounded-lg">
-                      <img
-                        src={desktopBanner.imageUrl}
-                        alt={desktopBanner.title}
-                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
-                      />
+                    <Link
+                      href={desktopBanner.targetURL || '#'}
+                      className="block w-full overflow-hidden rounded-lg border border-border"
+                    >
+                      <div className="relative w-full aspect-[3/1]">
+                        <img
+                          src={getFullUrl(desktopBanner.image)}
+                          alt={desktopBanner.imageAlt || desktopBanner.title}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
                     </Link>
                   )}
             </div>
@@ -335,15 +349,15 @@ export function SearchBar({
           <div className="flex flex-1 flex-col space-y-5 p-4">
             {history.length > 0 ? (
               <div className="shrink-0 space-y-2">
-                <div className="flex items-center justify-between border-b border-border pb-1">
-                  <span className="flex items-center gap-1 text-xs font-bold text-muted-foreground">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                     <Clock aria-hidden="true" className="h-3.5 w-3.5" />
                     جستجوهای اخیر شما
                   </span>
                   <button
                     type="button"
                     onClick={handleClearAllHistory}
-                    className="flex items-center gap-0.5 text-xs text-destructive hover:underline"
+                    className="flex items-center gap-1 text-xs text-destructive transition-colors hover:underline"
                   >
                     <Trash2 aria-hidden="true" className="h-3 w-3" />
                     پاک کردن همه
@@ -364,7 +378,7 @@ export function SearchBar({
                           if (e.key === 'Enter') handleSearchSubmit(wordValue);
                         }}
                         className={cn(
-                          'flex cursor-pointer items-center gap-1 rounded-md border border-border bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/30',
+                          'flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted',
                           isGlobalSearching && 'pointer-events-none opacity-50'
                         )}
                       >
@@ -386,7 +400,7 @@ export function SearchBar({
 
             {suggestions.length > 0 ? (
               <div className="shrink-0 space-y-2">
-                <span className="flex items-center justify-start gap-1.5 border-b border-border pb-1 text-xs font-bold text-muted-foreground">
+                <span className="flex items-center justify-start gap-1.5 border-b border-border pb-2 text-xs font-bold text-muted-foreground">
                   <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
                   جستجوهای پرطرفدار
                 </span>
@@ -397,7 +411,7 @@ export function SearchBar({
                       type="button"
                       disabled={isGlobalSearching}
                       onClick={() => handleSearchSubmit(suggest)}
-                      className="rounded-md border border-input px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-accent disabled:opacity-50"
+                      className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-accent/40 hover:text-primary disabled:opacity-50"
                     >
                       {suggest}
                     </button>
@@ -410,24 +424,31 @@ export function SearchBar({
               {isMobile
                 ? mobileBanner && (
                     <Link
-                      href={mobileBanner.link || '#'}
+                      href={mobileBanner.targetURL || '#'}
                       onClick={handleCloseMobileSearch}
-                      className="block overflow-hidden rounded-lg"
+                      className="block w-full overflow-hidden rounded-lg border border-border"
                     >
-                      <img
-                        src={mobileBanner.imageUrl}
-                        alt={mobileBanner.title}
-                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
-                      />
+                      <div className="relative w-full aspect-[3/1]">
+                        <img
+                          src={getFullUrl(mobileBanner.image)}
+                          alt={mobileBanner.imageAlt || mobileBanner.title}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
                     </Link>
                   )
                 : desktopBanner && (
-                    <Link href={desktopBanner.link || '#'} className="block overflow-hidden rounded-lg">
-                      <img
-                        src={desktopBanner.imageUrl}
-                        alt={desktopBanner.title}
-                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
-                      />
+                    <Link
+                      href={desktopBanner.targetURL || '#'}
+                      className="block w-full overflow-hidden rounded-lg border border-border"
+                    >
+                      <div className="relative w-full aspect-[3/1]">
+                        <img
+                          src={getFullUrl(desktopBanner.image)}
+                          alt={desktopBanner.imageAlt || desktopBanner.title}
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
                     </Link>
                   )}
             </div>
@@ -439,7 +460,7 @@ export function SearchBar({
 
   if (isMobile) {
     return (
-      <div className={cn('relative w-full', className)}>
+      <div className={cn('relative w-full', className)} dir="rtl">
         <div
           onClick={handleOpenMobileSearch}
           role="button"
@@ -447,18 +468,18 @@ export function SearchBar({
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleOpenMobileSearch();
           }}
-          className="relative flex h-9 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-md border border-input bg-card px-3 py-1.5 text-muted-foreground"
+          className="relative flex h-10 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-md border border-border bg-card px-3 py-1.5 text-muted-foreground transition-colors hover:border-primary/50 shadow-xs"
         >
           {isGlobalSearching ? (
             <Loader2 aria-hidden="true" className="z-10 h-4 w-4 shrink-0 animate-spin text-primary" />
           ) : (
-            <Search aria-hidden="true" className="z-10 h-4 w-4 shrink-0" />
+            <Search aria-hidden="true" className="z-10 h-4 w-4 shrink-0 text-muted-foreground" />
           )}
 
           {query ? (
-            <span className="me-2 flex-1 truncate text-sm font-medium">{query}</span>
+            <span className="ms-2.5 flex-1 truncate text-sm font-medium text-foreground">{query}</span>
           ) : (
-            <div className="me-2 flex flex-1 items-center">{renderAnimatedPlaceholder()}</div>
+            <div className="ms-2.5 flex flex-1 items-center">{renderAnimatedPlaceholder()}</div>
           )}
         </div>
 
@@ -466,16 +487,16 @@ export function SearchBar({
           isOpen={isMobileModalOpen}
           onClose={handleCloseMobileSearch}
           className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0"
-          overlayClassName="bg-foreground/40"
+          overlayClassName="bg-black/40 backdrop-blur-sm"
         >
-          <div className="flex shrink-0 items-center gap-3 border-b border-border bg-muted/30 px-4 py-4">
+          <div className="flex shrink-0 items-center gap-3 border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
             <button
               type="button"
               onClick={handleCloseMobileSearch}
-              aria-label="بستن جستجو"
-              className="rounded-full p-1 transition-colors hover:bg-muted"
+              aria-label="بازگشت"
+              className="rounded-full p-1.5 transition-colors hover:bg-muted"
             >
-              <ArrowRight aria-hidden="true" className="h-5 w-5" />
+              <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
             </button>
             <div className="relative flex-1">
               <Input
@@ -498,13 +519,14 @@ export function SearchBar({
                       type="button"
                       onClick={() => setQuery('')}
                       aria-label="پاک کردن"
-                      className="flex items-center justify-center rounded-full p-1 hover:bg-muted"
+                      className="flex items-center justify-center rounded-full p-1 hover:bg-muted transition-colors"
                     >
-                      <X aria-hidden="true" className="h-3.5 w-3.5" />
+                      <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
                   ) : undefined
                 }
-                className="w-full"
+                className="w-full border-border bg-card"
+                dir="rtl"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -513,7 +535,7 @@ export function SearchBar({
                 }}
               />
               {!query ? (
-                <div className="pointer-events-none absolute end-10 top-1/2 -translate-y-1/2">
+                <div className="pointer-events-none absolute start-10 top-1/2 -translate-y-1/2">
                   {renderAnimatedPlaceholder()}
                 </div>
               ) : null}
@@ -527,7 +549,7 @@ export function SearchBar({
   }
 
   return (
-    <div ref={containerRef} className={cn('relative w-full', className)}>
+    <div ref={containerRef} className={cn('relative w-full', className)} dir="rtl">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -548,6 +570,7 @@ export function SearchBar({
           }}
           placeholder=""
           aria-label="جستجو"
+          dir="rtl"
           leftIcon={
             isGlobalSearching ? (
               <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
@@ -563,17 +586,17 @@ export function SearchBar({
                 aria-label="پاک کردن"
                 className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
               >
-                <X aria-hidden="true" className="h-3.5 w-3.5" />
+                <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             ) : undefined
           }
-          className="w-full"
+          className="w-full border-border bg-card transition-colors focus-visible:border-primary"
         />
 
         {!query ? (
           <div
             onClick={() => desktopInputRef.current?.focus()}
-            className="pointer-events-none absolute end-10 top-1/2 flex -translate-y-1/2 cursor-text items-center"
+            className="pointer-events-none absolute start-10 top-1/2 flex -translate-y-1/2 cursor-text items-center"
           >
             {renderAnimatedPlaceholder()}
           </div>

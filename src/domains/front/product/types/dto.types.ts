@@ -240,6 +240,7 @@ export interface OpenSearchProductsRequestDto {
   pageNumber?: number;
   pageSize?: number;
   includeAggregations?: boolean;
+  hasDiscountWithExpiration?: boolean;
 }
 
 export interface OpenSearchProductsResponseDto {

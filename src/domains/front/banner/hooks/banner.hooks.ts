@@ -4,11 +4,7 @@ import { UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getBannerService } from '../services/banner.service';
 import { BannerPageName } from '../endpoints/banner.endpoints';
-import { BannerClickRequest, BannerViewRequest } from '../types/view.types';
-import { 
-  BannerViewModel, 
-
-} from '../types/view.types';
+import { BannerClickRequest, BannerViewRequest, BannerViewModel } from '../types/view.types';
 
 const bannerService = getBannerService();
 
@@ -21,6 +17,8 @@ export function useGetBanners(
     () => bannerService.getBanners(pageName),
     {
       staleTime: 10 * 60 * 1000,
+      retry: 2, // در صورت خطا، تا ۲ بار تلاش مجدد
+      refetchOnMount: true, // اگر داده‌ها موجود نبودند، در mount مجدد واکشی کن
       ...options,
     }
   );
@@ -36,6 +34,7 @@ export function useGetShopProductBanners(params: {
     () => bannerService.getShopProductBanners(params),
     {
       staleTime: 5 * 60 * 1000,
+      retry: 2,
     }
   );
 }
@@ -46,6 +45,7 @@ export function useGetMegaMenu() {
     () => bannerService.getMegaMenu(),
     {
       staleTime: 15 * 60 * 1000,
+      retry: 2,
     }
   );
 }
@@ -56,6 +56,7 @@ export function useGetFrontFooter() {
     () => bannerService.getFrontFooter(),
     {
       staleTime: 15 * 60 * 1000,
+      retry: 2,
     }
   );
 }

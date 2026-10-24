@@ -1,0 +1,2172 @@
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\AuthButton\AuthButton.tsx
+=====================================================
+// src/components/sections/Header/components/AuthButton/AuthButton.tsx
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, LogOut, ChevronLeft } from 'lucide-react';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { cn } from '@/design-system/utils/cn';
+
+export function AuthButton() {
+  const { user, isAuthenticated, logout, isLoggingOut } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 150);
+  };
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsOpen(false);
+    logout(undefined);
+  };
+
+  if (isAuthenticated && user) {
+    // ??????? ??? ????? (????: ???? ????)
+    const firstName = user.firstName || user.fullName?.split(' ')[0] || user.shopTitle || '?????';
+    const displayName = `???? ${firstName}`;
+
+    return (
+      <div 
+        ref={containerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="relative inline-block"
+        dir="rtl"
+      >
+        {/* ???? ????? ?? ???? ???? ???? ????? */}
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={cn(
+            "h-10 px-3.5 rounded-md border border-border bg-card flex items-center gap-2 select-none transition-all shadow-xs hover:bg-muted dark:hover:bg-muted/60",
+            isOpen && "border-border bg-muted"
+          )}
+        >
+          {/* ????? ????? ????/???? */}
+          <User className="h-4 w-4 text-foreground shrink-0" />
+          
+          <span className="text-xs font-bold text-foreground max-w-[110px] truncate leading-none">
+            {displayName}
+          </span>
+
+          {/* ??? ?? ????? ??? */}
+          <ChevronLeft className="h-4 w-4 text-muted-foreground shrink-0 me-0.5" />
+        </button>
+
+        <AnimatePresence>
+          {isOpen && (
+            <div className="absolute left-0 top-full pt-2 z-50 w-48">
+              <div className="absolute -top-2 left-0 right-0 h-4 bg-transparent pointer-events-auto" />
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                transition={{ duration: 0.15 }}
+                className="overflow-hidden rounded-md border border-border/80 bg-popover p-1.5 shadow-xl"
+              >
+                <Link
+                  href="/profile"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-foreground rounded-lg hover:bg-muted transition-colors"
+                >
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span>??? ?????? ??</span>
+                </Link>
+
+                <div className="my-1 border-t border-border/60" />
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-destructive rounded-lg hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  <span>{isLoggingOut ? '?? ??? ????...' : '???? ?? ????'}</span>
+                </button>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  return (
+    <Link href="/login" className="inline-block">
+      <button 
+        type="button"
+        className="h-10 px-4 rounded-md border border-border bg-card text-xs font-bold text-foreground flex items-center gap-2 shadow-xs hover:bg-muted dark:hover:bg-muted transition-colors"
+      >
+        <User className="h-4 w-4 text-foreground" />
+        <span>???? / ???????</span>
+      </button>
+    </Link>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\CartButton\CartButton.tsx
+=====================================================
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\CartButton\CartButton.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ShoppingCart, Trash2, Loader2, Store, Plus, Minus } from 'lucide-react';
+import { Button } from '@/components/primitives/Button';
+import { useGetBasket, useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+
+import { getFullUrl } from '@/core/utils/formatters';
+export function CartButton() {
+  const [mounted, setMounted] = useState(false);
+  const { data: rawBasket } = useGetBasket();
+  const addToBasket = useAddToBasket();
+  const deleteFromBasket = useDeleteFromBasket();
+  const [activeLoadingId, setActiveLoadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const basket = mounted ? (rawBasket as any) : null;
+  const itemCount = basket?.summary?.itemCount || 0;
+
+  const handleIncrease = async (e: React.MouseEvent, shopProductId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveLoadingId(shopProductId);
+    try {
+      await addToBasket.mutateAsync({ shopProductId, quantity: 1 });
+    } catch (err: any) {
+      showToast.error(err.userMessage || '??? ?? ?????? ?????');
+    } finally {
+      setActiveLoadingId(null);
+    }
+  };
+
+  const handleDecrease = async (e: React.MouseEvent, shopProductId: string, currentQuantity: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveLoadingId(shopProductId);
+    try {
+      await deleteFromBasket.mutateAsync({ shopProductId, quantity: 1 });
+      if (currentQuantity === 1) {
+        showToast.success('???? ?? ??? ???? ??? ??');
+      }
+    } catch (err: any) {
+      showToast.error(err.userMessage || '??? ?? ???? ?????');
+    } finally {
+      setActiveLoadingId(null);
+    }
+  };
+  return (
+    <div className="relative group select-none">
+      <Link href="/basket">
+        {/* ???? ????? ?? ????? ? ?????? ???????? ?????? ????? ??? */}
+        <div 
+          className="relative h-10 w-10 rounded-md border border-border bg-card flex items-center justify-center hover:bg-muted dark:hover:bg-muted/60 shadow-xs transition-colors cursor-pointer"
+          aria-label="??? ????"
+        >
+          <ShoppingCart className="h-4 w-4 text-foreground" strokeWidth={1.8} />
+          
+          {mounted && itemCount > 0 && (
+            <span
+              className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-black rounded-full shadow-xs border-2 border-white dark:border-border animate-in zoom-in-75 duration-200"
+            >
+              {itemCount}
+            </span>
+          )}
+        </div>
+      </Link>
+
+      {/* ???? ???? ??? ???? */}
+      {mounted && (
+        <div className="absolute left-0 top-full pt-2 w-[360px] opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 flex flex-col origin-top-left">
+          <div className="w-full bg-card border border-border/80 rounded-lg shadow-lg p-4 flex flex-col">
+            {!basket || basket.isEmpty ? (
+              <div className="w-full py-8 flex flex-col items-center justify-center text-center">
+                <ShoppingCart className="h-9 w-9 text-muted-foreground/40 stroke-[1.5] mb-2" />
+                <span className="text-xs font-bold text-muted-foreground">??? ???? ??? ???? ???</span>
+              </div>
+            ) : (
+              <>
+                <div className="w-full flex items-center justify-between border-b pb-2 mb-2">
+                  <span className="text-xs font-bold text-foreground">????? ??? ????</span>
+                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                    {new Intl.NumberFormat('fa-IR').format(itemCount)} ????
+                  </span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto max-h-60 pe-1 ps-1">
+                  {basket.subBaskets.map((sub: any) => (
+                    <div key={sub.id} className="w-full flex flex-col gap-1 py-2 border-b last:border-b-0">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground mb-1">
+                        <Store className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <span className="truncate">{sub.shop.title}</span>
+                      </div>
+
+                      {sub.items.map((item: any) => (
+                        <div key={item.id} className="flex items-center gap-2.5 py-2">
+                          <div className="w-11 h-11 rounded-lg border overflow-hidden shrink-0 bg-muted/10">
+                            <img
+                              src={getFullUrl(item.product.image)}
+                              className="w-full h-full object-contain"
+                              alt={item.product.title}
+                            />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-xs font-bold text-foreground truncate">{item.product.title}</h5>
+                            <span className="text-xs font-black text-primary block mt-0.5">
+                              {item.price.finalTotalPrice}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 border rounded-lg p-0.5 bg-muted/20 shrink-0" dir="ltr">
+                            <button
+                              type="button"
+                              onClick={(e) => handleDecrease(e, item.shopProductId, item.quantity)}
+                              disabled={activeLoadingId === item.shopProductId}
+                              className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-card text-foreground hover:text-destructive transition-all disabled:opacity-40"
+                            >
+                              {item.quantity === 1 ? <Trash2 className="h-3 w-3 text-destructive" /> : <Minus className="h-3 w-3" />}
+                            </button>
+
+                            <span className="text-xs font-bold min-w-[20px] text-center">
+                              {activeLoadingId === item.shopProductId ? (
+                                <Loader2 className="h-3 w-3 animate-spin text-primary mx-auto" />
+                              ) : (
+                                new Intl.NumberFormat('fa-IR').format(item.quantity)
+                              )}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={(e) => handleIncrease(e, item.shopProductId)}
+                              disabled={activeLoadingId === item.shopProductId || !item.canIncrease}
+                              className="h-6 w-6 flex items-center justify-center rounded-md hover:bg-card text-foreground hover:text-primary transition-all disabled:opacity-40"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t pt-3 mt-2 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-muted-foreground">???? ???? ??????:</span>
+                    <span className="text-sm font-black text-foreground">{basket.total.finalPrice}</span>
+                  </div>
+                  <Link href="/basket" className="w-full">
+                    <Button variant="primary" size="sm" fullWidth className="rounded-md text-xs h-9 font-bold">
+                      ????? ????
+                    </Button>
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\CategoryDropdown\CategoryDropdown.tsx
+=====================================================
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useGetMegaMenu } from '@/domains/front/banner/hooks/banner.hooks';
+import {
+  ChevronLeft,
+  Loader2,
+  AlertCircle,
+  Fuel,
+  Zap,
+  Activity,
+  Settings,
+  Gauge,
+  Wrench,
+  Sparkles,
+} from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+
+interface CategoryDropdownProps {
+  isOpen: boolean;
+}
+
+function getFallbackIcon(categoryName: string) {
+  const name = categoryName || '';
+  if (name.includes('????') || name.includes('?????') || name.includes('??????') || name.includes('???') || name.includes('???')) return Fuel;
+  if (name.includes('???') || name.includes('?????') || name.includes('?????????') || name.includes('???') || name.includes('????') || name.includes('?????')) return Zap;
+  if (name.includes('????') || name.includes('???') || name.includes('????')) return Activity;
+  if (name.includes('?????') || name.includes('??????') || name.includes('??????') || name.includes('????')) return Settings;
+  if (name.includes('??????') || name.includes('???? ????') || name.includes('????')) return Gauge;
+  if (name.includes('????') || name.includes('????') || name.includes('???')) return Sparkles;
+  return Wrench;
+}
+
+export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
+  const { data: rawData = [], isLoading, isError } = useGetMegaMenu();
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+
+  if (!isOpen) return null;
+
+  // ??????? ?? ???? ?????? ????? ?????? ?? ????? { partCategories: [...] }
+  const categories: any[] = Array.isArray(rawData)
+    ? rawData
+    : (rawData as any)?.partCategories || [];
+
+  const activeCategory =
+    categories.find((c) => c.id === (activeCategoryId || categories[0]?.id)) || categories[0];
+
+  const handleImageError = (id: string) => {
+    setFailedImages((prev) => ({ ...prev, [id]: true }));
+  };
+
+  return (
+    <div
+      dir="rtl"
+      className="absolute top-full right-0 z-dropdown flex h-[450px] w-[800px] overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+    >
+      {isLoading && (
+        <div className="flex flex-1 items-center justify-center gap-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          <span className="text-sm font-medium">?? ??? ???????? ????????????...</span>
+        </div>
+      )}
+
+      {isError && (
+        <div className="flex flex-1 items-center justify-center gap-2 p-4 text-destructive">
+          <AlertCircle className="h-5 w-5" />
+          <span className="text-sm font-medium">??? ?? ???????? ???????. ????? ?????? ???? ????.</span>
+        </div>
+      )}
+
+      {!isLoading && !isError && categories.length > 0 && (
+        <>
+          {/* ???? ????????????? ???? */}
+          <div className="w-[240px] shrink-0 overflow-y-auto border-l border-border bg-muted/20 py-2">
+            {categories.map((category) => {
+              const isActive = activeCategory?.id === category.id;
+              const hasImageFailed = failedImages[category.id] || !category.icon;
+              const FallbackIconComponent = getFallbackIcon(category.name);
+
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  className={cn(
+                    'flex w-full items-center justify-between px-4 py-3 text-sm font-medium transition-colors text-right',
+                    isActive
+                      ? 'bg-card text-primary font-bold border-r-2 border-primary'
+                      : 'text-foreground hover:bg-muted/50'
+                  )}
+                  onMouseEnter={() => setActiveCategoryId(category.id)}
+                >
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    {hasImageFailed ? (
+                      <FallbackIconComponent className="h-5 w-5 shrink-0 text-muted-foreground/80" />
+                    ) : (
+                      <img
+                        src={category.icon}
+                        alt={category.name}
+                        className="h-5 w-5 shrink-0 object-contain filter dark:invert"
+                        onError={() => handleImageError(category.id)}
+                      />
+                    )}
+                    <span className="truncate">{category.name}</span>
+                  </div>
+                  <ChevronLeft
+                    className={cn(
+                      'h-4 w-4 shrink-0 transition-transform',
+                      isActive ? 'translate-x-1 text-primary' : 'text-muted-foreground'
+                    )}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ?????? ????? ????????? ???? */}
+          <div className="flex-1 overflow-y-auto p-6 bg-card">
+            {activeCategory ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    {failedImages[activeCategory.id] || !activeCategory.icon ? (
+                      (() => {
+                        const FallbackIcon = getFallbackIcon(activeCategory.name);
+                        return <FallbackIcon className="h-5 w-5 text-primary shrink-0" />;
+                      })()
+                    ) : (
+                      <img
+                        src={activeCategory.icon}
+                        alt={activeCategory.name}
+                        className="h-5 w-5 object-contain filter dark:invert"
+                        onError={() => handleImageError(activeCategory.id)}
+                      />
+                    )}
+                    ??? ????? {activeCategory.name}
+                  </span>
+                  <Link
+                    href={
+                      activeCategory.href ||
+                      (activeCategory.englishTitle
+                        ? `/part-category/${activeCategory.englishTitle}`
+                        : '#')
+                    }
+                    className="flex items-center gap-1 text-xs text-primary transition-colors hover:underline"
+                  >
+                    ?????? ??? ????? ??? ????
+                    <ChevronLeft className="h-3 w-3" />
+                  </Link>
+                </div>
+
+                {activeCategory.parts && activeCategory.parts.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    {activeCategory.parts.map((part: any) => {
+                      const hasPartImageFailed = failedImages[part.id] || !part.icon;
+                      const PartFallbackIcon = getFallbackIcon(part.name);
+                      const partHref =
+                        part.href ||
+                        (part.englishTitle
+                          ? `/part-category/${activeCategory.englishTitle || ''}?part=${part.englishTitle}`
+                          : '#');
+
+                      return (
+                        <Link
+                          key={part.id}
+                          href={partHref}
+                          className="flex items-center gap-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary hover:translate-x-1 duration-150 truncate"
+                        >
+                          {!hasPartImageFailed ? (
+                            <img
+                              src={part.icon}
+                              alt={part.iconAlt || part.name}
+                              className="h-5 w-5 shrink-0 object-contain rounded"
+                              onError={() => handleImageError(part.id)}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <PartFallbackIcon className="h-4 w-4 shrink-0 text-muted-foreground/80" />
+                          )}
+                          <span className="truncate">{part.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-4 text-sm text-muted-foreground">
+                    ??? ??????? ???? ??? ????????? ???? ???.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                ?? ????????? ?? ?? ??? ???? ?????? ????.
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\CitySelector\CitySelector.tsx
+=====================================================
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { MapPin, ChevronDown, ChevronLeft, Search, X, MapPinOff, ArrowRight, Loader2 } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { Modal } from '@/components/composites/Modal/Modal';
+import { Input } from '@/components/primitives/Input/Input';
+import { useGetProvinceCitiesTree } from '@/domains/front/reference/city/hooks/city.hooks';
+import { useAppStore } from '@/shared/store/useAppStore';
+
+export interface CitySelectorProps {
+  variant?: 'default' | 'mobile';
+}
+
+export function CitySelector({ variant = 'default' }: CitySelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const storeCity = useAppStore((state) => state.selectedCity);
+  const setStoreCity = useAppStore((state) => state.setSelectedCity);
+
+  const { data: provincesTree = [], isLoading } = useGetProvinceCitiesTree();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeProvinceId, setActiveProvinceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const selectedCity = mounted ? storeCity : null;
+
+  const handleOpenModal = () => {
+    setIsOpen(true);
+    setSearchQuery('');
+    setActiveProvinceId(null);
+  };
+
+  const handleSelectCity = (id: string, name: string) => {
+    setStoreCity({ id, name });
+    setIsOpen(false);
+  };
+
+  const handleClearCity = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setStoreCity(null);
+  };
+
+  const filteredCities = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+
+    const results: Array<{ id: string; name: string; provinceName: string }> = [];
+    provincesTree.forEach((province) => {
+      province.cities.forEach((city) => {
+        if (city.name.includes(searchQuery.trim())) {
+          results.push({
+            id: city.id,
+            name: city.name,
+            provinceName: province.name,
+          });
+        }
+      });
+    });
+    return results;
+  }, [searchQuery, provincesTree]);
+
+  const activeProvince =
+    provincesTree.find((p) => p.id === (activeProvinceId || provincesTree[0]?.id)) || provincesTree[0];
+  const isMobileVariant = variant === 'mobile';
+
+  const renderModalContent = () => (
+    <Modal
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:overflow-hidden md:rounded-xl md:border md:border-border md:shadow-lg"
+      overlayClassName="bg-black/40 backdrop-blur-sm"
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="rounded-full p-1 text-foreground transition-colors hover:bg-muted md:hidden"
+            aria-label="??????"
+            type="button"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <MapPin className="h-4 w-4 text-primary" />
+            ?????? ??? ?? ?????
+          </span>
+        </div>
+        <button
+          onClick={() => setIsOpen(false)}
+          className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:flex"
+          aria-label="????"
+          type="button"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="shrink-0 border-b border-border bg-card p-4" dir="rtl">
+        <Input
+          type="text"
+          placeholder="?????? ??? ???..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
+          rightIcon={
+            searchQuery ? (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
+                type="button"
+                aria-label="??? ???? ???"
+              >
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            ) : undefined
+          }
+          className="w-full border-border bg-card"
+          dir="rtl"
+        />
+      </div>
+
+      <div className="flex min-h-0 flex-1 overflow-hidden" dir="rtl">
+        {isLoading ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <span className="text-xs text-muted-foreground">?? ??? ?????? ???? ?????...</span>
+          </div>
+        ) : searchQuery.trim() ? (
+          <div className="flex-1 space-y-2 overflow-y-auto p-4">
+            {filteredCities.length > 0 ? (
+              filteredCities.map((city) => (
+                <button
+                  key={city.id}
+                  type="button"
+                  onClick={() => handleSelectCity(city.id, city.name)}
+                  className="flex w-full items-center justify-between rounded-md border border-border p-3 transition-colors hover:border-primary/50 hover:bg-accent/40"
+                >
+                  <span className="text-sm font-medium text-foreground">{city.name}</span>
+                  <span className="text-xs text-muted-foreground">????? {city.provinceName}</span>
+                </button>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                <MapPinOff className="h-8 w-8 text-muted-foreground/60" />
+                <span className="text-sm">???? ?? ??? ??? ???? ???.</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-[140px] shrink-0 overflow-y-auto border-l border-border bg-muted/20 py-1 md:w-[200px]">
+              {provincesTree.map((province) => {
+                const isActive = activeProvince?.id === province.id;
+                return (
+                  <button
+                    key={province.id}
+                    type="button"
+                    onClick={() => setActiveProvinceId(province.id)}
+                    className={cn(
+                      'w-full truncate px-4 py-3 text-right text-xs font-medium transition-colors md:text-sm',
+                      isActive
+                        ? 'border-r-2 border-primary bg-card font-bold text-primary'
+                        : 'text-foreground hover:bg-muted/40'
+                    )}
+                  >
+                    {province.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-card p-4">
+              {activeProvince ? (
+                <div className="space-y-3">
+                  <span className="block border-b border-border pb-2 text-xs font-bold text-muted-foreground">
+                    ?????? ????? {activeProvince.name} ({activeProvince.cities.length} ???)
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {activeProvince.cities.map((city) => {
+                      const isSelected = selectedCity?.id === city.id;
+                      return (
+                        <button
+                          key={city.id}
+                          type="button"
+                          onClick={() => handleSelectCity(city.id, city.name)}
+                          className={cn(
+                            'truncate rounded-md border px-3 py-2 text-right text-xs transition-colors md:text-sm',
+                            isSelected
+                              ? 'border-primary bg-primary/10 font-bold text-primary'
+                              : 'border-border text-foreground hover:border-primary/40 hover:bg-muted/40'
+                          )}
+                        >
+                          {city.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-sm text-muted-foreground">
+                  ????? ???? ??? ?? ?????? ????.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+
+  if (isMobileVariant) {
+    return (
+      <>
+        <div
+          onClick={handleOpenModal}
+          dir="rtl"
+          className="flex w-full cursor-pointer items-center justify-between px-1 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 shrink-0 text-primary" />
+            <span className="text-sm font-bold text-foreground">
+              {selectedCity ? `?????? ???: ${selectedCity.name}` : '?????? ??? (????? ??????)'}
+            </span>
+          </div>
+
+          <div
+            className="flex items-center gap-2"
+            onClick={(e) => selectedCity && e.stopPropagation()}
+          >
+            {selectedCity ? (
+              <button
+                type="button"
+                onClick={handleClearCity}
+                className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+                aria-label="??? ??????"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+            <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+        </div>
+
+        {renderModalContent()}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        dir="rtl"
+        className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-border hover:bg-muted/60 shadow-xs xl:text-sm"
+        onClick={handleOpenModal}
+        aria-label="?????? ???"
+      >
+        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary xl:h-4 xl:w-4" />
+        <span className="font-medium text-foreground">
+          {selectedCity ? selectedCity.name : '?????? ???'}
+        </span>
+        {selectedCity ? (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={handleClearCity}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleClearCity(e as any);
+            }}
+            className="rounded p-0.5 text-muted-foreground hover:text-destructive"
+          >
+            <X className="h-3 w-3" />
+          </span>
+        ) : (
+          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+        )}
+      </button>
+
+      {renderModalContent()}
+    </>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\DesktopNavigation\DesktopNavigation.tsx
+=====================================================
+'use client';
+
+import { useState } from 'react';
+import { NAV_ITEMS } from '../../constants/header.constants';
+import { NavItem } from '../NavItem/NavItem';
+import { CategoryDropdown } from '../CategoryDropdown/CategoryDropdown';
+
+export function DesktopNavigation() {
+  const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
+
+  return (
+    <nav className="flex items-center gap-1 lg:gap-3 xl:gap-5" dir="rtl">
+      {NAV_ITEMS.map((item) => {
+        const hasDropdown = item.hasDropdown;
+        const isOpen = openCategoryId === item.id;
+
+        return (
+          <div
+            key={item.id}
+            className="relative"
+            onMouseEnter={() => hasDropdown && setOpenCategoryId(item.id)}
+            onMouseLeave={() => hasDropdown && setOpenCategoryId(null)}
+          >
+            <NavItem
+              label={item.label}
+              icon={item.icon}
+              href={item.href}
+              hasDropdown={hasDropdown}
+              isOpen={isOpen}
+              className="whitespace-nowrap text-xs font-medium text-foreground/90 transition-colors hover:text-primary lg:text-sm"
+            />
+            {hasDropdown && <CategoryDropdown isOpen={isOpen} />}
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\HeaderActions\HeaderActions.tsx
+=====================================================
+'use client';
+
+import { SellerButton } from '../SellerButton/SellerButton';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { AuthButton } from '../AuthButton/AuthButton';
+import { CartButton } from '../CartButton/CartButton';
+import { MobileMenuToggle } from '../MobileMenuToggle/MobileMenuToggle';
+
+interface HeaderActionsProps {
+  isMobileMenuOpen: boolean;
+  onMobileMenuToggle: () => void;
+}
+
+export function HeaderActions({ isMobileMenuOpen, onMobileMenuToggle }: HeaderActionsProps) {
+  return (
+    <div className="flex items-center gap-2 sm:gap-2.5">
+      <SellerButton />
+      <div className="hidden sm:block">
+        <ThemeToggle />
+      </div>
+      <AuthButton />
+      <CartButton />
+      <div className="border-s border-border/60 ps-1.5 lg:hidden">
+        <MobileMenuToggle isOpen={isMobileMenuOpen} onClick={onMobileMenuToggle} />
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\Logo\Logo.tsx
+=====================================================
+import Link from 'next/link';
+import Image from 'next/image';
+import { cn } from '@/design-system/utils/cn';
+
+interface LogoProps {
+  hideTitle?: boolean;
+  className?: string;
+}
+
+export function Logo({ hideTitle = false, className }: LogoProps) {
+  return (
+    <Link href="/" className={cn("flex flex-col items-center shrink-0", className)}>
+      <div className="relative w-20 h-10 md:w-24 md:h-12 leading-none">
+        <Image
+          src="/Logo.svg"
+          alt="Yadakchi Logo"
+          width={96}
+          height={48}
+          className="object-contain block"
+          priority
+        />
+      </div>
+      
+      <span className={cn(
+        "text-[10px] sm:text-[11px] font-bold text-muted-foreground text-center block",
+        "leading-none",
+        "mt-0 pt-0",
+        hideTitle ? "hidden" : ""
+      )}>
+        انتخاب هوشمند قطعات خودرو
+      </span>
+    </Link>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\MobileHeader\MobileHeader.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { cn } from '@/design-system/utils/cn';
+import { Logo } from '../Logo/Logo';
+import { SellerButton } from '../SellerButton/SellerButton';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { SearchBar } from '../SearchBar/SearchBar';
+import { CitySelector } from '../CitySelector/CitySelector';
+
+export interface MobileHeaderProps {
+  className?: string;
+  onSearch?: (query: string) => void;
+  isScrolled?: boolean;
+}
+
+export function MobileHeader({ className, onSearch, isScrolled = false }: MobileHeaderProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  return (
+    <div className={cn('flex w-full flex-col transition-transform duration-normal will-change-transform', className)}>
+      {/* ردیف بالای موبایل: لوگو و اکشن‌ها کاملاً هماهنگ با پس‌زمینه سفید کارت */}
+      <div className="relative z-20 flex h-10 w-full items-center justify-between">
+        <Logo className="shrink-0" />
+        <div className="flex shrink-0 items-center gap-2">
+          <SellerButton size="sm" />
+          <ThemeToggle />
+        </div>
+      </div>
+
+      {/* ردیف پایین: سرچ و انتخاب شهر */}
+      <div
+        className={cn(
+          'w-full origin-top transform transition-all duration-slow ease-out',
+          'will-change-[transform,opacity,max-height]',
+          isScrolled
+            ? 'pointer-events-none max-h-0 -translate-y-3 scale-y-90 overflow-hidden opacity-0'
+            : 'max-h-36 translate-y-0 scale-y-100 opacity-100'
+        )}
+      >
+        <div className="flex w-full flex-col pb-1 pt-2">
+          {isMounted ? (
+            <>
+              <SearchBar
+                placeholder="جستجو در یدک‌چی..."
+                onSearch={onSearch}
+                className="w-full"
+                isMobile
+              />
+
+              <div className="mt-2.5 border-t border-border/60 pt-2">
+                <CitySelector variant="mobile" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="h-9 w-full animate-pulse rounded-md bg-secondary" />
+              <div className="mt-2.5 h-6 w-full animate-pulse rounded-md bg-secondary/70" />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\MobileMenu\MobileMenu.tsx
+=====================================================
+// src/components/sections/Header/components/MobileMenu/MobileMenu.tsx
+
+'use client';
+
+import Link from 'next/link';
+import { Car, MapPin, ShoppingCart, LogOut } from 'lucide-react';
+import { Button } from '@/components/primitives/Button';
+import { Badge } from '@/components/primitives/Badge';
+import { NAV_ITEMS } from '../../constants/header.constants';
+import { useLogout } from '@/domains/auth/hooks/auth.hooks';
+import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
+
+interface MobileMenuProps {
+  isOpen: boolean;
+  isAuthenticated: boolean;
+  onClose?: () => void;
+}
+
+export function MobileMenu({ isOpen, isAuthenticated, onClose }: MobileMenuProps) {
+  const logoutMutation = useLogout();
+  const { data: basket } = useGetBasket();
+
+  if (!isOpen) return null;
+
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined);
+    onClose?.();
+  };
+
+  return (
+    <div className="md:hidden border-t p-4 space-y-4 bg-card">
+      {/* ???? ???? (???? ?????) */}
+      <div className="space-y-2">
+        {NAV_ITEMS.map((item) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors"
+            onClick={onClose}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        ))}
+      </div>
+
+      {/* ??????? ????? */}
+      <div className="border-t pt-3 space-y-2">
+        <Link href="/my-car" className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors" onClick={onClose}>
+          <Car className="h-4 w-4" />
+          ????? ??
+        </Link>
+        <button className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors w-full">
+          <MapPin className="h-4 w-4" />
+          ??? ??? ?? ?????? ????
+        </button>
+      </div>
+
+      {/* ??? ???? ? ????? ???? */}
+      <div className="border-t pt-3 space-y-3">
+        {/* ??? ???? */}
+        <Link href="/basket" className="flex items-center justify-between py-2" onClick={onClose}>
+          <div className="flex items-center gap-2 text-sm">
+            <ShoppingCart className="h-4 w-4" />
+            ??? ????
+          </div>
+          {basket && basket.summary.itemCount > 0 && (
+            <Badge variant="destructive" size="sm">
+              {basket.summary.itemCount}
+            </Badge>
+          )}
+        </Link>
+
+        {/* ????/???? */}
+        {isAuthenticated ? (
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 py-2 text-sm text-destructive hover:text-destructive/80 transition-colors w-full"
+          >
+            <LogOut className="h-4 w-4" />
+            ???? ?? ????
+          </button>
+        ) : (
+          <Link href="/login" onClick={onClose}>
+            <Button variant="primary" size="sm" fullWidth>
+              ???? / ???????
+            </Button>
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\MobileMenuToggle\MobileMenuToggle.tsx
+=====================================================
+// src/components/sections/Header/components/MobileMenuToggle/MobileMenuToggle.tsx
+
+'use client';
+
+import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/primitives/Button';
+
+interface MobileMenuToggleProps {
+  isOpen: boolean;
+  onClick: () => void;
+}
+
+export function MobileMenuToggle({ isOpen, onClick }: MobileMenuToggleProps) {
+  return (
+    <Button variant="ghost" size="icon" className="md:hidden" onClick={onClick} aria-label={isOpen ? 'بستن منو' : 'باز کردن منو'}>
+      {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+    </Button>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\MyCarButton\MyCarButton.tsx
+=====================================================
+// src/components/sections/Header/components/MyCarButton/MyCarButton.tsx
+
+import Link from 'next/link';
+import { Car } from 'lucide-react';
+
+export function MyCarButton() {
+  return (
+    <Link href="/my-car" className="flex items-center gap-1 text-xs xl:text-sm hover:text-primary transition-colors whitespace-nowrap">
+      <Car className="h-3 w-3 xl:h-4 xl:w-4" />
+      ماشین من
+    </Link>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\NavItem\NavItem.tsx
+=====================================================
+// src/components/sections/Header/components/NavItem/NavItem.tsx
+
+'use client';
+
+import Link from 'next/link';
+import { ChevronDown } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+
+interface NavItemProps {
+  label: string;
+  icon?: React.ElementType;
+  href: string;
+  hasDropdown?: boolean;
+  isOpen?: boolean;
+  className?: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+}
+
+export function NavItem({ 
+  label, 
+  icon: Icon, 
+  href, 
+  hasDropdown = false, 
+  isOpen = false,
+  className,
+  onMouseEnter,
+  onMouseLeave,
+}: NavItemProps) {
+  return (
+    <div 
+      className="relative group"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-1 font-medium hover:text-primary transition-colors py-2",
+          "text-xs xl:text-sm",
+          className
+        )}
+      >
+        {Icon && <Icon className="h-3 w-3 xl:h-4 xl:w-4" />}
+        <span className="whitespace-nowrap">{label}</span>
+        {hasDropdown && (
+          <ChevronDown className={cn('h-3 w-3 transition-transform', isOpen && 'rotate-180')} />
+        )}
+      </Link>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\SearchBar\SearchBar.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import {
+  Search,
+  X,
+  Clock,
+  Trash2,
+  ArrowRight,
+  Loader2,
+  Sparkles,
+  FolderKanban,
+  Car,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+import { Input } from '@/components/primitives/Input/Input';
+import { Modal } from '@/components/composites/Modal/Modal';
+import {
+  useGetSearchHistory,
+  useGetSearchSuggestions,
+  useGetSearchKeywords,
+  useRemoveSearchHistory,
+} from '@/domains/front/product/hooks/product.hooks';
+import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
+import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
+import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
+import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+
+const DEFAULT_ROTATING_KEYWORDS = [
+  '??? ???? ???',
+  '??? ????? ???',
+  '???? ? ???? ?????',
+  '???? ???? ??? ?? ??',
+  '????? ???? ??? ????',
+  '??? ??? ??? ??? ????',
+  '???? ???? ????',
+  '????? ??????? ????',
+];
+
+export interface SearchBarProps {
+  placeholder?: string;
+  className?: string;
+  onSearch?: (query: string) => void;
+  isMobile?: boolean;
+}
+
+export function SearchBar({
+  placeholder = '????? ?? ?????...',
+  className = '',
+  onSearch,
+  isMobile = false,
+}: SearchBarProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [isPending, startTransition] = React.useTransition();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const isGlobalSearching = isPending || isSubmitting;
+
+  const urlQuery = searchParams.get('q') || '';
+  const urlCarId = searchParams.get('carIds') || searchParams.get('carId') || '';
+  const urlBrandId = searchParams.get('brandIds') || searchParams.get('brandId') || '';
+
+  const { data: cars = [] } = useGetCarsName();
+  const { data: brands = [] } = useGetBrandsName();
+  const { data: categories = [] } = useGetPartCategoriesFlat();
+
+  const activeCar = cars.find((c: any) => c.id === urlCarId)?.model || '';
+  const activeBrand = brands.find((b: any) => b.id === urlBrandId)?.name || '';
+
+  const isCategoryPage = pathname.startsWith('/part-category/');
+  const catSlug = isCategoryPage ? pathname.split('/').pop() : '';
+  const activeCategory = categories.find((c: any) => c.englishTitle === catSlug)?.name || '';
+
+  const resolvedText = urlQuery || activeCar || activeBrand || activeCategory || '';
+
+  const [query, setQuery] = React.useState(resolvedText);
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [isMobileModalOpen, setIsMobileModalOpen] = React.useState(false);
+  const [keywordIndex, setKeywordIndex] = React.useState(0);
+
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const desktopInputRef = React.useRef<HTMLInputElement>(null);
+  const mobileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const debouncedQuery = useDebounce(query, 500);
+
+  const { data: history = [], refetch: refetchHistory } = useGetSearchHistory();
+  const { data: suggestions = [] } = useGetSearchSuggestions();
+  const { data: keywordsData, isLoading: isKeywordsLoading } = useGetSearchKeywords(debouncedQuery);
+  const { data: searchBanners = [] } = useGetBanners('SearchResult');
+  const removeHistoryMutation = useRemoveSearchHistory();
+
+  const desktopBanner = searchBanners.find(
+    (b) => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Desktop'
+  );
+  const mobileBanner = searchBanners.find(
+    (b) => (b as any).groupName === 'Search-Suggest' && (b as any).size === 'Mobile'
+  );
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setKeywordIndex((prev) => (prev + 1) % DEFAULT_ROTATING_KEYWORDS.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  React.useEffect(() => {
+    setQuery(resolvedText);
+    setIsSubmitting(false);
+  }, [resolvedText, pathname, searchParams]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isMobileModalOpen) return;
+    const handlePopState = () => setIsMobileModalOpen(false);
+    window.history.pushState({ modalOpen: 'search-modal' }, '');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isMobileModalOpen]);
+
+  const handleSearchSubmit = (searchWord: string) => {
+    const trimmed = searchWord.trim();
+    if (!trimmed || isGlobalSearching) return;
+    setIsSubmitting(true);
+    setQuery(trimmed);
+    if (onSearch) onSearch(trimmed);
+    setIsFocused(false);
+    setIsMobileModalOpen(false);
+    startTransition(() => {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    });
+  };
+
+  const handleRemoveHistoryItem = (word: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeHistoryMutation.mutate(word);
+  };
+
+  const handleClearAllHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeHistoryMutation.mutate(undefined);
+  };
+
+  const handleOpenMobileSearch = () => {
+    setIsMobileModalOpen(true);
+    refetchHistory();
+    setTimeout(() => mobileInputRef.current?.focus(), 150);
+  };
+
+  const handleCloseMobileSearch = () => {
+    setIsMobileModalOpen(false);
+    if (window.history.state?.modalOpen === 'search-modal') window.history.back();
+  };
+
+  const renderAnimatedPlaceholder = () => {
+    if (query) return null;
+    const currentWord = DEFAULT_ROTATING_KEYWORDS[keywordIndex];
+    return (
+      <div className="pointer-events-none flex h-5 select-none items-center overflow-hidden text-xs" dir="rtl">
+        <span className="ms-1 shrink-0 text-muted-foreground">????? ??</span>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={currentWord}
+            initial={{ y: 14, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -14, opacity: 0 }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
+            className="inline-block max-w-[210px] truncate font-bold text-primary"
+          >
+            {currentWord}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  const renderSuggestionsPanel = () => {
+    const showKeywords = debouncedQuery.trim().length >= 2;
+    const keywordsList = (keywordsData as any)?.keywords || [];
+    const carsList = (keywordsData as any)?.cars || [];
+
+    const uniqueCategories = Array.from(
+      new Map(
+        keywordsList
+          .filter((kw: any) => kw.partCategoryId && kw.partCategoryName)
+          .map((kw: any) => [kw.partCategoryId, kw])
+      ).values()
+    );
+
+    return (
+      <div className="flex flex-1 flex-col overflow-y-auto bg-card" dir="rtl">
+        {showKeywords ? (
+          <div className="flex h-full flex-col space-y-4 p-4">
+            {carsList.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
+                  ???????
+                </span>
+                <div className="flex flex-wrap justify-start gap-2">
+                  {carsList.map((car: any) => (
+                    <button
+                      key={car.id}
+                      type="button"
+                      disabled={isGlobalSearching}
+                      onClick={() => {
+                        setQuery(car.model);
+                        setIsFocused(false);
+                        setIsMobileModalOpen(false);
+                        setIsSubmitting(true);
+                        startTransition(() => {
+                          router.push(`/search?carId=${car.id}`);
+                        });
+                      }}
+                      className="flex items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:opacity-50"
+                    >
+                      <Car aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                      <span>??? ??????? ????? {car.model}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {uniqueCategories.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
+                  ????????????? ?????
+                </span>
+                <div className="flex flex-wrap justify-start gap-2">
+                  {uniqueCategories.map((cat: any) => (
+                    <button
+                      key={cat.partCategoryId}
+                      type="button"
+                      disabled={isGlobalSearching}
+                      onClick={() => {
+                        setQuery(cat.partCategoryName);
+                        setIsFocused(false);
+                        setIsMobileModalOpen(false);
+                        setIsSubmitting(true);
+                        startTransition(() => {
+                          router.push(`/part-category/${cat.partCategoryEnglishTitle}`);
+                        });
+                      }}
+                      className="flex items-center gap-1.5 rounded-md border border-accent bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80 disabled:opacity-50"
+                    >
+                      <FolderKanban aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                      <span>??? ??????? ???? {cat.partCategoryName}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="shrink-0 space-y-2">
+              <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
+                ?????? ????????
+              </span>
+
+              {isKeywordsLoading ? (
+                <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
+                  <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-xs">?? ??? ?????? ?????? ?????...</span>
+                </div>
+              ) : keywordsList.length > 0 ? (
+                <div className="space-y-1">
+                  {keywordsList.map((kw: any, index: number) => (
+                    <button
+                      key={index}
+                      type="button"
+                      disabled={isGlobalSearching}
+                      onClick={() => handleSearchSubmit(kw.suggestion)}
+                      className="flex w-full items-center justify-between rounded-md p-2.5 transition-colors hover:bg-muted/60 disabled:opacity-50"
+                    >
+                      <div className="flex min-w-0 flex-col text-right">
+                        <span className="truncate text-sm font-medium text-foreground">{kw.suggestion}</span>
+                        {kw.partCategoryName ? (
+                          <span className="mt-0.5 truncate text-2xs text-muted-foreground">
+                            ?? ???? {kw.partCategoryName}
+                          </span>
+                        ) : null}
+                      </div>
+                      <Search aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-4 text-center text-sm text-muted-foreground">
+                  ???????? ???? ???.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-auto shrink-0 pt-4">
+              {isMobile
+                ? mobileBanner && (
+                    <Link
+                      href={mobileBanner.link || '#'}
+                      onClick={handleCloseMobileSearch}
+                      className="block overflow-hidden rounded-lg border border-border"
+                    >
+                      <img
+                        src={mobileBanner.imageUrl}
+                        alt={mobileBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )
+                : desktopBanner && (
+                    <Link
+                      href={desktopBanner.link || '#'}
+                      className="block overflow-hidden rounded-lg border border-border"
+                    >
+                      <img
+                        src={desktopBanner.imageUrl}
+                        alt={desktopBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-1 flex-col space-y-5 p-4">
+            {history.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                    <Clock aria-hidden="true" className="h-3.5 w-3.5" />
+                    ???????? ???? ???
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearAllHistory}
+                    className="flex items-center gap-1 text-xs text-destructive transition-colors hover:underline"
+                  >
+                    <Trash2 aria-hidden="true" className="h-3 w-3" />
+                    ??? ???? ???
+                  </button>
+                </div>
+                <div className="flex flex-wrap justify-start gap-2 pt-1">
+                  {history.map((item: any, idx: number) => {
+                    const isObject = typeof item === 'object' && item !== null;
+                    const wordValue = isObject ? (item as any).value : String(item);
+                    const itemId = isObject ? (item as any).id : String(idx);
+                    return (
+                      <div
+                        key={itemId}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleSearchSubmit(wordValue)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSearchSubmit(wordValue);
+                        }}
+                        className={cn(
+                          'flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted',
+                          isGlobalSearching && 'pointer-events-none opacity-50'
+                        )}
+                      >
+                        <span>{wordValue}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleRemoveHistoryItem(wordValue, e)}
+                          aria-label={`??? ${wordValue}`}
+                          className="flex items-center justify-center rounded-full p-0.5 transition-colors hover:bg-muted-foreground/20"
+                        >
+                          <X aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {suggestions.length > 0 ? (
+              <div className="shrink-0 space-y-2">
+                <span className="flex items-center justify-start gap-1.5 border-b border-border pb-2 text-xs font-bold text-muted-foreground">
+                  <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
+                  ???????? ????????
+                </span>
+                <div className="flex flex-wrap justify-start gap-2 pt-1">
+                  {suggestions.map((suggest: any, idx: number) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={isGlobalSearching}
+                      onClick={() => handleSearchSubmit(suggest)}
+                      className="rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-accent/40 hover:text-primary disabled:opacity-50"
+                    >
+                      {suggest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-auto shrink-0 pt-4">
+              {isMobile
+                ? mobileBanner && (
+                    <Link
+                      href={mobileBanner.link || '#'}
+                      onClick={handleCloseMobileSearch}
+                      className="block overflow-hidden rounded-lg border border-border"
+                    >
+                      <img
+                        src={mobileBanner.imageUrl}
+                        alt={mobileBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )
+                : desktopBanner && (
+                    <Link
+                      href={desktopBanner.link || '#'}
+                      className="block overflow-hidden rounded-lg border border-border"
+                    >
+                      <img
+                        src={desktopBanner.imageUrl}
+                        alt={desktopBanner.title}
+                        className="h-24 w-full object-cover transition-transform duration-normal hover:scale-[1.01]"
+                      />
+                    </Link>
+                  )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (isMobile) {
+    return (
+      <div className={cn('relative w-full', className)} dir="rtl">
+        <div
+          onClick={handleOpenMobileSearch}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleOpenMobileSearch();
+          }}
+          className="relative flex h-10 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-md border border-border bg-card px-3 py-1.5 text-muted-foreground transition-colors hover:border-primary/50 shadow-xs"
+        >
+          {isGlobalSearching ? (
+            <Loader2 aria-hidden="true" className="z-10 h-4 w-4 shrink-0 animate-spin text-primary" />
+          ) : (
+            <Search aria-hidden="true" className="z-10 h-4 w-4 shrink-0 text-muted-foreground" />
+          )}
+
+          {query ? (
+            <span className="ms-2.5 flex-1 truncate text-sm font-medium text-foreground">{query}</span>
+          ) : (
+            <div className="ms-2.5 flex flex-1 items-center">{renderAnimatedPlaceholder()}</div>
+          )}
+        </div>
+
+        <Modal
+          isOpen={isMobileModalOpen}
+          onClose={handleCloseMobileSearch}
+          className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0"
+          overlayClassName="bg-black/40 backdrop-blur-sm"
+        >
+          <div className="flex shrink-0 items-center gap-3 border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
+            <button
+              type="button"
+              onClick={handleCloseMobileSearch}
+              aria-label="???? ?????"
+              className="rounded-full p-1.5 transition-colors hover:bg-muted"
+            >
+              <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
+            </button>
+            <div className="relative flex-1">
+              <Input
+                ref={mobileInputRef}
+                type="text"
+                placeholder=""
+                value={query}
+                disabled={isGlobalSearching}
+                onChange={(e) => setQuery(e.target.value)}
+                leftIcon={
+                  isGlobalSearching ? (
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+                  ) : (
+                    <Search aria-hidden="true" className="h-4 w-4" />
+                  )
+                }
+                rightIcon={
+                  query && !isGlobalSearching ? (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      aria-label="??? ????"
+                      className="flex items-center justify-center rounded-full p-1 hover:bg-muted transition-colors"
+                    >
+                      <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  ) : undefined
+                }
+                className="w-full border-border bg-card"
+                dir="rtl"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearchSubmit(query);
+                  }
+                }}
+              />
+              {!query ? (
+                <div className="pointer-events-none absolute start-10 top-1/2 -translate-y-1/2">
+                  {renderAnimatedPlaceholder()}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {renderSuggestionsPanel()}
+        </Modal>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className={cn('relative w-full', className)} dir="rtl">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSearchSubmit(query);
+        }}
+        className="relative"
+        role="search"
+      >
+        <Input
+          ref={desktopInputRef}
+          type="text"
+          value={query}
+          disabled={isGlobalSearching}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => {
+            setIsFocused(true);
+            refetchHistory();
+          }}
+          placeholder=""
+          aria-label="?????"
+          dir="rtl"
+          leftIcon={
+            isGlobalSearching ? (
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Search aria-hidden="true" className="h-4 w-4" />
+            )
+          }
+          rightIcon={
+            query && !isGlobalSearching ? (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                aria-label="??? ????"
+                className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
+              >
+                <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            ) : undefined
+          }
+          className="w-full border-border bg-card transition-colors focus-visible:border-primary"
+        />
+
+        {!query ? (
+          <div
+            onClick={() => desktopInputRef.current?.focus()}
+            className="pointer-events-none absolute start-10 top-1/2 flex -translate-y-1/2 cursor-text items-center"
+          >
+            {renderAnimatedPlaceholder()}
+          </div>
+        ) : null}
+      </form>
+
+      {isFocused ? (
+        <div className="absolute inset-x-0 top-full z-dropdown mt-1.5 flex max-h-[480px] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-lg">
+          {renderSuggestionsPanel()}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\SearchResults\index.ts
+=====================================================
+// src/components/sections/Header/components/SearchResults/index.ts
+
+export * from './SearchResults';
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\SearchResults\SearchResults.tsx
+=====================================================
+// src/components/sections/Header/components/SearchResults/SearchResults.tsx
+
+'use client';
+
+import Link from 'next/link';
+import { Search, FolderKanban, X, ArrowRight } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+
+interface KeywordItem {
+  suggestion: string;
+  partId?: string;
+  partName?: string;
+  partEnglishTitle?: string;
+  partCategoryId?: string;
+  partCategoryName?: string;
+  partCategoryEnglishTitle?: string;
+}
+
+interface SearchResultsProps {
+  isOpen: boolean;
+  onClose: () => void;
+  keywords: KeywordItem[];
+  isMobile: boolean;
+}
+
+export function SearchResults({ isOpen, onClose, keywords, isMobile }: SearchResultsProps) {
+  if (!isOpen) return null;
+
+  // ??????? ????????????? ???? ?? ??? ?????
+  const uniqueCategories = Array.from(
+    new Map(keywords.map(k => [k.partCategoryId, k])).values()
+  ).filter(k => k.partCategoryId && k.partCategoryName);
+
+  return (
+    <div className={cn(
+      "bg-card border rounded-xl shadow-2xl overflow-hidden flex flex-col",
+      isMobile ? "w-full h-full fixed inset-0 z-50 rounded-none" : "max-h-[70vh] w-full"
+    )}>
+      {/* ??? ??????? */}
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30 shrink-0">
+        <div className="flex items-center gap-2">
+          <Search className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium">????? ?????</span>
+        </div>
+        {!isMobile && (
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-muted transition-colors">
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        
+        {/* ??? ?: ????? ????????????? ????? (?? ????) */}
+        {uniqueCategories.length > 0 && (
+          <div className="space-y-2">
+            <span className="text-[11px] font-bold text-muted-foreground block">????????????? ?????</span>
+            <div className="flex flex-wrap gap-2">
+              {uniqueCategories.map((cat) => (
+                <Link
+                  key={cat.partCategoryId}
+                  href={`/part-category/${cat.partCategoryEnglishTitle}`}
+                  onClick={onClose}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/20 text-primary text-xs font-medium hover:bg-primary/10 transition-colors"
+                >
+                  <FolderKanban className="h-3.5 w-3.5" />
+                  {cat.partCategoryName}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ??? ?: ????? ????? ???????? ???? (???????) */}
+        {keywords.length > 0 ? (
+          <div className="space-y-1">
+            <span className="text-[11px] font-bold text-muted-foreground block pb-1">????? ????????</span>
+            {keywords.map((kw, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  // ????? ?????? ?? ???? ??? ?? ???? ?????
+                  window.location.href = `/search?q=${encodeURIComponent(kw.suggestion)}`;
+                }}
+                className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm text-foreground hover:bg-muted/50 transition-colors group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate">{kw.suggestion}</span>
+                </div>
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-sm text-muted-foreground">
+            ???????? ???? ???
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\SellerButton\SellerButton.tsx
+=====================================================
+// src/components/sections/Header/components/SellerButton/SellerButton.tsx
+'use client';
+
+import Link from 'next/link';
+import { Store } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+
+interface SellerButtonProps {
+  className?: string;
+  size?: 'sm' | 'md';
+}
+
+export function SellerButton({ className, size = 'md' }: SellerButtonProps) {
+  return (
+    <Link
+      href="/seller/register"
+      className={cn(
+        "relative inline-flex items-center justify-center select-none overflow-hidden rounded-md font-bold text-primary-foreground transition-all active:scale-95 shadow-sm",
+        "bg-primary hover:bg-primary", // دقیقاً رنگ و بدون تغییر در هاور
+        size === 'sm' ? "h-9 px-3 text-xs gap-1.5" : "h-10 px-4 text-xs sm:text-sm gap-2",
+        className
+      )}
+    >
+      {/* اشعه شاینینگ ظریف و روان */}
+      <motion.span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-l from-transparent via-white/25 to-transparent -skew-x-20"
+        initial={{ x: '200%' }}
+        animate={{ x: '-200%' }}
+        transition={{
+          repeat: Infinity,
+          repeatDelay: 3.5,
+          duration: 1.2,
+          ease: "easeInOut",
+        }}
+      />
+
+      {/* آیکون مرتبط فروشگاه مشابه تصویر */}
+      <Store className={cn("shrink-0 text-primary-foreground", size === 'sm' ? "h-4 w-4" : "h-4 w-4")} />
+
+      {/* متن دکمه */}
+      <span className="leading-none pt-0.5 whitespace-nowrap">
+        فروشنده شو
+      </span>
+    </Link>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\components\ThemeToggle\ThemeToggle.tsx
+=====================================================
+// src/components/sections/Header/components/ThemeToggle/ThemeToggle.tsx
+
+'use client';
+
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { Button } from '@/components/primitives/Button';
+
+export function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="تغییر تم">
+      <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+      <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+    </Button>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\constants\header.constants.ts
+=====================================================
+// src/components/sections/Header/constants/header.constants.ts
+
+import { Grid3x3, Tag, Star, ShoppingCart, Shield } from 'lucide-react';
+
+export const NAV_ITEMS = [
+  { id: 'categories', label: 'دسته بندی قطعات', icon: Grid3x3, href: '/part-category', hasDropdown: true },
+  { id: 'offers', label: 'یدکچی آف', icon: Tag, href: '/offers', hasDropdown: false },
+  { id: 'special', label: 'فروش ویژه', icon: Star, href: '/special', hasDropdown: false },
+  { id: 'bestsellers', label: 'پرفروش ترین ها', icon: ShoppingCart, href: '/bestsellers', hasDropdown: false },
+  { id: 'guarantee', label: 'ضمانت و گارانتی', icon: Shield, href: '/guarantee', hasDropdown: false },
+] as const;
+
+export const CATEGORY_DROPDOWN = [
+  { id: 'engine', label: 'قطعات موتور', href: '/part-category/engine' },
+  { id: 'transmission', label: 'قطعات گیربکس', href: '/part-category/transmission' },
+  { id: 'brake', label: 'قطعات ترمز', href: '/part-category/brake' },
+  { id: 'suspension', label: 'سیستم تعلیق', href: '/categopart-categoryries/suspension' },
+  { id: 'electrical', label: 'سیستم برق', href: '/part-category/electrical' },
+  { id: 'body', label: 'قطعات بدنه', href: '/part-category/body' },
+  { id: 'fluids', label: 'روغن و مایعات', href: '/part-category/fluids' },
+  { id: 'accessories', label: 'لوازم جانبی', href: '/part-category/accessories' },
+] as const;
+
+export const HEADER_CONSTANTS = {
+  SCROLL_THRESHOLD: 50,
+  SEARCH_PLACEHOLDER: 'جستجوی قطعات، برندها، خودرو...',
+  MOBILE_SEARCH_PLACEHOLDER: 'جستجو...',
+} as const;
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\Header.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+import { Logo } from './components/Logo/Logo';
+import { SearchBar } from './components/SearchBar/SearchBar';
+import { SellerButton } from './components/SellerButton/SellerButton';
+import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
+import { AuthButton } from './components/AuthButton/AuthButton';
+import { CartButton } from './components/CartButton/CartButton';
+import { DesktopNavigation } from './components/DesktopNavigation/DesktopNavigation';
+import { MobileHeader } from './components/MobileHeader/MobileHeader';
+import { MyCarButton } from './components/MyCarButton/MyCarButton';
+import { CitySelector } from './components/CitySelector/CitySelector';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { useAppStore } from '@/shared/store/useAppStore';
+
+export interface HeaderProps {
+  className?: string;
+}
+
+export function Header({ className }: HeaderProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  useAuth();
+  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
+  const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
+  const { scrollY } = useScroll();
+
+  React.useEffect(() => {
+    setIsHeaderMinimized(false);
+  }, [pathname, setIsHeaderMinimized]);
+
+  // ??? ??? ???? ?? ?????? ?????? ?? ??? ???? ?? ?? ???? ????
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const prev = scrollY.getPrevious() ?? 0;
+    const diff = latest - prev;
+
+    if (latest < 40) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+      return;
+    }
+
+    // ?? ???????? ???? ?? ???? (??? ?? ? ?????) ?????? ??? ??? ??????
+    if (diff < -8) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+    } 
+    // ?? ?????? ?? ????? ??? ??????
+    else if (diff > 10 && latest > 80) {
+      if (!isHeaderMinimized) setIsHeaderMinimized(true);
+    }
+  });
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    }
+  };
+
+  return (
+    <header className={cn('z-40 w-full select-none', className)}>
+      {/* ??? ???? ?????? */}
+      <div className="pointer-events-none relative hidden h-28 w-full lg:block">
+        <motion.div
+          className="pointer-events-auto fixed inset-x-0 top-0 z-40 flex w-full flex-col border-b border-border/60 bg-card/95 shadow-xs backdrop-blur-md"
+          initial={false}
+          animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+          variants={{
+            expanded: { height: '112px', transition: { duration: 0.2, ease: 'easeInOut' } },
+            collapsed: { height: '68px', transition: { duration: 0.2, ease: 'easeInOut' } },
+          }}
+        >
+          {/* ???? ??? ??????: ????? ????? ? ??????? */}
+          <div className="flex h-[68px] w-full items-center px-4 py-3 lg:px-8">
+            <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-4">
+              <Logo className="shrink-0 pt-0" />
+
+              <div className="mx-2 max-w-3xl flex-1 xl:max-w-4xl">
+                <SearchBar
+                  placeholder="?????? ?????? ?????..."
+                  onSearch={handleSearch}
+                  isMobile={false}
+                />
+              </div>
+
+              <div className="flex shrink-0 items-center gap-3">
+                <SellerButton />
+                <AuthButton />
+                <CartButton />
+                <div className="ms-1 border-s border-border/70 pe-1">
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ???? ??? ??????: ???? ?????? ? ??????? ????? */}
+          <motion.div
+            initial={false}
+            animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+            variants={{
+              expanded: { height: '44px', opacity: 1, transition: { duration: 0.2, ease: 'easeInOut' } },
+              collapsed: { height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeInOut' } },
+            }}
+            className={cn(
+              'w-full border-t border-border/50 bg-secondary/30',
+              isHeaderMinimized ? 'pointer-events-none overflow-hidden' : 'overflow-visible'
+            )}
+          >
+            <div className="mx-auto max-w-screen-2xl px-4 lg:px-8">
+              <div className="flex h-11 items-center justify-between">
+                <DesktopNavigation />
+                <div className="flex items-center gap-4">
+                  <MyCarButton />
+                  <CitySelector />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* ??? ???? ?????? */}
+      <div className="h-36 w-full lg:hidden" />
+      <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
+        <div className="mx-auto max-w-screen-2xl">
+          <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\sections\Header\index.ts
+=====================================================
+// src/components/sections/Header/index.ts
+
+export { Header } from './Header';
+export { Logo } from './components/Logo/Logo';
+export { SearchBar } from './components/SearchBar/SearchBar';
+export { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
+export { AuthButton } from './components/AuthButton/AuthButton';
+export { CartButton } from './components/CartButton/CartButton';
+export { DesktopNavigation } from './components/DesktopNavigation/DesktopNavigation';
+export { MobileMenu } from './components/MobileMenu/MobileMenu';
+export { NAV_ITEMS, CATEGORY_DROPDOWN, HEADER_CONSTANTS } from './constants/header.constants';
+
+

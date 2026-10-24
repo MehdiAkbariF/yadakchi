@@ -1,4 +1,5 @@
-﻿'use client';
+﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\ProductGrid\SearchSidebar.tsx
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
@@ -15,7 +16,7 @@ import { X, Filter, ArrowRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 import { Modal } from '@/components/composites/Modal/Modal';
-import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner'; // وارد کردن بنر تبلیغات
+import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner';
 
 interface SearchSidebarProps {
   filters: SearchProductsRequest;
@@ -24,7 +25,7 @@ interface SearchSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   hidePartFilter?: boolean;
-  carId?: string; // دریافت پاپ‌های تبلیغات برای لود در سایدبار دسکتاپ
+  carId?: string;
   partCategoryId?: string;
   partId?: string;
 }
@@ -81,7 +82,7 @@ export function SearchSidebar({
   useEffect(() => {
     setPriceRange([
       filters.fromPrice || 500000,
-      filters.toPrice || 100000000
+      filters.toPrice || 100000000,
     ]);
   }, [filters.fromPrice, filters.toPrice]);
 
@@ -94,7 +95,7 @@ export function SearchSidebar({
         updatedList.push(id);
       }
     } else {
-      updatedList = updatedList.filter(item => item !== id);
+      updatedList = updatedList.filter((item) => item !== id);
     }
 
     onFilterChange(name, updatedList.length ? updatedList : undefined);
@@ -109,7 +110,7 @@ export function SearchSidebar({
         updatedTypes.push(type);
       }
     } else {
-      updatedTypes = updatedTypes.filter(t => t !== type);
+      updatedTypes = updatedTypes.filter((t) => t !== type);
     }
 
     onFilterChange('types', updatedTypes.length ? updatedTypes : undefined);
@@ -144,26 +145,26 @@ export function SearchSidebar({
   };
 
   const renderFilterContent = (isMobile: boolean) => (
-    <div className={cn("w-full flex flex-col gap-5", isMobile && "pb-24")}>
-      <div className="flex flex-col gap-4 border-b pb-4">
-        <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-sans text-foreground">فقط کالاهای موجود</span>
+    <div className={cn('flex w-full flex-col gap-5', isMobile && 'pb-24')} dir="rtl">
+      <div className="flex flex-col gap-4 border-b border-border pb-4">
+        <div className="flex w-full select-none items-center justify-between">
+          <span className="text-xs font-bold text-foreground">فقط کالاهای موجود</span>
           <Switch
             checked={!!filters.isProductInStock}
             onChange={(checked) => onFilterChange('inStock', checked ? true : undefined)}
           />
         </div>
 
-        <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-sans text-foreground">فقط فروشنده‌های شهر من</span>
+        <div className="flex w-full select-none items-center justify-between">
+          <span className="text-xs font-bold text-foreground">فقط فروشنده‌های شهر من</span>
           <Switch
             checked={!!filters.isSellerInUserCity}
             onChange={(checked) => onFilterChange('userCity', checked ? true : undefined)}
           />
         </div>
 
-        <div className="flex items-center justify-between w-full select-none">
-          <span className="text-xs font-bold font-iran-sans text-foreground">دارای تخفیف ویژه</span>
+        <div className="flex w-full select-none items-center justify-between">
+          <span className="text-xs font-bold text-foreground">دارای تخفیف ویژه</span>
           <Switch
             checked={!!filters.hasDiscount}
             onChange={(checked) => onFilterChange('discount', checked ? true : undefined)}
@@ -172,7 +173,7 @@ export function SearchSidebar({
       </div>
 
       <Accordion title={`نوع قطعه${formatCount(activeTypesCount)}`} defaultOpen={activeTypesCount > 0}>
-        <div className="flex flex-col gap-2 pt-1 pe-1">
+        <div className="flex flex-col gap-2 pe-1 pt-1">
           <Checkbox
             label="همه قطعات"
             checked={!filters.types || filters.types.length === 0}
@@ -206,7 +207,7 @@ export function SearchSidebar({
             onSearchChange={(query) => {
               setPartSearch(query);
             }}
-            onLoadMore={() => setPartPage(prev => prev + 1)}
+            onLoadMore={() => setPartPage((prev) => prev + 1)}
             hasMore={hasMoreParts}
             isLoadingMore={isPartsLoading}
           />
@@ -237,7 +238,7 @@ export function SearchSidebar({
         />
       </Accordion>
 
-      <Accordion title={isPriceFilterActive ? "محدوده قیمت (فعال)" : "محدوده قیمت"} defaultOpen={isPriceFilterActive}>
+      <Accordion title={isPriceFilterActive ? 'محدوده قیمت (فعال)' : 'محدوده قیمت'} defaultOpen={isPriceFilterActive}>
         <PriceSlider
           min={500000}
           max={100000000}
@@ -254,24 +255,27 @@ export function SearchSidebar({
 
   return (
     <>
-      {/* سایدبار دسکتاپ: لود اتوماتیک بنر تبلیغاتی دقیقا در بالای کارت فیلترها در صورت پاس شدن آیدی مربوطه */}
-      <div className="hidden lg:flex flex-col w-[280px] shrink-0 gap-5">
-        <ShopProductAdBanner 
-          carId={carId} 
-          partCategoryId={partCategoryId} 
-          partId={partId} 
+      {/* سایدبار دسکتاپ: بنر تبلیغاتی + کارت فیلترها */}
+      <div className="hidden lg:flex w-[280px] shrink-0 flex-col gap-5" dir="rtl">
+        <ShopProductAdBanner
+          carId={carId}
+          partCategoryId={partCategoryId}
+          partId={partId}
         />
-        
-        <div className="w-full border rounded-xl p-5 bg-card shadow-sm h-fit">
-          <div className="flex items-center justify-between border-b pb-3 mb-4 select-none w-full">
+
+        <div className="h-fit w-full rounded-lg border border-border bg-card p-5 shadow-xs">
+          <div className="mb-4 flex w-full select-none items-center justify-between border-b border-border pb-3">
             <div className="flex items-center gap-2">
               <Filter className="h-4.5 w-4.5 text-primary" />
-              <Typography variant="h5" className=" font-extrabold text-foreground">فیلترها</Typography>
+              <Typography variant="h5" className="font-extrabold text-foreground">
+                فیلترها
+              </Typography>
             </div>
             {hasActiveFilters && (
               <button
+                type="button"
                 onClick={onClearAll}
-                className="text-xs font-bold font-iran-sans text-destructive hover:underline"
+                className="text-xs font-bold text-destructive transition-colors hover:underline"
               >
                 حذف فیلترها
               </button>
@@ -281,40 +285,43 @@ export function SearchSidebar({
         </div>
       </div>
 
+      {/* مودال فیلترهای موبایل */}
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        className="w-full h-full max-h-full max-w-none p-0 rounded-none flex flex-col fixed inset-0 z-[80] bg-card"
-        overlayClassName="bg-black/40 backdrop-blur-md"
+        className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0"
+        overlayClassName="bg-black/40 backdrop-blur-sm"
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b shrink-0 bg-muted/20">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
           <div className="flex items-center gap-2">
-            <button 
+            <button
+              type="button"
               onClick={onClose}
-              className="p-1 -me-1 hover:bg-muted rounded-full"
-              aria-label="Back"
+              className="rounded-full p-1 text-foreground transition-colors hover:bg-muted"
+              aria-label="بستن"
             >
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+              <ArrowRight className="h-5 w-5" />
             </button>
-            <span className="text-sm font-bold flex items-center gap-1.5 text-foreground">
+            <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
               <Filter className="h-4 w-4 text-primary" />
               فیلترها
             </span>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 hover:bg-muted rounded-full flex items-center justify-center"
-            aria-label="Close"
+            className="flex items-center justify-center rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="بستن"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        
-        <div className="flex-1 overflow-y-auto p-5 relative">
+
+        <div className="relative flex-1 overflow-y-auto p-5" dir="rtl">
           {renderFilterContent(true)}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 border-t bg-card p-4 flex gap-3 shrink-0 z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <div className="absolute bottom-0 right-0 left-0 z-sticky flex shrink-0 gap-3 border-t border-border bg-card p-4 shadow-md" dir="rtl">
           {hasActiveFilters && (
             <Button
               variant="outline"
@@ -323,7 +330,7 @@ export function SearchSidebar({
                 onClearAll();
                 onClose();
               }}
-              className="flex-1 rounded-xl text-xs font-bold font-iran-sans text-destructive border-destructive/20 hover:bg-destructive/5 h-10"
+              className="h-10 flex-1 rounded-md border-destructive/20 text-xs font-bold text-destructive hover:bg-destructive/5"
             >
               حذف فیلترها
             </Button>
@@ -332,7 +339,7 @@ export function SearchSidebar({
             variant="primary"
             size="sm"
             onClick={onClose}
-            className="flex-1 rounded-xl text-xs font-bold font-iran-sans h-10"
+            className="h-10 flex-1 rounded-md text-xs font-bold"
           >
             مشاهده نتایج
           </Button>

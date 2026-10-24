@@ -31,18 +31,19 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  images: {
-    unoptimized: true,
-    remotePatterns: [
-      // Fallback — اگر روزی عکسی مستقیم لود شد (نه از /proxy-api)
-      { protocol: 'https', hostname: 'api.yadakchi.local' },
-      { protocol: 'https', hostname: 'api.yadakchi.com' },
-      { protocol: 'https', hostname: 'cdn.yadakchi.com' },
-      { protocol: 'http', hostname: '51.158.252.139' },
-      { protocol: 'http', hostname: '172.92.92.237' },
-    ],
-    formats: ['image/avif', 'image/webp'],
-  },
+images: {
+  unoptimized: true,
+  remotePatterns: [
+    { protocol: 'https', hostname: 'api.yadakchi.local' },
+    { protocol: 'https', hostname: 'api.yadakchi.com' },
+    { protocol: 'https', hostname: 'cdn.yadakchi.com' },
+    { protocol: 'http', hostname: '51.158.252.139' },
+    { protocol: 'http', hostname: '172.92.92.237' },
+    // افزودن localhost برای تست
+    { protocol: 'http', hostname: 'localhost' },
+  ],
+  formats: ['image/avif', 'image/webp'],
+},
 
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,

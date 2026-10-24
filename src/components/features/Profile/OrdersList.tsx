@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Clock,
   Package,
+  ImageIcon,
 } from 'lucide-react';
 import { useGetOrders } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { Card } from '@/components/composites/Card';
@@ -54,9 +55,9 @@ function PayableTimer({ payableUntil }: PayableTimerProps) {
   const expired = timeLeft === 'منقضی شده';
 
   return (
-    <div className={cn('flex items-center gap-1 font-mono text-xs font-bold', expired ? 'text-muted-foreground' : 'text-destructive')} dir="ltr">
+    <div className={cn('flex items-center gap-1 font-mono text-sm font-bold', expired ? 'text-muted-foreground' : 'text-destructive')} dir="ltr">
       <span>{timeLeft}</span>
-      {!expired ? <Clock className="h-3 w-3 animate-spin" style={{ animationDuration: '4s' }} /> : null}
+      {!expired ? <Clock className="h-4 w-4 animate-spin" style={{ animationDuration: '4s' }} /> : null}
     </div>
   );
 }
@@ -133,7 +134,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
         >
           <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
         </button>
-        <span className="text-sm font-bold text-foreground">سفارش‌های من</span>
+        <span className="text-base font-bold text-foreground">سفارش‌های من</span>
       </div>
 
       {/* تب‌های افقی وضعیت */}
@@ -148,7 +149,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
               onClick={() => handleTabChange(tab.id)}
               aria-pressed={isActive}
               className={cn(
-                'flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all duration-fast shadow-2xs',
+                'flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-fast shadow-2xs',
                 isActive
                   ? 'border-primary bg-primary text-primary-foreground shadow-xs'
                   : 'border-border/70 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
@@ -166,90 +167,142 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
       ) : orders.length > 0 ? (
         <div className="flex w-full flex-col gap-4">
           <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-2">
-            {orders.map((order: any) => {
-              const statusCfg = STATUS_MAP[order.status] || {
-                label: order.statusLabel || order.status,
-                color: 'text-foreground',
-                bg: 'bg-secondary',
-              };
+       {orders.map((order: any) => {
+  // ۱. تعیین وضعیت به صورت داینامیک
+  let statusLabel = 'نامشخص';
+  let statusColor = 'text-muted-foreground';
 
-              return (
-                <Card
-                  key={order.id}
-                  className="flex w-full flex-col justify-between rounded-xl border border-border/70 bg-card p-5 shadow-xs transition-all hover:border-primary/40 hover:shadow-sm"
+  switch (order.status) {
+    case 'WaitingForPayment':
+      statusLabel = 'در انتظار پرداخت';
+      statusColor = 'text-red-500';
+      break;
+    case 'InProgress':
+      statusLabel = 'در حال پردازش';
+      statusColor = 'text-blue-500';
+      break;
+    case 'Delivered':
+      statusLabel = 'تحویل شده';
+      statusColor = 'text-emerald-500';
+      break;
+    case 'ReturnRequest':
+      statusLabel = 'مرجوعی';
+      statusColor = 'text-amber-500';
+      break;
+    case 'Cancelled':
+      statusLabel = 'لغو شده';
+      statusColor = 'text-muted-foreground';
+      break;
+    case 'SystemCancelled':
+      statusLabel = 'لغو سیستمی';
+      statusColor = 'text-muted-foreground';
+      break;
+    default:
+      statusLabel = order.statusLabel || order.status;
+  }
+
+  const isWaiting = order.status === 'WaitingForPayment';
+
+  return (
+    <Card
+      key={order.id}
+      className="flex w-full flex-col rounded-2xl border border-border/70 bg-card p-5 shadow-xs"
+    >
+      {/* ردیف بالا: وضعیت + جزئیات */}
+      <div className="flex items-center justify-between pb-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">وضعیت</span>
+          <span className={cn('text-sm font-bold', statusColor)}>
+            {statusLabel}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => router.push(`/profile/orders/${order.id}`)}
+          className="flex items-center gap-1 text-sm font-bold text-primary hover:opacity-80"
+        >
+          <span>جزئیات</span>
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* بخش وسط: اطلاعات و عکس‌ها */}
+      <div className="flex flex-col sm:grid sm:grid-cols-4 gap-5 sm:gap-4 pt-1 items-center sm:items-end">
+        
+        {/* ردیف بالای موبایل: ۳ ستون (کد، تاریخ، مبلغ) */}
+        <div className="grid grid-cols-3 gap-3 w-full sm:contents">
+          {/* کد سفارش */}
+          <div className="flex flex-col items-center gap-1.5 text-center">
+            <span className="text-xs text-muted-foreground">کد سفارش</span>
+            <span className="text-sm font-bold text-foreground font-sans">
+              {new Intl.NumberFormat('fa-IR').format(order.orderNumber)}
+            </span>
+          </div>
+
+          {/* تاریخ */}
+          <div className="flex flex-col items-center gap-1.5 text-center">
+            <span className="text-xs text-muted-foreground">تاریخ</span>
+            <span className="text-sm font-bold text-foreground">
+              {order.createDateFormatted ||
+                new Date(order.createDate).toLocaleDateString('fa-IR')}
+            </span>
+          </div>
+
+          {/* مبلغ */}
+          <div className="flex flex-col items-center gap-1.5 text-center">
+            <span className="text-xs text-muted-foreground">مبلغ</span>
+            <span className="text-sm font-bold text-foreground whitespace-nowrap">
+              {renderPrice(order.totalFinalPrice)}
+            </span>
+          </div>
+        </div>
+
+        {/* ردیف پایین موبایل / ستون چهارم دسکتاپ: کالاها */}
+        <div className="flex flex-col items-center gap-1.5 text-center w-full sm:w-auto mt-3 sm:mt-0">
+          <span className="text-xs text-muted-foreground">
+            کالاها {order.subOrderItemCount > 0 && `(${new Intl.NumberFormat('fa-IR').format(order.subOrderItemCount)})`}
+          </span>
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            {order.shopProductImages && order.shopProductImages.length > 0 ? (
+              order.shopProductImages.slice(0, 4).map((img: string, idx: number) => (
+                <div
+                  key={idx}
+                  className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-card"
                 >
-                  {/* ردیف اول: شماره سفارش و وضعیت */}
-                  <div className="flex w-full items-center justify-between border-b border-border/60 pb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">شماره سفارش:</span>
-                      <span className="font-mono text-xs font-bold text-foreground">{order.orderNumber}</span>
-                    </div>
+                  <img
+                    src={getFullUrl(img)}
+                    className="h-full w-full object-contain p-1"
+                    alt=""
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border/60 bg-secondary/50">
+                <ImageIcon className="h-6 w-6 text-muted-foreground" />
+              </div>
+            )}
+            {order.shopProductImages && order.shopProductImages.length > 4 && (
+              <span className="flex h-14 items-center justify-center rounded-xl bg-secondary/60 px-2.5 text-xs font-bold text-muted-foreground">
+                +{new Intl.NumberFormat('fa-IR').format(order.shopProductImages.length - 4)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
 
-                    <span className={cn('rounded-full border px-3 py-1 text-2xs font-bold', statusCfg.bg, statusCfg.color)}>
-                      {statusCfg.label}
-                    </span>
-                  </div>
-
-                  {/* ردیف دوم: تاریخ ثبت، مهلت پرداخت و قیمت کل */}
-                  <div className="flex w-full items-center justify-between py-3 text-xs">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-2xs text-muted-foreground">
-                        ثبت: {order.createDateFormatted || new Date(order.createDate).toLocaleDateString('fa-IR')}
-                      </span>
-                      {order.status === 'WaitingForPayment' && order.payableUntil ? (
-                        <div className="flex items-center gap-2 pt-1">
-                          <span className="text-2xs text-muted-foreground">مهلت پرداخت:</span>
-                          <PayableTimer payableUntil={order.payableUntil} />
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="flex flex-col items-end">
-                      <span className="text-2xs text-muted-foreground">مبلغ نهایی:</span>
-                      <span className="text-sm font-bold text-primary">
-                        {renderPrice(order.totalFinalPrice ?? order.totalFinalPriceRaw)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* ردیف سوم: عکس اقلام کالا و دکمه مشاهده جزییات */}
-                  <div className="flex w-full items-center justify-between border-t border-dashed border-border/70 pt-3">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      {order.shopProductImages && order.shopProductImages.length > 0 ? (
-                        order.shopProductImages.slice(0, 4).map((img: string, idx: number) => (
-                          <div
-                            key={idx}
-                            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-card p-1 shadow-2xs"
-                          >
-                            <img src={getFullUrl(img)} className="h-full w-full object-contain" alt="" />
-                          </div>
-                        ))
-                      ) : (
-                        <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-border/60 bg-secondary/50 text-muted-foreground">
-                          <Package className="h-5 w-5" />
-                        </div>
-                      )}
-
-                      {order.shopProductImages && order.shopProductImages.length > 4 ? (
-                        <span className="flex h-11 items-center justify-center rounded-lg bg-secondary/60 px-2 text-2xs font-bold text-muted-foreground">
-                          +{order.shopProductImages.length - 4}
-                        </span>
-                      ) : null}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/profile/orders/${order.id}`)}
-                      className="flex h-9 items-center gap-1 rounded-lg border-border/80 px-4 text-xs font-bold transition-colors hover:border-primary hover:text-primary"
-                    >
-                      <span>مشاهده فاکتور</span>
-                      <ChevronLeft aria-hidden="true" className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
+      {/* تایمر پرداخت */}
+      {isWaiting && order.payableUntil ? (
+        <div className="mt-4 flex items-center justify-end pt-3 border-t border-dashed border-border/60">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">مهلت پرداخت:</span>
+            <PayableTimer payableUntil={order.payableUntil} />
+          </div>
+        </div>
+      ) : null}
+    </Card>
+  );
+})}
           </div>
 
           <Pagination
@@ -264,7 +317,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
       ) : (
         <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center shadow-xs">
           <ShoppingBag className="mb-3 h-12 w-12 text-muted-foreground/40" />
-          <p className="text-xs font-semibold text-muted-foreground">
+          <p className="text-sm font-semibold text-muted-foreground">
             هیچ سفارشی در این دسته‌بندی یافت نشد.
           </p>
         </div>

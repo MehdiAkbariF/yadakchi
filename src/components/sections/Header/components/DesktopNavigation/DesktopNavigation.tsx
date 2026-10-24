@@ -9,7 +9,7 @@ export function DesktopNavigation() {
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
 
   return (
-    <nav className="flex items-center gap-1 lg:gap-3 xl:gap-5">
+    <nav className="flex items-center gap-1 lg:gap-3 xl:gap-5" dir="rtl">
       {NAV_ITEMS.map((item) => {
         const hasDropdown = item.hasDropdown;
         const isOpen = openCategoryId === item.id;
@@ -27,7 +27,7 @@ export function DesktopNavigation() {
               href={item.href}
               hasDropdown={hasDropdown}
               isOpen={isOpen}
-              className="text-xs font-medium text-foreground/90 transition-colors hover:text-primary lg:text-sm whitespace-nowrap"
+              className="whitespace-nowrap text-xs font-medium text-foreground/90 transition-colors hover:text-primary lg:text-sm"
             />
             {hasDropdown && <CategoryDropdown isOpen={isOpen} />}
           </div>

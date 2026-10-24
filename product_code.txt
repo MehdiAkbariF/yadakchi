@@ -1,0 +1,3346 @@
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ConditionSelector.tsx
+=====================================================
+'use client';
+
+import { cn } from '@/design-system/utils/cn';
+
+export interface ConditionSelectorProps {
+  selectedCondition: 'New' | 'Stock' | 'TakeOff';
+  onChangeCondition: (cond: 'New' | 'Stock' | 'TakeOff') => void;
+  sellersGroup: any;
+}
+
+export function ConditionSelector({ selectedCondition, onChangeCondition, sellersGroup }: ConditionSelectorProps) {
+  const isNewAvailable = sellersGroup.newOnline.length > 0 || sellersGroup.newLocal.length > 0;
+  const isStockAvailable = sellersGroup.stockOnline.length > 0 || sellersGroup.stockLocal.length > 0;
+  const isTakeOffAvailable = sellersGroup.takeOffOnline.length > 0 || sellersGroup.takeOffLocal.length > 0;
+
+  const hasAnyCondition = isNewAvailable || isStockAvailable || isTakeOffAvailable;
+  if (!hasAnyCondition) return null;
+
+  const baseBtn = 'px-5 py-2 text-xs font-bold border border-border rounded-md transition-colors outline-none';
+  const activeBtn = 'border-shop/60 bg-shop/5 text-shop ring-1 ring-shop/30';
+  const idleBtn = 'bg-card text-foreground hover:border-shop/40';
+
+  return (
+    <div className="mt-2 flex w-full select-none flex-col gap-2.5">
+      <span className="text-xs font-bold text-foreground">??? ???? ?? ?????? ????:</span>
+      <div className="flex flex-wrap gap-2">
+        {isNewAvailable ? (
+          <button
+            type="button"
+            onClick={() => onChangeCondition('New')}
+            className={cn(baseBtn, selectedCondition === 'New' ? activeBtn : idleBtn)}
+          >
+            ???? ??
+          </button>
+        ) : null}
+
+        {isStockAvailable ? (
+          <button
+            type="button"
+            onClick={() => onChangeCondition('Stock')}
+            className={cn(baseBtn, selectedCondition === 'Stock' ? activeBtn : idleBtn)}
+          >
+            ???? ?????
+          </button>
+        ) : null}
+
+        {isTakeOffAvailable ? (
+          <button
+            type="button"
+            onClick={() => onChangeCondition('TakeOff')}
+            className={cn(baseBtn, selectedCondition === 'TakeOff' ? activeBtn : idleBtn)}
+          >
+            ???? ???????
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\InPersonSellersMapModal.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, X, AlertTriangle, Phone, Navigation, ArrowRight, Store, Loader2 } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { Button } from '@/components/primitives/Button/Button';
+import { useGetReportSubjects, useSubmitShopReport } from '@/domains/front/shop/hooks/shop.hooks';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { showToast } from '@/core/utils/toast';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal';
+import { getFullUrl } from '@/core/utils/formatters';
+
+export interface InPersonSellersMapModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  sellers: any[];
+  productTitle: string;
+  initialActiveSellerId?: string | null;
+}
+
+export function InPersonSellersMapModal({
+  isOpen,
+  onClose,
+  sellers = [],
+  productTitle,
+  initialActiveSellerId = null,
+}: InPersonSellersMapModalProps) {
+  const [mounted, setMounted] = React.useState(false);
+  const [mapLoaded, setMapLoaded] = React.useState(false);
+  const [activeSellerId, setActiveSellerId] = React.useState<string | null>(null);
+  const [reportShop, setReportShop] = React.useState<any | null>(null);
+
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
+
+  const mapContainerRef = React.useRef<HTMLDivElement>(null);
+  const mapInstanceRef = React.useRef<any>(null);
+  const markersRef = React.useRef<Record<string, any>>({});
+  const cardRefs = React.useRef<Record<string, HTMLDivElement | null>>({});
+
+  const { data: reportSubjects = [] } = useGetReportSubjects('ShopProductReport');
+  const submitReport = useSubmitShopReport();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    if ((window as any).L) {
+      setMapLoaded(true);
+      return;
+    }
+    const existingLink = document.getElementById('leaflet-css');
+    if (!existingLink) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+    const existingScript = document.getElementById('leaflet-js');
+    if (existingScript) {
+      setMapLoaded(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'leaflet-js';
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => setMapLoaded(true);
+    document.body.appendChild(script);
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    document.body.style.overflow = 'hidden';
+    const handlePopState = () => onClose();
+    window.history.pushState({ modalOpen: 'in-person-map' }, '');
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isOpen, onClose]);
+
+  React.useEffect(() => {
+    if (!mapLoaded || !mapContainerRef.current || !isOpen || sellers.length === 0) return;
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+      markersRef.current = {};
+    }
+    const L = (window as any).L;
+    const targetSellerId = initialActiveSellerId || sellers[0]?.id;
+    const targetSeller = sellers.find((s) => s.id === targetSellerId) || sellers[0];
+    const initialLat = targetSeller?.shop?.latitude || 35.6892;
+    const initialLon = targetSeller?.shop?.longitude || 51.389;
+    const map = L.map(mapContainerRef.current, {
+      center: [initialLat, initialLon],
+      zoom: 12,
+      zoomControl: false,
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '� OpenStreetMap contributors',
+    }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    mapInstanceRef.current = map;
+    if (initialActiveSellerId) setActiveSellerId(initialActiveSellerId);
+
+    sellers.forEach((seller) => {
+      if (!seller.shop?.latitude || !seller.shop?.longitude) return;
+      const customIcon = L.divIcon({
+        className: 'custom-leaflet-marker',
+        html: `<div class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center border-2 border-background shadow-lg transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+      const marker = L.marker([seller.shop.latitude, seller.shop.longitude], { icon: customIcon })
+        .addTo(map)
+        .on('click', () => {
+          setActiveSellerId(seller.id);
+          map.flyTo([seller.shop.latitude, seller.shop.longitude], 15);
+        });
+      markersRef.current[seller.id] = marker;
+    });
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        markersRef.current = {};
+      }
+    };
+  }, [mapLoaded, isOpen, sellers, initialActiveSellerId]);
+
+  React.useEffect(() => {
+    if (isOpen && activeSellerId && cardRefs.current[activeSellerId]) {
+      cardRefs.current[activeSellerId]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [activeSellerId, isOpen]);
+
+  const handleSelectSeller = (seller: any) => {
+    setActiveSellerId(seller.id);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([seller.shop.latitude, seller.shop.longitude], 15);
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!selectedSubjectId) {
+      showToast.error('????? ???? ????? ?? ?????? ????');
+      return;
+    }
+    try {
+      await submitReport.mutateAsync({
+        shopId: reportShop.shop.id,
+        shopProductId: reportShop.id,
+        reportSubjectId: selectedSubjectId,
+        description: reportDescription,
+      });
+      showToast.success('????? ???? ???? ?? ?????? ??? ?? ? ???? ???????? ????? ????? ?????');
+      setReportShop(null);
+      setSelectedSubjectId('');
+      setReportDescription('');
+    } catch (error: any) {
+      showToast.error(error.userMessage || '??? ?? ??? ?????');
+    }
+  };
+
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  if (!mounted || !isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-modal flex h-screen w-screen items-center justify-center overflow-hidden">
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-foreground/40 backdrop-blur-sm"
+        />
+      </AnimatePresence>
+
+      <motion.div
+        initial={{ y: '100%', opacity: 0 }}
+        animate={{ y: '0%', opacity: 1 }}
+        exit={{ y: '100%', opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+        className="relative z-10 flex h-screen w-screen flex-col bg-card shadow-lg"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="??????"
+              className="-me-1 rounded-full p-1 hover:bg-muted"
+            >
+              <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
+            </button>
+            <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <MapPin aria-hidden="true" className="h-4 w-4 text-primary" />
+              ??????????? ?????: {productTitle}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="????"
+            className="flex items-center justify-center rounded-full p-1.5 transition-colors hover:bg-muted"
+          >
+            <X aria-hidden="true" className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="relative flex min-h-0 w-full flex-1 flex-col md:flex-row">
+          <div className="hidden min-h-0 w-[380px] shrink-0 flex-col gap-3 overflow-y-auto border-e border-border bg-card p-4 md:flex">
+            {sellers.map((seller) => {
+              const isSelected = activeSellerId === seller.id;
+              return (
+                <div
+                  key={seller.id}
+                  onClick={() => handleSelectSeller(seller)}
+                  className={cn(
+                    'flex h-fit cursor-pointer flex-col overflow-hidden rounded-md border transition-colors',
+                    isSelected
+                      ? 'border-primary bg-accent/50 p-4 gap-3'
+                      : 'border-border bg-card p-3.5 gap-0 hover:border-primary/40'
+                  )}
+                >
+                  <div className="flex w-full items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+                      {seller.shop.logo ? (
+                        <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
+                      ) : (
+                        <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-shop">{seller.shop.title}</span>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-2xs text-muted-foreground">??? ??</span>
+                        <span className="text-muted-foreground">|</span>
+                        <span className="text-2xs font-bold text-success">?????? ????</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border pt-3">
+                    <div className="flex flex-col">
+                      {seller.hasDiscount ? (
+                        <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
+                          {formatPrice(seller.retailPriceRaw / 10)}
+                        </span>
+                      ) : null}
+                      <span className="text-xs font-bold leading-none text-foreground md:text-sm">
+                        {seller.finalPrice}
+                      </span>
+                    </div>
+
+                    {seller.hasDiscount ? (
+                      <span className="rounded-sm bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground">
+                        {seller.discountPercentage}% ?????
+                      </span>
+                    ) : null}
+
+                    <Button
+                      variant={isSelected ? 'primary' : 'outline'}
+                      size="sm"
+                      className="h-8 px-3.5 text-2xs font-bold"
+                    >
+                      {isSelected ? '????? ???????' : '?????? ??????'}
+                    </Button>
+                  </div>
+
+                  <AnimatePresence>
+                    {isSelected ? (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="mt-1 flex w-full flex-col gap-3.5 overflow-hidden border-t border-dashed border-border pt-3"
+                      >
+                        <div className="flex w-full flex-col gap-1">
+                          <span className="text-2xs font-bold text-muted-foreground">???? ???????:</span>
+                          <p className="text-xs font-bold leading-relaxed text-foreground">{seller.shop.address}</p>
+                        </div>
+
+                        <div className="flex w-full gap-2">
+                          <a
+                            href={`tel:${seller.shop.tell}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border text-xs font-bold text-foreground shadow-xs transition-colors hover:bg-muted"
+                          >
+                            <Phone aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                            <span>???? ?? ???????</span>
+                          </a>
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${seller.shop.latitude},${seller.shop.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md bg-primary text-xs font-bold text-primary-foreground shadow-xs transition-colors hover:bg-primary-hover"
+                          >
+                            <Navigation aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                            <span>???????? ??? ????</span>
+                          </a>
+                        </div>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="relative z-0 h-full min-h-0 flex-1">
+            {!mapLoaded ? (
+              <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-2 bg-card/80">
+                <Loader2 aria-hidden="true" className="h-7 w-7 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">?? ??? ???????? ????...</span>
+              </div>
+            ) : null}
+            <div ref={mapContainerRef} className="h-full w-full" />
+          </div>
+
+          <div className="absolute inset-x-4 bottom-4 z-10 flex items-end gap-3 overflow-x-auto py-1 scrollbar-none md:hidden">
+            {sellers.map((seller) => {
+              const isSelected = activeSellerId === seller.id;
+              return (
+                <div
+                  key={seller.id}
+                  ref={(el) => { cardRefs.current[seller.id] = el; }}
+                  onClick={() => handleSelectSeller(seller)}
+                  className={cn(
+                    'flex h-fit min-w-[280px] max-w-[280px] shrink-0 flex-col overflow-hidden rounded-md border bg-card shadow-lg transition-colors',
+                    isSelected ? 'border-primary p-4 gap-3' : 'border-border p-3.5 gap-0'
+                  )}
+                >
+                  <div className="flex w-full items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+                      {seller.shop.logo ? (
+                        <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
+                      ) : (
+                        <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-shop">{seller.shop.title}</span>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="text-2xs text-muted-foreground">??? ??</span>
+                        <span className="text-muted-foreground">|</span>
+                        <span className="text-2xs font-bold text-success">?????? ????</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border pt-3">
+                    <div className="flex flex-col">
+                      {seller.hasDiscount ? (
+                        <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
+                          {formatPrice(seller.retailPriceRaw / 10)}
+                        </span>
+                      ) : null}
+                      <span className="text-xs font-bold leading-none text-foreground md:text-sm">
+                        {seller.finalPrice}
+                      </span>
+                    </div>
+
+                    <Button
+                      variant={isSelected ? 'primary' : 'outline'}
+                      size="sm"
+                      className="h-8 px-3.5 text-2xs font-bold"
+                    >
+                      {isSelected ? '????? ???????' : '?????? ??????'}
+                    </Button>
+                  </div>
+
+                  {isSelected ? (
+                    <div className="mt-1 flex w-full flex-col gap-3 border-t border-dashed border-border pt-3">
+                      <div className="flex w-full flex-col gap-1">
+                        <span className="text-2xs font-bold text-muted-foreground">???? ???????:</span>
+                        <p className="text-xs font-bold leading-relaxed text-foreground">{seller.shop.address}</p>
+                      </div>
+
+                      <div className="flex w-full gap-2">
+                        <a
+                          href={`tel:${seller.shop.tell}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border bg-card text-xs font-bold text-foreground shadow-xs"
+                        >
+                          <Phone aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                          <span>????</span>
+                        </a>
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${seller.shop.latitude},${seller.shop.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md bg-primary text-xs font-bold text-primary-foreground shadow-xs"
+                        >
+                          <Navigation aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                          <span>????????</span>
+                        </a>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md">
+          <ModalHeader onClose={() => setReportShop(null)}>
+            <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
+              ????? ??? ?? ???? ??????? {reportShop?.shop.title}
+            </ModalTitle>
+          </ModalHeader>
+          <ModalBody className="flex flex-col gap-4 p-0 pt-4">
+            <Select
+              label="???? ????? *"
+              placeholder="???? ????? ?? ?????? ????..."
+              value={selectedSubjectId}
+              onChange={(e) => setSelectedSubjectId(e.target.value)}
+              options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+            />
+
+            <TextArea
+              label="??????? (???????)"
+              placeholder="??????? ??? ?? ????? ???????..."
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              className="h-24"
+            />
+
+            <div className="mt-4 flex w-full gap-2.5">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setReportShop(null);
+                  setSelectedSubjectId('');
+                  setReportDescription('');
+                }}
+                className="h-10 flex-1 text-xs font-bold"
+              >
+                ??????
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleReportSubmit}
+                isLoading={submitReport.isPending}
+                className="h-10 flex-1 text-xs font-bold"
+              >
+                ??? ????? ???
+              </Button>
+            </div>
+          </ModalBody>
+        </Modal>
+      </motion.div>
+    </div>,
+    document.body
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\PickupAlert.tsx
+=====================================================
+'use client';
+
+import { MapPin } from 'lucide-react';
+
+export function PickupAlert() {
+  return (
+    <div className="mt-3 flex w-full select-none items-start gap-3.5 rounded-md border border-accent bg-accent/40 p-4">
+      <MapPin aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+      <div className="min-w-0 flex-1">
+        <span className="block text-xs font-bold text-foreground">امکان تحویل حضوری</span>
+        <p className="mt-1 text-2xs leading-relaxed text-muted-foreground md:text-xs">
+          شما می‌توانید علاوه بر اینکه سفارش‌های خود را در محل موردنظرتان تحویل بگیرید، این امکان فراهم است که سفارش‌تان را مستقیم از درب فروشگاه تحویل بگیرید.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ProductCommentsSection.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { Star, ThumbsUp, ThumbsDown, User, MessageSquare, ArrowLeft, Clock } from 'lucide-react';
+import { useGetProductComments, useGetProductCommentsAverage } from '@/domains/front/product/hooks/product.hooks';
+import { useCreateComment, useLikeComment, useUnlikeComment } from '@/domains/front/comment/hooks/comment.hooks';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+import { toPersianDigits } from '@/core/utils/formatters';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+
+function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: { path: string; className?: string; loop?: boolean }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/')
+          ? path.replace('/anumations/', '/animations/')
+          : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+        if (!animationData || !isMounted || !containerRef.current) return;
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch {}
+    };
+
+    init();
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
+
+export interface ProductCommentsSectionProps {
+  productId: string;
+  productTitle?: string;
+}
+
+export function ProductCommentsSection({ productId, productTitle = '???? ????' }: ProductCommentsSectionProps) {
+  const [orderBy, setOrderBy] = React.useState('Newest');
+  const [page, setPage] = React.useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = React.useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = React.useState(false);
+
+  const { user } = useAuth();
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '?????';
+
+  const [rate, setRate] = React.useState(0);
+  const [hoverRate, setHoverRate] = React.useState(0);
+  const [commentText, setCommentText] = React.useState('');
+  const [isIncognito, setIsIncognito] = React.useState(false);
+
+  const { data: average } = useGetProductCommentsAverage(productId);
+  const { data: commentsResponse, isLoading } = useGetProductComments(productId, orderBy, page);
+  const createComment = useCreateComment();
+  const likeComment = useLikeComment();
+  const unlikeComment = useUnlikeComment();
+
+  const comments = commentsResponse?.items || [];
+
+  const handleCommentSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (rate === 0) {
+      showToast.error('????? ?????? ??? ?? ??? ???? ?? ?????? ????');
+      return;
+    }
+    if (commentText.trim().length < 10) {
+      showToast.error('??? ??? ??? ???? ????? ?? ??????? ????');
+      return;
+    }
+    try {
+      await createComment.mutateAsync({ productId, comment: commentText, rate, isIncognito });
+      setRate(0);
+      setCommentText('');
+      setIsIncognito(false);
+      setIsWriteModalOpen(false);
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
+      showToast.error(error.userMessage || '??? ?? ??? ?????? ???');
+    }
+  };
+
+  const handleLike = (comment: any) => {
+    if (comment.userLiked) unlikeComment.mutate(comment.id);
+    else likeComment.mutate({ productCommentId: comment.id, likeStatus: 'Like' });
+  };
+
+  const handleDislike = (comment: any) => {
+    if (comment.userDisLiked) unlikeComment.mutate(comment.id);
+    else likeComment.mutate({ productCommentId: comment.id, likeStatus: 'Dislike' });
+  };
+
+  return (
+    <div className="mt-6 flex w-full flex-col gap-6">
+      <h3 className="text-sm font-bold text-foreground md:text-base">?????? ? ????? ???????</h3>
+
+      <div className="grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-10">
+        <div className="flex w-full flex-col gap-5 rounded-lg border border-border bg-card p-5 shadow-xs lg:sticky lg:top-[196px] lg:col-span-3">
+          {average ? (
+            <div className="flex w-full flex-col items-center gap-5">
+              <div className="flex flex-col items-center justify-center gap-2 text-center">
+                <span className="text-4xl font-bold text-foreground">
+                  {toPersianDigits(average.averageRate.toFixed(1))}
+                </span>
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      aria-hidden="true"
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        i < Math.round(average.averageRate)
+                          ? 'fill-warning text-warning'
+                          : 'text-border'
+                      )}
+                    />
+                  ))}
+                </div>
+                <span className="mt-1 text-2xs font-bold text-muted-foreground">
+                  ?? {toPersianDigits(average.allRatesCount)} ?????? ??? ???
+                </span>
+              </div>
+
+              <div className="flex w-full flex-col gap-2.5 border-t border-dashed border-border pt-4">
+                {[
+                  { label: '? ?????', value: average.starPercentages.five },
+                  { label: '? ?????', value: average.starPercentages.four },
+                  { label: '? ?????', value: average.starPercentages.three },
+                  { label: '? ?????', value: average.starPercentages.two },
+                  { label: '? ?????', value: average.starPercentages.one },
+                ].map((star, idx) => (
+                  <div key={idx} className="flex w-full items-center gap-3.5 text-xs text-muted-foreground">
+                    <span className="w-11 shrink-0 font-bold">{star.label}</span>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        style={{ width: `${star.value}%` }}
+                        className="absolute inset-y-0 end-0 rounded-full bg-warning"
+                      />
+                    </div>
+                    <span className="w-8 shrink-0 font-bold">{toPersianDigits(star.value)}%</span>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsWriteModalOpen(true)}
+                className="mt-2 flex h-10 w-full items-center gap-1.5 border-shop/40 text-xs font-bold text-shop hover:bg-shop/5"
+              >
+                <MessageSquare aria-hidden="true" className="h-4 w-4" />
+                <span>?????? ??? ?? ???????</span>
+              </Button>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex w-full flex-col gap-4 lg:col-span-7">
+          <div className="flex items-center gap-4 overflow-x-auto border-b border-dashed border-border pb-2.5 py-1 scrollbar-none">
+            <span className="shrink-0 text-xs font-bold text-muted-foreground">????? ?? ????:</span>
+            {[
+              { value: 'Newest', label: '???????????' },
+              { value: 'Oldest', label: '?????????????' },
+              { value: 'MostLike', label: '???????????' },
+              { value: 'LeastLike', label: '?????? ??????' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  setOrderBy(opt.value);
+                  setPage(1);
+                }}
+                className={cn(
+                  'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none',
+                  orderBy === opt.value
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {isLoading ? (
+              <span className="text-xs text-muted-foreground">?? ??? ??? ?????????...</span>
+            ) : comments.length > 0 ? (
+              comments.map((comment: any) => (
+                <div key={comment.id} className="flex gap-4 rounded-md border border-border bg-card p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                    <User aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-foreground">{comment.creator}</span>
+                        {(comment as any).isConfirmed === false ? (
+                          <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-2xs font-bold text-warning">
+                            <Clock aria-hidden="true" className="h-3 w-3" />
+                            ?? ??? ?????
+                          </span>
+                        ) : null}
+                      </div>
+                      <span className="text-2xs text-muted-foreground">
+                        {toPersianDigits(comment.createDateFormatted)}
+                      </span>
+                    </div>
+
+                    <div className="mt-1 flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          aria-hidden="true"
+                          className={cn(
+                            'h-3 w-3 shrink-0',
+                            i < comment.rate ? 'fill-warning text-warning' : 'text-border'
+                          )}
+                        />
+                      ))}
+                    </div>
+
+                    <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">{comment.comment}</p>
+
+                    {comment.userBoughtFrom ? (
+                      <span className="mt-3 inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-2xs font-bold text-success">
+                        ?????? ??? ???? ?? ??????? {comment.userBoughtFrom}
+                      </span>
+                    ) : null}
+
+                    <div className="mt-4 flex items-center justify-end gap-4 border-t border-dashed border-border pt-2.5">
+                      <button
+                        type="button"
+                        onClick={() => handleLike(comment)}
+                        disabled={likeComment.isPending || unlikeComment.isPending}
+                        className={cn(
+                          'flex items-center gap-1 text-2xs font-bold transition-colors',
+                          comment.userLiked ? 'text-success' : 'text-muted-foreground hover:text-success'
+                        )}
+                      >
+                        <ThumbsUp aria-hidden="true" className="h-3.5 w-3.5" />
+                        <span>({toPersianDigits(comment.likes)})</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDislike(comment)}
+                        disabled={likeComment.isPending || unlikeComment.isPending}
+                        className={cn(
+                          'flex items-center gap-1 text-2xs font-bold transition-colors',
+                          comment.userDisLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
+                        )}
+                      >
+                        <ThumbsDown aria-hidden="true" className="h-3.5 w-3.5" />
+                        <span>({toPersianDigits(comment.dislikes)})</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <span className="text-xs text-muted-foreground">
+                  ??? ??????? ???? ??? ???? ??? ???? ???. ????? ???? ????? ?? ??? ??? ?? ??? ??????!
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsWriteModalOpen(true)}
+                  className="flex shrink-0 items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+                >
+                  <span>??? ??????</span>
+                  <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="text-sm font-bold text-foreground">??? ?????? ????</ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="p-5 pt-4">
+          <form onSubmit={handleCommentSubmit} className="flex w-full flex-col gap-4">
+            <div className="flex w-full flex-col gap-1 border-b border-border pb-3">
+              <span className="text-2xs font-bold text-muted-foreground">??? ????:</span>
+              <span className="text-xs font-bold leading-relaxed text-foreground">
+                {toPersianDigits(productTitle)}
+              </span>
+            </div>
+
+            <div className="flex w-full flex-col items-center justify-center gap-2 border-b border-dashed border-border py-2 text-center">
+              <span className="text-xs font-bold text-muted-foreground">?????? ??? ?? ???? *</span>
+              <div className="mt-1 flex items-center gap-1.5" dir="ltr">
+                {[1, 2, 3, 4, 5].map((starValue) => {
+                  const isHighlighted = (hoverRate || rate) >= starValue;
+                  return (
+                    <button
+                      key={starValue}
+                      type="button"
+                      onMouseEnter={() => setHoverRate(starValue)}
+                      onMouseLeave={() => setHoverRate(0)}
+                      onClick={() => setRate(starValue)}
+                      aria-label={`${starValue} ?????`}
+                      className="p-1 outline-none"
+                    >
+                      <Star
+                        aria-hidden="true"
+                        className={cn(
+                          'h-7 w-7 shrink-0',
+                          isHighlighted ? 'fill-warning text-warning' : 'text-border'
+                        )}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <TextArea
+              label="??? ??? *"
+              placeholder="??? ??? ?? ?? ???? ??? ???? ?? ?????? ???????..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="h-28 text-xs"
+              required
+            />
+
+            <div className="mt-1 flex w-full items-start gap-2.5 border-t border-dashed border-border pt-4 select-none">
+              <Checkbox checked={isIncognito} onChange={(checked) => setIsIncognito(checked)} />
+              <div>
+                <span className="block text-xs font-bold text-foreground">????? ?? ???? ??????</span>
+                <span className="mt-0.5 block text-2xs text-muted-foreground">
+                  ?? ???? ?????????? ??? ??? ?? ??????? ????? ???? ?????? ??.
+                </span>
+              </div>
+            </div>
+          </form>
+        </ModalBody>
+
+        <div className="flex w-full shrink-0 flex-row gap-2.5 border-t border-border p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsWriteModalOpen(false)}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            ??????
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            isLoading={createComment.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+            onClick={() => handleCommentSubmit()}
+          >
+            ??? ??? ?????
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} className="w-full max-w-md">
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <LottiePlayer path="/anumations/Rate-cong.json" className="mx-auto h-72 w-72 max-w-full" loop={false} />
+
+          <h4 className="text-base font-bold leading-relaxed text-foreground">
+            {userName} ????? ?? ????? ??? ??? ???????
+          </h4>
+
+          <p className="text-xs font-bold text-shop">?? ????? ??? ??? ?? ???? ?? ??? ????? ????</p>
+
+          <p className="mx-auto max-w-xs text-xs leading-relaxed text-muted-foreground">
+            ??? ??? ??? ?? ? ?? ?? ????? ? ????? ????????? ???? ?????? ?? ?? ?????? ?????? ??????.
+          </p>
+
+          <Button
+            variant="primary"
+            onClick={() => setIsSuccessModalOpen(false)}
+            className="mt-3 h-8 px-4 text-2xs font-bold shadow-xs"
+          >
+            ????? ???
+          </Button>
+        </ModalBody>
+      </Modal>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ProductGallery.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ZoomIn, ZoomOut, RotateCcw, X, ChevronLeft, ChevronRight, Maximize2, ImageOff, Ticket } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+
+export interface ProductGalleryProps {
+  images: any[];
+  title: string;
+  hasDiscount?: boolean;
+  discountPercent?: number;
+  hasTimedDiscount?: boolean;
+  discountExpiration?: string | null;
+}
+
+function useCountdown(expiration?: string | null) {
+  const [remain, setRemain] = React.useState<{ h: number; m: number; s: number } | null>(null);
+  React.useEffect(() => {
+    if (!expiration) {
+      setRemain(null);
+      return;
+    }
+    const calc = () => {
+      const diff = +new Date(expiration) - Date.now();
+      if (diff <= 0) {
+        setRemain({ h: 0, m: 0, s: 0 });
+        return;
+      }
+      setRemain({
+        h: Math.floor(diff / (1000 * 60 * 60)),
+        m: Math.floor((diff / 1000 / 60) % 60),
+        s: Math.floor((diff / 1000) % 60),
+      });
+    };
+    calc();
+    const iv = setInterval(calc, 1000);
+    return () => clearInterval(iv);
+  }, [expiration]);
+  return remain;
+}
+
+export function ProductGallery({
+  images = [],
+  title,
+  hasDiscount,
+  discountPercent,
+  hasTimedDiscount,
+  discountExpiration,
+}: ProductGalleryProps) {
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [isFullscreenOpen, setIsFullscreenOpen] = React.useState(false);
+  const [zoomScale, setZoomScale] = React.useState(1);
+  const [panOffset, setPanOffset] = React.useState({ x: 0, y: 0 });
+
+  const countdown = useCountdown(hasTimedDiscount ? discountExpiration : null);
+
+  const validImages = React.useMemo(() => (images || []).filter(Boolean), [images]);
+  const safeIndex = activeIndex < validImages.length ? activeIndex : 0;
+
+  React.useEffect(() => {
+    if (!isFullscreenOpen) return;
+    document.body.style.overflow = 'hidden';
+    const handlePopState = () => setIsFullscreenOpen(false);
+    window.history.pushState({ modalOpen: 'gallery-modal' }, '');
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isFullscreenOpen]);
+
+  const handleZoomIn = () => setZoomScale((prev) => Math.min(prev + 0.5, 4));
+  const handleZoomOut = () =>
+    setZoomScale((prev) => {
+      const next = Math.max(prev - 0.5, 1);
+      if (next === 1) setPanOffset({ x: 0, y: 0 });
+      return next;
+    });
+
+  const handleResetZoom = () => {
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleCloseFullscreen = () => {
+    handleResetZoom();
+    setIsFullscreenOpen(false);
+    if (window.history.state?.modalOpen === 'gallery-modal') window.history.back();
+  };
+
+  const resolveImageUrl = (item: any): string => {
+    if (!item) return '';
+    const rawPath = typeof item === 'string' ? item : item.url || item.image || '';
+    if (!rawPath) return '';
+    if (rawPath.startsWith('http')) return rawPath;
+    try {
+      return getFullUrl(rawPath);
+    } catch {
+      return `https://api.yadakchi.com${rawPath.startsWith('/') ? rawPath : `/${rawPath}`}`;
+    }
+  };
+
+  const currentImageUrl = resolveImageUrl(validImages[safeIndex]);
+
+  if (validImages.length === 0 || !currentImageUrl) {
+    return (
+      <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-lg border border-border bg-muted p-4 text-muted-foreground">
+        <ImageOff aria-hidden="true" className="h-10 w-10 opacity-40" />
+        <span className="text-xs">?????? ???? ??? ???? ??? ???? ???</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full select-none flex-col gap-4">
+      <div className="group relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-lg border border-border bg-card p-4 shadow-xs">
+        {hasTimedDiscount ? (
+          <div className="absolute end-3 top-3 z-10 flex items-center gap-1.5 rounded-sm bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
+            <Ticket aria-hidden="true" className="h-3.5 w-3.5" />
+            <span>????? {toPersianDigits(discountPercent || 0)}%</span>
+            {countdown ? (
+              <span className="rounded-sm bg-destructive-foreground/20 px-1.5 py-0.5 text-2xs" dir="ltr">
+                {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:
+                {String(countdown.s).padStart(2, '0')}
+              </span>
+            ) : null}
+          </div>
+        ) : hasDiscount ? (
+          <div className="absolute end-3 top-3 z-10 rounded-sm bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
+            ????? {toPersianDigits(discountPercent || 0)}%
+          </div>
+        ) : null}
+
+        <img
+          src={currentImageUrl}
+          alt={`${title} - ${safeIndex + 1}`}
+          onClick={() => setIsFullscreenOpen(true)}
+          className="h-full w-full cursor-zoom-in object-contain"
+        />
+        <button
+          type="button"
+          onClick={() => setIsFullscreenOpen(true)}
+          aria-label="?????? ????"
+          className="absolute bottom-3 start-3 rounded-md border border-border bg-card/80 p-2 text-muted-foreground shadow-xs outline-none backdrop-blur-sm transition-colors hover:bg-primary hover:text-primary-foreground"
+        >
+          <Maximize2 aria-hidden="true" className="h-4 w-4" />
+        </button>
+      </div>
+
+      {validImages.length > 1 ? (
+        <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
+          {validImages.map((img, idx) => {
+            const thumbUrl = resolveImageUrl(img);
+            if (!thumbUrl) return null;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveIndex(idx)}
+                aria-label={`????? ${idx + 1}`}
+                aria-current={idx === safeIndex}
+                className={cn(
+                  'h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border bg-card p-1 outline-none transition-colors',
+                  idx === safeIndex ? 'border-primary' : 'hover:border-primary/40'
+                )}
+              >
+                <img src={thumbUrl} alt="" className="h-full w-full rounded-sm object-contain" />
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
+      <AnimatePresence>
+        {isFullscreenOpen ? (
+          <div className="fixed inset-0 z-modal flex h-screen w-screen flex-col bg-card/95 backdrop-blur-md">
+            <div className="flex shrink-0 items-center justify-between border-b border-border bg-card/20 px-6 py-4">
+              <span className="max-w-xs truncate text-xs font-bold text-foreground md:max-w-xl md:text-sm">
+                ???? ???? ?????: {title}
+              </span>
+              <button
+                type="button"
+                onClick={handleCloseFullscreen}
+                aria-label="????"
+                className="rounded-full p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <X aria-hidden="true" className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="relative min-h-0 w-full flex-1 overflow-hidden">
+              <div className="relative flex h-full w-full max-w-4xl items-center justify-center p-4 touch-none">
+                <motion.img
+                  src={currentImageUrl}
+                  alt=""
+                  drag={zoomScale > 1}
+                  dragConstraints={zoomScale > 1 ? false : { left: 0, right: 0, top: 0, bottom: 0 }}
+                  dragElastic={0.15}
+                  onDragEnd={(_, info) => {
+                    if (zoomScale === 1) {
+                      if (info.offset.x > 80) {
+                        setActiveIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+                      } else if (info.offset.x < -80) {
+                        setActiveIndex((prev) => (prev + 1) % validImages.length);
+                      }
+                    }
+                  }}
+                  animate={{
+                    scale: zoomScale,
+                    x: zoomScale > 1 ? panOffset.x : 0,
+                    y: zoomScale > 1 ? panOffset.y : 0,
+                  }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                  onUpdate={(latest: any) => {
+                    if (zoomScale > 1) setPanOffset({ x: latest.x || 0, y: latest.y || 0 });
+                  }}
+                  className="pointer-events-none max-h-full max-w-full select-none object-contain"
+                />
+              </div>
+
+              {validImages.length > 1 && zoomScale === 1 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+                      handleResetZoom();
+                    }}
+                    aria-label="????? ????"
+                    className="absolute end-6 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-card p-2.5 text-foreground shadow-sm outline-none transition-colors hover:bg-primary hover:text-primary-foreground md:flex"
+                  >
+                    <ChevronRight aria-hidden="true" className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveIndex((prev) => (prev + 1) % validImages.length);
+                      handleResetZoom();
+                    }}
+                    aria-label="????? ????"
+                    className="absolute start-6 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-card p-2.5 text-foreground shadow-sm outline-none transition-colors hover:bg-primary hover:text-primary-foreground md:flex"
+                  >
+                    <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+                  </button>
+                </>
+              ) : null}
+            </div>
+
+            <div className="flex shrink-0 items-center justify-center gap-3 border-t border-border bg-card/20 p-4">
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                disabled={zoomScale >= 4}
+                aria-label="??????????"
+                className="rounded-md border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30"
+              >
+                <ZoomIn aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                disabled={zoomScale === 1}
+                aria-label="??????????"
+                className="rounded-md border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30"
+              >
+                <ZoomOut aria-hidden="true" className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleResetZoom}
+                disabled={zoomScale === 1 && panOffset.x === 0 && panOffset.y === 0}
+                aria-label="????????"
+                className="rounded-md border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30"
+              >
+                <RotateCcw aria-hidden="true" className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ProductHeader.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { Share2, Scale, Star, Heart, Loader2, AlertTriangle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Typography } from '@/components/primitives/Typography';
+import { ProductDetailsViewModel } from '@/domains/front/product/types/view.types';
+import {
+  useIsUserFavoriteProduct,
+  useAddFavorite,
+  useDeleteFavorite,
+  useSubmitProductReport,
+} from '@/domains/front/product/hooks/product.hooks';
+import { useGetReportSubjects } from '@/domains/front/shop/hooks/shop.hooks';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@/components/composites/Modal/Modal';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Button } from '@/components/primitives/Button/Button';
+import { toPersianDigits } from '@/core/utils/formatters';
+import { showToast } from '@/core/utils/toast';
+import { cn } from '@/design-system/utils/cn';
+
+export interface ProductHeaderProps {
+  product: ProductDetailsViewModel;
+  onScrollToComments: () => void;
+  onScrollToInquiries: () => void;
+}
+
+export function ProductHeader({ product, onScrollToComments, onScrollToInquiries }: ProductHeaderProps) {
+  const [mounted, setMounted] = React.useState(false);
+  const queryClient = useQueryClient();
+  const { data: rawIsFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
+  const addFavorite = useAddFavorite(product.code);
+  const deleteFavorite = useDeleteFavorite(product.code);
+  const submitProductReport = useSubmitProductReport();
+  const { data: reportSubjects } = useGetReportSubjects('ProductReport');
+
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
+  const [localIsFavorite, setLocalIsFavorite] = React.useState<boolean | undefined>(undefined);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (rawIsFavorite !== undefined) setLocalIsFavorite(rawIsFavorite);
+  }, [rawIsFavorite]);
+
+  const handleFavoriteToggle = async () => {
+    const previousState = localIsFavorite;
+    const nextState = !previousState;
+    setLocalIsFavorite(nextState);
+    try {
+      if (previousState) {
+        await deleteFavorite.mutateAsync(product.id);
+        showToast.success('از علاقه‌مندی‌ها حذف شد');
+      } else {
+        await addFavorite.mutateAsync(product.id);
+        showToast.success('به علاقه‌مندی‌ها اضافه شد');
+      }
+    } catch (err: any) {
+      setLocalIsFavorite(previousState);
+      if (
+        err?.message?.includes('قبلا ثبت شده است') ||
+        err?.userMessage?.includes('قبلا ثبت شده است')
+      ) {
+        setLocalIsFavorite(true);
+        queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], true);
+        return;
+      }
+      showToast.error(err.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
+    }
+  };
+
+  const handleShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: product.title, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast.success('لینک صفحه کپی شد');
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!selectedSubjectId) {
+      showToast.error('لطفاً دلیل گزارش کالا را انتخاب کنید');
+      return;
+    }
+    try {
+      await submitProductReport.mutateAsync({
+        productId: product.id,
+        reportSubjectId: selectedSubjectId,
+        description: reportDescription,
+      });
+      showToast.success('گزارش خطای کالا با موفقیت ثبت شد و توسط تیم پشتیبانی بررسی خواهد گردید');
+      setIsReportModalOpen(false);
+      setSelectedSubjectId('');
+      setReportDescription('');
+    } catch (error: any) {
+      showToast.error(error.userMessage || 'خطا در ثبت گزارش خطا');
+    }
+  };
+
+  const subjectsList = reportSubjects || [];
+
+  if (!mounted) {
+    return (
+      <div className="flex w-full select-none flex-col gap-4 animate-pulse">
+        <div className="h-6 w-1/4 rounded-md bg-border" />
+        <div className="mt-2 h-8 w-3/4 rounded-md bg-border" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full select-none flex-col gap-4">
+      <div className="flex w-full items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center gap-3">
+          <span className="text-2xs font-bold text-muted-foreground">
+            کد کالا: {toPersianDigits(product.code)}
+          </span>
+          <span className="text-2xs text-muted-foreground">|</span>
+          <button
+            type="button"
+            onClick={() => setIsReportModalOpen(true)}
+            className="flex items-center gap-0.5 text-2xs font-bold text-muted-foreground outline-none hover:text-destructive"
+          >
+            <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5" />
+            <span>گزارش کالا</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleShare}
+            aria-label="اشتراک‌گذاری"
+            className="rounded-md border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+          >
+            <Share2 aria-hidden="true" className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="مقایسه"
+            className="rounded-md border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+          >
+            <Scale aria-hidden="true" className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleFavoriteToggle}
+            disabled={isFavLoading || addFavorite.isPending || deleteFavorite.isPending}
+            aria-label={localIsFavorite ? 'حذف از علاقه‌مندی' : 'افزودن به علاقه‌مندی'}
+            aria-pressed={localIsFavorite}
+            className="select-none rounded-md border border-border p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive disabled:opacity-40"
+          >
+            {addFavorite.isPending || deleteFavorite.isPending ? (
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Heart
+                aria-hidden="true"
+                className={cn(
+                  'h-4 w-4 transition-colors duration-fast',
+                  localIsFavorite ? 'fill-destructive text-destructive' : 'text-muted-foreground'
+                )}
+              />
+            )}
+          </button>
+        </div>
+      </div>
+
+      <Typography variant="h3" className="font-bold leading-relaxed text-foreground">
+        {toPersianDigits(product.title)}
+      </Typography>
+
+      <div className="mt-1 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+        <button
+          type="button"
+          onClick={onScrollToComments}
+          className="flex cursor-pointer items-center gap-1 outline-none"
+        >
+          <Star aria-hidden="true" className="h-4 w-4 shrink-0 fill-warning text-warning" />
+          <span className="font-bold text-foreground">{toPersianDigits(product.averageRate)}</span>
+          <span>از {toPersianDigits(product.rateCount)} نظر</span>
+        </button>
+        <span className="text-muted-foreground">|</span>
+        <button
+          type="button"
+          onClick={onScrollToInquiries}
+          className="hover:text-primary hover:underline"
+        >
+          تبادل پرسش و پاسخ
+        </button>
+      </div>
+
+      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsReportModalOpen(false)}>
+          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
+            گزارش خطای کالا
+          </ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="flex flex-col gap-4 p-5 pt-4">
+          <Select
+            label="دلیل گزارش *"
+            placeholder="دلیل گزارش را انتخاب کنید..."
+            value={selectedSubjectId}
+            onChange={(e) => setSelectedSubjectId(e.target.value)}
+            options={subjectsList.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+          />
+
+          <TextArea
+            label="توضیحات (اختیاری)"
+            placeholder="جزییات مشکل را بنویسید..."
+            value={reportDescription}
+            onChange={(e) => setReportDescription(e.target.value)}
+            className="h-24 text-xs"
+          />
+        </ModalBody>
+
+        <ModalFooter className="gap-2.5 p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setIsReportModalOpen(false);
+              setSelectedSubjectId('');
+              setReportDescription('');
+            }}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="submit"
+            variant="destructive"
+            onClick={handleReportSubmit}
+            isLoading={submitProductReport.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            ثبت گزارش خطا
+          </Button>
+        </ModalFooter>
+      </Modal>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ProductInquiriesSection.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { User, MessageSquare, ThumbsUp, ThumbsDown, HelpCircle, ArrowLeft, Clock } from 'lucide-react';
+import { useGetProductInquiries } from '@/domains/front/product/hooks/product.hooks';
+import { useCreateInquiry, useLikeInquiry, useUnlikeInquiry } from '@/domains/front/inquiry/hooks/inquiry.hooks';
+import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+import { toPersianDigits } from '@/core/utils/formatters';
+
+export interface ProductInquiriesSectionProps {
+  productId: string;
+}
+
+export function ProductInquiriesSection({ productId }: ProductInquiriesSectionProps) {
+  const [orderBy, setOrderBy] = React.useState('Latest');
+  const [page, setPage] = React.useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = React.useState(false);
+  const [inquiryText, setInquiryText] = React.useState('');
+
+  const { data: inquiriesResponse, isLoading } = useGetProductInquiries(productId, orderBy, page);
+  const createInquiry = useCreateInquiry();
+  const likeInquiry = useLikeInquiry();
+  const unlikeInquiry = useUnlikeInquiry();
+
+  const inquiries = inquiriesResponse?.items || [];
+
+  const handleInquirySubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (inquiryText.trim().length < 5) {
+      showToast.error('??? ???? ??? ???? ????? ? ??????? ????');
+      return;
+    }
+    try {
+      await createInquiry.mutateAsync({ productId, comment: inquiryText });
+      showToast.success('???? ??? ?? ?????? ??? ?? ? ?? ?? ????? ?????? ????? ????? ???? ????? ??');
+      setInquiryText('');
+      setIsWriteModalOpen(false);
+    } catch (error: any) {
+      showToast.error(error?.userMessage || '??? ?? ??? ???? ???');
+    }
+  };
+
+  const handleLike = (inquiry: any) => {
+    if (inquiry.userLiked) unlikeInquiry.mutate(inquiry.id);
+    else likeInquiry.mutate({ productInquiryId: inquiry.id, likeStatus: 'Like' });
+  };
+
+  const handleDislike = (inquiry: any) => {
+    if (inquiry.userDisLiked) unlikeInquiry.mutate(inquiry.id);
+    else likeInquiry.mutate({ productInquiryId: inquiry.id, likeStatus: 'Dislike' });
+  };
+
+  return (
+    <div className="mt-6 flex w-full flex-col gap-6 pb-12">
+      <h3 className="text-sm font-bold text-foreground md:text-base">??????? ? ???????</h3>
+
+      <div className="flex flex-col items-center justify-between gap-4 border-b border-border pb-2.5 md:flex-row">
+        <div className="flex items-center gap-4 overflow-x-auto py-1 scrollbar-none">
+          <span className="shrink-0 text-xs font-bold text-muted-foreground">????? ?? ????:</span>
+          {[
+            { value: 'Latest', label: '????????' },
+            { value: 'Oldest', label: '??????????' },
+            { value: 'MostPopular', label: '????????' },
+            { value: 'MostReplied', label: '??????? ????' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setOrderBy(opt.value);
+                setPage(1);
+              }}
+              className={cn(
+                'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none',
+                orderBy === opt.value
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground'
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsWriteModalOpen(true)}
+          className="flex h-9 shrink-0 items-center gap-1 border-shop/40 text-xs font-bold text-shop hover:bg-shop/5"
+        >
+          <MessageSquare aria-hidden="true" className="h-3.5 w-3.5" />
+          <span>??? ?? ???? ??? ?? ??????</span>
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-5">
+        {isLoading ? (
+          <span className="text-xs text-muted-foreground">?? ??? ???????? ???????...</span>
+        ) : inquiries.length > 0 ? (
+          inquiries.map((inquiry: any) => (
+            <div key={inquiry.id} className="flex flex-col gap-4 rounded-md border border-border bg-card p-4">
+              <div className="flex w-full items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                  <User aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-foreground">{inquiry.creator}</span>
+                      {(inquiry as any).isConfirmed === false ? (
+                        <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-2xs font-bold text-warning">
+                          <Clock aria-hidden="true" className="h-3 w-3" />
+                          ?? ??? ?????
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="text-2xs text-muted-foreground">{inquiry.createDateFormatted}</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-foreground">{inquiry.comment}</p>
+                </div>
+              </div>
+
+              {inquiry.bestReply ? (
+                <div className="me-6 flex gap-3 rounded-e-md border-s-2 border-primary bg-accent/50 p-3.5 md:me-10">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-accent">
+                    <User aria-hidden="true" className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-xs font-bold text-primary">{inquiry.bestReply.creator} (???? ????)</span>
+                      <span className="text-2xs text-muted-foreground">{inquiry.bestReply.createDateFormatted}</span>
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{inquiry.bestReply.comment}</p>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex items-center justify-end gap-4 border-t border-dashed border-border pt-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleLike(inquiry)}
+                  disabled={likeInquiry.isPending || unlikeInquiry.isPending}
+                  className={cn(
+                    'flex items-center gap-1 text-2xs font-bold transition-colors',
+                    inquiry.userLiked ? 'text-success' : 'text-muted-foreground hover:text-success'
+                  )}
+                >
+                  <ThumbsUp aria-hidden="true" className="h-3.5 w-3.5" />
+                  <span>({toPersianDigits(inquiry.likes)})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDislike(inquiry)}
+                  disabled={likeInquiry.isPending || unlikeInquiry.isPending}
+                  className={cn(
+                    'flex items-center gap-1 text-2xs font-bold transition-colors',
+                    inquiry.userDisLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
+                  )}
+                >
+                  <ThumbsDown aria-hidden="true" className="h-3.5 w-3.5" />
+                  <span>({toPersianDigits(inquiry.dislikes)})</span>
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <span className="text-xs text-muted-foreground">
+              ??? ????? ???? ??? ???? ??? ???? ???. ????? ???? ??? ?? ??????!
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsWriteModalOpen(true)}
+              className="flex shrink-0 items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+            >
+              <span>??? ????</span>
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <HelpCircle aria-hidden="true" className="h-4 w-4 text-primary" />
+            ??? ?? ???? ?????? ?? ??????
+          </ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="p-5 pt-4">
+          <form onSubmit={handleInquirySubmit} className="flex w-full flex-col gap-4">
+            <TextArea
+              label="??? ???? ??? *"
+              placeholder="???? ??? ?? ?? ???? ??? ???? ???? ??????..."
+              value={inquiryText}
+              onChange={(e) => setInquiryText(e.target.value)}
+              className="h-28 text-xs"
+              required
+            />
+          </form>
+        </ModalBody>
+
+        <div className="flex w-full shrink-0 flex-row gap-2.5 border-t border-border p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsWriteModalOpen(false)}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            ??????
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            isLoading={createInquiry.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+            onClick={() => handleInquirySubmit()}
+          >
+            ??? ???? ?????
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ProductPageSkeleton.tsx
+=====================================================
+'use client';
+
+import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+
+export function ProductPageSkeleton() {
+  return (
+    <div className="flex w-full flex-col gap-8">
+      <div className="flex w-full flex-col items-start gap-8 lg:flex-row">
+        <div className="flex w-full flex-1 flex-col gap-6 lg:max-w-[70%]">
+          <div className="flex w-full flex-col gap-4 border-b border-border pb-3">
+            <Skeleton variant="text" className="h-3.5 w-24" />
+            <Skeleton variant="text" className="mt-2 h-8 w-3/4" />
+            <div className="mt-1 flex items-center gap-2">
+              <Skeleton variant="circle" className="h-4 w-4" />
+              <Skeleton variant="text" className="h-3.5 w-32" />
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-2.5">
+            <Skeleton variant="text" className="h-3.5 w-28" />
+            <div className="flex gap-2">
+              <Skeleton className="h-9 w-24 rounded-md" />
+              <Skeleton className="h-9 w-24 rounded-md" />
+              <Skeleton className="h-9 w-28 rounded-md" />
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-3.5">
+            <Skeleton variant="text" className="h-3.5 w-28" />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <Skeleton className="h-16 w-full rounded-md" />
+              <Skeleton className="h-16 w-full rounded-md" />
+              <Skeleton className="h-16 w-full rounded-md" />
+            </div>
+          </div>
+
+          <Skeleton className="h-20 w-full rounded-md" />
+
+          <div className="flex w-full flex-col gap-4">
+            <div className="flex gap-6 border-b border-border pb-2">
+              <Skeleton variant="text" className="h-5 w-28" />
+              <Skeleton variant="text" className="h-5 w-28" />
+            </div>
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-20 w-full rounded-md" />
+              <Skeleton className="h-20 w-full rounded-md" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex w-full shrink-0 flex-col gap-6 lg:w-[30%]">
+          <Skeleton className="aspect-[4/3] w-full rounded-lg" />
+          <Skeleton className="h-72 w-full rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ProductSideInvoice.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { Store, ShieldCheck, Truck, LineChart, Loader2, Sparkles, ShoppingBag, Info, Eye, Star, Bell } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button/Button';
+import { useAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { useGetProductPriceChart } from '@/domains/front/product/hooks/product.hooks';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { showToast } from '@/core/utils/toast';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl, toPersianDigits } from '@/core/utils/formatters';
+
+export interface ProductSideInvoiceProps {
+  product: any;
+  seller: any | null;
+  sellersCount?: number;
+}
+
+function LottiePlayer({ path, className = 'w-48 h-48', loop = false }: { path: string; className?: string; loop?: boolean }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/')
+          ? path.replace('/anumations/', '/animations/')
+          : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+        if (!animationData || !isMounted || !containerRef.current) return;
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch {}
+    };
+
+    init();
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
+
+export function ProductSideInvoice({ product, seller, sellersCount = 0 }: ProductSideInvoiceProps) {
+  const [isChartOpen, setIsChartOpen] = React.useState(false);
+  const [isNotifySuccessOpen, setIsNotifySuccessOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isNotifying, setIsNotifying] = React.useState(false);
+  const [metaIndex, setMetaIndex] = React.useState(0);
+  const [lottieKey, setLottieKey] = React.useState(0);
+
+  const addToBasket = useAddToBasket();
+  const { data: chartData, isLoading: isChartLoading } = useGetProductPriceChart(
+    product.id,
+    seller ? seller.type : 'New'
+  );
+
+  const metaItems = [
+    { icon: Info, text: `${toPersianDigits(product.salesCount || '۰')} خرید موفق` },
+    { icon: Eye, text: `${toPersianDigits(product.views || '۰')} بازدید اخیر` },
+    { icon: Star, text: `امتیاز ${toPersianDigits(product.averageRate || '۵')}` },
+  ];
+
+  React.useEffect(() => {
+    const iv = setInterval(() => setMetaIndex((i) => (i + 1) % 3), 3000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const handleAddToBasket = async () => {
+    if (!seller) return;
+    setIsSubmitting(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: seller.id, quantity: 1 });
+      showToast.success('قطعه با موفقیت به سبد خرید شما افزوده شد');
+    } catch {} finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleNotifyMe = async () => {
+    if (isNotifying) return;
+    setIsNotifying(true);
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      setLottieKey((k) => k + 1);
+      setIsNotifySuccessOpen(true);
+    } finally {
+      setIsNotifying(false);
+    }
+  };
+
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  const discountPercentage =
+    seller && seller.hasDiscount && seller.retailPriceRaw && seller.finalPriceRaw
+      ? Math.round(((seller.retailPriceRaw - seller.finalPriceRaw) / seller.retailPriceRaw) * 100)
+      : seller?.discountPercentage || 0;
+
+  const isLowStock = seller && seller.quantity > 0 && seller.quantity < 4;
+
+  return (
+    <Card className="flex w-full flex-col overflow-hidden">
+      {seller && seller.hasDiscount && discountPercentage > 0 ? (
+        <div className="w-full shrink-0 bg-destructive px-4 py-2 text-center text-xs font-bold text-destructive-foreground">
+          با تخفیف ویژه {toPersianDigits(discountPercentage)} درصد
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-4 p-5">
+        {seller ? (
+          <>
+            <div className="flex w-full items-center justify-between border-b border-border pb-3.5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+                  {seller.shop.logo ? (
+                    <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
+                  ) : (
+                    <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-bold text-shop md:text-sm">
+                    {seller.shop.title}
+                  </span>
+                  <span className="mt-0.5 block text-2xs text-muted-foreground">
+                    عملکرد عالی فروشنده
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="shrink-0 border-b border-shop pb-0.5 text-2xs font-bold text-shop outline-none transition-opacity hover:opacity-80"
+              >
+                همه فروشندگان ({formatPrice(sellersCount)})
+              </button>
+            </div>
+
+            <div className="flex w-full flex-col gap-3 border-b border-border pb-3.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0 text-success" />
+                <span className="font-bold text-foreground">
+                  {seller.warrantyTitle || 'ضمانت اصل بودن کالا'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Sparkles aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+                <span className="font-bold text-foreground">نوع قطعه: {seller.typeLabel}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Truck aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="font-bold text-foreground">
+                  ارسال از {(seller.shop as any).cityName || seller.shop.address?.split('،')[0] || 'فروشنده'} | {seller.dayOfDeliveryLabel}
+                </span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex w-full flex-col items-center justify-center gap-4 px-2 py-4 text-center">
+            <p className="text-sm leading-reading text-foreground">
+              این کالا فعلاً ناموجود است اما می‌توانید زنگوله را بزنید تا به محض موجود شدن، به شما خبر دهیم.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleNotifyMe}
+              disabled={isNotifying}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-destructive text-sm font-bold text-destructive-foreground shadow-xs transition-colors hover:bg-destructive/90 disabled:opacity-80 md:text-base"
+            >
+              {isNotifying ? (
+                <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
+              ) : (
+                <Bell aria-hidden="true" className="h-5 w-5" />
+              )}
+              <span>موجود شد خبرم کن</span>
+            </button>
+          </div>
+        )}
+
+        {seller ? (
+          <div className="relative flex h-8 w-full shrink-0 items-center justify-center overflow-hidden border-b border-dashed border-border py-3">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={metaIndex}
+                initial={{ y: 12, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -12, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="absolute inset-0 flex items-center justify-center gap-1.5 text-2xs font-bold text-foreground"
+              >
+                {(() => {
+                  const Icon = metaItems[metaIndex].icon;
+                  return <Icon aria-hidden="true" className="h-3.5 w-3.5 text-primary" />;
+                })()}
+                <span>{metaItems[metaIndex].text}</span>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        ) : null}
+
+        {isLowStock ? (
+          <div className="w-full rounded-md bg-destructive/10 py-1.5 text-center text-2xs font-bold text-destructive">
+            فقط {toPersianDigits(seller.quantity)} عدد در انبار باقی مانده
+          </div>
+        ) : null}
+
+        {seller ? (
+          <div className="flex w-full items-center justify-between pt-1">
+            <div className="flex flex-col">
+              <span className="mb-0.5 text-2xs text-muted-foreground">قیمت فروشنده:</span>
+              {seller.hasDiscount ? (
+                <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
+                  {seller.retailPrice}
+                </span>
+              ) : null}
+              <span className="text-base font-bold leading-none text-foreground md:text-lg">
+                {seller.finalPrice}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsChartOpen(true)}
+              aria-label="نمودار قیمت"
+              className="shrink-0 rounded-md border border-border p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-primary"
+            >
+              <LineChart aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
+
+        {seller ? (
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onClick={handleAddToBasket}
+            isLoading={isSubmitting || addToBasket.isPending}
+            className="mt-1 flex h-11 items-center justify-center gap-1.5 text-xs font-bold"
+          >
+            <ShoppingBag aria-hidden="true" className="h-4 w-4" />
+            <span>افزودن به سبد خرید</span>
+          </Button>
+        ) : null}
+      </div>
+
+      <Modal isOpen={isChartOpen} onClose={() => setIsChartOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsChartOpen(false)}>
+          <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <LineChart aria-hidden="true" className="h-4 w-4 text-shop" />
+            نمودار تغییرات قیمت فروش
+          </ModalTitle>
+        </ModalHeader>
+        <ModalBody className="p-0 pt-4 text-center">
+          {isChartLoading ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-12">
+              <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground">در حال لود نمودار قیمت...</span>
+            </div>
+          ) : chartData && chartData.prices && chartData.prices.length > 0 ? (
+            <div className="w-full py-2">
+              <PriceChart data={chartData} />
+            </div>
+          ) : (
+            <div className="w-full py-12 text-center text-xs text-muted-foreground">
+              دیتای تغییرات قیمتی برای این فروشنده در بازار ثبت نشده است.
+            </div>
+          )}
+          <Button
+            variant="outline"
+            fullWidth
+            onClick={() => setIsChartOpen(false)}
+            className="mt-4 h-10 text-xs font-bold"
+          >
+            متوجه شدم
+          </Button>
+        </ModalBody>
+      </Modal>
+
+      <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md">
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center">
+          <div className="mx-auto -mt-2 mb-1 h-56 w-56 max-w-full">
+            <LottiePlayer key={lottieKey} path="/anumations/notif-success.json" className="h-full w-full" loop={false} />
+          </div>
+
+          <h4 className="text-base font-bold leading-relaxed text-foreground">
+            درخواست شما با موفقیت ثبت شد!
+          </h4>
+
+          <p className="text-center text-sm leading-reading text-foreground">
+            به‌محض موجود شدن این کالا، به شما اطلاع می‌دیم.
+          </p>
+
+          <p className="mx-auto max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
+            تا اون موقع، می‌تونید قطعات موردنیاز خودروتون رو در یدکچی جستجو و قیمت‌ها رو مقایسه کنید.
+          </p>
+
+          <div className="mt-3 flex w-full flex-col gap-2">
+            <Button
+              variant="primary"
+              onClick={() => setIsNotifySuccessOpen(false)}
+              className="h-10 w-full text-xs font-bold"
+            >
+              متوجه شدم
+            </Button>
+
+            <Link
+              href="/search"
+              className="py-1 text-center text-xs font-bold text-shop hover:underline"
+              onClick={() => setIsNotifySuccessOpen(false)}
+            >
+              جستجوی قطعات در یدک‌چی
+            </Link>
+          </div>
+        </ModalBody>
+      </Modal>
+    </Card>
+  );
+}
+
+function PriceChart({ data }: { data: any }) {
+  const prices: number[] = data.prices || [];
+  if (prices.length === 0) return null;
+
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const W = 320;
+  const H = 160;
+  const pad = 20;
+  const innerW = W - pad * 2;
+  const innerH = H - pad * 2;
+
+  const points = prices
+    .map((p, i) => {
+      const x = pad + (i / Math.max(prices.length - 1, 1)) * innerW;
+      const y = pad + innerH - ((p - min) / Math.max(max - min, 1)) * innerH;
+      return `${x},${y}`;
+    })
+    .join(' ');
+
+  const fmt = (n: number) => new Intl.NumberFormat('fa-IR').format(n);
+
+  return (
+    <div className="w-full px-2">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-40 w-full">
+        <line x1={pad} y1={pad} x2={pad} y2={H - pad} stroke="currentColor" className="text-border" strokeWidth="1" />
+        <line x1={pad} y1={H - pad} x2={W - pad} y2={H - pad} stroke="currentColor" className="text-border" strokeWidth="1" />
+        <polyline
+          fill="none"
+          stroke="currentColor"
+          className="text-shop"
+          strokeWidth="2"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          points={points}
+        />
+        {prices.map((p, i) => {
+          const x = pad + (i / Math.max(prices.length - 1, 1)) * innerW;
+          const y = pad + innerH - ((p - min) / Math.max(max - min, 1)) * innerH;
+          return <circle key={i} cx={x} cy={y} r="2.5" fill="currentColor" className="text-shop" />;
+        })}
+      </svg>
+      <div className="mt-2 flex items-center justify-between text-2xs text-muted-foreground">
+        <span>کمترین: {fmt(min)}</span>
+        <span>میانگین: {fmt(data.averagePrice || 0)}</span>
+        <span>بیشترین: {fmt(max)}</span>
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\ProductSpecsTable.tsx
+=====================================================
+'use client';
+
+import { toPersianDigits } from '@/core/utils/formatters';
+
+export interface ProductSpecsTableProps {
+  specGroups: any[];
+}
+
+export function ProductSpecsTable({ specGroups }: ProductSpecsTableProps) {
+  if (!specGroups || specGroups.length === 0) return null;
+
+  return (
+    <div className="flex w-full flex-col gap-6 bg-inherit">
+      <h3 className="mb-2 text-sm font-bold text-foreground md:text-base">مشخصات فنی قطعه</h3>
+
+      <div className="flex w-full flex-col gap-6">
+        {specGroups.map((group, gIdx) => (
+          <div
+            key={gIdx}
+            className="flex w-full flex-col items-stretch gap-4 border-b border-border pb-6 last:border-none last:pb-0 lg:flex-row lg:items-center lg:gap-8"
+          >
+            <div className="flex shrink-0 items-center lg:w-1/4">
+              <span className="text-xs font-medium leading-relaxed text-foreground md:text-sm">
+                {group.name}
+              </span>
+            </div>
+
+            <div className="flex flex-1 flex-col">
+              {(group.specs || []).map((spec: any, sIdx: number) => (
+                <div
+                  key={sIdx}
+                  className="flex w-full items-center border-b border-border py-3 text-xs last:border-b-0 md:text-sm"
+                >
+                  <div className="w-1/3 font-medium text-muted-foreground">{spec.name}</div>
+                  <div className="w-2/3 font-bold text-foreground">{toPersianDigits(spec.value)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\SellersList.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { Store, ShieldCheck, MapPin, Truck, AlertTriangle, Phone, Plus, Loader2, ChevronDown } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { Button } from '@/components/primitives/Button/Button';
+import { useAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { InPersonSellersMapModal } from './InPersonSellersMapModal';
+import { useGetReportSubjects, useSubmitShopReport } from '@/domains/front/shop/hooks/shop.hooks';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { showToast } from '@/core/utils/toast';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+
+export interface SellersListProps {
+  activeSellers: any;
+  selectedSellerId: string | null;
+  onSelectSeller: (id: string) => void;
+  productTitle?: string;
+}
+
+const MAX_VISIBLE_SELLERS = 4;
+
+export function SellersList({
+  activeSellers,
+  selectedSellerId,
+  onSelectSeller,
+  productTitle = '???? ????',
+}: SellersListProps) {
+  const [activeTab, setActiveTab] = React.useState<'online' | 'local'>('online');
+  const [reportShop, setReportShop] = React.useState<any | null>(null);
+  const [loadingSellerId, setLoadingSellerId] = React.useState<string | null>(null);
+  const [isMapModalOpen, setIsMapModalOpen] = React.useState(false);
+  const [mapInitialSellerId, setMapInitialSellerId] = React.useState<string | null>(null);
+  const [showAllOnline, setShowAllOnline] = React.useState(false);
+
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
+
+  const addToBasket = useAddToBasket();
+  const { data: reportSubjects = [] } = useGetReportSubjects('ShopProductReport');
+  const submitReport = useSubmitShopReport();
+
+  const onlineList = activeSellers.online || [];
+  const localList = activeSellers.local || [];
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  const visibleOnline = React.useMemo(() => {
+    if (onlineList.length <= MAX_VISIBLE_SELLERS || showAllOnline) return onlineList;
+    return onlineList.slice(0, MAX_VISIBLE_SELLERS);
+  }, [onlineList, showAllOnline]);
+
+  const hasMoreOnline = onlineList.length > MAX_VISIBLE_SELLERS && !showAllOnline;
+
+  const handleAddOnlineToBasket = async (e: React.MouseEvent, seller: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setLoadingSellerId(seller.id);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: seller.id, quantity: 1 });
+      showToast.success('???? ?? ?????? ?? ??? ???? ?????? ??');
+    } catch {} finally {
+      setLoadingSellerId(null);
+    }
+  };
+
+  const handleOpenMapWithSeller = (e: React.MouseEvent, seller: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setMapInitialSellerId(seller.id);
+    setIsMapModalOpen(true);
+  };
+
+  const handleOpenGeneralMap = () => {
+    setMapInitialSellerId(null);
+    setIsMapModalOpen(true);
+  };
+
+  const handleReportSubmit = async () => {
+    if (!selectedSubjectId) {
+      showToast.error('????? ???? ????? ?? ?????? ????');
+      return;
+    }
+    try {
+      await submitReport.mutateAsync({
+        shopId: reportShop.shop.id,
+        shopProductId: reportShop.id,
+        reportSubjectId: selectedSubjectId,
+        description: reportDescription,
+      });
+      showToast.success('????? ???? ???? ?? ?????? ??? ?? ? ???? ???????? ????? ????? ?????');
+      setReportShop(null);
+      setSelectedSubjectId('');
+      setReportDescription('');
+    } catch (error: any) {
+      showToast.error(error.userMessage || '??? ?? ??? ?????');
+    }
+  };
+
+  const renderSellerRow = (seller: any) => {
+    const isOnline = activeTab === 'online';
+    const isSelected = isOnline && selectedSellerId === seller.id;
+
+    const originalPriceRaw = seller.retailPriceRaw || 0;
+    const finalPriceRaw = seller.finalPriceRaw || 0;
+    const calculatedPercent =
+      originalPriceRaw > finalPriceRaw && originalPriceRaw > 0
+        ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+        : 0;
+
+    const discountPercent = seller.discountPercentage || calculatedPercent || 0;
+    const hasDiscount = !!(
+      (seller.hasDiscount || (originalPriceRaw > 0 && finalPriceRaw > 0 && originalPriceRaw > finalPriceRaw)) &&
+      discountPercent > 0
+    );
+
+    return (
+      <div
+        key={seller.id}
+        onClick={() => isOnline && onSelectSeller(seller.id)}
+        className={cn(
+          'flex w-full items-start justify-between gap-4 rounded-lg border border-border p-4 transition-colors md:p-5',
+          isSelected ? 'border-shop/40 bg-shop/5' : 'bg-card',
+          isOnline ? 'cursor-pointer hover:border-shop/40' : 'cursor-default'
+        )}
+      >
+        <div className="flex min-w-0 flex-1 items-start gap-3.5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+            {seller.shop.logo ? (
+              <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
+            ) : (
+              <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="truncate text-sm font-bold text-shop md:text-base">
+                {seller.shop.title}
+              </span>
+              <span className="rounded-sm bg-muted px-2 py-0.5 text-2xs font-bold text-muted-foreground">
+                {seller.typeLabel}
+              </span>
+              {seller.isAdvertised ? (
+                <span className="rounded-sm bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground">
+                  ????
+                </span>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-2xs text-muted-foreground md:text-xs">
+              <span className="font-bold text-success">?????? ????</span>
+              <span className="text-muted-foreground">|</span>
+              <span className="flex items-center gap-1">
+                <Truck aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
+                {seller.dayOfDeliveryLabel}
+              </span>
+              <span className="text-muted-foreground">|</span>
+              <span className="flex items-center gap-1 text-success">
+                <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5" />
+                {seller.warrantyTitle || '????? ????? ????'}
+              </span>
+            </div>
+
+            {!isOnline ? (
+              <div className="mt-1.5 flex items-center gap-1 text-2xs text-muted-foreground">
+                <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="truncate">
+                  {(seller.shop as any).cityName || seller.shop.address?.split('?')[0] || ''}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-end justify-start gap-3">
+          {isOnline ? (
+            <Button
+              variant={isSelected ? 'primary' : 'outline'}
+              size="sm"
+              onClick={(e) => handleAddOnlineToBasket(e, seller)}
+              disabled={loadingSellerId === seller.id}
+              className="flex h-10 w-auto min-w-[110px] shrink-0 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs md:min-w-[130px]"
+            >
+              {loadingSellerId === seller.id ? (
+                <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <>
+                  <Plus aria-hidden="true" className="h-3.5 w-3.5" />
+                  <span>?????? ?? ???</span>
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => handleOpenMapWithSeller(e, seller)}
+              className="flex h-10 w-auto min-w-[110px] shrink-0 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs md:min-w-[130px]"
+            >
+              <Phone aria-hidden="true" className="h-3.5 w-3.5" />
+              <span>??????? ????</span>
+            </Button>
+          )}
+
+          <div className="mt-1 flex flex-col items-end">
+            {hasDiscount ? (
+              <div className="mb-1 flex select-none items-center gap-1.5">
+                <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-2xs font-bold leading-none text-destructive md:text-xs">
+                  %{toPersianDigits(discountPercent)}
+                </span>
+                <span className="text-2xs leading-none text-muted-foreground line-through md:text-xs">
+                  {seller.retailPrice}
+                </span>
+              </div>
+            ) : null}
+
+            <span className="text-base font-bold leading-none text-foreground md:text-lg">
+              {seller.finalPrice}
+            </span>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setReportShop(seller);
+              }}
+              className="mt-2 flex items-center gap-0.5 rounded-md p-1 text-2xs font-bold text-muted-foreground outline-none transition-colors hover:text-destructive md:text-xs"
+            >
+              <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5" />
+              <span>????? ???? ????</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative mt-4 flex w-full select-none flex-col gap-4">
+      <div className="sticky top-[64px] z-20 flex w-full items-center gap-6 border-b border-border bg-card px-1 pb-2 shadow-xs transition-colors duration-normal lg:top-[76px]">
+        <button
+          type="button"
+          onClick={() => setActiveTab('online')}
+          className={cn(
+            'border-b-2 pb-2 text-xs font-bold outline-none transition-colors md:text-sm',
+            activeTab === 'online' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+          )}
+        >
+          ???? ???????? ({onlineList.length} ???????)
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('local')}
+          className={cn(
+            'border-b-2 pb-2 text-xs font-bold outline-none transition-colors md:text-sm',
+            activeTab === 'local' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+          )}
+        >
+          ???? ????? ({localList.length} ???????)
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        {activeTab === 'online' ? (
+          onlineList.length > 0 ? (
+            <>
+              {visibleOnline.map((s: any) => renderSellerRow(s))}
+
+              {hasMoreOnline ? (
+                <div className="flex w-full justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllOnline(true)}
+                    className="flex items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+                  >
+                    <span>
+                      ?????? ????? ({toPersianDigits(onlineList.length - MAX_VISIBLE_SELLERS)} ??????? ????)
+                    </span>
+                    <ChevronDown aria-hidden="true" className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <span className="py-4 text-xs text-muted-foreground">
+              ??????? ???????? ????? ???? ??? ???? ????? ????.
+            </span>
+          )
+        ) : (
+          <>
+            {localList.length > 0 ? (
+              localList.map((s: any) => renderSellerRow(s))
+            ) : (
+              <span className="py-4 text-xs text-muted-foreground">
+                ??????? ????? ????? ???? ??? ???? ??? ???? ???.
+              </span>
+            )}
+            {localList.length > 0 ? (
+              <div
+                onClick={handleOpenGeneralMap}
+                className="group mt-2 flex h-36 w-full cursor-pointer select-none flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-border bg-muted/40 p-6 shadow-xs transition-colors hover:border-shop/40"
+              >
+                <div className="z-10 shrink-0 rounded-full border border-shop/40 bg-accent p-3 text-shop">
+                  <MapPin aria-hidden="true" className="h-6 w-6" />
+                </div>
+                <span className="z-10 text-xs font-bold text-foreground md:text-sm">
+                  ?????? ???? ??????????? ????? ??? ????
+                </span>
+                <button
+                  type="button"
+                  className="z-10 border-b border-shop pb-0.5 text-2xs font-bold text-shop outline-none transition-opacity hover:opacity-80"
+                >
+                  ?????? ????
+                </button>
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+
+      <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setReportShop(null)}>
+          <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
+            ????? ??? ?? ???? ??????? {reportShop?.shop.title}
+          </ModalTitle>
+        </ModalHeader>
+        <ModalBody className="flex flex-col gap-4 p-0 pt-4">
+          <Select
+            label="???? ????? *"
+            placeholder="???? ????? ?? ?????? ????..."
+            value={selectedSubjectId}
+            onChange={(e) => setSelectedSubjectId(e.target.value)}
+            options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+          />
+
+          <TextArea
+            label="??????? (???????)"
+            placeholder="??????? ??? ?? ????? ???????..."
+            value={reportDescription}
+            onChange={(e) => setReportDescription(e.target.value)}
+            className="h-24"
+          />
+
+          <div className="mt-4 flex w-full gap-2.5">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setReportShop(null);
+                setSelectedSubjectId('');
+                setReportDescription('');
+              }}
+              className="h-10 flex-1 text-xs font-bold"
+            >
+              ??????
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReportSubmit}
+              isLoading={submitReport.isPending}
+              className="h-10 flex-1 text-xs font-bold"
+            >
+              ??? ????? ???
+            </Button>
+          </div>
+        </ModalBody>
+      </Modal>
+
+      <InPersonSellersMapModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        sellers={localList}
+        productTitle={productTitle}
+        initialActiveSellerId={mapInitialSellerId}
+      />
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\components\SpecHighlights.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { toPersianDigits } from '@/core/utils/formatters';
+import { cn } from '@/design-system/utils/cn';
+
+export interface SpecHighlightsProps {
+  specGroups: any[];
+  onSeeAll?: () => void;
+}
+
+function TruncatedSpec({ name, value }: { name: string; value: string }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [isTruncated, setIsTruncated] = React.useState(false);
+  const [tooltipPos, setTooltipPos] = React.useState({ top: 0, left: 0 });
+  const textRef = React.useRef<HTMLSpanElement>(null);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    const checkTruncation = () => {
+      if (textRef.current) {
+        const element = textRef.current;
+        setIsTruncated(element.scrollWidth > element.clientWidth);
+      }
+    };
+    checkTruncation();
+    window.addEventListener('resize', checkTruncation);
+    return () => window.removeEventListener('resize', checkTruncation);
+  }, [value]);
+
+  const updateTooltipPosition = () => {
+    if (textRef.current) {
+      const rect = textRef.current.getBoundingClientRect();
+      setTooltipPos({ top: rect.bottom + 8, left: rect.left + rect.width / 2 });
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (!isTruncated) return;
+    updateTooltipPosition();
+    timerRef.current = setTimeout(() => setIsOpen(true), 250);
+  };
+
+  const handleMouseLeave = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setIsOpen(false);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (!isTruncated) return;
+    e.stopPropagation();
+    updateTooltipPosition();
+    setIsOpen((prev) => !prev);
+  };
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = () => setIsOpen(false);
+    document.addEventListener('click', handleClickOutside);
+    window.addEventListener('scroll', handleClickOutside, true);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleClickOutside, true);
+    };
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  return (
+    <div className="flex min-w-0 flex-col gap-1 rounded-md border border-border bg-muted/60 p-3">
+      <span className="block truncate text-2xs font-bold text-muted-foreground md:text-xs">
+        {toPersianDigits(name)}
+      </span>
+
+      <span
+        ref={textRef}
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={cn(
+          'mt-0.5 block truncate text-xs font-medium text-foreground md:text-sm',
+          isTruncated && 'cursor-help'
+        )}
+      >
+        {toPersianDigits(value)}
+      </span>
+
+      {mounted && isOpen && isTruncated
+        ? createPortal(
+            <div
+              style={{
+                position: 'fixed',
+                top: tooltipPos.top,
+                left: tooltipPos.left,
+                transform: 'translateX(-50%)',
+                zIndex: 9999,
+              }}
+              className="pointer-events-none"
+              dir="rtl"
+            >
+              <div className="relative max-w-xs break-words rounded-md bg-foreground px-3 py-2 text-2xs font-bold text-background shadow-lg">
+                {toPersianDigits(value)}
+                <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-foreground" />
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
+    </div>
+  );
+}
+
+export function SpecHighlights({ specGroups, onSeeAll }: SpecHighlightsProps) {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
+  const mainSpecs = (specGroups || []).flatMap((g) => g.specs || []).filter((s: any) => s.isMain === true);
+
+  if (mainSpecs.length === 0) return null;
+
+  const visibleSpecs = isExpanded ? mainSpecs : mainSpecs.slice(0, 4);
+  const hasMoreThanFour = mainSpecs.length > 4;
+
+  return (
+    <div className="flex w-full select-none flex-col gap-2.5">
+      <span className="me-1 text-sm font-bold text-foreground md:text-base">ویژگی‌های مهم محصول</span>
+
+      <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
+        {visibleSpecs.map((spec: any, idx: number) => (
+          <TruncatedSpec key={idx} name={spec.name} value={spec.value} />
+        ))}
+      </div>
+
+      {hasMoreThanFour ? (
+        <div className="mt-1 flex justify-start">
+          <button
+            type="button"
+            onClick={() => {
+              setIsExpanded(!isExpanded);
+              if (!isExpanded && onSeeAll) {
+                setTimeout(() => onSeeAll(), 50);
+              }
+            }}
+            className="flex items-center gap-0.5 text-xs font-bold text-foreground outline-none hover:underline"
+          >
+            <span>{isExpanded ? 'بستن ویژگی‌ها' : 'مشاهده همه ویژگی‌ها'}</span>
+            {isExpanded ? (
+              <ChevronUp aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <ChevronDown aria-hidden="true" className="h-4 w-4" />
+            )}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\Product\ProductContent.tsx
+=====================================================
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag, Bell } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGetProductPageData } from '@/domains/front/product/hooks/product.hooks';
+import { useAddToBasket as useGlobalAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { ProductHeader } from './components/ProductHeader';
+import { ConditionSelector } from './components/ConditionSelector';
+import { SpecHighlights } from './components/SpecHighlights';
+import { PickupAlert } from './components/PickupAlert';
+import { SellersList } from './components/SellersList';
+import { ProductSpecsTable } from './components/ProductSpecsTable';
+import { ProductCommentsSection } from './components/ProductCommentsSection';
+import { ProductInquiriesSection } from './components/ProductInquiriesSection';
+import { ProductSideInvoice } from './components/ProductSideInvoice';
+import { ProductPageSkeleton } from './components/ProductPageSkeleton';
+import { ProductGallery } from './components/ProductGallery';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { Modal, ModalBody } from '@/components/composites/Modal/Modal';
+import { Button } from '@/components/primitives/Button/Button';
+import { getProductUrl, toPersianDigits } from '@/core/utils/formatters';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+
+interface ProductContentProps {
+  productCode: number;
+  initialData?: any;
+}
+
+function LottiePlayer({
+  path,
+  className = 'w-48 h-48',
+  loop = false,
+}: {
+  path: string;
+  className?: string;
+  loop?: boolean;
+}) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/')
+          ? path.replace('/anumations/', '/animations/')
+          : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+
+        if (!animationData || !isMounted || !containerRef.current) return;
+
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch {}
+    };
+
+    init();
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
+
+export function ProductContent({ productCode, initialData }: ProductContentProps) {
+  const { data: clientData, isLoading } = useGetProductPageData(productCode);
+  const pageData = clientData || initialData;
+
+  const defaultCondition = React.useMemo((): 'New' | 'Stock' | 'TakeOff' => {
+    if (!pageData?.shopProducts) return 'New';
+    const sp = pageData.shopProducts;
+    const hasNew = (sp.newOnline?.length || 0) + (sp.newLocal?.length || 0) > 0 || !!sp.newNominated;
+    if (hasNew) return 'New';
+    const hasStock = (sp.stockOnline?.length || 0) + (sp.stockLocal?.length || 0) > 0 || !!sp.stockNominated;
+    if (hasStock) return 'Stock';
+    const hasTakeOff = (sp.takeOffOnline?.length || 0) + (sp.takeOffLocal?.length || 0) > 0 || !!sp.takeOffNominated;
+    if (hasTakeOff) return 'TakeOff';
+    return 'New';
+  }, [pageData]);
+
+  const [selectedCondition, setSelectedCondition] = React.useState<'New' | 'Stock' | 'TakeOff'>(defaultCondition);
+  const [activeSellerId, setActiveSellerId] = React.useState<string | null>(null);
+  const [isIntroExpanded, setIsIntroExpanded] = React.useState(false);
+  const [activeSection, setActiveSection] = React.useState('intro');
+  const [isMobileSubmitting, setIsMobileSubmitting] = React.useState(false);
+  const [isNotifying, setIsNotifying] = React.useState(false);
+  const [isNotifySuccessOpen, setIsNotifySuccessOpen] = React.useState(false);
+  const [lottieKey, setLottieKey] = React.useState(0);
+  const [metaIndex, setMetaIndex] = React.useState(0);
+
+  const addToBasket = useGlobalAddToBasket();
+
+  const introRef = React.useRef<HTMLDivElement>(null);
+  const specsRef = React.useRef<HTMLDivElement>(null);
+  const commentsRef = React.useRef<HTMLDivElement>(null);
+  const inquiriesRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (pageData && defaultCondition) setSelectedCondition(defaultCondition);
+  }, [defaultCondition, pageData]);
+
+  React.useEffect(() => {
+    const handleScrollSpy = () => {
+      const scrollPosition = window.scrollY + 200;
+      const sections = [
+        { id: 'intro', ref: introRef },
+        { id: 'specs', ref: specsRef },
+        { id: 'comments', ref: commentsRef },
+        { id: 'inquiries', ref: inquiriesRef },
+      ];
+      for (const section of sections) {
+        if (section.ref.current) {
+          const top = section.ref.current.offsetTop;
+          const height = section.ref.current.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(section.id);
+            break;
+          }
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScrollSpy, { passive: true });
+    return () => window.removeEventListener('scroll', handleScrollSpy);
+  }, []);
+
+  React.useEffect(() => {
+    if (!pageData) return;
+    const interval = setInterval(() => setMetaIndex((prev) => (prev + 1) % 3), 3000);
+    return () => clearInterval(interval);
+  }, [pageData]);
+
+  if (!pageData && isLoading) return <ProductPageSkeleton />;
+  if (!pageData) return null;
+
+  const product = pageData.product;
+  const sellersGroup = pageData.shopProducts || {};
+
+  const getSellersForCondition = () => {
+    if (selectedCondition === 'Stock') {
+      return {
+        nominated: sellersGroup.stockNominated || null,
+        online: sellersGroup.stockOnline || [],
+        local: sellersGroup.stockLocal || [],
+      };
+    }
+    if (selectedCondition === 'TakeOff') {
+      return {
+        nominated: sellersGroup.takeOffNominated || null,
+        online: sellersGroup.takeOffOnline || [],
+        local: sellersGroup.takeOffLocal || [],
+      };
+    }
+    return {
+      nominated: sellersGroup.newNominated || null,
+      online: sellersGroup.newOnline || [],
+      local: sellersGroup.newLocal || [],
+    };
+  };
+
+  const activeSellers = getSellersForCondition();
+  const allAvailableSellersList = [...(activeSellers.online || []), ...(activeSellers.local || [])];
+
+  const currentSelectedSeller =
+    allAvailableSellersList.find((s) => s.id === activeSellerId) ||
+    activeSellers.nominated ||
+    allAvailableSellersList[0] ||
+    null;
+
+  const galleryImages = React.useMemo(() => {
+    const all = [product.image, ...(product.gallery || [])].filter(Boolean) as string[];
+    return Array.from(new Set(all));
+  }, [product.image, product.gallery]);
+
+  const handleScrollToSection = (ref: React.RefObject<HTMLDivElement | null>, sectionId: string) => {
+    if (ref.current) {
+      const offsetValue = window.innerWidth < 1024 ? 144 : 188;
+      const topOffset = ref.current.getBoundingClientRect().top + window.scrollY - offsetValue;
+      window.scrollTo({ top: topOffset, behavior: 'smooth' });
+      setActiveSection(sectionId);
+    }
+  };
+
+  const handleMobileAddToBasket = async () => {
+    if (!currentSelectedSeller) return;
+    setIsMobileSubmitting(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      showToast.success('???? ?? ?????? ?? ??? ???? ??? ?????? ??');
+    } catch {} finally {
+      setIsMobileSubmitting(false);
+    }
+  };
+
+  const handleNotifyMe = async () => {
+    if (isNotifying) return;
+    setIsNotifying(true);
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      setLottieKey((k) => k + 1);
+      setIsNotifySuccessOpen(true);
+    } finally {
+      setIsNotifying(false);
+    }
+  };
+
+  const originalPriceRaw = currentSelectedSeller?.retailPriceRaw || 0;
+  const finalPriceRaw = currentSelectedSeller?.finalPriceRaw || 0;
+  const calculatedPercent =
+    originalPriceRaw > finalPriceRaw
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+      : 0;
+
+  const discountPercentage = currentSelectedSeller?.discountPercentage || calculatedPercent || 0;
+  const hasDiscount = !!(currentSelectedSeller?.hasDiscount && discountPercentage > 0);
+  const discountExpiration = (currentSelectedSeller as any)?.discountUntil || null;
+  const hasTimedDiscount = hasDiscount && !!discountExpiration;
+
+  const metaItems = [
+    `???????: ${currentSelectedSeller?.shop?.title || '??????'}`,
+    `${toPersianDigits(product.views || 0)} ?????? ????`,
+    `${toPersianDigits(product.salesCount || 0)} ???? ????`,
+  ];
+
+  const leftPriceContent = currentSelectedSeller ? (
+    <div className="flex h-10 w-36 max-w-[150px] select-none flex-col justify-between">
+      <div className="relative h-4 w-full overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={metaIndex}
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -10, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute block w-full truncate text-2xs font-bold leading-none text-muted-foreground"
+          >
+            {metaItems[metaIndex]}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+
+      <div className="flex flex-col">
+        {currentSelectedSeller.hasDiscount ? (
+          <span className="mb-0.5 text-2xs leading-none text-muted-foreground line-through">
+            {currentSelectedSeller.retailPrice}
+          </span>
+        ) : null}
+        <span className="text-xs font-bold leading-none text-foreground md:text-sm">
+          {currentSelectedSeller.finalPrice}
+        </span>
+      </div>
+    </div>
+  ) : null;
+
+  return (
+    <div className="flex w-full flex-col gap-1">
+      <div className="flex w-full select-none items-center gap-1.5 overflow-x-auto py-1.5 text-2xs text-muted-foreground scrollbar-none md:text-xs">
+        <Link href="/" className="transition-colors hover:text-primary">
+          ????
+        </Link>
+        {product.breadCrumbs?.map((crumb: any, idx: number) => {
+          const isLast = idx === product.breadCrumbs.length - 1;
+          const url = isLast
+            ? getProductUrl(product.code, product.title)
+            : `/part-category/${crumb.englishTitle}`;
+          return (
+            <div key={crumb.id || idx} className="flex items-center gap-1.5">
+              <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              {isLast ? (
+                <span className="max-w-[180px] truncate font-bold text-foreground md:max-w-none">
+                  {crumb.title}
+                </span>
+              ) : (
+                <Link href={url} className="whitespace-nowrap transition-colors hover:text-primary">
+                  {crumb.title}
+                </Link>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex w-full flex-col items-start gap-8 lg:flex-row">
+        <div className="flex w-full min-w-0 flex-1 flex-col gap-6">
+          <div className="flex w-full flex-col gap-6 md:flex-row md:gap-8">
+            <div className="w-full shrink-0 md:w-[45%]">
+              <ProductGallery
+                images={galleryImages}
+                title={product.title}
+                hasDiscount={hasDiscount}
+                discountPercent={discountPercentage}
+                hasTimedDiscount={hasTimedDiscount}
+                discountExpiration={discountExpiration}
+              />
+            </div>
+
+            <div className="flex min-w-0 flex-1 flex-col gap-5">
+              <ProductHeader
+                product={product}
+                onScrollToComments={() => handleScrollToSection(commentsRef, 'comments')}
+                onScrollToInquiries={() => handleScrollToSection(inquiriesRef, 'inquiries')}
+              />
+
+              <ConditionSelector
+                selectedCondition={selectedCondition}
+                onChangeCondition={(cond) => {
+                  setSelectedCondition(cond);
+                  setActiveSellerId(null);
+                }}
+                sellersGroup={sellersGroup}
+              />
+
+              <SpecHighlights
+                specGroups={product.specGroups}
+                onSeeAll={() => handleScrollToSection(specsRef, 'specs')}
+              />
+
+              <PickupAlert />
+            </div>
+          </div>
+
+          <SellersList
+            activeSellers={activeSellers}
+            selectedSellerId={currentSelectedSeller?.id || null}
+            onSelectSeller={(id) => setActiveSellerId(id)}
+            productTitle={product.title}
+          />
+
+          <div className="sticky top-[64px] z-30 mt-6 flex w-full items-center gap-6 overflow-x-auto border-b border-border bg-card px-1 py-2.5 shadow-xs scrollbar-none transition-colors duration-normal lg:top-[76px]">
+            {[
+              { id: 'intro', label: '????? ????', ref: introRef },
+              { id: 'specs', label: '?????? ???', ref: specsRef },
+              { id: 'comments', label: '?????? ? ????? ???????', ref: commentsRef },
+              { id: 'inquiries', label: '???? ? ????', ref: inquiriesRef },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleScrollToSection(tab.ref, tab.id)}
+                className={cn(
+                  'shrink-0 border-b-2 pb-2 text-xs font-bold transition-colors md:text-sm',
+                  activeSection === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div ref={introRef} className="border-b border-border pb-6 pt-6">
+            <h3 className="mb-3 text-sm font-bold text-foreground md:text-base">????? ????</h3>
+            <div className="relative">
+              <div
+                style={{ maxHeight: isIntroExpanded ? 'none' : '110px' }}
+                className="overflow-hidden text-justify text-xs leading-reading text-muted-foreground transition-all duration-normal md:text-sm"
+                dangerouslySetInnerHTML={{
+                  __html: product.description || '?????? ???? ??? ???? ??? ???? ???.',
+                }}
+              />
+              {!isIntroExpanded ? (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-background to-transparent" />
+              ) : null}
+            </div>
+            <div className="mt-3 flex justify-start">
+              <button
+                type="button"
+                onClick={() => setIsIntroExpanded(!isIntroExpanded)}
+                className="flex items-center gap-0.5 text-xs font-bold text-shop hover:underline"
+              >
+                <span>{isIntroExpanded ? '?????? ????' : '?????? ?????'}</span>
+                {isIntroExpanded ? (
+                  <ChevronUp aria-hidden="true" className="h-4 w-4" />
+                ) : (
+                  <ChevronDown aria-hidden="true" className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div ref={specsRef} className="border-b border-border pb-6 pt-8">
+            <ProductSpecsTable specGroups={product.specGroups} />
+          </div>
+
+          <div ref={commentsRef} className="border-b border-border pb-6 pt-8">
+            <ProductCommentsSection productId={product.id} />
+          </div>
+
+          <div ref={inquiriesRef} className="pt-8">
+            <ProductInquiriesSection productId={product.id} />
+          </div>
+
+          <div className="mt-6 w-full lg:hidden">
+            <ProductSideInvoice
+              product={product}
+              seller={currentSelectedSeller}
+              sellersCount={allAvailableSellersList.length}
+            />
+          </div>
+        </div>
+
+        <div className="hidden w-[320px] shrink-0 flex-col gap-6 lg:sticky lg:top-[132px] lg:flex xl:w-[340px]">
+          <ProductSideInvoice
+            product={product}
+            seller={currentSelectedSeller}
+            sellersCount={allAvailableSellersList.length}
+          />
+        </div>
+      </div>
+
+      <MobileBottomAction
+        variant={currentSelectedSeller ? 'default' : 'notify'}
+        label={currentSelectedSeller ? '?????? ?? ??? ????' : '????? ?? ???? ??'}
+        leftContent={leftPriceContent}
+        onClick={() => {
+          if (currentSelectedSeller) handleMobileAddToBasket();
+          else handleNotifyMe();
+        }}
+        disabled={false}
+        isLoading={currentSelectedSeller ? isMobileSubmitting : isNotifying}
+        icon={
+          currentSelectedSeller ? (
+            <ShoppingBag aria-hidden="true" className="h-4 w-4" />
+          ) : (
+            <Bell aria-hidden="true" className="h-5 w-5" />
+          )
+        }
+        forceShowKey={selectedCondition}
+      />
+
+      <Modal
+        isOpen={isNotifySuccessOpen}
+        onClose={() => setIsNotifySuccessOpen(false)}
+        className="w-full max-w-md"
+      >
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center">
+          <div className="mx-auto -mt-2 mb-1 h-56 w-56 max-w-full">
+            <LottiePlayer key={lottieKey} path="/anumations/notif-success.json" className="h-full w-full" loop={false} />
+          </div>
+
+          <h4 className="text-base font-bold leading-relaxed text-foreground">
+            ??????? ??? ?? ?????? ??? ??!
+          </h4>
+
+          <p className="text-center text-sm leading-reading text-foreground">
+            ?????? ????? ??? ??? ????? ?? ??? ????? ??????.
+          </p>
+
+          <p className="mx-auto max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
+            ?? ??? ????? ???????? ????? ???????? ???????? ?? ?? ????? ????? ? ??????? ?? ?????? ????.
+          </p>
+
+          <div className="mt-3 flex w-full flex-col gap-2">
+            <Button
+              variant="primary"
+              onClick={() => setIsNotifySuccessOpen(false)}
+              className="h-10 w-full text-xs font-bold"
+            >
+              ????? ???
+            </Button>
+
+            <Link
+              href="/search"
+              className="py-1 text-center text-xs font-bold text-shop hover:underline"
+              onClick={() => setIsNotifySuccessOpen(false)}
+            >
+              ?????? ????? ?? ??????
+            </Link>
+          </div>
+        </ModalBody>
+      </Modal>
+    </div>
+  );
+}
+
+

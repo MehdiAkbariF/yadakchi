@@ -94,7 +94,7 @@ export class ProductService {
   async getNominatedProducts(cityId?: string): Promise<any> {
     try {
       const payload: OpenSearchProductsRequestDto = {
-        onlyInStock: true,
+        hasDiscountWithExpiration: true,
         pageNumber: 1,
         pageSize: 30,
         includeAggregations: false,

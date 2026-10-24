@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useGetNominatedProductsByCategory } from '@/domains/front/product/hooks/product.hooks';
 import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
@@ -15,7 +16,23 @@ import { ShopSlider } from '@/components/features/Shop/ShopSlider';
 import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
 
 export function HomeContent() {
-  const { data: rawBanners = [] } = useGetBanners('Home');
+  const { 
+    data: rawBanners = [], 
+    isLoading: isBannersLoading, 
+    isError: isBannersError,
+    error: bannersError 
+  } = useGetBanners('Home');
+
+  // دیباگ: مشاهده وضعیت بنرها در کنسول مرورگر
+  useEffect(() => {
+    console.log('Banners Loading:', isBannersLoading);
+    console.log('Banners Error:', isBannersError, bannersError);
+    console.log('Banners Data:', rawBanners);
+    if (rawBanners.length > 0) {
+      console.log('🔍 First Banner Group:', rawBanners[0]);
+      console.log('🖼️ First Banner Image:', rawBanners[0]?.banners[0]?.image);
+    }
+  }, [rawBanners, isBannersLoading, isBannersError, bannersError]);
 
   const { data: toolsData, isLoading: isToolsLoading, isError: isToolsError } =
     useGetNominatedProductsByCategory('car-tools');
@@ -37,25 +54,30 @@ export function HomeContent() {
       const response = await client.get<any>('/api/Front/GetHomePage');
       return response.data;
     },
-    { staleTime: 30 * 60 * 1000 }
+    { staleTime: 30 * 60 * 1000, retry: 2 }
   );
 
-  const sliderGroup = rawBanners?.find((b: any) => b.name === 'Home-Top-Slider') as unknown as BannerGroup;
-  const a1BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A1') as unknown as BannerGroup;
-  const a2BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A2') as unknown as BannerGroup;
-  const a3BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A3') as unknown as BannerGroup;
-  const a4BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A4') as unknown as BannerGroup;
-  const a5BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A5') as unknown as BannerGroup;
-  const a6BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A6') as unknown as BannerGroup;
-  const a7BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A7') as unknown as BannerGroup;
-  const a8BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A8') as unknown as BannerGroup;
-  const a9BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A9') as unknown as BannerGroup;
-  const a10BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A10') as unknown as BannerGroup;
-  const a11BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A11') as unknown as BannerGroup;
-  const a12BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A12') as unknown as BannerGroup;
-  const a13BannerGroup = rawBanners?.find((b: any) => b.name === 'Home-A13') as unknown as BannerGroup;
+  // اطمینان از آرایه بودن داده‌ها
+  const bannersList = Array.isArray(rawBanners) ? rawBanners : [];
 
-  const hasLeftBanner = !!a1BannerGroup && a1BannerGroup.banners?.length > 0;
+  // ✅ اصلاح نام‌ها بر اساس خروجی واقعی API
+  const sliderGroup = bannersList.find((b: any) => b.name === 'Home-Top-Slider') as unknown as BannerGroup;
+  const topLeftBannerGroup = bannersList.find((b: any) => b.name === 'TopLeft') as unknown as BannerGroup;
+  const a2BannerGroup = bannersList.find((b: any) => b.name === 'A2-Banner') as unknown as BannerGroup;
+  const a3BannerGroup = bannersList.find((b: any) => b.name === 'A3-Banner') as unknown as BannerGroup;
+  const a4BannerGroup = bannersList.find((b: any) => b.name === 'A4-Banner') as unknown as BannerGroup;
+  const a5BannerGroup = bannersList.find((b: any) => b.name === 'A5-Banner') as unknown as BannerGroup;
+  const a6BannerGroup = bannersList.find((b: any) => b.name === 'A6-Banner') as unknown as BannerGroup;
+  const a7BannerGroup = bannersList.find((b: any) => b.name === 'A7-Banner') as unknown as BannerGroup;
+  const a8BannerGroup = bannersList.find((b: any) => b.name === 'A8-Banner') as unknown as BannerGroup;
+  const a9BannerGroup = bannersList.find((b: any) => b.name === 'A9-Banner') as unknown as BannerGroup;
+  const a10BannerGroup = bannersList.find((b: any) => b.name === 'A10-Banner') as unknown as BannerGroup;
+  const a11BannerGroup = bannersList.find((b: any) => b.name === 'A11-Banner') as unknown as BannerGroup;
+  const a12BannerGroup = bannersList.find((b: any) => b.name === 'A12-Banner') as unknown as BannerGroup;
+  const a13BannerGroup = bannersList.find((b: any) => b.name === 'A13-Banner') as unknown as BannerGroup;
+
+  const hasLeftBanner = !!topLeftBannerGroup && topLeftBannerGroup.banners?.length > 0;
+  
   const toolsProducts = toolsData?.products?.items || [];
   const audioProducts = audioData?.products?.items || [];
   const exhaustProducts = exhaustData?.products?.items || [];
@@ -64,21 +86,29 @@ export function HomeContent() {
   const bodyProducts = bodyData?.products?.items || [];
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 mt-3">
+      {/* بخش بالای صفحه (اسلایدر و بنر کناری) */}
       <div className="w-full">
-        <div className="grid h-48 w-full grid-cols-1 items-stretch gap-6 sm:h-60 md:h-72 md:grid-cols-10 lg:h-80 xl:h-96">
+        <div className="grid w-full grid-cols-1 items-stretch gap-6 md:grid-cols-10">
+          {/* اسلایدر */}
           <div className={hasLeftBanner ? 'md:col-span-7' : 'md:col-span-10'}>
-            <BannerSlider group={sliderGroup} aspectRatio="h-full" />
+            <div className="relative w-full h-[200px] sm:h-[300px] md:h-[350px] lg:h-[400px] xl:h-[450px]">
+              <BannerSlider group={sliderGroup} aspectRatio="h-full" />
+            </div>
           </div>
 
+          {/* بنر کناری */}
           {hasLeftBanner ? (
             <div className="hidden h-full w-full md:col-span-3 md:block">
-              <Banner group={a1BannerGroup} aspectRatio="h-full" priority />
+              <div className="relative w-full h-[200px] sm:h-[300px] md:h-[350px] lg:h-[400px] xl:h-[450px]">
+                <Banner group={topLeftBannerGroup} aspectRatio="h-full" priority />
+              </div>
             </div>
           ) : null}
         </div>
       </div>
 
+      {/* بخش‌های بعدی */}
       <div className="w-full space-y-6 py-2 md:py-3">
         <ShopByCar />
         <HomeCategories />

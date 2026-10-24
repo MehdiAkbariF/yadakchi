@@ -1,0 +1,783 @@
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\constants\banner.constants.ts
+=====================================================
+// src/domains/front/banner/constants/banner.constants.ts
+
+export const BANNER_CONSTANTS = {
+  PAGE_NAMES: {
+    MEGA_MENU: 'MegaMenu',
+    FRONT_FOOTER: 'FrontFooter',
+    USER_FAQ: 'UserFAQ',
+    HOME: 'Home',
+    PRODUCT_DETAIL: 'ProductDetail',
+    PART_CATEGORY: 'PartCategory',
+    PART: 'Part',
+    SHOP: 'Shop',
+    SEARCH_RESULT: 'SearchResult',
+    BEST_SHOPS: 'BestShops',
+    CONTACT_US: 'ContactUs',
+    ABOUT_US: 'AboutUs',
+    CAR: 'Car',
+    SELLER_DASHBOARD: 'SellerDashboard',
+    SELLER_FAQ: 'SellerFAQ',
+  } as const,
+
+  CACHE_TIMES: {
+    BANNERS: 600, // 10 minutes
+    SHOP_PRODUCT_BANNERS: 300, // 5 minutes
+    MEGA_MENU: 900, // 15 minutes
+    FOOTER: 900, // 15 minutes
+  } as const,
+} as const;
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\endpoints\banner.endpoints.ts
+=====================================================
+// src/domains/front/banner/endpoints/banner.endpoints.ts
+
+export const BANNER_ENDPOINTS = {
+  GET_BANNERS: '/api/Front/Banners',
+  GET_SHOP_PRODUCT_BANNERS: '/api/Front/ShopProductBanners',
+  POST_BANNER_CLICK: '/api/Front/BannerClick',
+  POST_BANNER_VIEW: '/api/Front/BannerView',
+  GET_MEGA_MENU: '/api/Front/GetMegaMenu',
+  GET_FRONT_FOOTER: '/api/Front/GetFrontFooter',
+} as const;
+
+export type BannerPageName = 
+  | 'MegaMenu'
+  | 'FrontFooter'
+  | 'UserFAQ'
+  | 'Home'
+  | 'ProductDetail'
+  | 'PartCategory'
+  | 'Part'
+  | 'Shop'
+  | 'SearchResult'
+  | 'BestShops'
+  | 'ContactUs'
+  | 'AboutUs'
+  | 'Car'
+  | 'SellerDashboard'
+  | 'SellerFAQ';
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\hooks\banner.hooks.ts
+=====================================================
+// src/domains/front/banner/hooks/banner.hooks.ts
+
+import { UseQueryOptions } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { getBannerService } from '../services/banner.service';
+import { BannerPageName } from '../endpoints/banner.endpoints';
+import { BannerClickRequest, BannerViewRequest } from '../types/view.types';
+import { 
+  BannerViewModel, 
+
+} from '../types/view.types';
+
+const bannerService = getBannerService();
+
+export function useGetBanners(
+  pageName: BannerPageName,
+  options?: Omit<UseQueryOptions<BannerViewModel[]>, 'queryKey' | 'queryFn'>
+) {
+  return useTypedQuery(
+    ['front', 'banners', pageName],
+    () => bannerService.getBanners(pageName),
+    {
+      staleTime: 10 * 60 * 1000,
+      ...options,
+    }
+  );
+}
+
+export function useGetShopProductBanners(params: {
+  partCategoryId?: string;
+  partId?: string;
+  carId?: string;
+}) {
+  return useTypedQuery(
+    ['front', 'banners', 'shop-product', params],
+    () => bannerService.getShopProductBanners(params),
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+export function useGetMegaMenu() {
+  return useTypedQuery(
+    ['front', 'mega-menu'],
+    () => bannerService.getMegaMenu(),
+    {
+      staleTime: 15 * 60 * 1000,
+    }
+  );
+}
+
+export function useGetFrontFooter() {
+  return useTypedQuery(
+    ['front', 'footer'],
+    () => bannerService.getFrontFooter(),
+    {
+      staleTime: 15 * 60 * 1000,
+    }
+  );
+}
+
+export function useTrackBannerClick() {
+  return useTypedMutation(
+    (request: BannerClickRequest) => bannerService.trackBannerClick(request)
+  );
+}
+
+export function useTrackBannerView() {
+  return useTypedMutation(
+    (request: BannerViewRequest) => bannerService.trackBannerView(request)
+  );
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\mappers\banner.mapper.ts
+=====================================================
+import { env } from '@/core/config/env';
+import { 
+  BannerApiDto, 
+  ShopProductBannerApiDto,
+  MegaMenuCategoryApiDto,
+  FrontFooterApiDto,
+  BannerClickRequestDto,
+  BannerViewRequestDto
+} from '../types/dto.types';
+import { Banner } from '../types/domain.types';
+import { 
+  BannerViewModel, 
+  ShopProductBannerViewModel,
+  MegaMenuCategoryViewModel,
+  FrontFooterViewModel,
+  BannerClickRequest,
+  BannerViewRequest
+} from '../types/view.types';
+
+import { getFullUrl } from '@/core/utils/formatters';
+export class BannerMapper {
+  static toDomain(dto: BannerApiDto): Banner {
+    return {
+      id: dto.id,
+      title: dto.title,
+      description: dto.description,
+      imageUrl: dto.imageUrl,
+      link: dto.linkUrl,
+      target: dto.target || '_self',
+      position: dto.position,
+      isActive: dto.isActive,
+      pageName: dto.pageName,
+      schedule: {
+        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+        endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+      },
+      metadata: {
+        createdAt: new Date(dto.createdAt),
+        updatedAt: new Date(dto.updatedAt),
+      },
+    };
+  }
+
+  static toView(domain: Banner): BannerViewModel {
+    const now = new Date();
+    const isActive = domain.isActive && (
+      (!domain.schedule.startDate || domain.schedule.startDate <= now) &&
+      (!domain.schedule.endDate || domain.schedule.endDate >= now)
+    );
+
+    return {
+      id: domain.id,
+      title: domain.title,
+      description: domain.description || null,
+      imageUrl: domain.imageUrl,
+      link: domain.link || null,
+      target: domain.target,
+      position: domain.position,
+      pageName: domain.pageName,
+      schedule: {
+        startDate: domain.schedule.startDate?.toISOString() || null,
+        endDate: domain.schedule.endDate?.toISOString() || null,
+      },
+      isActive,
+    };
+  }
+
+  /**
+   * ??? ??????? ? ????? ?????? ???? ? ??????? ??????
+   * ?????? ?? ?????? ???? ??? ????? ? ???? ??????????? ???? ???? ???? ????? ????? ? ??????? ?????
+   */
+  static toViewShopProduct(dto: any): ShopProductBannerViewModel {
+    if (!dto) {
+      return {
+        id: '',
+        title: '',
+        imageUrl: '',
+        link: null,
+        product: {
+          id: '',
+          name: '',
+          code: 0,
+          shopName: '',
+          price: { raw: 0, formatted: '?', toman: '? ?????' },
+          discount: { hasDiscount: false, discountPrice: null, discountPercent: null }
+        },
+        position: 0
+      };
+    }
+
+    // ??????? ???? ??? ????? ? ????? ?? ???? ??????? ????? ?? ?? ?????? API
+    const originalPriceRaw = Number(dto.rialRetailPrice || dto.price || 0);
+    const finalPriceRaw = Number(dto.rialFinalPrice || dto.discountPrice || originalPriceRaw);
+
+    const price = finalPriceRaw / 10;
+    const discountPrice = originalPriceRaw > finalPriceRaw ? finalPriceRaw / 10 : null;
+
+    const hasDiscount = originalPriceRaw > finalPriceRaw;
+    const discountPercent = hasDiscount
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+      : (dto.discountPercentage || 0);
+
+    const productId = dto.shopProductId || dto.id || '';
+    const productName = dto.productTitle || dto.productName || dto.title || '';
+    const imageUrl = dto.image || dto.imageUrl || '';
+    const shopName = dto.shopTitle || dto.shopName || '?????';
+    const position = dto.position || 0;
+
+    return {
+      id: dto.id || productId,
+      title: productName,
+      imageUrl: imageUrl,
+      link: dto.linkUrl || null,
+      product: {
+        id: productId,
+        name: productName,
+        code: dto.productCode || 0,
+        shopName: shopName,
+        price: {
+          raw: finalPriceRaw,
+          formatted: new Intl.NumberFormat('fa-IR').format(finalPriceRaw),
+          toman: new Intl.NumberFormat('fa-IR').format(price) + ' ?????',
+        },
+        discount: {
+          hasDiscount,
+          discountPrice: discountPrice ? new Intl.NumberFormat('fa-IR').format(discountPrice) + ' ?????' : null,
+          discountPercent: discountPercent > 0 ? discountPercent : null,
+        },
+      },
+      position,
+    };
+  }
+
+  static toViewMegaMenu(dto: MegaMenuCategoryApiDto): MegaMenuCategoryViewModel {
+    const apiBase = (env.apiBaseUrl || 'https://api.yadakchi.com').replace(/\/$/, '');
+    const categoryIcon = getFullUrl(dto.icon);
+
+    return {
+      id: dto.id,
+      name: dto.name,
+      englishTitle: dto.englishTitle,
+      icon: categoryIcon,
+      href: `/part-category/${dto.englishTitle}`,
+      parts: (dto.parts || []).map(part => {
+        const partIcon = getFullUrl(part.icon);
+        return {
+          id: part.id,
+          name: part.name,
+          englishTitle: part.englishTitle,
+          icon: partIcon,
+          iconAlt: part.iconAlt || null,
+          href: `/parts/${dto.englishTitle}/${part.englishTitle}`,
+        };
+      }),
+    };
+  }
+
+  // ?? ???? ???????? ???? ?? ????? ????? ????????? ????? ?? ????? ???????? ???/???? ????
+  static toViewFooter(dto: FrontFooterApiDto): FrontFooterViewModel {
+    if (!dto) {
+      return {
+        title: '',
+        description: '',
+        links: [],
+        socialMedia: [],
+        contactInfo: [],
+      };
+    }
+
+    return {
+      title: dto.title || '',
+      description: dto.description || '',
+      links: (dto.links || []).map(link => ({
+        id: link.id,
+        title: link.title,
+        link: link.link,
+        order: link.order,
+      })),
+      socialMedia: (dto.socialMedia || []).map(sm => ({
+        id: sm.id,
+        name: sm.name,
+        icon: sm.icon,
+        link: sm.link,
+        order: sm.order,
+      })),
+      contactInfo: (dto.contactInfo || []).map(ci => ({
+        id: ci.id,
+        type: ci.type,
+        value: ci.value,
+        order: ci.order,
+      })),
+    };
+  }
+
+  static toClickRequest(request: BannerClickRequest): BannerClickRequestDto {
+    return {
+      bannerIds: request.bannerIds,
+      shopProductIds: request.shopProductIds,
+    };
+  }
+
+  static toViewRequest(request: BannerViewRequest): BannerViewRequestDto {
+    return {
+      bannerIds: request.bannerIds,
+      shopProductIds: request.shopProductIds,
+    };
+  }
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\services\banner.service.ts
+=====================================================
+// src/domains/front/banner/services/banner.service.ts
+
+import { getHttpClient } from '@/core/http/client';
+import { logger } from '@/core/utils/logger';
+import { BANNER_ENDPOINTS, BannerPageName } from '../endpoints/banner.endpoints';
+import { BannerMapper } from '../mappers/banner.mapper';
+import { BannerClickRequest, BannerViewRequest } from '../types/view.types';
+import { 
+  BannerApiDto, 
+  ShopProductBannerApiDto,
+  MegaMenuResponseApiDto,
+  FrontFooterApiDto
+} from '../types/dto.types';
+import { 
+  ShopProductBannerViewModel,
+  MegaMenuCategoryViewModel,
+  FrontFooterViewModel
+} from '../types/view.types';
+
+export class BannerService {
+  private readonly httpClient = getHttpClient();
+
+  async getBanners(pageName: BannerPageName): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        BANNER_ENDPOINTS.GET_BANNERS,
+        { params: { YadakchiPageName: pageName } }
+      );
+
+      return response.data;
+    } catch (error) {
+      logger.error('[BannerService] Get banners failed:', error);
+      // رفع باگ کلیدی: پرتاب خطا به جای بازگرداندن آرایه خالی برای ایجاد قابلیت فال‌بک روی کلاینت
+      throw error; 
+    }
+  }
+
+  async getShopProductBanners(params: {
+    partCategoryId?: string;
+    partId?: string;
+    carId?: string;
+  }): Promise<ShopProductBannerViewModel[]> {
+    try {
+      const response = await this.httpClient.get<ShopProductBannerApiDto[]>(
+        BANNER_ENDPOINTS.GET_SHOP_PRODUCT_BANNERS,
+        { params }
+      );
+
+      return response.data.map(dto => BannerMapper.toViewShopProduct(dto));
+    } catch (error) {
+      logger.error('[BannerService] Get shop product banners failed:', error);
+      throw error;
+    }
+  }
+
+  async getMegaMenu(): Promise<MegaMenuCategoryViewModel[]> {
+    try {
+      const response = await this.httpClient.get<MegaMenuResponseApiDto>(
+        BANNER_ENDPOINTS.GET_MEGA_MENU
+      );
+
+      if (!response.data || !response.data.partCategories) {
+        return [];
+      }
+
+      return response.data.partCategories.map(dto => BannerMapper.toViewMegaMenu(dto));
+    } catch (error) {
+      logger.error('[BannerService] Get mega menu failed:', error);
+      throw error;
+    }
+  }
+
+  async getFrontFooter(): Promise<FrontFooterViewModel | null> {
+    try {
+      const response = await this.httpClient.get<FrontFooterApiDto>(
+        BANNER_ENDPOINTS.GET_FRONT_FOOTER
+      );
+
+      return BannerMapper.toViewFooter(response.data);
+    } catch (error) {
+      logger.error('[BannerService] Get front footer failed:', error);
+      throw error;
+    }
+  }
+
+  async trackBannerClick(request: BannerClickRequest): Promise<void> {
+    try {
+      const dto = BannerMapper.toClickRequest(request);
+      await this.httpClient.post(BANNER_ENDPOINTS.POST_BANNER_CLICK, dto);
+    } catch (error) {
+      logger.error('[BannerService] Track banner click failed:', error);
+    }
+  }
+
+  async trackBannerView(request: BannerViewRequest): Promise<void> {
+    try {
+      const dto = BannerMapper.toViewRequest(request);
+      await this.httpClient.post(BANNER_ENDPOINTS.POST_BANNER_VIEW, dto);
+    } catch (error) {
+      logger.error('[BannerService] Track banner view failed:', error);
+    }
+  }
+}
+
+let bannerServiceInstance: BannerService | null = null;
+
+export function getBannerService(): BannerService {
+  if (!bannerServiceInstance) {
+    bannerServiceInstance = new BannerService();
+  }
+  return bannerServiceInstance;
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\types\domain.types.ts
+=====================================================
+// src/domains/front/banner/types/domain.types.ts
+
+export interface Banner {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl: string;
+  link?: string;
+  target: '_blank' | '_self';
+  position: number;
+  isActive: boolean;
+  pageName: string;
+  schedule: BannerSchedule;
+  metadata: BannerMetadata;
+}
+
+export interface BannerSchedule {
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export interface BannerMetadata {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ShopProductBanner {
+  id: string;
+  title: string;
+  imageUrl: string;
+  link?: string;
+  product: ShopProductInfo;
+  position: number;
+  isActive: boolean;
+}
+
+export interface ShopProductInfo {
+  id: string;
+  name: string;
+  code: number;
+  shopName: string;
+  price: number;
+  discountPrice?: number;
+  hasDiscount: boolean;
+}
+
+export interface MegaMenuItem {
+  id: string;
+  title: string;
+  link: string;
+  icon?: string;
+  order: number;
+  children: MegaMenuItem[];
+  isActive: boolean;
+}
+
+export interface FrontFooter {
+  id: string;
+  title: string;
+  description: string;
+  links: FooterLink[];
+  socialMedia: SocialMedia[];
+  contactInfo: ContactInfo[];
+}
+
+export interface FooterLink {
+  id: string;
+  title: string;
+  link: string;
+  order: number;
+}
+
+export interface SocialMedia {
+  id: string;
+  name: string;
+  icon: string;
+  link: string;
+  order: number;
+}
+
+export interface ContactInfo {
+  id: string;
+  type: 'phone' | 'email' | 'address' | 'working_hours';
+  value: string;
+  order: number;
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\types\dto.types.ts
+=====================================================
+// src/domains/front/banner/types/dto.types.ts
+
+export interface BannerApiDto {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl: string;
+  linkUrl?: string;
+  target?: '_blank' | '_self';
+  position: number;
+  isActive: boolean;
+  pageName: string;
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShopProductBannerApiDto {
+  id: string;
+  title: string;
+  imageUrl: string;
+  linkUrl?: string;
+  shopProductId: string;
+  productName: string;
+  productCode: number;
+  shopName: string;
+  price: number;
+  discountPrice?: number;
+  hasDiscount: boolean;
+  position: number;
+  isActive: boolean;
+}
+
+// ساختار مگا منو منطبق با خروجی واقعی API شما
+export interface MegaMenuPartApiDto {
+  id: string;
+  name: string;
+  englishTitle: string;
+  icon: string | null;
+  iconAlt: string | null;
+}
+
+export interface MegaMenuCategoryApiDto {
+  id: string;
+  name: string;
+  englishTitle: string;
+  icon: string | null;
+  parts: MegaMenuPartApiDto[];
+}
+
+export interface MegaMenuResponseApiDto {
+  partCategories: MegaMenuCategoryApiDto[];
+}
+
+export interface FrontFooterApiDto {
+  id: string;
+  title: string;
+  description: string;
+  links: FooterLinkApiDto[];
+  socialMedia: SocialMediaApiDto[];
+  contactInfo: ContactInfoApiDto[];
+}
+
+export interface FooterLinkApiDto {
+  id: string;
+  title: string;
+  link: string;
+  order: number;
+}
+
+export interface SocialMediaApiDto {
+  id: string;
+  name: string;
+  icon: string;
+  link: string;
+  order: number;
+}
+
+export interface ContactInfoApiDto {
+  id: string;
+  type: 'phone' | 'email' | 'address' | 'working_hours';
+  value: string;
+  order: number;
+}
+
+export interface BannerClickRequestDto {
+  bannerIds: string[];
+  shopProductIds: string[];
+}
+
+export interface BannerViewRequestDto {
+  bannerIds: string[];
+  shopProductIds: string[];
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\types\view.types.ts
+=====================================================
+// src/domains/front/banner/types/view.types.ts
+
+export interface BannerViewModel {
+  id: string;
+  title: string;
+  description: string | null;
+  imageUrl: string;
+  link: string | null;
+  target: '_blank' | '_self';
+  position: number;
+  pageName: string;
+  schedule: {
+    startDate: string | null;
+    endDate: string | null;
+  };
+  isActive: boolean;
+}
+
+export interface ShopProductBannerViewModel {
+  id: string;
+  title: string;
+  imageUrl: string;
+  link: string | null;
+  product: {
+    id: string;
+    name: string;
+    code: number;
+    shopName: string;
+    price: {
+      raw: number;
+      formatted: string;
+      toman: string;
+    };
+    discount: {
+      hasDiscount: boolean;
+      discountPrice: string | null;
+      discountPercent: number | null;
+    };
+  };
+  position: number;
+}
+
+// ساختار نهایی ویو مگا منو مورد استفاده در کامپوننت هدر
+export interface MegaMenuPartViewModel {
+  id: string;
+  name: string;
+  englishTitle: string;
+  icon: string | null;
+  iconAlt: string | null;
+  href: string;
+}
+
+export interface MegaMenuCategoryViewModel {
+  id: string;
+  name: string;
+  englishTitle: string;
+  icon: string | null;
+  href: string;
+  parts: MegaMenuPartViewModel[];
+}
+
+export interface FrontFooterViewModel {
+  title: string;
+  description: string;
+  links: Array<{
+    id: string;
+    title: string;
+    link: string;
+    order: number;
+  }>;
+  socialMedia: Array<{
+    id: string;
+    name: string;
+    icon: string;
+    link: string;
+    order: number;
+  }>;
+  contactInfo: Array<{
+    id: string;
+    type: 'phone' | 'email' | 'address' | 'working_hours';
+    value: string;
+    order: number;
+  }>;
+}
+
+export interface BannerClickRequest {
+  bannerIds: string[];
+  shopProductIds: string[];
+}
+
+export interface BannerViewRequest {
+  bannerIds: string[];
+  shopProductIds: string[];
+}
+
+export interface BannerFilters {
+  pageName: string;
+  isActive?: boolean;
+}
+
+
+=====================================================
+????: C:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\domains\front\banner\index.ts
+=====================================================
+// src/domains/front/banner/index.ts
+
+export * from './types/dto.types';
+export * from './types/domain.types';
+export * from './types/view.types';
+export * from './mappers/banner.mapper';
+export * from './services/banner.service';
+export * from './endpoints/banner.endpoints';
+export * from './hooks/banner.hooks';
+export * from './constants/banner.constants';
+
+

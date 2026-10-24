@@ -1,6 +1,6 @@
 // src/app/(public)/home/page.tsx
 
-import type { Metadata } from 'next'; // وارد کردن تایپ متادیتا برای سئو
+import type { Metadata } from 'next';
 import { getBannerService } from '@/domains/front/banner/services/banner.service';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getPartService } from '@/domains/front/part/services/part.service';
@@ -10,12 +10,11 @@ import { getHttpClient } from '@/core/http/client';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { HomeContent } from '@/components/features/Home/HomeContent';
 
-
 export const metadata: Metadata = {
   title: 'یدک‌چی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
   description: 'خرید مستقیم و آنلاین انواع قطعات یدکی، لوازم بدنه، ابزارآلات و تجهیزات خودرو از معتبرترین فروشگاه‌های سراسر کشور با ضمانت اصالت کالا در یدک‌چی.',
   alternates: {
-    canonical: 'https://www.yadakchi.com/home', // اصلاح دیکته کلید به alternates جهت تعریف آدرس کانونیکال رسمی
+    canonical: 'https://www.yadakchi.com/home',
   },
   openGraph: {
     title: 'یدک‌چی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
@@ -35,23 +34,24 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 60; 
+export const revalidate = 60;
 
 export default async function HomePage() {
   const queryClient = new QueryClient();
 
   const bannerService = getBannerService();
   const productService = getProductService();
-  const partService = getPartService();
   const brandService = getBrandService();
   const shopService = getShopService();
   const httpClient = getHttpClient();
 
   try {
     await Promise.all([
+      // بنرها با retry بیشتر برای اطمینان از دریافت
       queryClient.prefetchQuery({
         queryKey: ['front', 'banners', 'Home'],
         queryFn: () => bannerService.getBanners('Home'),
+        retry: 2,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'get-home-page'],
@@ -59,10 +59,12 @@ export default async function HomePage() {
           const response = await httpClient.get<any>('/api/Front/GetHomePage');
           return response.data;
         },
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-deals', null],
         queryFn: () => productService.getNominatedProducts(),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'parts', 'categories-flat', 'all'],
@@ -72,42 +74,52 @@ export default async function HomePage() {
           });
           return Array.isArray(response.data) ? response.data : [];
         },
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-category', 'car-tools', null],
         queryFn: () => productService.getNominatedProductsByCategory('car-tools'),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-category', 'audio-video-multimedia-system', null],
         queryFn: () => productService.getNominatedProductsByCategory('audio-video-multimedia-system'),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-category', 'Exhaust', null],
         queryFn: () => productService.getNominatedProductsByCategory('Exhaust'),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-category', 'heater', null],
         queryFn: () => productService.getNominatedProductsByCategory('heater'),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-category', 'door-handles-locks-and-safety', null],
         queryFn: () => productService.getNominatedProductsByCategory('door-handles-locks-and-safety'),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'products', 'nominated-category', 'body-and-weatherstrips', null],
         queryFn: () => productService.getNominatedProductsByCategory('body-and-weatherstrips'),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['reference', 'brands', 'main'],
         queryFn: () => brandService.getMainBrands(),
+        retry: 1,
       }),
       queryClient.prefetchQuery({
         queryKey: ['front', 'shop', 'cards', { orderBy: 'Rank', pageNumber: 1, pageSize: 30 }],
         queryFn: () => shopService.getShopCards({ orderBy: 'Rank', pageNumber: 1, pageSize: 30 }),
+        retry: 1,
       }),
     ]);
-  } catch (error) {}
-
+  } catch (error) {
+    console.error('❌ Prefetch Error in HomePage:', error);
+  }
 
   const schemaJson = {
     "@context": "https://schema.org",
@@ -167,7 +179,6 @@ export default async function HomePage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-    
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}

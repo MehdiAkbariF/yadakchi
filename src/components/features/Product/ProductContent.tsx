@@ -1,5 +1,4 @@
 ﻿'use client';
-
 import * as React from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag, Bell } from 'lucide-react';
@@ -351,7 +350,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             productTitle={product.title}
           />
 
-          <div className="sticky top-[64px] z-30 mt-6 flex w-full items-center gap-6 overflow-x-auto border-b border-border bg-card px-1 py-2.5 shadow-xs scrollbar-none transition-colors duration-normal lg:top-[76px]">
+          <div className="sticky top-[54px] z-30 mt-6 flex w-full items-center gap-6 overflow-x-auto border-b border-border bg-card px-1 py-2.5 shadow-xs scrollbar-none transition-colors duration-normal lg:top-[76px]">
             {[
               { id: 'intro', label: 'معرفی کالا', ref: introRef },
               { id: 'specs', label: 'مشخصات فنی', ref: specsRef },

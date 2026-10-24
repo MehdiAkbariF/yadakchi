@@ -4,18 +4,12 @@ import { UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getStaticService } from '../services/static.service';
 import { 
- 
   FAQFilters, 
   ContactUsRequest, 
-  NewsletterRequest 
-} from '../types/view.types';
-import { 
-  StaticPageViewModel, 
-  
+  NewsletterRequest,
+  StaticPageViewModel,
   FAQViewModel,
-
-  ToolTipViewModel,
- 
+  ToolTipViewModel
 } from '../types/view.types';
 
 const staticService = getStaticService();
@@ -110,13 +104,16 @@ export function useSubscribeNewsletter() {
   );
 }
 
+
 export function useGetCurrentTime() {
   return useTypedQuery(
     ['front', 'current-time'],
     () => staticService.getCurrentTime(),
     {
-      staleTime: 60 * 1000,
+      staleTime: 30 * 1000, // ۳۰ ثانیه
       refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      retry: 1, // در صورت خطا، یک بار تلاش مجدد
     }
   );
 }

@@ -242,3 +242,7 @@
   }
 }
 
+/* globals.css */
+:root {
+  --header-height: 68px; /* پیش‌فرض */
+}

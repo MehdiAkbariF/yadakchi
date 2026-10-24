@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { Gift } from 'lucide-react';
-import { Card, CardBody, CardHeader } from '@/components/composites/Card';
+import { User } from 'lucide-react';
+import { Card, CardBody } from '@/components/composites/Card';
 import { Input } from '@/components/primitives/Input/Input';
 import { Button } from '@/components/primitives/Button';
 import { useApplyReferralCode } from '@/domains/front/basket/hooks/basket.hooks';
@@ -27,38 +27,43 @@ export function ReferralCard() {
   };
 
   return (
-    <Card className="w-full overflow-hidden rounded-xl border border-border/70 bg-card shadow-xs">
-      <CardHeader className="flex items-center justify-between border-b border-border/60 bg-card px-5 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Gift aria-hidden="true" className="h-4 w-4" />
+    <Card className="w-full overflow-hidden rounded-lg border border-border bg-card shadow-none">
+      <CardBody className="flex flex-col gap-4 p-4 sm:p-5">
+        
+        {/* بخش بالایی: عنوان و توضیحات - راست‌چین */}
+        <div className="flex w-full flex-col items-start justify-start text-right gap-1">
+          <div className="flex items-center gap-2">
+            <User className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm font-bold text-foreground">ثبت کد معرف</span>
           </div>
-          <span className="text-sm font-bold text-foreground">کد معرف (هدیه دوستان)</span>
+          <span className="text-xs text-muted-foreground">
+            با وارد کردن کد معرف، هم دوستت و هم خودت (۱,۰۰۰,۰۰۰ ریال) اعتبار خرید دریافت می‌کنید.
+          </span>
         </div>
-      </CardHeader>
 
-      <CardBody className="flex flex-col gap-3 p-5">
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          با ثبت کد معرف، ۱۰۰,۰۰۰ تومان اعتبار خرید به کیف پول شما و دوستتان اضافه خواهد شد.
-        </p>
+        {/* بخش پایین: فیلد ورودی و دکمه */}
+        <div className="flex w-full flex-col sm:flex-row items-stretch sm:items-center justify-start gap-3 mt-2">
+          {/* فیلد ورودی اول می‌آید تا در راست قرار بگیرد */}
+          <div className="w-full sm:max-w-md">
+            <Input
+              placeholder="کد معرف را وارد کنید"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleApply()}
+              className="h-10 rounded-md border-border/80 text-xs text-left dir-ltr placeholder:text-right"
+            />
+          </div>
 
-        <div className="flex w-full items-center gap-2">
-          <Input
-            placeholder="کد معرف ۶ رقمی را وارد کنید..."
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleApply()}
-            className="h-10.5 flex-1 rounded-lg text-xs"
-          />
           <Button
-            variant="outline"
+            variant="primary"
             onClick={handleApply}
             isLoading={applyReferral.isPending}
-            className="h-10 rounded-lg border-border px-5 text-xs font-bold transition-colors hover:border-primary/50 hover:bg-secondary/40"
+            className="h-10 rounded-md px-8 text-xs font-bold bg-shop text-shop-foreground hover:bg-shop-hover shrink-0"
           >
-            ثبت معرف
+            ثبت کد
           </Button>
         </div>
+
       </CardBody>
     </Card>
   );

@@ -22,6 +22,7 @@ export interface HeaderProps {
 }
 
 export function Header({ className }: HeaderProps) {
+  
   const router = useRouter();
   const pathname = usePathname();
   useAuth();
@@ -58,7 +59,12 @@ export function Header({ className }: HeaderProps) {
       router.push(`/search?q=${encodeURIComponent(query)}`);
     }
   };
-
+React.useEffect(() => {
+  document.documentElement.style.setProperty(
+    '--header-height',
+    isHeaderMinimized ? '68px' : '112px'
+  );
+}, [isHeaderMinimized]);
   return (
     <header className={cn('z-40 w-full select-none', className)}>
       {/* هدر نسخه دسکتاپ */}

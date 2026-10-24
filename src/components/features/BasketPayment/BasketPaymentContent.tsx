@@ -86,32 +86,37 @@ export default function BasketPaymentContent() {
   return (
     <div className="flex w-full select-none flex-col gap-6 py-2">
       {/* مرحله‌بندی پیشرفت خرید (Checkout Stepper - مرحله آخر فعال) */}
-      <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 pb-2">
-        <div className="flex items-center gap-2 text-success font-semibold">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-success/15 text-success">
-            <CheckCircle2 className="h-4 w-4" />
-          </div>
-          <span className="text-xs">سبد خرید</span>
-        </div>
+     <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-2 sm:px-4 pb-4 sm:pb-2">
+  {/* مرحله ۱: سبد خرید */}
+  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 text-success font-semibold">
+    <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-success/15 text-success">
+      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+    </div>
+    <span className="text-[10px] sm:text-xs">سبد خرید</span>
+  </div>
 
-        <div className="h-[2px] flex-1 bg-success/50 mx-3" />
+  {/* خط جداکننده */}
+  <div className="h-[2px] flex-1 bg-success/50 mx-1.5 sm:mx-3" />
 
-        <div className="flex items-center gap-2 text-success font-semibold">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-success/15 text-success">
-            <CheckCircle2 className="h-4 w-4" />
-          </div>
-          <span className="text-xs">زمان و شیوه ارسال</span>
-        </div>
+  {/* مرحله ۲: زمان و شیوه ارسال */}
+  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 text-success font-semibold">
+    <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-success/15 text-success">
+      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+    </div>
+    <span className="text-[10px] sm:text-xs">زمان و شیوه ارسال</span>
+  </div>
 
-        <div className="h-[2px] flex-1 bg-primary/50 mx-3" />
+  {/* خط جداکننده */}
+  <div className="h-[2px] flex-1 bg-primary/50 mx-1.5 sm:mx-3" />
 
-        <div className="flex items-center gap-2 text-primary font-bold">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
-            <CreditCard className="h-3.5 w-3.5" />
-          </div>
-          <span className="text-xs">پرداخت نهایی</span>
-        </div>
-      </div>
+  {/* مرحله ۳: پرداخت نهایی */}
+  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 text-primary font-bold">
+    <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs">
+      <CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+    </div>
+    <span className="text-[10px] sm:text-xs">پرداخت نهایی</span>
+  </div>
+</div>
 
       <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
         {/* ستون اصلی کارت‌ها */}
