@@ -14,7 +14,7 @@ export const typographyVariants = cva('', {
       large: 'text-lg font-semibold',
       small: 'text-sm font-medium',
       muted: 'text-sm text-muted-foreground',
-      code: 'font-mono rounded-sm bg-muted px-1 py-0.5 text-sm font-semibold',
+      code: ' rounded-sm bg-muted px-1 py-0.5 text-sm font-semibold',
       blockquote: 'border-s-2 border-border ps-4 italic text-muted-foreground',
     },
     align: {

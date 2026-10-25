@@ -1,30 +1,27 @@
 import { getServerCurrentUser } from '@/domains/auth/server.auth';
-import { getAuthService } from '@/domains/auth/services/auth.service';
 import { getUserPanelService } from '@/domains/userpanel/services/userpanel.service';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { SettingsForm } from '@/components/features/Profile/SettingsForm';
+import { cookies } from 'next/headers';
 
 export default async function SettingsPage() {
   const queryClient = new QueryClient();
   const user = await getServerCurrentUser();
-  const authService = getAuthService();
-  const userPanelService = getUserPanelService();
 
+  // ست کردن مستقیم کاربر در کش React Query
   if (user) {
     queryClient.setQueryData(['auth', 'user'], user);
   }
 
+  const cookieStore = cookies();
+  const cookieHeader = cookieStore.toString();
+  const userPanelService = getUserPanelService();
+
   try {
-    await Promise.all([
-      queryClient.prefetchQuery({
-        queryKey: ['auth', 'user'],
-        queryFn: () => authService.getCurrentUser(),
-      }),
-      queryClient.prefetchQuery({
-        queryKey: ['user', 'bank-accounts', 'list'],
-        queryFn: () => userPanelService.getBankAccounts(),
-      }),
-    ]);
+    await queryClient.prefetchQuery({
+      queryKey: ['user', 'bank-accounts', 'list'],
+      queryFn: () => userPanelService.getBankAccounts({ cookie: cookieHeader }),
+    });
   } catch (error) {}
 
   return (

@@ -91,7 +91,7 @@ export function StaticPageContent({ slug, initialPage }: StaticPageContentProps)
               className="prose-static text-justify text-sm leading-reading text-foreground sm:text-base
                 [&_a]:font-medium [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:opacity-80
                 [&_blockquote]:my-4 [&_blockquote]:rounded-e-md [&_blockquote]:border-s-4 [&_blockquote]:border-primary/40 [&_blockquote]:bg-muted/40 [&_blockquote]:px-4 [&_blockquote]:py-2 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
-                [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-xs
+                [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]: [&_code]:text-xs
                 [&_em]:italic
                 [&_h1]:mb-3 [&_h1]:mt-6 [&_h1]:border-s-4 [&_h1]:border-primary [&_h1]:ps-3 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-foreground
                 [&_h2]:mb-3 [&_h2]:mt-8 [&_h2]:border-s-2 [&_h2]:border-primary [&_h2]:ps-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-foreground

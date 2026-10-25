@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Bell,
-  ArrowRight,
   Tag,
   Info,
   Settings,
@@ -13,89 +12,80 @@ import {
   Radio,
   Clock,
   Store,
+  ChevronLeft,
+  CheckCircle2,
 } from 'lucide-react';
 import { useGetUserNotifications } from '@/domains/userpanel/hooks/userpanel.hooks';
-import { Card, CardBody } from '@/components/composites/Card';
+import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { Select } from '@/components/primitives/Select/Select';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
+import { toPersianDigits } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
-
-function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: { path: string; className?: string; loop?: boolean }) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    let anim: any = null;
-    let isMounted = true;
-    const init = async () => {
-      try {
-        const altPath = path.includes('/anumations/')
-          ? path.replace('/anumations/', '/animations/')
-          : path.replace('/animations/', '/anumations/');
-        let animationData: any = null;
-        for (const p of [path, altPath]) {
-          try {
-            const res = await fetch(p);
-            if (res.ok) {
-              animationData = await res.json();
-              break;
-            }
-          } catch {}
-        }
-        if (!animationData || !isMounted || !containerRef.current) return;
-        const lottieModule = await import('lottie-web');
-        const lottie = lottieModule.default || lottieModule;
-        if (containerRef.current && isMounted) {
-          anim = lottie.loadAnimation({
-            container: containerRef.current,
-            renderer: 'svg',
-            loop,
-            autoplay: true,
-            animationData,
-          });
-        }
-      } catch {}
-    };
-    init();
-    return () => {
-      isMounted = false;
-      anim?.destroy();
-    };
-  }, [path, loop]);
-
-  return <div ref={containerRef} className={className} />;
-}
 
 const PRIORITY_OPTIONS = [
   { value: '', label: 'همه اولویت‌ها' },
-  { value: 'Important', label: 'مهم' },
+  { value: 'Important', label: 'اولویت مهم' },
   { value: 'VeryImportant', label: 'خیلی مهم' },
 ] as const;
 
 const ORDER_OPTIONS = [
-  { value: 'Latest', label: 'جدیدترین' },
-  { value: 'Oldest', label: 'قدیمی‌ترین' },
+  { value: 'Latest', label: 'جدیدترین‌ها' },
+  { value: 'Oldest', label: 'قدیمی‌ترین‌ها' },
 ] as const;
 
-function getChannelIcon(channel: string) {
+function getChannelMeta(channel: string) {
   switch (channel) {
     case 'Discount':
-      return <Tag aria-hidden="true" className="h-5 w-5 text-primary" />;
+      return {
+        icon: <Tag className="h-4.5 w-4.5 text-primary" />,
+        bg: 'bg-primary/10 border-primary/20',
+        badgeLabel: 'تخفیف و پیشنهاد',
+      };
     case 'System':
-      return <Settings aria-hidden="true" className="h-5 w-5 text-muted-foreground" />;
+      return {
+        icon: <Settings className="h-4.5 w-4.5 text-muted-foreground" />,
+        bg: 'bg-muted border-border',
+        badgeLabel: 'سیستمی',
+      };
     case 'Information':
-      return <Info aria-hidden="true" className="h-5 w-5 text-info" />;
+      return {
+        icon: <Info className="h-4.5 w-4.5 text-blue-500" />,
+        bg: 'bg-blue-500/10 border-blue-500/20',
+        badgeLabel: 'اطلاعیه',
+      };
     case 'AdminMessage':
-      return <ShieldAlert aria-hidden="true" className="h-5 w-5 text-destructive" />;
+      return {
+        icon: <ShieldAlert className="h-4.5 w-4.5 text-destructive" />,
+        bg: 'bg-destructive/10 border-destructive/20',
+        badgeLabel: 'پیام مدیریت',
+      };
     case 'SellerMessage':
-      return <Store aria-hidden="true" className="h-5 w-5 text-warning" />;
+      return {
+        icon: <Store className="h-4.5 w-4.5 text-amber-500" />,
+        bg: 'bg-amber-500/10 border-amber-500/20',
+        badgeLabel: 'پیام فروشنده',
+      };
     case 'Advertise':
-      return <Sparkles aria-hidden="true" className="h-5 w-5 text-warning" />;
+      return {
+        icon: <Sparkles className="h-4.5 w-4.5 text-amber-500" />,
+        bg: 'bg-amber-500/10 border-amber-500/20',
+        badgeLabel: 'ویژه',
+      };
     case 'WebBroadcastMessage':
-      return <Radio aria-hidden="true" className="h-5 w-5 text-primary" />;
+      return {
+        icon: <Radio className="h-4.5 w-4.5 text-primary" />,
+        bg: 'bg-primary/10 border-primary/20',
+        badgeLabel: 'اطلاع‌رسانی عمومی',
+      };
     default:
-      return <Bell aria-hidden="true" className="h-5 w-5 text-muted-foreground" />;
+      return {
+        icon: <Bell className="h-4.5 w-4.5 text-muted-foreground" />,
+        bg: 'bg-muted border-border',
+        badgeLabel: 'پیام',
+      };
   }
 }
 
@@ -129,49 +119,42 @@ export function NotificationsList() {
   };
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-6">
-      <div className="mb-1 flex items-center justify-between border-b border-border pb-3 lg:hidden">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.push('/profile')}
-            aria-label="بازگشت"
-            className="-me-1 flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
-          >
-            <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
-          </button>
-          <span className="text-sm font-bold text-foreground">پیام‌ها و اعلان‌ها</span>
-        </div>
-      </div>
-
-      <div className="flex w-full flex-col gap-2 border-b border-border pb-5">
+    <div className="flex w-full flex-col gap-4 sm:gap-5" dir="rtl">
+      
+      {/* هدر فقط در دسکتاپ نمایش داده می‌شود؛ در موبایل هدر اپلیکیشن بالا فعال است */}
+      <div className="hidden lg:flex flex-col gap-1 border-b border-border/70 pb-4">
         <div className="flex items-center gap-2">
-          <Bell aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
-          <span className="text-xl font-bold text-foreground">پیام‌ها و اعلان‌ها</span>
+          <Bell className="h-5 w-5 text-primary" />
+          <h1 className="text-base font-black text-foreground sm:text-lg">پیام‌ها و اعلان‌ها</h1>
         </div>
         <p className="text-xs text-muted-foreground">
-          تمام اطلاع‌رسانی‌های مربوط به سفارش و تخفیف‌های ویژه در این بخش قابل مشاهده است
+          تمام اطلاعیه‌های سفارش‌ها، کدهای تخفیف و پیام‌های سیستمی را در این بخش پیگیری کنید.
         </p>
       </div>
 
-      <div className="mt-2 flex flex-col justify-between gap-4 border-b border-border select-none sm:flex-row sm:items-center">
-        <div className="flex w-full shrink-0 items-center gap-5 pb-px sm:w-auto">
+      {/* نوار فیلتر و تب‌ها به سبک بومی اپلیکیشن */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-3 shadow-2xs sm:flex-row sm:items-center sm:justify-between select-none">
+        
+        {/* تب‌های کپسولی */}
+        <div className="flex items-center gap-1.5 rounded-xl bg-muted/60 p-1">
           <button
             type="button"
             onClick={() => handleTabChange('all')}
             className={cn(
-              'flex items-center gap-1.5 border-b-2 pb-2 text-sm font-bold outline-none transition-colors',
-              activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-all',
+              activeTab === 'all'
+                ? 'bg-card text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            <span>همه اعلان‌ها</span>
+            <span>همه پیام‌ها</span>
             <span
               className={cn(
-                'shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold',
-                activeTab === 'all' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                'rounded-md px-1.5 py-0.2 text-3xs  font-bold',
+                activeTab === 'all' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
               )}
             >
-              {totalCount}
+              {toPersianDigits(totalCount)}
             </span>
           </button>
 
@@ -179,24 +162,27 @@ export function NotificationsList() {
             type="button"
             onClick={() => handleTabChange('discounts')}
             className={cn(
-              'flex items-center gap-1.5 border-b-2 pb-2 text-sm font-bold outline-none transition-colors',
-              activeTab === 'discounts' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+              'flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-bold transition-all',
+              activeTab === 'discounts'
+                ? 'bg-card text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <span>تخفیف‌ها</span>
             <span
               className={cn(
-                'shrink-0 rounded-full px-2 py-0.5 text-2xs font-bold',
-                activeTab === 'discounts' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                'rounded-md px-1.5 py-0.2 text-3xs  font-bold',
+                activeTab === 'discounts' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
               )}
             >
-              {discountCount}
+              {toPersianDigits(discountCount)}
             </span>
           </button>
         </div>
 
-        <div className="flex w-full items-center justify-start gap-2 pb-3 sm:w-auto sm:justify-end sm:pb-2.5">
-          <div className="w-28 shrink-0 sm:w-36">
+        {/* فیلترهای اولویت و ترتیب (در موبایل هر کدام ۵۰٪ عرض می‌گیرند) */}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex-1 sm:w-36">
             <Select
               placeholder="اولویت"
               value={priority}
@@ -208,9 +194,9 @@ export function NotificationsList() {
             />
           </div>
 
-          <div className="w-28 shrink-0 sm:w-36">
+          <div className="flex-1 sm:w-36">
             <Select
-              placeholder="ترتیب"
+              placeholder="مرتب‌سازی"
               value={orderBy}
               onChange={(e) => {
                 setOrderBy(e.target.value as any);
@@ -222,66 +208,97 @@ export function NotificationsList() {
         </div>
       </div>
 
+      {/* لیست اعلان‌ها */}
       {isLoading ? (
-        <PageLoading label="در حال بارگذاری اعلان‌ها..." />
+        <PageLoading label="در حال دریافت پیام‌های شما..." />
       ) : notifications.length > 0 ? (
-        <div className="flex w-full flex-col gap-5">
-          <div className="flex w-full flex-col gap-4">
-            {notifications.map((notif: any) => (
+        <div className="flex flex-col gap-3 sm:gap-4">
+          {notifications.map((notif: any) => {
+            const meta = getChannelMeta(notif.channel);
+
+            return (
               <Card
                 key={notif.id}
                 className={cn(
-                  'relative w-full p-4 transition-colors md:p-5',
-                  !notif.isRead && 'border-primary/30 bg-accent/30'
+                  'relative overflow-hidden rounded-2xl border p-4 sm:p-5 transition-all shadow-xs',
+                  !notif.isRead
+                    ? 'border-primary/40 bg-gradient-to-r from-primary/5 via-card to-card'
+                    : 'border-border/80 bg-card hover:border-border'
                 )}
               >
-                <CardBody className="flex items-start gap-4 p-0">
-                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-xs">
-                    {getChannelIcon(notif.channel)}
-                    {!notif.isRead ? (
-                      <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 animate-pulse rounded-full bg-primary ring-2 ring-background" />
-                    ) : null}
+                {/* نشانگر نقطه نورانی برای پیام‌های خوانده‌نشده */}
+                {!notif.isRead && (
+                  <span className="absolute top-4 start-4 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                  </span>
+                )}
+
+                <div className="flex items-start gap-3.5">
+                  {/* آیکون کانال با پدینگ و فرم زیبا */}
+                  <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border shadow-2xs', meta.bg)}>
+                    {meta.icon}
                   </div>
 
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <div className="flex w-full items-center justify-between gap-4">
-                      <span className="block truncate text-sm font-bold text-foreground">{notif.title}</span>
-                      <div className="flex shrink-0 items-center gap-1.5 text-2xs text-muted-foreground">
-                        <Clock aria-hidden="true" className="h-3.5 w-3.5" />
+                  <div className="flex flex-1 flex-col gap-1.5 min-w-0">
+                    {/* ردیف تایتل و تگ نوع پیام */}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="truncate text-xs sm:text-sm font-black text-foreground">
+                          {notif.title}
+                        </span>
+                        <span className="hidden sm:inline-block rounded-md bg-muted px-2 py-0.5 text-3xs font-bold text-muted-foreground">
+                          {meta.badgeLabel}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-3xs text-muted-foreground font-medium shrink-0">
+                        <Clock className="h-3 w-3 text-muted-foreground/80" />
                         <span>{notif.createDateFormatted}</span>
                       </div>
                     </div>
 
-                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
+                    {/* متن پیام با فاصله‌گذاری و خوانایی بالا */}
+                    <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed text-right whitespace-pre-line break-words">
                       {notif.body}
                     </p>
 
-                    {notif.linkType && notif.linkText ? (
-                      <div className="mt-2 flex justify-start">
+                    {/* دکمه اکشن در صورت وجود لینک اختصاصی */}
+                    {notif.linkType && notif.linkText && (
+                      <div className="mt-3 flex justify-start">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => router.push(notif.linkType as string)}
-                          className="h-8 px-4 text-2xs font-bold"
+                          className="h-8 gap-1.5 rounded-xl border-primary/30 px-3.5 text-2xs font-bold text-primary hover:bg-primary/5 active:scale-95 transition-all"
                         >
-                          {notif.linkText}
+                          <span>{notif.linkText}</span>
+                          <ChevronLeft className="h-3 w-3" />
                         </Button>
                       </div>
-                    ) : null}
+                    )}
                   </div>
-                </CardBody>
+                </div>
               </Card>
-            ))}
-          </div>
+            );
+          })}
 
-          <Pagination currentPage={page} totalPages={totalPages} onPageChange={(p) => setPage(p)} />
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(p) => setPage(p)}
+          />
         </div>
       ) : (
-        <div className="flex w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card px-4 py-12 text-center">
-          <LottiePlayer path="/anumations/notif-bell.json" className="mx-auto h-48 w-48 max-w-full" />
-          <span className="text-sm font-bold text-muted-foreground">هیچ اعلانی در این دسته یافت نشد.</span>
+        /* استیت خالی اعلان‌ها */
+        <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center">
+          <LottiePlayer path="/animations/notif-bell.json" className="mx-auto h-40 w-40" />
+          <span className="text-xs font-bold text-muted-foreground">
+            هیچ پیامی در این دسته‌بندی یافت نشد.
+          </span>
         </div>
       )}
+
     </div>
   );
 }

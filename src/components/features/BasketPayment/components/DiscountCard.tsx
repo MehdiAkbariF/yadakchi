@@ -85,7 +85,7 @@ export function DiscountCard() {
                   className="group relative flex cursor-pointer items-center justify-between overflow-hidden rounded-md border border-dashed border-shop/40 bg-shop/5 p-3 transition-all duration-fast hover:border-shop hover:bg-shop/10"
                 >
                   <div className="flex flex-col items-start gap-0.5 text-right">
-                    <span className="font-mono text-xs font-bold text-shop tracking-wider dir-ltr">
+                    <span className=" text-xs font-bold text-shop tracking-wider dir-ltr">
                       {d.code}
                     </span>
                     <span className="text-2xs text-muted-foreground">

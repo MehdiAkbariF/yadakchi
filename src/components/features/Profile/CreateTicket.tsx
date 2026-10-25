@@ -72,7 +72,7 @@ export function CreateTicket() {
   return (
     <div className="flex-1 flex flex-col gap-6 w-full" dir="rtl">
       
-      <div className="flex items-center gap-3 border-b pb-3 mb-1 shrink-0">
+      {/* <div className="flex items-center gap-3 border-b pb-3 mb-1 shrink-0">
         <button 
           onClick={() => router.push('/profile/support')}
           className="p-1 -me-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
@@ -81,7 +81,7 @@ export function CreateTicket() {
           <ArrowRight className="h-5 w-5 text-foreground" />
         </button>
         <span className="text-sm font-bold text-foreground">ثبت تیکت پشتیبانی جدید</span>
-      </div>
+      </div> */}
 
       <Card className="w-full border rounded-xl bg-card shadow-sm">
         <CardBody className="p-5 md:p-6">

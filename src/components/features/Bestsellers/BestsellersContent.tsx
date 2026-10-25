@@ -110,7 +110,7 @@ export function BestsellersContent() {
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}

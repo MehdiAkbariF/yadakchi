@@ -73,7 +73,7 @@ export function BasketSummary() {
   );
 
   return (
-    <div className="flex w-full select-none flex-col gap-8">
+    <div className="flex w-full select-none flex-col gap-8 mt-5 md:mt-0">
       <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
         <div className="flex w-full flex-1 flex-col">
           <div className="mb-2 flex w-fit items-center justify-between border-b-2 border-primary pb-3">

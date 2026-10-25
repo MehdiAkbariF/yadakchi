@@ -119,7 +119,7 @@ export function FavoritesList() {
         <PageLoading label="در حال دریافت کالاهای محبوب شما..." />
       ) : favorites.length > 0 ? (
         <div className="flex w-full flex-col gap-6">
-          <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid w-full grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {favorites.map((product: any) => (
               <ProductSearchCard key={product.id} product={product} />
             ))}

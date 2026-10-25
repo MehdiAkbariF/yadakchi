@@ -126,7 +126,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
 
   React.useEffect(() => {
     const handleScrollSpy = () => {
-      const scrollPosition = window.scrollY + 200;
+      const scrollPosition = window.scrollY + 140;
       const sections = [
         { id: 'intro', ref: introRef },
         { id: 'specs', ref: specsRef },
@@ -198,7 +198,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
 
   const handleScrollToSection = (ref: React.RefObject<HTMLDivElement | null>, sectionId: string) => {
     if (ref.current) {
-      const offsetValue = window.innerWidth < 1024 ? 144 : 188;
+      const offsetValue = window.innerWidth < 1024 ? 104 : 120;
       const topOffset = ref.current.getBoundingClientRect().top + window.scrollY - offsetValue;
       window.scrollTo({ top: topOffset, behavior: 'smooth' });
       setActiveSection(sectionId);
@@ -277,7 +277,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
   ) : null;
 
   return (
-    <div className="flex w-full flex-col gap-1">
+    <div className="flex w-full flex-col gap-1 mt-3 md:mt-0">
       <div className="flex w-full select-none items-center gap-1.5 overflow-x-auto py-1.5 text-2xs text-muted-foreground scrollbar-none md:text-xs">
         <Link href="/" className="transition-colors hover:text-primary">
           خانه
@@ -350,7 +350,8 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             productTitle={product.title}
           />
 
-          <div className="sticky top-[54px] z-30 mt-6 flex w-full items-center gap-6 overflow-x-auto border-b border-border bg-card px-1 py-2.5 shadow-xs scrollbar-none transition-colors duration-normal lg:top-[76px]">
+          {/* تب‌های ۴ گانه اصلاح‌شده: دقیقاً چسبیده به هدر در 56px موبایل و 68px دسکتاپ، لبه تا لبه بدون ردیوس */}
+          <div className="sticky top-[56px] lg:top-[68px] z-30 mt-6 -mx-4 flex h-12 w-[calc(100%+2rem)] items-center gap-6 overflow-x-auto border-b border-border bg-card px-4 shadow-xs backdrop-blur-md scrollbar-none transition-all duration-normal md:mx-0 md:w-full md:px-0 rounded-none lg:gap-8">
             {[
               { id: 'intro', label: 'معرفی کالا', ref: introRef },
               { id: 'specs', label: 'مشخصات فنی', ref: specsRef },
@@ -362,10 +363,10 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
                 type="button"
                 onClick={() => handleScrollToSection(tab.ref, tab.id)}
                 className={cn(
-                  'shrink-0 border-b-2 pb-2 text-xs font-bold transition-colors md:text-sm',
+                  'h-full shrink-0 border-b-2 px-1 text-xs font-bold transition-all duration-fast flex items-center md:text-sm',
                   activeSection === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground'
+                    ? 'border-primary text-primary font-black'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
                 )}
               >
                 {tab.label}

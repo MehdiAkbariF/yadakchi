@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Car as CarIcon, Search, X } from 'lucide-react';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
@@ -19,6 +20,7 @@ export interface CarHeaderCardProps {
 }
 
 export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
+  const router = useRouter();
   const [isChangeCarOpen, setIsChangeCarOpen] = React.useState(false);
   const [isSelectPartOpen, setIsSelectPartOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -30,9 +32,9 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
 
   return (
     <div className="w-full">
-      <Card className="flex w-full flex-col justify-between gap-5 p-4 shadow-xs md:flex-row md:items-center">
+      <Card className="flex w-full flex-col justify-between gap-5 p-4 shadow-xs md:flex-row md:items-center rounded-2xl border-border/80">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/30 p-1">
             <img src={getFullUrl(carCover)} className="h-full w-full object-contain" alt="" />
           </div>
           <div className="flex flex-col gap-1">
@@ -49,7 +51,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
               setSearchQuery('');
               setIsChangeCarOpen(true);
             }}
-            className="h-10 px-5 text-xs font-bold"
+            className="h-10 px-5 text-xs font-bold rounded-xl"
           >
             تغییر خودرو
           </Button>
@@ -57,7 +59,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
             variant="primary"
             size="sm"
             onClick={() => setIsSelectPartOpen(true)}
-            className="h-10 px-5 text-xs font-bold shadow-xs"
+            className="h-10 px-5 text-xs font-bold shadow-xs rounded-xl"
           >
             انتخاب قطعه
           </Button>
@@ -67,7 +69,7 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
       <Modal
         isOpen={isChangeCarOpen}
         onClose={() => setIsChangeCarOpen(false)}
-        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:rounded-lg md:overflow-hidden"
+        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:rounded-2xl md:overflow-hidden"
         overlayClassName="bg-foreground/40 backdrop-blur-md"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
@@ -95,32 +97,32 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
           />
         </div>
 
-        <ModalBody className="h-full flex-1 overflow-y-auto bg-card p-6">
+        <ModalBody className="h-full flex-1 overflow-y-auto bg-card p-4 sm:p-6">
           {isCarsLoading ? (
             <PageLoading label="در حال دریافت لیست خودروها..." />
           ) : filteredCars.length > 0 ? (
-            <div className="grid w-full grid-cols-2 gap-4 py-1 sm:grid-cols-3">
+            <div className="grid w-full grid-cols-2 gap-3 py-1 sm:grid-cols-3">
               {filteredCars.map((car: any) => (
                 <div
                   key={car.id}
                   onClick={() => {
-                    window.location.href = getCarUrl(car.englishTitle);
+                    router.push(getCarUrl(car.englishTitle));
                     setIsChangeCarOpen(false);
                   }}
                   className={cn(
-                    'flex cursor-pointer flex-col items-center gap-3 rounded-md border border-border p-4 text-center transition-colors hover:border-primary/50 hover:bg-accent/50',
-                    slug === car.englishTitle && 'border-primary bg-accent/50 ring-1 ring-primary'
+                    'flex cursor-pointer flex-col items-center gap-2.5 rounded-2xl border border-border/80 p-3 text-center transition-all hover:border-primary/50 hover:bg-accent/40 active:scale-95',
+                    slug === car.englishTitle && 'border-primary bg-primary/5 ring-1 ring-primary'
                   )}
                 >
-                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md">
-                    <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain" />
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted/20">
+                    <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain p-1" />
                   </div>
-                  <span className="text-xs font-bold text-foreground sm:text-sm">{car.model}</span>
+                  <span className="text-xs font-bold text-foreground truncate w-full">{car.model}</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="w-full rounded-md border border-dashed border-border bg-card py-12 text-center">
+            <div className="w-full rounded-2xl border border-dashed border-border bg-card py-12 text-center">
               <span className="text-xs font-bold text-muted-foreground">خودرویی یافت نشد.</span>
             </div>
           )}

@@ -102,7 +102,7 @@ export function ReturnShipmentModal({ isOpen, onClose, returnRequestId }: Return
               value={traceNumber}
               onChange={(e) => setTraceNumber(e.target.value)}
               dir="ltr"
-              className="h-10 text-xs font-mono"
+              className="h-10 text-xs "
               required
             />
           </div>

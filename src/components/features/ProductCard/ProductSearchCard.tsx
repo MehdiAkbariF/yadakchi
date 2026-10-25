@@ -203,8 +203,9 @@ export function ProductSearchCard({
     null;
 
   return (
-    <div ref={impressionRef} className={cn('w-full select-none transition-all', className)}>
-      {/* دسکتاپ */}
+    <div ref={impressionRef} className={cn('w-full min-w-0 select-none transition-all', className)}>
+      
+      {/* ================= نسخه دسکتاپ ================= */}
       <Link
         href={productCardUrl}
         prefetch={false}
@@ -366,28 +367,30 @@ export function ProductSearchCard({
         ) : null}
       </Link>
 
-      {/* موبایل */}
+      {/* ================= نسخه موبایل: استایل اصلی با پدینگ متقارن px-3 py-3.5 ================= */}
       <Link
         href={productCardUrl}
         prefetch={false}
         onClick={handleCardClick}
-        className="relative flex w-full select-none flex-col border-b border-border bg-card px-0 py-4 md:hidden"
+        className="relative flex w-full min-w-0 select-none flex-col border-b border-border bg-card px-3 py-3.5 md:hidden"
         draggable={false}
       >
-        <div className="flex w-full items-stretch gap-3">
-          <div className="relative h-[100px] w-[100px] shrink-0 overflow-hidden rounded-md bg-muted">
+        <div className="flex w-full min-w-0 items-start gap-3">
+          {/* عکس محصول */}
+          <div className="relative h-[96px] w-[96px] shrink-0 overflow-hidden rounded-md bg-muted">
             <Image
               src={getFullUrl(imageSource)}
               alt={product?.imageAlt || title}
               fill
-              sizes="100px"
+              sizes="96px"
               className="select-none rounded-md object-contain"
               draggable={false}
             />
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col justify-between">
-            <div className="w-full">
+          {/* محتوا و مشخصات محصول */}
+          <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch">
+            <div className="w-full min-w-0">
               <h4 className="line-clamp-2 text-xs font-semibold leading-relaxed text-foreground">
                 {title}
               </h4>
@@ -414,8 +417,8 @@ export function ProductSearchCard({
               ) : null}
 
               {isMounted && tickerLength > 0 ? (
-                <div className="relative mt-1 flex h-5 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground">
-                  <div className="flex h-full w-full items-center justify-start gap-1.5 truncate">
+                <div className="relative mt-1 flex h-5 w-full min-w-0 shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground">
+                  <div className="flex h-full w-full min-w-0 items-center justify-start gap-1.5 truncate">
                     <CurrentTickerIcon aria-hidden="true" className="h-3 w-3 shrink-0 text-primary" />
                     <span className="truncate text-2xs font-medium">{tickerItems[0]?.text}</span>
                   </div>
@@ -425,10 +428,11 @@ export function ProductSearchCard({
               )}
             </div>
 
-            <div className="mt-2 flex w-full items-end justify-between">
+            {/* ردیف قیمت و تخفیف */}
+            <div className="mt-2 flex w-full min-w-0 items-end justify-between pt-1">
               <div
                 className={cn(
-                  'rounded-sm border border-accent bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground',
+                  'rounded-sm border border-accent bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground shrink-0',
                   hasDiscount && discountPercent > 0
                     ? 'opacity-100'
                     : 'pointer-events-none opacity-0'
@@ -460,6 +464,7 @@ export function ProductSearchCard({
           </div>
         </div>
 
+        {/* دکمه افزودن به سبد در صورت فعال بودن */}
         {showAddToBasket && !isOutOfStock ? (
           <div className="mt-3 h-8 w-full shrink-0">
             {isInBasket ? (

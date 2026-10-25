@@ -171,7 +171,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         </div>
       </div>
 
-      <Typography variant="h3" className="font-bold leading-relaxed text-foreground">
+      <Typography variant="h4" className="font-bold leading-relaxed text-foreground">
         {toPersianDigits(product.title)}
       </Typography>
 

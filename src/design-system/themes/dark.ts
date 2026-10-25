@@ -1,44 +1,44 @@
 export const darkTheme = {
-  background:            '#0C0A09',
-  foreground:            '#FAFAF9',
+  background:            '#0F1317',
+  foreground:            '#F4F6F8',
 
-  card:                  '#1C1917',
-  'card-foreground':     '#FAFAF9',
+  card:                  '#151A20',
+  'card-foreground':     '#F4F6F8',
 
-  popover:               '#1C1917',
-  'popover-foreground':  '#FAFAF9',
+  popover:               '#151A20',
+  'popover-foreground':  '#F4F6F8',
 
-  primary:               '#EE8A66',
-  'primary-foreground':  '#0C0A09',
-  'primary-hover':       '#F4A98D',
-  'primary-active':      '#E36D43',
+  primary:               '#F17B4C',
+  'primary-foreground':  '#FFFFFF',
+  'primary-hover':       '#F4956E',
+  'primary-active':      '#EE612A',
 
-  secondary:             '#292524',
-  'secondary-foreground':'#FAFAF9',
+  secondary:             '#212831',
+  'secondary-foreground':'#F4F6F8',
 
-  muted:                 '#292524',
-  'muted-foreground':    '#A8A29E',
+  muted:                 '#212831',
+  'muted-foreground':    '#A0A8B2',
 
-  accent:                '#852D14',
-  'accent-foreground':   '#FCE3DA',
+  accent:                '#391A0F',
+  'accent-foreground':   '#F8BFAB',
 
-  destructive:           '#EF4444',
-  'destructive-foreground':'#0C0A09',
+  destructive:           '#E03E3E',
+  'destructive-foreground':'#FFFFFF',
 
-  success:               '#22C55E',
-  'success-foreground':  '#0C0A09',
+  success:               '#2BB65E',
+  'success-foreground':  '#FFFFFF',
 
   warning:               '#F59E0B',
-  'warning-foreground':  '#0C0A09',
+  'warning-foreground':  '#0F1317',
 
   info:                  '#3B82F6',
-  'info-foreground':     '#0C0A09',
+  'info-foreground':     '#FFFFFF',
 
-  border:                '#292524',
-  input:                 '#292524',
-  ring:                  '#EE8A66',
+  border:                '#232A34',
+  input:                 '#232A34',
+  ring:                  '#F17B4C',
 
-  shop:                  '#4C90B6',
-  'shop-foreground':     '#0C0A09',
-  'shop-hover':          '#77ABC8',
+  shop:                  '#3D94C6',
+  'shop-foreground':     '#FFFFFF',
+  'shop-hover':          '#5FA6D1',
 } as const;

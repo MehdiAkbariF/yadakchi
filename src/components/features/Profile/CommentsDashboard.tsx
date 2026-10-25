@@ -119,7 +119,7 @@ export function CommentsDashboard() {
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6 select-none">
-      <div className="mb-1 flex items-center gap-3 border-b border-border pb-3 lg:hidden">
+      {/* <div className="mb-1 flex items-center gap-3 border-b border-border pb-3 lg:hidden">
         <button
           type="button"
           onClick={() => router.push('/profile')}
@@ -129,7 +129,7 @@ export function CommentsDashboard() {
           <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
         </button>
         <span className="text-sm font-bold text-foreground">نظرات و پرسش‌ها</span>
-      </div>
+      </div> */}
 
       <div className="flex w-full flex-col gap-2 border-b border-border pb-5">
         <div className="flex items-center gap-2">

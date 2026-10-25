@@ -50,14 +50,15 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
   ];
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-6" dir="rtl">
+      
+      {/* هدر چسبان موبایل: پرکننده ۱۰۰٪ عرض صفحه (Edge-to-Edge) بدون فاصله از کناره‌ها */}
       <div
-        style={{ top: isHeaderMinimized ? '56px' : '122px' }}
-        className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
+        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/40 p-1">
               <img
                 src={getFullUrl(categoryData?.category?.thumbnail)}
                 className="h-full w-full object-contain filter dark:invert"
@@ -65,8 +66,8 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
               />
             </div>
             <div className="flex min-w-0 flex-col">
-              <span className="text-2xs font-bold leading-none text-muted-foreground">گروه قطعات</span>
-              <span className="mt-1 truncate text-xs font-bold leading-none text-foreground">
+              <span className="text-3xs font-bold text-muted-foreground">گروه قطعات</span>
+              <span className="mt-0.5 truncate text-xs font-black text-foreground">
                 {categoryData?.category?.name || 'قطعات یدکی'}
               </span>
             </div>
@@ -76,27 +77,27 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             <button
               type="button"
               onClick={() => setIsChangeCatOpen(true)}
-              className="rounded-md bg-accent px-2.5 py-1.5 text-2xs font-bold text-accent-foreground outline-none"
+              className="rounded-lg bg-accent px-2.5 py-1.5 text-2xs font-bold text-accent-foreground active:scale-95 transition-transform"
             >
               تغییر دسته
             </button>
             <button
               type="button"
               onClick={() => setIsSelectPartOpen(true)}
-              className="rounded-md bg-secondary px-2.5 py-1.5 text-2xs font-bold text-secondary-foreground outline-none"
+              className="rounded-lg bg-secondary px-2.5 py-1.5 text-2xs font-bold text-secondary-foreground active:scale-95 transition-transform"
             >
               انتخاب قطعه
             </button>
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-between gap-3 border-t border-dashed border-border pt-2.5">
+        <div className="flex w-full items-center justify-between gap-2.5 border-t border-dashed border-border/60 pt-2.5">
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-xs font-bold text-foreground shadow-xs outline-none transition-colors hover:bg-muted"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-xs font-bold text-foreground shadow-2xs active:scale-95 transition-transform"
           >
-            <span className="truncate">فیلترها</span>
+            <span>فیلترها</span>
           </button>
 
           <SortSelector
@@ -105,7 +106,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             variant="trigger"
           />
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
+          <span className="flex h-9 shrink-0 items-center justify-center rounded-xl bg-muted px-2.5 text-3xs font-bold text-muted-foreground">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -123,7 +124,8 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           partCategoryId={categoryData?.category?.id}
         />
 
-        <div className="flex flex-1 flex-col items-stretch gap-6">
+        {/* کانتینر محصولات با min-w-0 حیاتی برای جلوگیری از بریده شدن کارت‌ها */}
+        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-6">
           <div className="hidden md:block">
             <PartCategoryHeaderCard
               slug={slug}
@@ -145,14 +147,14 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -165,8 +167,8 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
               />
             </>
           ) : (
-            <div className="mx-4 flex select-none flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card py-16 text-center md:mx-0">
-              <ShoppingBag aria-hidden="true" className="mb-4 h-12 w-12 text-muted-foreground/60" />
+            <div className="flex select-none flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center shadow-xs">
+              <ShoppingBag aria-hidden="true" className="mb-4 h-12 w-12 text-muted-foreground/40" />
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
               </Typography>
@@ -187,11 +189,12 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
 
       <ChangeCategoryModal isOpen={isChangeCatOpen} onClose={() => setIsChangeCatOpen(false)} />
 
-      <SelectPartModal
+     <SelectPartModal
         isOpen={isSelectPartOpen}
         onClose={() => setIsSelectPartOpen(false)}
         slug={slug}
         categoryName={categoryData?.category?.name || 'گروه قطعات'}
+        categoryId={categoryData?.category?.id}
       />
     </div>
   );

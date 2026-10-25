@@ -148,7 +148,7 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}

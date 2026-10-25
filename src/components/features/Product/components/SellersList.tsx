@@ -1,7 +1,22 @@
 ﻿'use client';
 
 import * as React from 'react';
-import { Store, ShieldCheck, MapPin, Truck, AlertTriangle, Phone, Plus, Loader2, ChevronDown } from 'lucide-react';
+import {
+  Store,
+  ShieldCheck,
+  MapPin,
+  Truck,
+  AlertTriangle,
+  Phone,
+  Plus,
+  Loader2,
+  ChevronDown,
+  Star,
+  Zap,
+  ShoppingBag,
+  Maximize2,
+  X,
+} from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
 import { useAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
@@ -20,7 +35,7 @@ export interface SellersListProps {
   productTitle?: string;
 }
 
-const MAX_VISIBLE_SELLERS = 4;
+const DESKTOP_MAX_VISIBLE = 3;
 
 export function SellersList({
   activeSellers,
@@ -33,7 +48,7 @@ export function SellersList({
   const [loadingSellerId, setLoadingSellerId] = React.useState<string | null>(null);
   const [isMapModalOpen, setIsMapModalOpen] = React.useState(false);
   const [mapInitialSellerId, setMapInitialSellerId] = React.useState<string | null>(null);
-  const [showAllOnline, setShowAllOnline] = React.useState(false);
+  const [isAllSellersModalOpen, setIsAllSellersModalOpen] = React.useState(false);
 
   const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
   const [reportDescription, setReportDescription] = React.useState('');
@@ -44,14 +59,12 @@ export function SellersList({
 
   const onlineList = activeSellers.online || [];
   const localList = activeSellers.local || [];
-  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
   const visibleOnline = React.useMemo(() => {
-    if (onlineList.length <= MAX_VISIBLE_SELLERS || showAllOnline) return onlineList;
-    return onlineList.slice(0, MAX_VISIBLE_SELLERS);
-  }, [onlineList, showAllOnline]);
+    return onlineList.slice(0, DESKTOP_MAX_VISIBLE);
+  }, [onlineList]);
 
-  const hasMoreOnline = onlineList.length > MAX_VISIBLE_SELLERS && !showAllOnline;
+  const hasMoreOnline = onlineList.length > DESKTOP_MAX_VISIBLE;
 
   const handleAddOnlineToBasket = async (e: React.MouseEvent, seller: any) => {
     e.preventDefault();
@@ -98,7 +111,7 @@ export function SellersList({
     }
   };
 
-  const renderSellerRow = (seller: any) => {
+  const renderSellerCard = (seller: any) => {
     const isOnline = activeTab === 'online';
     const isSelected = isOnline && selectedSellerId === seller.id;
 
@@ -120,74 +133,114 @@ export function SellersList({
         key={seller.id}
         onClick={() => isOnline && onSelectSeller(seller.id)}
         className={cn(
-          'flex w-full items-start justify-between gap-4 rounded-lg border border-border p-4 transition-colors md:p-5',
-          isSelected ? 'border-shop/40 bg-shop/5' : 'bg-card',
-          isOnline ? 'cursor-pointer hover:border-shop/40' : 'cursor-default'
+          'relative flex w-full flex-col gap-3 rounded-2xl bg-card p-4 shadow-xs transition-all md:p-4.5',
+          isSelected ? 'border-primary ring-1 ring-primary/20 bg-primary/2' : 'border-border/80 hover:border-primary/40',
+          isOnline ? 'cursor-pointer' : 'cursor-default'
         )}
       >
-        <div className="flex min-w-0 flex-1 items-start gap-3.5">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
-            {seller.shop.logo ? (
-              <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
-            ) : (
-              <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
-            )}
+        {/* ۱. بنر کوچک پیشنهاد ویژه در بالای کارت */}
+        {hasDiscount && (
+          <div className="flex items-center justify-between rounded-xl bg-destructive/10 px-3 py-1.5 text-3xs font-bold text-destructive">
+            <div className="flex items-center gap-1">
+              <Zap className="h-3.5 w-3.5 fill-destructive text-destructive" />
+              <span>پیشنهاد ویژه</span>
+            </div>
+            <span className="font-bold">تخفیف {toPersianDigits(discountPercent)}٪</span>
           </div>
+        )}
 
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="truncate text-sm font-bold text-shop md:text-base">
-                {seller.shop.title}
-              </span>
-              <span className="rounded-sm bg-muted px-2 py-0.5 text-2xs font-bold text-muted-foreground">
-                {seller.typeLabel}
-              </span>
-              {seller.isAdvertised ? (
-                <span className="rounded-sm bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground">
-                  آگهی
+        {/* ۲. هدر فروشگاه: لوگو، نام، امتیاز، شهر و دکمه گزارش */}
+        <div className="flex items-center justify-between border-b border-border/50 pb-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/30 p-1">
+              {seller.shop.logo ? (
+                <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
+              ) : (
+                <Store className="h-4.5 w-4.5 text-muted-foreground" />
+              )}
+            </div>
+
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs sm:text-sm font-black text-foreground truncate">
+                  {seller.shop.title}
                 </span>
-              ) : null}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-2xs text-muted-foreground md:text-xs">
-              <span className="font-bold text-success">عملکرد عالی</span>
-              <span className="text-muted-foreground">|</span>
-              <span className="flex items-center gap-1">
-                <Truck aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
-                {seller.dayOfDeliveryLabel}
-              </span>
-              <span className="text-muted-foreground">|</span>
-              <span className="flex items-center gap-1 text-success">
-                <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5" />
-                {seller.warrantyTitle || 'ضمانت اصالت کالا'}
-              </span>
-            </div>
-
-            {!isOnline ? (
-              <div className="mt-1.5 flex items-center gap-1 text-2xs text-muted-foreground">
-                <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="truncate">
-                  {(seller.shop as any).cityName || seller.shop.address?.split('،')[0] || ''}
+                <span className="rounded-md bg-muted px-1.5 py-0.2 text-3xs font-bold text-muted-foreground shrink-0">
+                  {seller.typeLabel}
                 </span>
               </div>
-            ) : null}
+
+              <div className="mt-0.5 flex items-center gap-2 text-3xs text-muted-foreground">
+                <span className="flex items-center gap-1 font-bold text-foreground">
+                  <Star className="h-3 w-3 fill-warning text-warning" />
+                  {toPersianDigits(seller.shop.rate || '۴.۸')}
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+                  {(seller.shop as any).cityName || seller.shop.address?.split('،')[0] || 'تهران'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setReportShop(seller);
+            }}
+            className="flex items-center gap-1 rounded-lg bg-muted/60 px-2.5 py-1 text-3xs font-bold text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+          >
+            <AlertTriangle className="h-2.5 w-2.5" />
+            <span>گزارش</span>
+          </button>
+        </div>
+
+        {/* ۳. مشخصات کوتاه تحویل و ضمانت */}
+        <div className="flex flex-col gap-1.5 text-3xs sm:text-2xs text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-foreground">زمان تحویل:</span>
+            <span className="font-bold text-foreground">{seller.dayOfDeliveryLabel}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-foreground">ضمانت اصالت:</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+              {seller.warrantyTitle || 'ضمانت اصالت و سلامت فیزیکی'}
+            </span>
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col items-end justify-start gap-3">
+        {/* ۴. ردیف قیمت و دکمه افزودن به سبد */}
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-dashed border-border/50">
+          <div className="flex flex-col">
+            {hasDiscount && (
+              <span className="text-3xs text-muted-foreground line-through">
+                {seller.retailPrice}
+              </span>
+            )}
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm sm:text-base font-black text-foreground" dir="ltr">
+                {seller.finalPrice}
+              </span>
+              <span className="text-3xs text-muted-foreground">تومان</span>
+            </div>
+          </div>
+
           {isOnline ? (
             <Button
-              variant={isSelected ? 'primary' : 'outline'}
+              variant="primary"
               size="sm"
               onClick={(e) => handleAddOnlineToBasket(e, seller)}
               disabled={loadingSellerId === seller.id}
-              className="flex h-10 w-auto min-w-[110px] shrink-0 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs md:min-w-[130px]"
+              className="h-9 gap-1.5 rounded-xl px-4 text-xs font-bold shadow-xs shrink-0"
             >
               {loadingSellerId === seller.id ? (
                 <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" />
               ) : (
                 <>
-                  <Plus aria-hidden="true" className="h-3.5 w-3.5" />
+                  <ShoppingBag aria-hidden="true" className="h-3.5 w-3.5" />
                   <span>افزودن به سبد</span>
                 </>
               )}
@@ -197,138 +250,129 @@ export function SellersList({
               variant="outline"
               size="sm"
               onClick={(e) => handleOpenMapWithSeller(e, seller)}
-              className="flex h-10 w-auto min-w-[110px] shrink-0 items-center justify-center gap-1.5 px-5 text-xs font-bold shadow-xs md:min-w-[130px]"
+              className="h-9 gap-1.5 rounded-xl px-4 text-xs font-bold shadow-xs shrink-0"
             >
               <Phone aria-hidden="true" className="h-3.5 w-3.5" />
               <span>اطلاعات تماس</span>
             </Button>
           )}
-
-          <div className="mt-1 flex flex-col items-end">
-            {hasDiscount ? (
-              <div className="mb-1 flex select-none items-center gap-1.5">
-                <span className="rounded-full bg-destructive/10 px-1.5 py-0.5 text-2xs font-bold leading-none text-destructive md:text-xs">
-                  ٪{toPersianDigits(discountPercent)}
-                </span>
-                <span className="text-2xs leading-none text-muted-foreground line-through md:text-xs">
-                  {seller.retailPrice}
-                </span>
-              </div>
-            ) : null}
-
-            <span className="text-base font-bold leading-none text-foreground md:text-lg">
-              {seller.finalPrice}
-            </span>
-
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setReportShop(seller);
-              }}
-              className="mt-2 flex items-center gap-0.5 rounded-md p-1 text-2xs font-bold text-muted-foreground outline-none transition-colors hover:text-destructive md:text-xs"
-            >
-              <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5" />
-              <span>گزارش خطای قیمت</span>
-            </button>
-          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="relative mt-4 flex w-full select-none flex-col gap-4">
-      <div className="sticky top-[64px] z-20 flex w-full items-center gap-6 border-b border-border bg-card px-1 pb-2 shadow-xs transition-colors duration-normal lg:top-[76px]">
+    <div className="relative mt-4 flex w-full select-none flex-col gap-4" dir="rtl">
+      
+      {/* تب‌های دوگانه خرید اینترنتی / حضوری */}
+      <div className="sticky top-[56px] lg:top-[68px] z-20 -mx-4 flex w-[calc(100%+2rem)] items-center border-b border-border bg-card px-4 shadow-xs backdrop-blur-md transition-all duration-normal md:mx-0 md:w-full md:px-0 rounded-none">
         <button
           type="button"
           onClick={() => setActiveTab('online')}
           className={cn(
-            'border-b-2 pb-2 text-xs font-bold outline-none transition-colors md:text-sm',
-            activeTab === 'online' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+            'flex-1 border-b-2 py-3 text-center text-xs font-bold outline-none transition-all duration-fast sm:flex-none sm:px-6 md:text-sm',
+            activeTab === 'online'
+              ? 'border-primary text-primary font-black'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           )}
         >
-          خرید اینترنتی ({onlineList.length} فروشگاه)
+          خرید اینترنتی ({toPersianDigits(onlineList.length)} فروشگاه)
         </button>
         <button
           type="button"
           onClick={() => setActiveTab('local')}
           className={cn(
-            'border-b-2 pb-2 text-xs font-bold outline-none transition-colors md:text-sm',
-            activeTab === 'local' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground'
+            'flex-1 border-b-2 py-3 text-center text-xs font-bold outline-none transition-all duration-fast sm:flex-none sm:px-6 md:text-sm',
+            activeTab === 'local'
+              ? 'border-primary text-primary font-black'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
           )}
         >
-          خرید حضوری ({localList.length} فروشگاه)
+          خرید حضوری ({toPersianDigits(localList.length)} فروشگاه)
         </button>
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         {activeTab === 'online' ? (
           onlineList.length > 0 ? (
             <>
-              {visibleOnline.map((s: any) => renderSellerRow(s))}
+              {/* نمایش ۳ کارت در دسکتاپ و تمام کارت‌ها در موبایل */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                {visibleOnline.map((s: any) => renderSellerCard(s))}
+              </div>
 
-              {hasMoreOnline ? (
-                <div className="flex w-full justify-end pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAllOnline(true)}
-                    className="flex items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+              {hasMoreOnline && (
+                <div className="flex w-full justify-center pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAllSellersModalOpen(true)}
+                    className="h-10 gap-2 rounded-2xl px-6 text-xs font-bold border-primary/40 text-primary hover:bg-primary/5 shadow-2xs"
                   >
-                    <span>
-                      مشاهده بیشتر ({toPersianDigits(onlineList.length - MAX_VISIBLE_SELLERS)} فروشنده دیگر)
-                    </span>
-                    <ChevronDown aria-hidden="true" className="h-4 w-4" />
-                  </button>
+                    <Maximize2 className="h-4 w-4" />
+                    <span>مشاهده همه فروشندگان ({toPersianDigits(onlineList.length)} فروشگاه)</span>
+                  </Button>
                 </div>
-              ) : null}
+              )}
             </>
           ) : (
-            <span className="py-4 text-xs text-muted-foreground">
+            <span className="py-8 text-center text-xs text-muted-foreground">
               فروشگاه اینترنتی فعالی برای این قطعه موجود نیست.
             </span>
           )
         ) : (
           <>
             {localList.length > 0 ? (
-              localList.map((s: any) => renderSellerRow(s))
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                {localList.map((s: any) => renderSellerCard(s))}
+              </div>
             ) : (
-              <span className="py-4 text-xs text-muted-foreground">
+              <span className="py-8 text-center text-xs text-muted-foreground">
                 فروشگاه حضوری فعالی برای این قطعه ثبت نشده است.
               </span>
             )}
             {localList.length > 0 ? (
               <div
                 onClick={handleOpenGeneralMap}
-                className="group mt-2 flex h-36 w-full cursor-pointer select-none flex-col items-center justify-center gap-3 overflow-hidden rounded-lg border border-border bg-muted/40 p-6 shadow-xs transition-colors hover:border-shop/40"
+                className="group mt-2 flex h-32 w-full cursor-pointer select-none flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border border-border/80 bg-muted/20 p-5 text-center shadow-2xs transition-all hover:border-primary/40"
               >
-                <div className="z-10 shrink-0 rounded-full border border-shop/40 bg-accent p-3 text-shop">
-                  <MapPin aria-hidden="true" className="h-6 w-6" />
+                <div className="z-10 shrink-0 rounded-xl border border-primary/30 bg-primary/10 p-2.5 text-primary">
+                  <MapPin aria-hidden="true" className="h-5 w-5" />
                 </div>
-                <span className="z-10 text-xs font-bold text-foreground md:text-sm">
-                  مشاهده تمام فروشگاه‌های حضوری روی نقشه
+                <span className="z-10 text-xs font-bold text-foreground">
+                  مشاهده تمام فروشگاه‌های حضوری روی نقشه شهر
                 </span>
-                <button
-                  type="button"
-                  className="z-10 border-b border-shop pb-0.5 text-2xs font-bold text-shop outline-none transition-opacity hover:opacity-80"
-                >
-                  مشاهده نقشه
-                </button>
               </div>
             ) : null}
           </>
         )}
       </div>
 
-      <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md">
-        <ModalHeader onClose={() => setReportShop(null)}>
-          <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-            <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
-            گزارش خطا در قیمت فروشگاه {reportShop?.shop.title}
+      {/* ================= مودال مشاهده همه فروشندگان ================= */}
+      <Modal
+        isOpen={isAllSellersModalOpen}
+        onClose={() => setIsAllSellersModalOpen(false)}
+        className="w-full max-w-3xl overflow-hidden rounded-2xl"
+      >
+        <ModalHeader onClose={() => setIsAllSellersModalOpen(false)}>
+          <ModalTitle className="flex items-center gap-2 text-sm font-black text-foreground">
+            <Store className="h-4.5 w-4.5 text-primary" />
+            <span>لیست کامل فروشندگان این قطعه ({toPersianDigits(onlineList.length)} فروشگاه)</span>
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="flex flex-col gap-4 p-0 pt-4">
+        <ModalBody className="p-4 md:p-6 max-h-[80dvh] overflow-y-auto no-scrollbar flex flex-col gap-3.5" dir="rtl">
+          {onlineList.map((s: any) => renderSellerCard(s))}
+        </ModalBody>
+      </Modal>
+
+      {/* مودال گزارش خطای قیمت */}
+      <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md overflow-hidden rounded-2xl">
+        <ModalHeader onClose={() => setReportShop(null)}>
+          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <AlertTriangle aria-hidden="true" className="h-4.5 w-4.5 text-destructive" />
+            <span>گزارش خطا در قیمت فروشگاه {reportShop?.shop.title}</span>
+          </ModalTitle>
+        </ModalHeader>
+        <ModalBody className="flex flex-col gap-4 p-5 pt-3" dir="rtl">
           <Select
             label="دلیل گزارش *"
             placeholder="دلیل گزارش را انتخاب کنید..."
@@ -338,14 +382,14 @@ export function SellersList({
           />
 
           <TextArea
-            label="توضیحات (اختیاری)"
-            placeholder="توضیحات خود را اینجا بنویسید..."
+            label="توضیحات تکمیلی (اختیاری)"
+            placeholder="جزئیات خطا را بنویسید..."
             value={reportDescription}
             onChange={(e) => setReportDescription(e.target.value)}
-            className="h-24"
+            className="h-24 text-xs"
           />
 
-          <div className="mt-4 flex w-full gap-2.5">
+          <div className="mt-2 flex w-full gap-2.5 border-t border-border/60 pt-4">
             <Button
               variant="outline"
               onClick={() => {
@@ -353,7 +397,7 @@ export function SellersList({
                 setSelectedSubjectId('');
                 setReportDescription('');
               }}
-              className="h-10 flex-1 text-xs font-bold"
+              className="h-10 flex-1 rounded-xl text-xs font-bold"
             >
               انصراف
             </Button>
@@ -361,7 +405,7 @@ export function SellersList({
               variant="destructive"
               onClick={handleReportSubmit}
               isLoading={submitReport.isPending}
-              className="h-10 flex-1 text-xs font-bold"
+              className="h-10 flex-1 rounded-xl text-xs font-bold shadow-xs"
             >
               ثبت گزارش خطا
             </Button>

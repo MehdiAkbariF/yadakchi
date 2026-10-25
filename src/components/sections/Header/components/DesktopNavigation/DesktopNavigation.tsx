@@ -27,7 +27,7 @@ export function DesktopNavigation() {
               href={item.href}
               hasDropdown={hasDropdown}
               isOpen={isOpen}
-              className="whitespace-nowrap text-xs font-medium text-foreground/90 transition-colors hover:text-primary lg:text-sm"
+              className="whitespace-nowrap text-xs font-thin text-foreground/90 transition-colors hover:text-primary lg:text-sm"
             />
             {hasDropdown && <CategoryDropdown isOpen={isOpen} />}
           </div>

@@ -9,6 +9,7 @@ import { Button } from '@/components/primitives/Button/Button';
 import { useAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { useGetProductPriceChart } from '@/domains/front/product/hooks/product.hooks';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { getHttpClient } from '@/core/http/client';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl, toPersianDigits } from '@/core/utils/formatters';
@@ -102,13 +103,20 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
     }
   };
 
+  // ✅ اتصال به اندپوینت موجود شد خبرم کن بر اساس Swagger
   const handleNotifyMe = async () => {
-    if (isNotifying) return;
+    if (isNotifying || !product?.id) return;
     setIsNotifying(true);
     try {
-      await new Promise((r) => setTimeout(r, 600));
+      const client = getHttpClient();
+      await client.post('/api/Front/ProductInStockNotificationRequest', null, {
+        params: { ProductId: product.id },
+      });
       setLottieKey((k) => k + 1);
       setIsNotifySuccessOpen(true);
+      showToast.success('درخواست اطلاع‌رسانی با موفقیت ثبت شد');
+    } catch (error: any) {
+      showToast.error(error?.userMessage || 'خطا در ثبت درخواست اطلاع‌رسانی موجودی');
     } finally {
       setIsNotifying(false);
     }
@@ -124,7 +132,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
   const isLowStock = seller && seller.quantity > 0 && seller.quantity < 4;
 
   return (
-    <Card className="flex w-full flex-col overflow-hidden">
+    <Card className="flex w-full flex-col overflow-hidden rounded-2xl border-border/80 shadow-xs" dir="rtl">
       {seller && seller.hasDiscount && discountPercentage > 0 ? (
         <div className="w-full shrink-0 bg-destructive px-4 py-2 text-center text-xs font-bold text-destructive-foreground">
           با تخفیف ویژه {toPersianDigits(discountPercentage)} درصد
@@ -134,20 +142,20 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
       <div className="flex flex-col gap-4 p-5">
         {seller ? (
           <>
-            <div className="flex w-full items-center justify-between border-b border-border pb-3.5">
+            <div className="flex w-full items-center justify-between border-b border-border/60 pb-3.5">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/30 p-1">
                   {seller.shop.logo ? (
                     <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
                   ) : (
                     <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 text-right">
                   <span className="block truncate text-xs font-bold text-shop md:text-sm">
                     {seller.shop.title}
                   </span>
-                  <span className="mt-0.5 block text-2xs text-muted-foreground">
+                  <span className="mt-0.5 block text-3xs text-muted-foreground">
                     عملکرد عالی فروشنده
                   </span>
                 </div>
@@ -161,9 +169,9 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
               </button>
             </div>
 
-            <div className="flex w-full flex-col gap-3 border-b border-border pb-3.5 text-xs text-muted-foreground">
+            <div className="flex w-full flex-col gap-3 border-b border-border/60 pb-3.5 text-xs text-muted-foreground text-right">
               <div className="flex items-center gap-2">
-                <ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0 text-success" />
+                <ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-500" />
                 <span className="font-bold text-foreground">
                   {seller.warrantyTitle || 'ضمانت اصل بودن کالا'}
                 </span>
@@ -192,7 +200,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
               type="button"
               onClick={handleNotifyMe}
               disabled={isNotifying}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-destructive text-sm font-bold text-destructive-foreground shadow-xs transition-colors hover:bg-destructive/90 disabled:opacity-80 md:text-base"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-destructive text-sm font-bold text-destructive-foreground shadow-xs transition-colors hover:bg-destructive/90 disabled:opacity-80 md:text-base"
             >
               {isNotifying ? (
                 <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
@@ -204,8 +212,9 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
           </div>
         )}
 
+        {/* بخش متحرک اطلاعات آماری (راست‌چین شده در RTL) */}
         {seller ? (
-          <div className="relative flex h-8 w-full shrink-0 items-center justify-center overflow-hidden border-b border-dashed border-border py-3">
+          <div className="relative flex h-8 w-full shrink-0 items-center justify-start overflow-hidden  py-3 text-right">
             <AnimatePresence mode="wait">
               <motion.div
                 key={metaIndex}
@@ -213,34 +222,34 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -12, opacity: 0 }}
                 transition={{ duration: 0.25 }}
-                className="absolute inset-0 flex items-center justify-center gap-1.5 text-2xs font-bold text-foreground"
+                className="absolute inset-0 flex items-center justify-start gap-1.5 text-2xs font-bold text-foreground"
               >
                 {(() => {
                   const Icon = metaItems[metaIndex].icon;
-                  return <Icon aria-hidden="true" className="h-3.5 w-3.5 text-primary" />;
+                  return <Icon aria-hidden="true" className="h-3.5 w-3.5 text-primary shrink-0" />;
                 })()}
-                <span>{metaItems[metaIndex].text}</span>
+                <span className="truncate">{metaItems[metaIndex].text}</span>
               </motion.div>
             </AnimatePresence>
           </div>
         ) : null}
 
         {isLowStock ? (
-          <div className="w-full rounded-md bg-destructive/10 py-1.5 text-center text-2xs font-bold text-destructive">
+          <div className="w-full rounded-xl bg-destructive/10 py-2 text-center text-2xs font-bold text-destructive">
             فقط {toPersianDigits(seller.quantity)} عدد در انبار باقی مانده
           </div>
         ) : null}
 
         {seller ? (
           <div className="flex w-full items-center justify-between pt-1">
-            <div className="flex flex-col">
+            <div className="flex flex-col text-right">
               <span className="mb-0.5 text-2xs text-muted-foreground">قیمت فروشنده:</span>
               {seller.hasDiscount ? (
                 <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
                   {seller.retailPrice}
                 </span>
               ) : null}
-              <span className="text-base font-bold leading-none text-foreground md:text-lg">
+              <span className="text-base font-black leading-none text-foreground md:text-lg" dir="ltr">
                 {seller.finalPrice}
               </span>
             </div>
@@ -249,9 +258,9 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
               type="button"
               onClick={() => setIsChartOpen(true)}
               aria-label="نمودار قیمت"
-              className="shrink-0 rounded-md border border-border p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-primary"
+              className="shrink-0 rounded-xl border border-border p-2.5 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-primary shadow-2xs"
             >
-              <LineChart aria-hidden="true" className="h-4 w-4" />
+              <LineChart aria-hidden="true" className="h-4.5 w-4.5" />
             </button>
           </div>
         ) : null}
@@ -263,7 +272,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
             fullWidth
             onClick={handleAddToBasket}
             isLoading={isSubmitting || addToBasket.isPending}
-            className="mt-1 flex h-11 items-center justify-center gap-1.5 text-xs font-bold"
+            className="mt-1 flex h-11 items-center justify-center gap-1.5 rounded-xl text-xs font-bold shadow-sm"
           >
             <ShoppingBag aria-hidden="true" className="h-4 w-4" />
             <span>افزودن به سبد خرید</span>
@@ -271,14 +280,14 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
         ) : null}
       </div>
 
-      <Modal isOpen={isChartOpen} onClose={() => setIsChartOpen(false)} className="w-full max-w-md">
+      <Modal isOpen={isChartOpen} onClose={() => setIsChartOpen(false)} className="w-full max-w-md overflow-hidden rounded-2xl">
         <ModalHeader onClose={() => setIsChartOpen(false)}>
           <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
             <LineChart aria-hidden="true" className="h-4 w-4 text-shop" />
-            نمودار تغییرات قیمت فروش
+            <span>نمودار تغییرات قیمت فروش</span>
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="p-0 pt-4 text-center">
+        <ModalBody className="p-5 pt-3 text-center" dir="rtl">
           {isChartLoading ? (
             <div className="flex flex-col items-center justify-center gap-2 py-12">
               <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-primary" />
@@ -297,15 +306,15 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
             variant="outline"
             fullWidth
             onClick={() => setIsChartOpen(false)}
-            className="mt-4 h-10 text-xs font-bold"
+            className="mt-4 h-10 rounded-xl text-xs font-bold"
           >
             متوجه شدم
           </Button>
         </ModalBody>
       </Modal>
 
-      <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md">
-        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center">
+      <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md overflow-hidden rounded-2xl">
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center" dir="rtl">
           <div className="mx-auto -mt-2 mb-1 h-56 w-56 max-w-full">
             <LottiePlayer key={lottieKey} path="/anumations/notif-success.json" className="h-full w-full" loop={false} />
           </div>
@@ -326,7 +335,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
             <Button
               variant="primary"
               onClick={() => setIsNotifySuccessOpen(false)}
-              className="h-10 w-full text-xs font-bold"
+              className="h-10 w-full rounded-xl text-xs font-bold"
             >
               متوجه شدم
             </Button>

@@ -1,6 +1,6 @@
-﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\features\ProductGrid\SearchHeader.tsx
-'use client';
+﻿'use client';
 
+import * as React from 'react';
 import { cn } from '@/design-system/utils/cn';
 import { Typography } from '@/components/primitives/Typography';
 import { SlidersHorizontal } from 'lucide-react';
@@ -28,36 +28,32 @@ export function SearchHeader({
   searchTitle,
   isMobileSticky = false,
 }: SearchHeaderProps) {
-  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
-
   const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
 
   if (isMobileSticky) {
     return (
+      /* نوار چسبان فیلترها: پرکننده ۱۰۰٪ عرض در موبایل، چسبیده دقیق به هدر در 56px */
       <div
-        style={{
-          top: isHeaderMinimized ? '56px' : '122px',
-        }}
         dir="rtl"
-        className="sticky z-sticky mt-3 flex w-full select-none items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5 transition-all duration-normal md:hidden shadow-xs"
+        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] select-none items-center justify-between gap-2.5 border-b border-border/80 bg-card/95 px-4 py-2.5 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden rounded-none"
       >
         <button
           type="button"
           onClick={onOpenMobileFilters}
-          className="flex h-9 flex-1 select-none items-center justify-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-bold text-foreground shadow-xs transition-colors hover:border-primary/40 hover:bg-muted/60 outline-none"
+          className="flex h-9 flex-1 select-none items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-card px-3 py-1.5 text-xs font-bold text-foreground shadow-2xs transition-colors hover:border-primary/40 hover:bg-muted/60 active:scale-95 outline-none"
         >
           <SlidersHorizontal className="h-4 w-4 shrink-0 text-primary" />
           <span className="truncate whitespace-nowrap">فیلترها</span>
         </button>
 
-        {/* دکمه تریگر متصل به باتم‌شیت در هدر چسبان سرچ */}
+        {/* دکمه انتخاب نوع مرتب‌سازی */}
         <SortSelector
           value={currentSort}
           onChange={onSortChange}
           variant="trigger"
         />
 
-        <span className="flex h-9 shrink-0 select-none items-center justify-center rounded-md bg-muted px-2.5 py-1.5 text-2xs font-bold text-muted-foreground">
+        <span className="flex h-9 shrink-0 select-none items-center justify-center rounded-xl bg-muted px-2.5 py-1.5 text-3xs font-bold text-muted-foreground">
           {formatNumber(totalCount)} کالا
         </span>
       </div>

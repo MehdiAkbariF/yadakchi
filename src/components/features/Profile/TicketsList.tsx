@@ -1,64 +1,24 @@
 ﻿'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  MessageSquare,
+  Plus,
+  ChevronLeft,
+  AlertCircle,
+  Clock,
+  Hash,
+  ShoppingBag,
+} from 'lucide-react';
 import { useGetTicketsList } from '@/domains/ticket/hooks/ticket.hooks';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
+import { toPersianDigits } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
-import { MessageSquare, Plus, ChevronLeft, ArrowRight, AlertCircle } from 'lucide-react';
-
-function LottiePlayer({ path, className = "w-48 h-48", loop = true }: { path: string; className?: string; loop?: boolean }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let anim: any = null;
-    let isMounted = true;
-
-    const init = async () => {
-      try {
-        const altPath = path.includes('/anumations/') ? path.replace('/anumations/', '/animations/') : path.replace('/animations/', '/anumations/');
-        let animationData: any = null;
-
-        for (const p of [path, altPath]) {
-          try {
-            const res = await fetch(p);
-            if (res.ok) {
-              animationData = await res.json();
-              break;
-            }
-          } catch {}
-        }
-
-        if (!animationData || !isMounted || !containerRef.current) return;
-
-        const lottieModule = await import('lottie-web');
-        const lottie = lottieModule.default || lottieModule;
-
-        if (containerRef.current && isMounted) {
-          anim = lottie.loadAnimation({
-            container: containerRef.current,
-            renderer: 'svg',
-            loop,
-            autoplay: true,
-            animationData,
-          });
-        }
-      } catch (e) {}
-    };
-
-    init();
-
-    return () => {
-      isMounted = false;
-      anim?.destroy();
-    };
-  }, [path, loop]);
-
-  return <div ref={containerRef} className={className} />;
-}
 
 interface TicketsListProps {
   initialStatus: string;
@@ -67,19 +27,19 @@ interface TicketsListProps {
 
 export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
   const router = useRouter();
-  const [status, setStatus] = useState(initialStatus);
-  const [page, setPage] = useState(initialPage);
+  const [status, setStatus] = React.useState(initialStatus);
+  const [page, setPage] = React.useState(initialPage);
 
   const { data: ticketsResponse, isLoading } = useGetTicketsList({
     status,
     pageNumber: page,
-    pageSize: 10
+    pageSize: 10,
   });
 
   const { data: allTicketsResponse } = useGetTicketsList({
     status: '',
     pageNumber: 1,
-    pageSize: 100
+    pageSize: 100,
   });
 
   const tickets = ticketsResponse?.items || [];
@@ -87,9 +47,9 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
 
   const allTickets = allTicketsResponse?.items || [];
   const totalCount = allTickets.length;
-  const waitingCount = allTickets.filter(t => t.status === 'WaitingForAnswer').length;
-  const answeredCount = allTickets.filter(t => t.status === 'Answered').length;
-  const closedCount = allTickets.filter(t => t.status === 'Closed').length;
+  const waitingCount = allTickets.filter((t) => t.status === 'WaitingForAnswer').length;
+  const answeredCount = allTickets.filter((t) => t.status === 'Answered').length;
+  const closedCount = allTickets.filter((t) => t.status === 'Closed').length;
 
   const handleTabChange = (newStatus: string) => {
     setStatus(newStatus);
@@ -104,121 +64,153 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
     { id: 'Closed', label: 'بسته شده', count: closedCount },
   ];
 
-  return (
-    <div className="flex-1 flex flex-col gap-6 w-full" dir="rtl">
-      <div className="lg:hidden flex items-center justify-between border-b pb-3 mb-1 shrink-0">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => router.push('/profile')}
-            className="p-1 -me-1 hover:bg-muted rounded-full flex items-center justify-center transition-colors"
-            aria-label="Back"
-          >
-            <ArrowRight className="h-5 w-5 text-foreground" />
-          </button>
-          <span className="text-sm font-bold text-foreground">پشتیبانی و تیکت‌ها</span>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push('/profile/support/new')}
-          className="rounded-xl text-[10px] h-9 px-4 py-1.5 border-primary/20 text-primary hover:bg-primary/5 flex items-center justify-center gap-1 shrink-0"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span>ثبت تیکت</span>
-        </Button>
-      </div>
+  const getTicketStatusBadge = (ticketStatus: string, label: string) => {
+    switch (ticketStatus) {
+      case 'WaitingForAnswer':
+        return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+      case 'Answered':
+        return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+      case 'Closed':
+        return 'text-muted-foreground bg-muted border-border';
+      default:
+        return 'text-muted-foreground bg-muted border-border';
+    }
+  };
 
-      <div className="hidden lg:flex items-center justify-between w-full border-b pb-3">
-        <span className="text-sm font-black text-foreground ">پشتیبانی و تیکت‌ها</span>
+  return (
+    <div className="flex w-full flex-col gap-4 sm:gap-5" dir="rtl">
+      
+      {/* هدر بخش پشتیبانی */}
+      <div className="flex items-center justify-between border-b border-border/70 pb-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            <h1 className="text-base font-black text-foreground sm:text-lg">پشتیبانی و تیکت‌ها</h1>
+          </div>
+          <p className="hidden text-xs text-muted-foreground sm:block">
+            ارتباط مستقیم با کارشناسان فنی و پشتیبانی یدک‌چی، پیگیری درخواست‌ها و مرجوعی‌ها
+          </p>
+        </div>
+
         <Button
           variant="primary"
           size="sm"
           onClick={() => router.push('/profile/support/new')}
-          className="rounded-xl text-xs h-10 px-5 py-2 flex items-center justify-center gap-1.5 shadow-sm"
+          className="h-9 gap-1.5 rounded-xl px-4 text-xs font-bold shadow-xs"
         >
           <Plus className="h-4 w-4" />
-          <span>ثبت تیکت پشتیبانی جدید</span>
+          <span>ثبت تیکت جدید</span>
         </Button>
       </div>
 
-      <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-2 w-full shrink-0 select-none px-1">
+      {/* تب‌های کپسولی به سبک اپلیکیشن‌های بومی (بسیار سبک و فشرده) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none select-none">
         {statusTabs.map((tab) => {
           const isActive = status === tab.id;
+
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                "w-32 h-24 md:w-40 md:h-26 shrink-0 flex flex-col items-center justify-center gap-2 border rounded-2xl bg-card transition-all outline-none shadow-sm px-4",
-                isActive 
-                  ? "border-primary bg-primary/5 text-primary scale-105 font-bold" 
-                  : "border-border text-muted-foreground hover:border-border hover:text-foreground"
+                'flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold transition-all duration-fast',
+                isActive
+                  ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                  : 'border-border/80 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground'
               )}
             >
-              <MessageSquare className={cn("h-5 w-5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
-              <span className="text-[10px] md:text-xs font-bold leading-none truncate w-full">{tab.label}</span>
-              <span className={cn(
-                "text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 mt-0.5",
-                isActive ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-              )}>
-                {tab.count} مورد
+              <span>{tab.label}</span>
+              <span
+                className={cn(
+                  'rounded-md px-1.5 py-0.2 text-3xs  font-bold',
+                  isActive ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+                )}
+              >
+                {toPersianDigits(tab.count)}
               </span>
             </button>
           );
         })}
       </div>
 
+      {/* لیست تیکت‌ها */}
       {isLoading ? (
-        <PageLoading message="در حال دریافت لیست تیکت‌های شما..." />
+        <PageLoading label="در حال دریافت لیست تیکت‌های پشتیبانی..." />
       ) : tickets.length > 0 ? (
-        <div className="flex flex-col gap-6 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-            {tickets.map((ticket) => (
-              <Card key={ticket.id} className="w-full border rounded-xl p-5 md:p-6 bg-card shadow-sm hover:border-primary/25 transition-all flex flex-col justify-between gap-4">
-                <div className="flex items-center justify-between border-b border-dashed pb-3 w-full">
-                  <span className="text-xs md:text-sm font-black text-foreground ">شماره تیکت: {ticket.ticketNumberFormatted}</span>
-                  <span className={cn(
-                    "font-bold text-[10px] md:text-xs px-2.5 py-0.5 rounded-full",
-                    ticket.status === 'WaitingForAnswer' && "bg-warning-50 text-warning-600 dark:bg-warning-950/20 dark:text-warning-400",
-                    ticket.status === 'Answered' && "bg-success-50 text-success-600 dark:bg-success-950/20 dark:text-success-400",
-                    ticket.status === 'Closed' && "bg-muted text-muted-foreground"
-                  )}>
-                    {ticket.statusLabel}
-                  </span>
-                </div>
-                
-                <div className="flex flex-col gap-1 w-full text-xs text-muted-foreground">
-                  <h4 className="text-xs md:text-sm font-bold text-foreground line-clamp-1">{ticket.title}</h4>
-                  <div className="flex items-center justify-between mt-2.5 w-full text-[10px] md:text-xs">
-                    <span>ثبت: {ticket.createDateFormatted}</span>
-                    {ticket.orderNumber && (
-                      <span className="font-bold text-foreground">کد سفارش: {ticket.orderNumber}</span>
-                    )}
-                  </div>
-                </div>
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {tickets.map((ticket) => {
+              const statusClass = getTicketStatusBadge(ticket.status, ticket.statusLabel);
 
-                <div className="flex items-center justify-between w-full pt-3.5 mt-1 border-t border-dashed">
-                  <div className="flex items-center gap-1.5 text-primary text-[10px] md:text-xs font-bold">
-                    {ticket.hasUnread && (
-                      <>
-                        <AlertCircle className="h-4 w-4 text-primary shrink-0 animate-pulse" />
-                        <span>پاسخ جدید خوانده نشده</span>
-                      </>
-                    )}
+              return (
+                <Card
+                  key={ticket.id}
+                  className="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-4.5 sm:p-5 shadow-xs transition-colors hover:border-primary/30"
+                >
+                  <div>
+                    {/* ردیف بالا: شناسه تیکت و وضعیت */}
+                    <div className="flex items-center justify-between border-b border-border/50 pb-3">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground " dir="ltr">
+                        <Hash className="h-3.5 w-3.5 text-primary" />
+                        <span className="font-bold text-foreground">
+                          {toPersianDigits(ticket.ticketNumberFormatted)}
+                        </span>
+                      </div>
+
+                      <span className={cn('rounded-lg border px-2.5 py-0.5 text-3xs font-bold', statusClass)}>
+                        {ticket.statusLabel}
+                      </span>
+                    </div>
+
+                    {/* موضوع و خلاصه تیکت */}
+                    <div className="mt-3 flex flex-col gap-1.5 text-right">
+                      <h2 className="text-xs sm:text-sm font-black text-foreground line-clamp-1 leading-snug">
+                        {ticket.title}
+                      </h2>
+
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-2xs text-muted-foreground mt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-muted-foreground/80" />
+                          ثبت: {ticket.createDateFormatted}
+                        </span>
+
+                        {ticket.orderNumber && (
+                          <span className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-3xs font-bold text-foreground">
+                            <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                            سفارش: {toPersianDigits(ticket.orderNumber)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push(`/profile/support/${ticket.id}`)}
-                    className="rounded-xl text-[10px] md:text-xs h-9.5 px-5 py-1.5 border-border hover:bg-muted text-foreground flex items-center justify-center gap-1 shrink-0"
-                  >
-                    <span>مشاهده گفتگو</span>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                  {/* نوار پایین کارت: هشدار پیام جدید و دکمه ورود به چت */}
+                  <div className="mt-4 flex items-center justify-between border-t border-border/50 pt-3">
+                    <div>
+                      {ticket.hasUnread ? (
+                        <div className="flex items-center gap-1.5 text-primary text-3xs font-bold animate-pulse">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          <span>پاسخ جدید دریافت شد</span>
+                        </div>
+                      ) : (
+                        <span className="text-3xs text-muted-foreground">پیام ناخوانده‌ای ندارید</span>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/profile/support/${ticket.id}`)}
+                      className="h-8 gap-1 rounded-xl text-3xs font-bold hover:border-primary/40 hover:text-primary transition-colors"
+                    >
+                      <span>مشاهده گفتگو</span>
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
 
           <Pagination
@@ -231,15 +223,15 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
           />
         </div>
       ) : (
-        /* استیت خالی با لاتی ticket.json */
-        <div className="w-full py-12 px-4 text-center border border-dashed rounded-2xl bg-card flex flex-col items-center justify-center gap-3">
-          <LottiePlayer path="/anumations/ticket.json" className="w-48 h-48 max-w-full mx-auto" />
-          <p className="text-xs md:text-sm font-bold text-muted-foreground ">هیچ تیکت پشتیبانی یافت نشد.</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
+        /* استیت خالی بدون تیکت */
+        <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center shadow-xs">
+          <LottiePlayer path="/animations/ticket.json" className="mx-auto h-40 w-40" />
+          <p className="text-xs font-bold text-muted-foreground">هیچ تیکت پشتیبانی یافت نشد.</p>
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => router.push('/profile/support/new')}
-            className="rounded-xl mt-2 text-xs font-bold h-10 px-6 py-2 flex items-center justify-center gap-1 shadow-sm"
+            className="mt-2 h-9 gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs"
           >
             <Plus className="h-4 w-4" />
             <span>ثبت اولین تیکت پشتیبانی</span>

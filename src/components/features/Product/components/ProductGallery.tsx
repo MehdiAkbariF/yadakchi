@@ -106,92 +106,164 @@ export function ProductGallery({
 
   if (validImages.length === 0 || !currentImageUrl) {
     return (
-      <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-lg border border-border bg-muted p-4 text-muted-foreground">
+      <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/80 bg-card p-6 text-muted-foreground shadow-xs">
         <ImageOff aria-hidden="true" className="h-10 w-10 opacity-40" />
-        <span className="text-xs">تصویری برای این کالا ثبت نشده است</span>
+        <span className="text-xs font-bold">تصویری برای این کالا ثبت نشده است</span>
       </div>
     );
   }
 
   return (
-    <div className="flex w-full select-none flex-col gap-4">
-      <div className="group relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-lg border border-border bg-card p-4 shadow-xs">
+    <div className="flex w-full select-none flex-col gap-4" dir="rtl">
+      
+      {/* ================= تصویر اصلی محصول با قابلیت Swipe و دکمه‌های ناوبری استاندارد RTL ================= */}
+      <div className="group relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+        
+        {/* تگ تخفیف و تایمر */}
         {hasTimedDiscount ? (
-          <div className="absolute end-3 top-3 z-10 flex items-center gap-1.5 rounded-sm bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
+          <div className="absolute end-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-2xs font-bold text-destructive-foreground shadow-sm">
             <Ticket aria-hidden="true" className="h-3.5 w-3.5" />
             <span>تخفیف {toPersianDigits(discountPercent || 0)}٪</span>
             {countdown ? (
-              <span className="rounded-sm bg-destructive-foreground/20 px-1.5 py-0.5 text-2xs" dir="ltr">
+              <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-3xs font-bold font-mono" dir="ltr">
                 {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:
                 {String(countdown.s).padStart(2, '0')}
               </span>
             ) : null}
           </div>
-        ) : hasDiscount ? (
-          <div className="absolute end-3 top-3 z-10 rounded-sm bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
-            تخفیف {toPersianDigits(discountPercent || 0)}٪
+        ) : hasDiscount && discountPercent ? (
+          <div className="absolute end-3 top-3 z-10 rounded-lg bg-destructive px-3 py-1.5 text-2xs font-bold text-destructive-foreground shadow-sm">
+            تخفیف {toPersianDigits(discountPercent)}٪
           </div>
         ) : null}
 
-        <img
+        {/* عکس اصلی با قابلیت کشیدن (Swipe) در موبایل (هماهنگ با RTL) */}
+        <motion.img
+          key={safeIndex}
           src={currentImageUrl}
-          alt={`${title} - ${safeIndex + 1}`}
+          alt={`${title} - تصویر ${safeIndex + 1}`}
           onClick={() => setIsFullscreenOpen(true)}
-          className="h-full w-full cursor-zoom-in object-contain"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(_, info) => {
+            if (info.offset.x < -50 && validImages.length > 1) {
+              setActiveIndex((prev) => (prev + 1) % validImages.length);
+            } else if (info.offset.x > 50 && validImages.length > 1) {
+              setActiveIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+            }
+          }}
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
+          className="h-full w-full cursor-zoom-in object-contain touch-pan-y"
         />
+
+        {/* دکمه بزرگ‌نمایی در گوشه تصویر */}
         <button
           type="button"
           onClick={() => setIsFullscreenOpen(true)}
-          aria-label="مشاهده بزرگ"
-          className="absolute bottom-3 start-3 rounded-md border border-border bg-card/80 p-2 text-muted-foreground shadow-xs outline-none backdrop-blur-sm transition-colors hover:bg-primary hover:text-primary-foreground"
+          aria-label="مشاهده تمام‌صفحه"
+          className="absolute bottom-3 start-3 flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-card/90 text-muted-foreground shadow-xs backdrop-blur-md outline-none transition-all hover:bg-primary hover:text-primary-foreground active:scale-90"
         >
           <Maximize2 aria-hidden="true" className="h-4 w-4" />
         </button>
+
+        {/* دکمه‌های ناوبری عکس در دسکتاپ */}
+        {validImages.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => setActiveIndex((prev) => (prev - 1 + validImages.length) % validImages.length)}
+              aria-label="تصویر قبلی"
+              className="absolute start-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/90 text-foreground shadow-sm backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0 hidden md:flex"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveIndex((prev) => (prev + 1) % validImages.length)}
+              aria-label="تصویر بعدی"
+              className="absolute end-3 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/90 text-foreground shadow-sm backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-0 hidden md:flex"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          </>
+        )}
+
+        {/* نقاط نشانگر صفحه در موبایل (Pagination Dots) */}
+        {validImages.length > 1 && (
+          <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5 md:hidden pointer-events-none">
+            {validImages.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  'h-1.5 rounded-full transition-all duration-300',
+                  i === safeIndex ? 'w-5 bg-primary' : 'w-1.5 bg-foreground/20'
+                )}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* ================= ریزعکس‌ها (Thumbnails): فیت شده و بدون بیرون‌زدگی از کناره‌ها ================= */}
       {validImages.length > 1 ? (
-        <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
-          {validImages.map((img, idx) => {
-            const thumbUrl = resolveImageUrl(img);
-            if (!thumbUrl) return null;
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setActiveIndex(idx)}
-                aria-label={`تصویر ${idx + 1}`}
-                aria-current={idx === safeIndex}
-                className={cn(
-                  'h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border bg-card p-1 outline-none transition-colors',
-                  idx === safeIndex ? 'border-primary' : 'hover:border-primary/40'
-                )}
-              >
-                <img src={thumbUrl} alt="" className="h-full w-full rounded-sm object-contain" />
-              </button>
-            );
-          })}
+        <div className="w-full overflow-x-auto scrollbar-none py-1">
+          <div className="flex items-center gap-2.5 w-max min-w-full px-0.5">
+            {validImages.map((img, idx) => {
+              const thumbUrl = resolveImageUrl(img);
+              if (!thumbUrl) return null;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveIndex(idx)}
+                  aria-label={`تصویر ${idx + 1}`}
+                  aria-current={idx === safeIndex}
+                  className={cn(
+                    'relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-card p-1.5 outline-none transition-all',
+                    idx === safeIndex
+                      ? 'border-primary ring-2 ring-primary/20 scale-105'
+                      : 'border-border/80 hover:border-primary/40 opacity-70 hover:opacity-100'
+                  )}
+                >
+                  <img src={thumbUrl} alt="" className="h-full w-full rounded-lg object-contain" />
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : null}
 
+      {/* ================= مدال لایت‌باکس تمام‌صفحه با زوم پیشرفته ================= */}
       <AnimatePresence>
         {isFullscreenOpen ? (
-          <div className="fixed inset-0 z-modal flex h-screen w-screen flex-col bg-card/95 backdrop-blur-md">
-            <div className="flex shrink-0 items-center justify-between border-b border-border bg-card/20 px-6 py-4">
-              <span className="max-w-xs truncate text-xs font-bold text-foreground md:max-w-xl md:text-sm">
-                نمای بزرگ محصول: {title}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-modal flex h-screen w-screen flex-col bg-card/98 backdrop-blur-lg"
+            dir="rtl"
+          >
+            {/* هدر مدال */}
+            <div className="flex shrink-0 items-center justify-between border-b border-border/80 bg-muted/30 px-5 py-4">
+              <span className="max-w-xs truncate text-xs font-bold text-foreground md:max-w-xl sm:text-sm">
+                {title} ({toPersianDigits(safeIndex + 1)} از {toPersianDigits(validImages.length)})
               </span>
               <button
                 type="button"
                 onClick={handleCloseFullscreen}
                 aria-label="بستن"
-                className="rounded-full p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-muted text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X aria-hidden="true" className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="relative min-h-0 w-full flex-1 overflow-hidden">
-              <div className="relative flex h-full w-full max-w-4xl items-center justify-center p-4 touch-none">
+            {/* بدنه اصلی عکس تمام‌صفحه */}
+            <div className="relative min-h-0 w-full flex-1 overflow-hidden flex items-center justify-center p-4">
+              <div className="relative flex h-full w-full max-w-5xl items-center justify-center touch-none">
                 <motion.img
                   src={currentImageUrl}
                   alt=""
@@ -200,10 +272,10 @@ export function ProductGallery({
                   dragElastic={0.15}
                   onDragEnd={(_, info) => {
                     if (zoomScale === 1) {
-                      if (info.offset.x > 80) {
-                        setActiveIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
-                      } else if (info.offset.x < -80) {
+                      if (info.offset.x < -50 && validImages.length > 1) {
                         setActiveIndex((prev) => (prev + 1) % validImages.length);
+                      } else if (info.offset.x > 50 && validImages.length > 1) {
+                        setActiveIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
                       }
                     }
                   }}
@@ -216,10 +288,11 @@ export function ProductGallery({
                   onUpdate={(latest: any) => {
                     if (zoomScale > 1) setPanOffset({ x: latest.x || 0, y: latest.y || 0 });
                   }}
-                  className="pointer-events-none max-h-full max-w-full select-none object-contain"
+                  className="max-h-full max-w-full select-none object-contain cursor-grab active:cursor-grabbing"
                 />
               </div>
 
+              {/* دکمه‌های ناوبری در مدال تمام‌صفحه با جهت صحیح RTL */}
               {validImages.length > 1 && zoomScale === 1 ? (
                 <>
                   <button
@@ -229,9 +302,9 @@ export function ProductGallery({
                       handleResetZoom();
                     }}
                     aria-label="تصویر قبلی"
-                    className="absolute end-6 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-card p-2.5 text-foreground shadow-sm outline-none transition-colors hover:bg-primary hover:text-primary-foreground md:flex"
+                    className="absolute start-4 sm:start-8 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md outline-none transition-colors hover:bg-primary hover:text-primary-foreground"
                   >
-                    <ChevronRight aria-hidden="true" className="h-5 w-5" />
+                    <ChevronRight className="h-6 w-6" />
                   </button>
                   <button
                     type="button"
@@ -240,44 +313,45 @@ export function ProductGallery({
                       handleResetZoom();
                     }}
                     aria-label="تصویر بعدی"
-                    className="absolute start-6 top-1/2 hidden -translate-y-1/2 rounded-full border border-border bg-card p-2.5 text-foreground shadow-sm outline-none transition-colors hover:bg-primary hover:text-primary-foreground md:flex"
+                    className="absolute end-4 sm:end-8 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md outline-none transition-colors hover:bg-primary hover:text-primary-foreground"
                   >
-                    <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+                    <ChevronLeft className="h-6 w-6" />
                   </button>
                 </>
               ) : null}
             </div>
 
-            <div className="flex shrink-0 items-center justify-center gap-3 border-t border-border bg-card/20 p-4">
+            {/* فوتر ابزارها (زوم و بازنشانی) */}
+            <div className="flex shrink-0 items-center justify-center gap-3 border-t border-border/80 bg-muted/30 p-4">
               <button
                 type="button"
                 onClick={handleZoomIn}
                 disabled={zoomScale >= 4}
                 aria-label="بزرگ‌نمایی"
-                className="rounded-md border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30 shadow-xs"
               >
-                <ZoomIn aria-hidden="true" className="h-4 w-4" />
+                <ZoomIn className="h-4.5 w-4.5" />
               </button>
               <button
                 type="button"
                 onClick={handleZoomOut}
                 disabled={zoomScale === 1}
                 aria-label="کوچک‌نمایی"
-                className="rounded-md border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30 shadow-xs"
               >
-                <ZoomOut aria-hidden="true" className="h-4 w-4" />
+                <ZoomOut className="h-4.5 w-4.5" />
               </button>
               <button
                 type="button"
                 onClick={handleResetZoom}
                 disabled={zoomScale === 1 && panOffset.x === 0 && panOffset.y === 0}
                 aria-label="بازنشانی"
-                className="rounded-md border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-primary disabled:opacity-30 shadow-xs"
               >
-                <RotateCcw aria-hidden="true" className="h-4 w-4" />
+                <RotateCcw className="h-4.5 w-4.5" />
               </button>
             </div>
-          </div>
+          </motion.div>
         ) : null}
       </AnimatePresence>
     </div>

@@ -1,44 +1,44 @@
 export const lightTheme = {
-  background:            '#FAFAF9',
-  foreground:            '#1C1917',
+  background:            '#FFFFFF',
+  foreground:            '#13171F',
 
   card:                  '#FFFFFF',
-  'card-foreground':     '#1C1917',
+  'card-foreground':     '#13171F',
 
   popover:               '#FFFFFF',
-  'popover-foreground':  '#1C1917',
+  'popover-foreground':  '#13171F',
 
-  primary:               '#D95D32',
+  primary:               '#E3541B',
   'primary-foreground':  '#FFFFFF',
-  'primary-hover':       '#BD4D28',
-  'primary-active':      '#A13D1E',
+  'primary-hover':       '#C74412',
+  'primary-active':      '#AA360B',
 
-  secondary:             '#F5F5F4',
-  'secondary-foreground':'#1C1917',
+  secondary:             '#F1F4F8',
+  'secondary-foreground':'#1E242E',
 
-  muted:                 '#F5F5F4',
-  'muted-foreground':    '#57534E',
+  muted:                 '#F1F4F8',
+  'muted-foreground':    '#687383',
 
-  accent:                '#FDF2EE',
-  'accent-foreground':   '#BD4D28',
+  accent:                '#FEF6F0',
+  'accent-foreground':   '#C74412',
 
-  destructive:           '#DC2626',
+  destructive:           '#EF4444',
   'destructive-foreground':'#FFFFFF',
 
-  success:               '#16A34A',
+  success:               '#1D9A4C',
   'success-foreground':  '#FFFFFF',
 
-  warning:               '#D97706',
+  warning:               '#E8920C',
   'warning-foreground':  '#FFFFFF',
 
-  info:                  '#2563EB',
+  info:                  '#3177F0',
   'info-foreground':     '#FFFFFF',
 
-  border:                '#E7E5E4',
-  input:                 '#E7E5E4',
-  ring:                  '#E36D43',
+  border:                '#E2E7EE',
+  input:                 '#E2E7EE',
+  ring:                  '#E3541B',
 
-  shop:                  '#2B76A1',
+  shop:                  '#29688E',
   'shop-foreground':     '#FFFFFF',
-  'shop-hover':          '#235F82',
+  'shop-hover':          '#205270',
 } as const;

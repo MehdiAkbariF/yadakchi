@@ -17,7 +17,7 @@ export function RecentlyViewedList() {
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6">
-      <div className="mb-1 flex items-center justify-between border-b border-border pb-3 lg:hidden">
+      {/* <div className="mb-1 flex items-center justify-between border-b border-border pb-3 lg:hidden">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -29,7 +29,7 @@ export function RecentlyViewedList() {
           </button>
           <span className="text-sm font-bold text-foreground">کالاهای دیده شده اخیر</span>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex w-full flex-col gap-2 border-b border-border pb-5">
         <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export function RecentlyViewedList() {
       </div>
 
       {products.length > 0 ? (
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <div className="grid w-full grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {products.map((product: any) => (
             <ProductSearchCard key={product.id} product={product} />
           ))}

@@ -6,14 +6,56 @@ import { useRouter } from 'next/navigation';
 import { useGetMegaMenu } from '@/domains/front/banner/hooks/banner.hooks';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Search, Settings, ArrowLeft, X, Package } from 'lucide-react';
+import { BottomNav } from '@/components/sections/BottomNav/BottomNav';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl } from '@/core/utils/formatters';
+
+// کامپوننت لود امن تصاویر با انکود خودکار فاصله‌ها و حروف فارسی
+function PartItemIcon({ icon, name }: { icon: string | null; name: string }) {
+  const [hasError, setHasError] = React.useState(false);
+
+  const safeUrl = React.useMemo(() => {
+    if (!icon) return null;
+    const full = getFullUrl(icon);
+    try {
+      return encodeURI(full);
+    } catch {
+      return full;
+    }
+  }, [icon]);
+
+  if (!safeUrl || hasError) {
+    return (
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Package className="h-5 w-5" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-secondary/40 p-1">
+      <img
+        src={safeUrl}
+        alt={name}
+        onError={() => setHasError(true)}
+        className="h-full w-full object-contain"
+      />
+    </div>
+  );
+}
 
 export function CategoriesContent() {
   const router = useRouter();
   const { data: categories = [], isLoading } = useGetMegaMenu();
   const [activeCategoryId, setActiveCategoryId] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
+
+  // ریدایرکت کاربران دسکتاپ به صفحه اصلی (صفحه دسته‌بندی‌ها صرفاً مختص نمای موبایل است)
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      router.replace('/');
+    }
+  }, [router]);
 
   React.useEffect(() => {
     if (categories.length > 0 && !activeCategoryId) {
@@ -28,7 +70,7 @@ export function CategoriesContent() {
   const activeCategory =
     categories.find((c) => c.id === (activeCategoryId || categories[0]?.id)) || categories[0];
 
-  // ارسال فرم جستجو به صفحه سرچ اصلی
+  // ارسال فرم جستجو به صفحه سرچ سراسری
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (searchQuery.trim()) {
@@ -36,7 +78,7 @@ export function CategoriesContent() {
     }
   };
 
-  // فیلتر آنی و زنده قطعات در صورت تایپ کاربر
+  // فیلتر زنده و همزمان قطعات بر اساس تایپ کاربر
   const trimmedQuery = searchQuery.trim().toLowerCase();
   const isSearching = trimmedQuery.length > 0;
 
@@ -44,13 +86,19 @@ export function CategoriesContent() {
     ? categories.flatMap((cat: any) =>
         (cat.parts || [])
           .filter((part: any) => part.name?.toLowerCase().includes(trimmedQuery))
-          .map((part: any) => ({ ...part, categoryName: cat.name }))
+          .map((part: any) => ({
+            ...part,
+            categoryName: cat.name,
+            categoryEnglishTitle: cat.englishTitle,
+            categoryId: cat.id,
+          }))
       )
     : [];
 
   return (
-    <div className="flex h-[calc(100dvh-4rem)] w-full select-none flex-col overflow-hidden bg-card">
-      {/* نوار جستجوی فعال و هوشمند بالای صفحه */}
+    <div className="flex h-[100dvh] w-full select-none flex-col overflow-hidden bg-card lg:hidden" dir="rtl">
+      
+      {/* نوار جستجوی بالای صفحه دسته‌بندی */}
       <div className="z-10 w-full shrink-0 border-b border-border/60 bg-card p-3">
         <form onSubmit={handleSearchSubmit} className="relative flex w-full items-center" role="search">
           <input
@@ -85,10 +133,10 @@ export function CategoriesContent() {
         </form>
       </div>
 
-      {/* نمایش نتایج زنده جستجو یا نمایش دو ستونه استاندارد */}
+      {/* نتایج زنده جستجو یا ساختار دو ستونه استاندارد */}
       {isSearching ? (
-        /* بخش نتایج لحظه‌ای جستجو */
-        <div className="h-full min-h-0 flex-1 overflow-y-auto overscroll-contain bg-card p-4 scrollbar-none">
+        /* نتایج زنده جستجو */
+        <div className="h-full min-h-0 flex-1 overflow-y-auto overscroll-contain bg-card p-4 scrollbar-none pb-24">
           <div className="mb-3 flex items-center justify-between border-b border-border/60 pb-2">
             <span className="text-xs font-bold text-foreground">
               نتایج قطعات منطبق با «{searchQuery}»:
@@ -104,24 +152,18 @@ export function CategoriesContent() {
           </div>
 
           {matchedParts.length > 0 ? (
-            <div className="grid w-full grid-cols-2 gap-3 pb-8 sm:grid-cols-3 md:grid-cols-4">
+            <div className="grid w-full grid-cols-2 gap-3 pb-8 sm:grid-cols-3">
               {matchedParts.map((part: any) => (
                 <Link
                   key={part.id}
-                  href={part.href}
+                  href={`/part-category/${encodeURIComponent(part.categoryEnglishTitle)}?partId=${part.id}&categoryId=${part.categoryId}`}
                   className="flex h-28 select-none flex-col items-center justify-center gap-2 rounded-xl border border-border/70 bg-card p-3 text-center shadow-2xs transition-all hover:border-primary/50"
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary/40 p-1">
-                    {part.icon ? (
-                      <img src={getFullUrl(part.icon)} className="h-full w-full object-contain" alt="" />
-                    ) : (
-                      <Package className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
+                  <PartItemIcon icon={part.icon} name={part.name} />
                   <span className="line-clamp-2 w-full text-2xs font-semibold leading-relaxed text-foreground">
                     {part.name}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-3xs text-muted-foreground">
                     دسته: {part.categoryName}
                   </span>
                 </Link>
@@ -144,10 +186,11 @@ export function CategoriesContent() {
           )}
         </div>
       ) : (
-        /* بخش دو ستونه استاندارد با اسکرول مستقل سایدبار */
-        <div className="relative flex min-h-0 w-full flex-1 overflow-hidden">
-          {/* ستون راست: لیست دسته‌بندی‌ها با اسکرول مستقل اختصاصی */}
-          <div className="flex h-full w-24 shrink-0 flex-col overflow-y-auto overscroll-contain border-e border-border/60 bg-secondary/20 py-2 scrollbar-none sm:w-28">
+        /* ساختار دو ستونه اپلیکیشنی متصل به نوار پایین */
+        <div className="relative flex min-h-0 w-full flex-1 overflow-hidden pb-16">
+          
+          {/* ستون راست: منوی دسته‌بندی‌ها با اسکرول مستقل */}
+          <div className="flex h-full w-24 shrink-0 flex-col overflow-y-auto overscroll-contain border-e border-border/60 bg-secondary/20 py-2 scrollbar-none sm:w-28 pb-8">
             {categories.map((cat) => {
               const isActive = activeCategory?.id === cat.id;
               return (
@@ -189,8 +232,8 @@ export function CategoriesContent() {
             })}
           </div>
 
-          {/* ستون چپ: قطعات دسته‌بندی انتخاب‌شده با اسکرول مستقل */}
-          <div className="h-full min-h-0 flex-1 overflow-y-auto overscroll-contain bg-card p-4 scrollbar-none">
+          {/* ستون چپ: قطعات دسته‌بندی با مدل دقیق آدرس درخواستی */}
+          <div className="h-full min-h-0 flex-1 overflow-y-auto overscroll-contain bg-card p-4 scrollbar-none pb-8">
             {activeCategory ? (
               <div className="flex w-full flex-col gap-4">
                 <div className="flex w-full items-center justify-between border-b border-border/50 pb-2">
@@ -198,7 +241,7 @@ export function CategoriesContent() {
                     همه قطعات {activeCategory.name}
                   </span>
                   <Link
-                    href={activeCategory.href}
+                    href={`/part-category/${encodeURIComponent(activeCategory.englishTitle)}?categoryId=${activeCategory.id}`}
                     prefetch={false}
                     className="flex items-center gap-1 text-2xs font-bold text-primary hover:underline"
                   >
@@ -212,24 +255,11 @@ export function CategoriesContent() {
                     {activeCategory.parts.map((part) => (
                       <Link
                         key={part.id}
-                        href={part.href}
+                        href={`/part-category/${encodeURIComponent(activeCategory.englishTitle)}?partId=${part.id}&categoryId=${activeCategory.id}`}
                         prefetch={false}
-                        className="flex h-28 select-none flex-col items-center justify-center gap-2 rounded-xl border border-border/70 bg-card p-3 text-center shadow-2xs transition-all duration-fast hover:border-primary/50 hover:shadow-xs"
+                        className="flex h-28 select-none flex-col items-center justify-center gap-2 rounded-xl border border-border/70 bg-card p-3 text-center shadow-2xs transition-all duration-fast hover:border-primary/50 hover:shadow-xs active:scale-95"
                       >
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-secondary/40 p-1">
-                          {part.icon ? (
-                            <img
-                              src={getFullUrl(part.icon)}
-                              className={cn(
-                                'h-full w-full object-contain',
-                                part.icon.toLowerCase().endsWith('.svg') && 'filter dark:invert'
-                              )}
-                              alt=""
-                            />
-                          ) : (
-                            <Settings aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </div>
+                        <PartItemIcon icon={part.icon} name={part.name} />
                         <span className="line-clamp-2 w-full text-2xs font-semibold leading-relaxed text-foreground">
                           {part.name}
                         </span>
@@ -250,6 +280,9 @@ export function CategoriesContent() {
           </div>
         </div>
       )}
+
+      {/* نوار پایین اپلیکیشن با تب دسته‌بندی روشن (پرکننده کف صفحه و بدون فاصله سفید) */}
+      <BottomNav />
     </div>
   );
 }

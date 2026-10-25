@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { MainLayout } from '@/components/shared/Layouts/MainLayout';
-import { ProfileSidebar } from '@/components/features/Profile/components/ProfileSidebar';
 import { getAuthService } from '@/domains/auth/services/auth.service';
+import { ProfileDesktopNav } from '@/components/features/Profile/components/navigation/ProfileDesktopNav';
+import { ProfileHeader } from '@/components/features/Profile/components/navigation/ProfileHeader';
 
 interface ProfileLayoutProps {
   children: React.ReactNode;
@@ -21,13 +22,23 @@ export default async function ProfileLayout({ children }: ProfileLayoutProps) {
 
   return (
     <MainLayout>
-      <div className="w-full flex flex-col lg:flex-row gap-8 select-none" dir="rtl">
-        <div className="w-full lg:w-[320px] shrink-0">
-          <ProfileSidebar />
-        </div>
-        
-        <div className="flex-1 w-full min-w-0">
-          {children}
+      <div className="w-full" dir="rtl">
+        {/* هدر مخصوص اپلیکیشن در موبایل به همراه کشوی دسترسی سریع */}
+        <ProfileHeader />
+
+        {/* افزایش عرض دسکتاپ به 1680px برای مانیتورهای عریض و استفاده حداکثری از فضا */}
+        <div className="mx-auto w-full max-w-[1680px] px-3 sm:px-6 lg:px-8 xl:px-10 py-4 lg:py-8">
+          <div className="flex items-start gap-8">
+            {/* منوی ثابت سایدبار در دسکتاپ (عرض 300px عریض و خوانا) */}
+            <div className="hidden lg:block w-[290px] xl:w-[320px] shrink-0">
+              <ProfileDesktopNav />
+            </div>
+
+            {/* بخش اصلی محتوای داشبورد */}
+            <main className="flex-1 min-w-0">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
     </MainLayout>
