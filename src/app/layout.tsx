@@ -15,14 +15,14 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'یدک‌چی | بازارگاه تخصصی قطعات خودرو',
-    template: '%s | یدک‌چی'
+    default: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+    template: '%s | یدکچی'
   },
   description: 'بزرگ‌ترین مارکت‌پلیس خودرو و قطعات یدکی در ایران',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'یدک‌چی',
+    title: 'یدکچی',
   },
   formatDetection: {
     telephone: false,

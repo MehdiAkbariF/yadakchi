@@ -1,3 +1,4 @@
+// src/providers/root.provider.tsx
 'use client';
 
 import { QueryProvider } from './query.provider';
@@ -14,46 +15,34 @@ export function RootProvider({ children }: RootProviderProps) {
   return (
     <QueryProvider>
       <ThemeProvider>
+        {/* نوار بارگذاری فوق‌باریک و سریع منطبق با استانداردهای یوتیوب و گیت‌هاب */}
         <NextTopLoader 
           color="#F56D3C" 
-          initialPosition={0.08}
-          crawlSpeed={200}
-          height={3}
+          initialPosition={0.15}
+          crawlSpeed={150}
+          height={2.5}
           crawl={true}
           showSpinner={false} 
-          easing="ease"
+          easing="cubic-bezier(0.2, 0.8, 0.2, 1)"
           speed={200}
-          shadow="0 0 10px #F56D3C,0 0 5px #F56D3C"
+          shadow="0 0 12px #F56D3C, 0 0 4px #F56D3C"
+          zIndex={99999}
         />
         {children}
         <PWAInstallBanner />
         <Toaster 
           position="top-center"
           toastOptions={{
-            duration: 4000,
+            duration: 3500,
             style: {
-              background: '#333',
-              color: '#fff',
-              fontFamily: 'IRANSans, sans-serif',
+              background: '#1F2937',
+              color: '#F9FAFB',
+              fontFamily: 'IRANYekan, sans-serif',
               direction: 'rtl',
-              borderRadius: '12px',
+              borderRadius: '14px',
               padding: '12px 20px',
-              fontSize: '14px',
-              maxWidth: '500px'
-            },
-            success: {
-              icon: '✅',
-              style: {
-                background: '#22c55e',
-                color: '#fff',
-              },
-            },
-            error: {
-              icon: '❌',
-              style: {
-                background: '#ef4444',
-                color: '#fff',
-              },
+              fontSize: '13px',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
             },
           }}
         />

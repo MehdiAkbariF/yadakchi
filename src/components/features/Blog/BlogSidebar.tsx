@@ -1,8 +1,7 @@
 ﻿'use client';
 
 import * as React from 'react';
-import { Search, FolderKanban, Car, Wrench } from 'lucide-react';
-import { Input } from '@/components/primitives/Input/Input';
+import { Search, FolderKanban, Car, Wrench, X } from 'lucide-react';
 import { BlogCategoryViewModel, BlogPostFiltersAvailable } from '@/domains/blog/types/view.types';
 import { cn } from '@/design-system/utils/cn';
 
@@ -58,34 +57,41 @@ export function BlogSidebar({
     Boolean(selectedCategory) || selectedCarTypes.length > 0 || selectedParts.length > 0 || Boolean(searchQuery);
 
   return (
-    <div className={cn('flex w-full select-none flex-col gap-6', isMobile && 'gap-4')}>
-      <div className="w-full rounded-lg border border-border bg-card p-4 shadow-xs">
-        <span className="mb-3 block text-xs font-bold text-foreground">جستجو در مقالات</span>
+    <div className={cn('flex w-full select-none flex-col gap-5', isMobile && 'gap-4')}>
+      
+      {/* باکس جستجوی مدرن */}
+      <div className="w-full rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+        <label className="mb-2 block text-xs font-bold text-foreground">جستجوی تخصصی</label>
         <form onSubmit={handleSearchSubmit} className="relative">
-          <Input
-            placeholder="عنوان مقاله یا کلمه کلیدی..."
+          <input
+            type="text"
+            placeholder="مثلاً: لنت سرامیکی، توربوشارژر..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            leftIcon={<Search aria-hidden="true" className="h-4 w-4" />}
+            className="w-full rounded-xl border border-border/80 bg-muted/40 py-2 pe-9 ps-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
+          <button type="submit" aria-label="جستجو" className="absolute end-2.5 top-2.5 text-muted-foreground hover:text-primary">
+            <Search className="h-4 w-4" />
+          </button>
         </form>
       </div>
 
-      <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-4 shadow-xs">
-        <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+      {/* دسته‌بندی‌های وبلاگ */}
+      <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+        <div className="mb-1 flex items-center justify-between border-b border-border/70 pb-2.5">
           <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
             <FolderKanban aria-hidden="true" className="h-4 w-4 text-primary" />
-            دسته‌بندی‌های وبلاگ
+            موضوعات تخصصی
           </span>
-          {selectedCategory ? (
+          {selectedCategory && (
             <button
               type="button"
               onClick={() => onFilterChange('blogCategoryId', undefined)}
-              className="text-2xs font-bold text-destructive hover:underline"
+              className="text-3xs font-bold text-destructive hover:underline"
             >
-              پاک کردن
+              حذف انتخاب
             </button>
-          ) : null}
+          )}
         </div>
 
         <div className="flex flex-col gap-1">
@@ -93,11 +99,11 @@ export function BlogSidebar({
             type="button"
             onClick={() => onFilterChange('blogCategoryId', undefined)}
             className={cn(
-              'w-full rounded-md px-3 py-2 text-start text-xs font-bold transition-colors',
-              !selectedCategory ? 'bg-muted text-foreground font-bold' : 'text-muted-foreground hover:bg-muted'
+              'w-full rounded-xl px-3 py-2 text-start text-xs font-bold transition-colors',
+              !selectedCategory ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
             )}
           >
-            همه مقالات
+            همه موضوعات
           </button>
           {categories.map((cat) => (
             <button
@@ -105,10 +111,10 @@ export function BlogSidebar({
               type="button"
               onClick={() => onFilterChange('blogCategoryId', cat.id)}
               className={cn(
-                'flex w-full items-center justify-between rounded-md px-3 py-2 text-start text-xs font-bold transition-colors',
+                'flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-xs font-bold transition-colors',
                 selectedCategory === cat.id
-                  ? 'bg-muted text-foreground font-bold'
-                  : 'text-muted-foreground hover:bg-muted'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
               )}
             >
               <span>{cat.title}</span>
@@ -117,9 +123,10 @@ export function BlogSidebar({
         </div>
       </div>
 
-      {availableFilters.carTypes.length > 0 ? (
-        <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-4 shadow-xs">
-          <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+      {/* چیپ‌های انتخاب خودرو (Car Architecture Chips) */}
+      {availableFilters.carTypes.length > 0 && (
+        <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+          <div className="mb-1 flex items-center justify-between border-b border-border/70 pb-2.5">
             <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
               <Car aria-hidden="true" className="h-4 w-4 text-primary" />
               خودروهای مرتبط
@@ -134,10 +141,10 @@ export function BlogSidebar({
                   type="button"
                   onClick={() => handleToggleCar(car.id)}
                   className={cn(
-                    'rounded-md border px-3 py-1.5 text-xs font-bold transition-colors',
+                    'rounded-full border px-3 py-1 text-2xs font-bold transition-all',
                     active
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                      ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                      : 'border-border/80 bg-muted/40 text-muted-foreground hover:border-border hover:bg-muted'
                   )}
                 >
                   {car.name}
@@ -146,14 +153,15 @@ export function BlogSidebar({
             })}
           </div>
         </div>
-      ) : null}
+      )}
 
-      {availableFilters.parts.length > 0 ? (
-        <div className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-4 shadow-xs">
-          <div className="mb-1 flex items-center justify-between border-b border-border pb-2">
+      {/* چیپ‌های انتخاب قطعات مرتبط */}
+      {availableFilters.parts.length > 0 && (
+        <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+          <div className="mb-1 flex items-center justify-between border-b border-border/70 pb-2.5">
             <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
               <Wrench aria-hidden="true" className="h-4 w-4 text-primary" />
-              قطعات مرتبط
+              مجموعه قطعات
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5 pt-1">
@@ -165,10 +173,10 @@ export function BlogSidebar({
                   type="button"
                   onClick={() => handleTogglePart(part.id)}
                   className={cn(
-                    'rounded-md border px-3 py-1.5 text-xs font-bold transition-colors',
+                    'rounded-full border px-3 py-1 text-2xs font-bold transition-all',
                     active
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                      ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                      : 'border-border/80 bg-muted/40 text-muted-foreground hover:border-border hover:bg-muted'
                   )}
                 >
                   {part.name}
@@ -177,17 +185,19 @@ export function BlogSidebar({
             })}
           </div>
         </div>
-      ) : null}
+      )}
 
-      {hasAnyFilter ? (
+      {/* دکمه پاک‌سازی فیلترها */}
+      {hasAnyFilter && (
         <button
           type="button"
           onClick={onClearAll}
-          className="w-full rounded-md border border-destructive/30 py-2.5 text-center text-xs font-bold text-destructive transition-colors hover:bg-destructive/5"
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-destructive/20 bg-destructive/5 py-2.5 text-xs font-bold text-destructive transition-colors hover:bg-destructive/10"
         >
-          حذف تمام فیلترها
+          <X className="h-3.5 w-3.5" />
+          <span>حذف تمام فیلترها</span>
         </button>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Store, BadgeCheck, Truck, Eye } from 'lucide-react';
+import { Star, Store, Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
@@ -42,12 +42,10 @@ export function ProductStandardCard({
     product?.name ||
     '';
 
-  const shopName = product?.shopTitle || nominated?.shopTitle || product?.shop?.name || null;
-
-  const isTipax = product?.isTipaxShipping || nominated?.isTipaxShipping || false;
-  const isDirect = product?.isDirectShipping || nominated?.isDirectShipping || false;
-  const salesCount = product?.totalSalesCount || product?.salesCount || 0;
-  const views = product?.viewsAndClicks || product?.views || 0;
+  // استخراج ۳ مقدار مورد نظر برای اسلایدر
+  const shopName = product?.shopTitle || nominated?.shopTitle || product?.shop?.name || '';
+  const scoreValue = product?.score ?? nominated?.score ?? product?.averageRate ?? 5;
+  const quantityValue = product?.quantity ?? nominated?.quantity ?? 0;
 
   const originalPriceRaw = Number(
     product?.rialRetailPrice ??
@@ -86,18 +84,31 @@ export function ProductStandardCard({
       ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
       : nominated?.discountPercentage || product?.discount?.percent || 0);
 
+  // تنظیم دقیق اسلایدر فقط بین: نام فروشگاه، امتیاز و موجودی
   const tickerItems = React.useMemo(() => {
-    const items: { text: string; icon: any }[] = [];
-    if (salesCount > 0) {
-      items.push({ text: `${toPersianDigits(salesCount)} فروش موفق در یدک‌چی`, icon: BadgeCheck });
-    }
-    if (isTipax) items.push({ text: 'ارسال سریع با تیپاکس', icon: Truck });
-    if (isDirect) items.push({ text: 'ارسال مستقیم فروشگاه', icon: Truck });
-    if (views > 0) {
-      items.push({ text: `${toPersianDigits(views)} بازدید اخیر`, icon: Eye });
-    }
+    const items: { text: string; icon: any; isShop?: boolean }[] = [];
+
+    // ۱. نام فروشگاه
+    items.push({
+      text: shopName ? `فروشگاه: ${shopName}` : 'فروشگاه: یدکچی',
+      icon: Store,
+      isShop: true,
+    });
+
+    // ۲. امتیاز (Score)
+    items.push({
+      text: `امتیاز: ${toPersianDigits(scoreValue)} از ۵`,
+      icon: Star,
+    });
+
+    // ۳. موجودی (Quantity)
+    items.push({
+      text: quantityValue > 0 ? `موجودی در انبار: ${toPersianDigits(quantityValue)} عدد` : 'وضعیت: ناموجود در انبار',
+      icon: Package,
+    });
+
     return items;
-  }, [isTipax, isDirect, salesCount, views]);
+  }, [shopName, scoreValue, quantityValue]);
 
   const tickerLength = tickerItems.length;
 
@@ -149,7 +160,7 @@ export function ProductStandardCard({
   };
 
   const renderStars = () => {
-    const rating = product?.averageRate || product?.rating?.average || 5;
+    const rating = product?.averageRate || product?.rating?.average || scoreValue;
     return (
       <div className="flex select-none items-center gap-1">
         <Star aria-hidden="true" className="h-3 w-3 shrink-0 fill-warning text-warning" />
@@ -161,6 +172,7 @@ export function ProductStandardCard({
   };
 
   const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
+  const currentItem = tickerItems[tickerIndex];
 
   const codeOrId =
     product?.productCode || product?.code || product?.productId || product?.id;
@@ -216,37 +228,67 @@ export function ProductStandardCard({
           </h4>
         </div>
 
-        {shopName ? (
-          <div className="mt-1 flex w-full select-none items-center gap-1 text-2xs transition-colors hover:text-primary sm:text-xs">
-            <Store aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <span className="truncate font-medium text-shop">فروشگاه: {shopName}</span>
-          </div>
-        ) : null}
-
+        {/* بخش اسلایدر اختصاصی بین نام فروشگاه، امتیاز و موجودی */}
         <div className="flex w-full select-none flex-col items-stretch">
           {isMounted && tickerLength > 0 ? (
             <div className="relative mt-0.5 flex h-6 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground sm:text-xs">
               <div className="relative hidden h-full w-full md:block">
                 <AnimatePresence mode="wait">
-                  <motion.span
-                    key={tickerIndex}
+                  <motion.div
+                    key={`standard-desktop-ticker-${tickerIndex}`}
                     initial={{ y: 15, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -15, opacity: 0 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 22 }}
                     className="absolute inset-x-0 bottom-0 top-0 flex h-full items-center justify-start gap-1.5 truncate py-1"
                   >
-                    <CurrentTickerIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
-                    <span className="truncate font-medium text-foreground">
-                      {tickerItems[tickerIndex]?.text}
+                    <CurrentTickerIcon
+                      aria-hidden="true"
+                      className={cn(
+                        'h-3.5 w-3.5 shrink-0',
+                        currentItem?.isShop ? 'text-shop' : 'text-primary'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'truncate font-medium',
+                        currentItem?.isShop ? 'text-shop font-semibold' : 'text-foreground'
+                      )}
+                    >
+                      {currentItem?.text}
                     </span>
-                  </motion.span>
+                  </motion.div>
                 </AnimatePresence>
               </div>
 
-              <div className="flex h-full w-full items-center justify-start gap-1.5 truncate md:hidden">
-                <CurrentTickerIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="truncate text-2xs font-medium">{tickerItems[0]?.text}</span>
+              {/* نسخه موبایل (اسلایدر برای موبایل نیز فعال شد) */}
+              <div className="relative flex h-full w-full items-center justify-start gap-1.5 truncate md:hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`standard-mobile-ticker-${tickerIndex}`}
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -10, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="absolute inset-x-0 bottom-0 top-0 flex h-full items-center justify-start gap-1.5 truncate"
+                  >
+                    <CurrentTickerIcon
+                      aria-hidden="true"
+                      className={cn(
+                        'h-3 w-3 shrink-0',
+                        currentItem?.isShop ? 'text-shop' : 'text-primary'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'truncate text-2xs font-medium',
+                        currentItem?.isShop ? 'text-shop font-semibold' : 'text-foreground'
+                      )}
+                    >
+                      {currentItem?.text}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           ) : (

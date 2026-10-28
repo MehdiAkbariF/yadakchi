@@ -21,14 +21,14 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
   try {
     const post = await blogService.getPostDetail(decodedSlug);
-    if (!post) return { title: 'مطلب یافت نشد | یدک‌چی' };
+    if (!post) return { title: 'مطلب یافت نشد | یدکچی' };
 
     const title = post.seo?.title || post.title;
     const description = post.seo?.description || post.summary || post.title;
     const canonical = post.seo?.canonicalUrl || `https://www.yadakchi.com/blog/${encodeURIComponent(post.englishTitle)}`;
 
     return {
-      title: `${title} | مجله یدک‌چی`,
+      title: `${title} | مجله یدکچی`,
       description,
       alternates: {
         canonical,
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       },
     };
   } catch {
-    return { title: 'مقاله یدک‌چی' };
+    return { title: 'مقاله یدکچی' };
   }
 }
 
@@ -77,7 +77,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     },
     "publisher": {
       "@type": "Organization",
-      "name": "یدک‌چی",
+      "name": "یدکچی",
       "logo": {
         "@type": "ImageObject",
         "url": "https://api.yadakchi.com/Logo.svg"

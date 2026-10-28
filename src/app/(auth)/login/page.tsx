@@ -144,7 +144,7 @@ function LoginContent() {
             <Link href="/terms" className="text-primary hover:underline font-bold">قوانین و مقررات</Link>{' '}
             و{' '}
             <Link href="/privacy" className="text-primary hover:underline font-bold">حریم خصوصی</Link>{' '}
-            کاربران یدک‌چی است.
+            کاربران یدکچی است.
           </Typography>
         </div>
       ) : (

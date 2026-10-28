@@ -142,7 +142,7 @@ export default function NotFoundPage() {
                 بازدیدهای اخیر شما
               </h2>
               <span className="text-[11px] text-muted-foreground">
-                کالاهایی که اخیراً در یدک‌چی بررسی کرده‌اید
+                کالاهایی که اخیراً در یدکچی بررسی کرده‌اید
               </span>
             </div>
           </div>

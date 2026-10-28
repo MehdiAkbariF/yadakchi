@@ -17,6 +17,7 @@ import {
   X,
   ChevronLeft,
   LogOut,
+  RotateCcw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
@@ -30,6 +31,7 @@ const ALL_MENU_GROUPS = [
       { label: 'کالاهای محبوب', icon: Heart, href: '/profile/favorites' },
       { label: 'کالاهای دیده شده اخیر', icon: Eye, href: '/profile/history' },
       { label: 'نظرات و پرسش‌ها', icon: MessageSquare, href: '/profile/comments' },
+      { label: 'درخواست‌های مرجوعی', icon: RotateCcw, href: '/profile/returns' },
     ],
   },
   {
@@ -96,7 +98,7 @@ export function ProfileNavDrawer({ isOpen, onClose }: ProfileNavDrawerProps) {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-foreground">
-                    {user?.fullName || 'کاربر یدک‌چی'}
+                    {user?.fullName || 'کاربر یدکچی'}
                   </span>
                   <span className="text-3xs text-muted-foreground " dir="ltr">
                     {user?.phoneNumber}

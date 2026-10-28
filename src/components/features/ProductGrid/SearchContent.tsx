@@ -109,7 +109,7 @@ export function SearchContent() {
           ) : productItems.length > 0 ? (
             /* ۳. نمایش لیست محصولات پیدا شده */
             <>
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {productItems.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}

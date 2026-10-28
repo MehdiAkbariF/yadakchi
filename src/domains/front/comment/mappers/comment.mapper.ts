@@ -26,7 +26,7 @@ export class CommentMapper {
       productId: dto.productId,
       user: {
         id: dto.userId || '',
-        name: dto.userName || dto.commentCreator || 'کاربر یدک‌چی',
+        name: dto.userName || dto.commentCreator || 'کاربر یدکچی',
         avatar: dto.userAvatar || null,
         isIncognito: !!dto.isIncognito,
       },

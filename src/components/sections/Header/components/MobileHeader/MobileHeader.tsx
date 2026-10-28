@@ -46,7 +46,7 @@ export function MobileHeader({ className, onSearch, isScrolled = false }: Mobile
           {isMounted ? (
             <>
               <SearchBar
-                placeholder="جستجو در یدک‌چی..."
+                placeholder="جستجو در یدکچی..."
                 onSearch={onSearch}
                 className="w-full"
                 isMobile

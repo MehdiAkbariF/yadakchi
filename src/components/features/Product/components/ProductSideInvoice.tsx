@@ -345,7 +345,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
               className="py-1 text-center text-xs font-bold text-shop hover:underline"
               onClick={() => setIsNotifySuccessOpen(false)}
             >
-              جستجوی قطعات در یدک‌چی
+              جستجوی قطعات در یدکچی
             </Link>
           </div>
         </ModalBody>

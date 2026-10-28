@@ -26,12 +26,12 @@ export async function generateMetadata({ params }: StaticPageRouteProps): Promis
 
     if (!page) {
       return {
-        title: 'صفحه یافت نشد | یدک‌چی',
+        title: 'صفحه یافت نشد | یدکچی',
         robots: { index: false, follow: false },
       };
     }
 
-    const metaTitle = page.seo?.metaTitle || `${page.title} | یدک‌چی`;
+    const metaTitle = page.seo?.metaTitle || `${page.title} | یدکچی`;
     const metaDescription = page.seo?.metaDescription || page.title;
     const canonical = page.seo?.canonicalUrl || `${BASE_URL}/page/${slug}`;
 
@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: StaticPageRouteProps): Promis
         title: metaTitle,
         description: metaDescription,
         url: canonical,
-        siteName: 'یدک‌چی',
+        siteName: 'یدکچی',
         locale: 'fa_IR',
         type: 'article',
       },
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: StaticPageRouteProps): Promis
     };
   } catch (error) {
     return {
-      title: 'صفحه یافت نشد | یدک‌چی',
+      title: 'صفحه یافت نشد | یدکچی',
       robots: { index: false, follow: false },
     };
   }

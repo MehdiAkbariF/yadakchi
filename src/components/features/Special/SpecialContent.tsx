@@ -44,7 +44,7 @@ export function SpecialContent() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xs font-bold text-muted-foreground">فرصت طلایی خرید</span>
-              <span className="mt-0.5 text-xs font-bold text-foreground">فروش ویژه یدک‌چی</span>
+              <span className="mt-0.5 text-xs font-bold text-foreground">فروش ویژه یدکچی</span>
             </div>
           </div>
         </div>

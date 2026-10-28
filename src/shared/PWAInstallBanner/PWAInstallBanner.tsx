@@ -60,7 +60,7 @@ export function PWAInstallBanner() {
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         if (outcome === 'accepted') {
-          showToast.success('وب‌اپلیکیشن یدک‌چی با موفقیت نصب شد');
+          showToast.success('وب‌اپلیکیشن یدکچی با موفقیت نصب شد');
           setShowBanner(false);
         }
       } catch (error) {
@@ -105,7 +105,7 @@ export function PWAInstallBanner() {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between w-full">
-                <span className="text-xs font-black text-foreground font-iran-sans">نصب وب‌اپلیکیشن یدک‌چی</span>
+                <span className="text-xs font-black text-foreground font-iran-sans">نصب وب‌اپلیکیشن یدکچی</span>
                 <button
                   onClick={handleDismiss}
                   className="p-1 hover:bg-muted text-muted-foreground/80 hover:text-foreground rounded-full transition-colors outline-none shrink-0"
@@ -121,7 +121,7 @@ export function PWAInstallBanner() {
                 </p>
               ) : (
                 <p className="text-[10px] md:text-[11px] leading-relaxed text-muted-foreground font-iran-sans mt-1">
-                  با نصب اپلیکیشن، یدک‌چی را همیشه سریع‌تر، سبک‌تر و بدون نیاز به مرورگر در دسترس داشته باشید.
+                  با نصب اپلیکیشن، یدکچی را همیشه سریع‌تر، سبک‌تر و بدون نیاز به مرورگر در دسترس داشته باشید.
                 </p>
               )}
             </div>

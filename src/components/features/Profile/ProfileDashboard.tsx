@@ -25,6 +25,7 @@ import {
   Bell,
   Eye,
   Settings,
+  RotateCcw,
 } from 'lucide-react';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
@@ -132,7 +133,7 @@ export function ProfileDashboard() {
               </button>
             </div>
             <p className="hidden text-3xs text-muted-foreground/80 md:block">
-              با معرفی یدک‌چی به دوستان، ۱۰۰,۰۰۰ تومان اعتبار هدیه بگیرید.
+              با معرفی یدکچی به دوستان، ۱۰۰,۰۰۰ تومان اعتبار هدیه بگیرید.
             </p>
           </div>
         )}
@@ -156,8 +157,8 @@ export function ProfileDashboard() {
                   : 'سفارش جاری شما در مرحله پردازش و ارسال است'}
               </span>
               <span className="text-2xs text-muted-foreground">
-                کد سفارش: {toPersianDigits(pendingActionOrder.orderNumber)} | مبلغ:{' '}
-                {formatToman(pendingActionOrder.totalFinalPrice)}
+                کد سفارش: {pendingActionOrder.orderNumber} | مبلغ:{' '}
+                {(pendingActionOrder.totalFinalPrice)}
               </span>
             </div>
           </div>
@@ -287,7 +288,7 @@ export function ProfileDashboard() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/my-car/add')}
-              className="mt-2 h-8.5 gap-1.5 rounded-lg text-2xs font-bold text-primary"
+              className="mt-2 h-8 gap-1.5 rounded-lg text-2xs font-bold text-primary"
             >
               <Plus className="h-3.5 w-3.5" />
               افزودن خودرو به گاراژ
@@ -352,75 +353,84 @@ export function ProfileDashboard() {
       </div>
 
       {/* ================= 6. منوی کامل و دسته‌بندی‌شده اپلیکیشنی در موبایل ================= */}
-      <div className="flex flex-col gap-3 lg:hidden mt-2">
-        <span className="text-2xs font-bold text-muted-foreground px-1">سایر بخش‌های حساب کاربری</span>
-        
-        <div className="flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden divide-y divide-border/60 shadow-2xs">
-          <Link href="/profile/orders" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <ShoppingBag className="h-4.5 w-4.5 text-primary" />
-              <span>تمام سفارش‌های من</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link href="/profile/wallet" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <Wallet className="h-4.5 w-4.5 text-emerald-500" />
-              <span>کیف پول و حساب‌های تسویه</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link href="/profile/addresses" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <MapPin className="h-4.5 w-4.5 text-blue-500" />
-              <span>آدرس‌های تحویل سفارش</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link href="/profile/comments" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="h-4.5 w-4.5 text-amber-500" />
-              <span>دیدگاه‌ها و پرسش‌های من</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link href="/profile/notifications" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <Bell className="h-4.5 w-4.5 text-purple-500" />
-              <span>پیام‌ها و اعلان‌ها</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link href="/profile/history" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <Eye className="h-4.5 w-4.5 text-teal-500" />
-              <span>کالاهای دیده شده اخیر</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link href="/profile/support" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <Headphones className="h-4.5 w-4.5 text-sky-500" />
-              <span>تیکت‌های پشتیبانی</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-
-          <Link href="/profile/settings" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <Settings className="h-4.5 w-4.5 text-muted-foreground" />
-              <span>اطلاعات حساب و حقوقی</span>
-            </div>
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </Link>
-        </div>
+    <div className="flex flex-col gap-3 lg:hidden mt-2">
+  <span className="text-2xs font-bold text-muted-foreground px-1">سایر بخش‌های حساب کاربری</span>
+  
+  <div className="flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden divide-y divide-border/60 shadow-2xs">
+    <Link href="/profile/orders" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <ShoppingBag className="h-4.5 w-4.5 text-primary" />
+        <span>تمام سفارش‌های من</span>
       </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    {/* ✅ آیتم جدید: درخواست‌های مرجوعی */}
+    <Link href="/profile/returns" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <RotateCcw className="h-4.5 w-4.5 text-rose-500" />
+        <span>درخواست‌های مرجوعی</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    <Link href="/profile/wallet" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <Wallet className="h-4.5 w-4.5 text-emerald-500" />
+        <span>کیف پول و حساب‌های تسویه</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    <Link href="/profile/addresses" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <MapPin className="h-4.5 w-4.5 text-blue-500" />
+        <span>آدرس‌های تحویل سفارش</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    <Link href="/profile/comments" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <MessageSquare className="h-4.5 w-4.5 text-amber-500" />
+        <span>دیدگاه‌ها و پرسش‌های من</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    <Link href="/profile/notifications" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <Bell className="h-4.5 w-4.5 text-purple-500" />
+        <span>پیام‌ها و اعلان‌ها</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    <Link href="/profile/history" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <Eye className="h-4.5 w-4.5 text-teal-500" />
+        <span>کالاهای دیده شده اخیر</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    <Link href="/profile/support" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <Headphones className="h-4.5 w-4.5 text-sky-500" />
+        <span>تیکت‌های پشتیبانی</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+
+    <Link href="/profile/settings" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+      <div className="flex items-center gap-3">
+        <Settings className="h-4.5 w-4.5 text-muted-foreground" />
+        <span>اطلاعات حساب و حقوقی</span>
+      </div>
+      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+    </Link>
+  </div>
+</div>
 
     </div>
   );

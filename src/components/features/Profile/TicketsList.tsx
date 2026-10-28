@@ -88,7 +88,7 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
             <h1 className="text-base font-black text-foreground sm:text-lg">پشتیبانی و تیکت‌ها</h1>
           </div>
           <p className="hidden text-xs text-muted-foreground sm:block">
-            ارتباط مستقیم با کارشناسان فنی و پشتیبانی یدک‌چی، پیگیری درخواست‌ها و مرجوعی‌ها
+            ارتباط مستقیم با کارشناسان فنی و پشتیبانی یدکچی، پیگیری درخواست‌ها و مرجوعی‌ها
           </p>
         </div>
 

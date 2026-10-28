@@ -18,6 +18,7 @@ const TITLE_MAP: Record<string, string> = {
   '/profile/notifications': 'پیام‌ها و اعلان‌ها',
   '/profile/history': 'بازدیدهای اخیر',
   '/profile/settings': 'اطلاعات حساب',
+  '/profile/returns': 'درخواست‌های مرجوعی',
 };
 
 export function ProfileHeader() {

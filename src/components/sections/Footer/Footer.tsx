@@ -121,9 +121,9 @@ const InstagramIcon = () => (
 );
 
 const SOCIAL_LINKS = [
-  { id: 'instagram', label: 'صفحه اینستاگرام یدک‌چی', icon: <InstagramIcon /> },
-  { id: 'telegram', label: 'کانال تلگرام یدک‌چی', icon: <Send className="h-5 w-5" /> },
-  { id: 'support', label: 'پشتیبانی آنلاین یدک‌چی', icon: <MessageSquare className="h-5 w-5" /> },
+  { id: 'instagram', label: 'صفحه اینستاگرام یدکچی', icon: <InstagramIcon /> },
+  { id: 'telegram', label: 'کانال تلگرام یدکچی', icon: <Send className="h-5 w-5" /> },
+  { id: 'support', label: 'پشتیبانی آنلاین یدکچی', icon: <MessageSquare className="h-5 w-5" /> },
 ];
 
 export function Footer({ className }: FooterProps) {
@@ -178,7 +178,7 @@ export function Footer({ className }: FooterProps) {
           <div className="flex flex-col items-center text-center md:items-start md:gap-2">
             <Logo hideTitle className="origin-right scale-110" />
             <p className="mt-2 max-w-xl text-xs text-muted-foreground">
-              {footerData?.description || 'یدک‌چی؛ مارکت‌پلیس تخصصی خرید قطعات یدکی خودرو'}
+              {footerData?.description || 'یدکچی؛ مارکت‌پلیس تخصصی خرید قطعات یدکی خودرو'}
             </p>
           </div>
           <Button
@@ -234,7 +234,7 @@ export function Footer({ className }: FooterProps) {
 
           <div className="flex flex-col items-start space-y-4 md:col-span-1">
             <Typography variant="h5" className="font-bold text-foreground">
-              ارتباط با یدک‌چی
+              ارتباط با یدکچی
             </Typography>
             <div className="w-full space-y-3.5">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -269,7 +269,7 @@ export function Footer({ className }: FooterProps) {
 
         <div className="flex flex-col space-y-4 border-b border-border py-6 md:hidden">
           <Typography variant="h5" className="font-bold text-foreground">
-            ارتباط با یدک‌چی
+            ارتباط با یدکچی
           </Typography>
           <div className="w-full space-y-3.5">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -342,7 +342,7 @@ export function Footer({ className }: FooterProps) {
 
         <div className="mt-8 border-t border-border pt-6 text-center">
           <p className="mx-auto max-w-5xl text-center text-2xs leading-relaxed text-muted-foreground">
-            استفاده از مطالب یدک‌چی برای «استفاده غیرتجاری» و با «ذکر منبع» بلامانع است، تمامی حقوق مادی و معنوی این وب سایت متعلق به شرکت تامین اندیشان نوین خودرو می‌باشد.
+            استفاده از مطالب یدکچی برای «استفاده غیرتجاری» و با «ذکر منبع» بلامانع است، تمامی حقوق مادی و معنوی این وب سایت متعلق به شرکت تامین اندیشان نوین خودرو می‌باشد.
           </p>
         </div>
       </div>

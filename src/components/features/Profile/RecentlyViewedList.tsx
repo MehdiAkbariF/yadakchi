@@ -37,7 +37,7 @@ export function RecentlyViewedList() {
           <span className="text-xl font-bold text-foreground">کالاهای دیده شده اخیر</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          تاریخچه محصولاتی که اخیراً در فروشگاه یدک‌چی از آن‌ها بازدید کرده‌اید
+          تاریخچه محصولاتی که اخیراً در فروشگاه یدکچی از آن‌ها بازدید کرده‌اید
         </p>
       </div>
 

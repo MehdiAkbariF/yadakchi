@@ -103,7 +103,7 @@ export function ProfileSidebar() {
     if (user?.referralCode && typeof navigator !== 'undefined' && navigator.share) {
       navigator
         .share({
-          title: 'کد معرف یدک‌چی',
+          title: 'کد معرف یدکچی',
           text: `با اشتراک‌گذاری این کد، هم دوستت برای خرید اولش ۱۰۰,۰۰۰ تومان تخفیف می‌گیره و هم خودت ۱۰۰,۰۰۰ تومان اعتبار خرید دریافت می‌کنی.`,
           url: window.location.origin,
         })
@@ -180,7 +180,7 @@ export function ProfileSidebar() {
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-bold text-foreground">
-                {user?.fullName || user?.lastName || 'کاربر یدک‌چی'}
+                {user?.fullName || user?.lastName || 'کاربر یدکچی'}
               </span>
               <span className="mt-0.5 text-2xs text-muted-foreground">{user?.userName}</span>
             </div>

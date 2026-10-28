@@ -174,7 +174,7 @@ export function OrbitDiagram() {
           />
 
           <div className="relative flex h-24 w-24 items-center justify-center rounded-lg border-2 border-primary/20 bg-card p-4 shadow-lg backdrop-blur-sm sm:h-32 sm:w-32">
-            <img src="/Logo.svg" alt="یدک‌چی" className="h-full w-full object-contain" />
+            <img src="/Logo.svg" alt="یدکچی" className="h-full w-full object-contain" />
           </div>
         </div>
 
@@ -215,7 +215,7 @@ export function OrbitDiagram() {
                 </span>
                 <span className="mt-0.5 flex items-center gap-1 text-2xs text-muted-foreground">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                  به صورت زنده در یدک‌چی
+                  به صورت زنده در یدکچی
                 </span>
               </div>
             </motion.div>

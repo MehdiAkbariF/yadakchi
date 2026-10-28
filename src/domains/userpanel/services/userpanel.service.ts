@@ -213,37 +213,49 @@ export class UserPanelService {
     }
   }
 
-  async getReturnRequests(pageNumber: number = 1, pageSize: number = 30, status?: string, subOrderId?: string): Promise<PaginatedResult<any>> {
-    try {
-      const response = await this.httpClient.get<any>(
-        USERPANEL_ENDPOINTS.GET_RETURN_REQUESTS,
-        {
-          params: {
-            PageNumber: pageNumber,
-            PageSize: pageSize,
-            Status: status || '',
-            SubOrderId: subOrderId || ''
-          }
-        }
-      );
-      const items = (response.data.items || []).map((dto: any) => UserPanelMapper.toViewReturnRequest(UserPanelMapper.toDomainReturnRequest(dto)));
-      return {
-        items,
-        pageNumber: response.data.currentPage,
-        pageSize: response.data.pageSize,
-        totalCount: response.data.totalCount,
-        totalPages: response.data.totalPages,
-        hasNextPage: response.data.currentPage < response.data.totalPages,
-        hasPreviousPage: response.data.currentPage > 1,
-        hasMore: response.data.currentPage < response.data.totalPages,
-        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
-        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
-      };
-    } catch (error) {
-      logger.error('[UserPanelService] Get return requests failed:', error);
-      throw errorManager.normalize(error);
-    }
+async getReturnRequests(
+  pageNumber: number = 1,
+  pageSize: number = 30,
+  status?: string,
+  subOrderId?: string,
+): Promise<PaginatedResult<any>> {
+  try {
+    const params: Record<string, any> = {
+      PageNumber: pageNumber,
+      PageSize: pageSize,
+    };
+    if (status && status.trim()) params.Status = status;
+    if (subOrderId && subOrderId.trim()) params.SubOrderId = subOrderId;
+
+    const response = await this.httpClient.get<any>(
+      USERPANEL_ENDPOINTS.GET_RETURN_REQUESTS,
+      { params },
+    );
+
+    const items = (response.data.items || []).map((dto: any) =>
+      UserPanelMapper.toViewReturnRequest(UserPanelMapper.toDomainReturnRequest(dto)),
+    );
+
+    return {
+      items,
+      pageNumber: response.data.currentPage,
+      pageSize: response.data.pageSize,
+      totalCount: response.data.totalCount,
+      totalPages: response.data.totalPages,
+      hasNextPage: response.data.currentPage < response.data.totalPages,
+      hasPreviousPage: response.data.currentPage > 1,
+      hasMore: response.data.currentPage < response.data.totalPages,
+      from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+      to: Math.min(
+        response.data.currentPage * response.data.pageSize,
+        response.data.totalCount,
+      ),
+    };
+  } catch (error) {
+    logger.error('[UserPanelService] Get return requests failed:', error);
+    throw errorManager.normalize(error);
   }
+}
 
   async submitReturnShipmentReceipt(id: string, method: string, traceNumber: string, file: File): Promise<void> {
     try {

@@ -160,3 +160,13 @@
 :root {
   --header-height: 68px;
 }
+
+/* اضافه شود به انتهای globals.css */
+@layer utilities {
+  /* بهینه‌سازی رندر و جلوگیری از لرزش فونت‌ها هنگام انیمیشن */
+  .transform-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  
+  }
+}

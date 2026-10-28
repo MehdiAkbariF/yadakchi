@@ -22,10 +22,11 @@ import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useGetWalletBalances } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
-
+import { RotateCcw } from 'lucide-react';
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'داشبورد کاربری', icon: Home, href: '/profile' },
   { id: 'orders', label: 'سفارش‌های من', icon: ShoppingBag, href: '/profile/orders' },
+  { id: 'returns', label: 'درخواست‌های مرجوعی', icon: RotateCcw, href: '/profile/returns' },
   { id: 'wallet', label: 'کیف پول و تسویه', icon: Wallet, href: '/profile/wallet' },
   { id: 'support', label: 'تیکت‌های پشتیبانی', icon: Headphones, href: '/profile/support' },
   { id: 'favorites', label: 'کالاهای محبوب', icon: Heart, href: '/profile/favorites' },
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { id: 'notifications', label: 'پیام‌ها و اعلان‌ها', icon: Bell, href: '/profile/notifications' },
   { id: 'history', label: 'کالاهای دیده شده', icon: Eye, href: '/profile/history' },
   { id: 'settings', label: 'اطلاعات حساب کاربری', icon: Settings, href: '/profile/settings' },
+  
 ];
 
 export function ProfileDesktopNav() {
@@ -58,7 +60,7 @@ export function ProfileDesktopNav() {
           </div>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-bold text-foreground">
-              {user?.fullName || user?.lastName || 'کاربر یدک‌چی'}
+              {user?.fullName || user?.lastName || 'کاربر یدکچی'}
             </span>
             <span className="text-2xs text-muted-foreground  mt-0.5" dir="ltr">
               {user?.phoneNumber || user?.userName}

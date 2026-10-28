@@ -26,6 +26,7 @@ import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
 import { WriteCommentModal } from './components/WriteCommentModal';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
@@ -39,6 +40,42 @@ const TABS = [
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
+
+interface EmptyStateProps {
+  title: string;
+  description: string;
+  actionText?: string;
+  actionHref?: string;
+}
+
+function EmptyState({ title, description, actionText, actionHref }: EmptyStateProps) {
+  const router = useRouter();
+
+  return (
+    <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-12 text-center shadow-xs">
+      <div className="mx-auto flex h-48 w-48 max-w-full items-center justify-center -mb-2">
+        <LottiePlayer
+          path="/anumations/customer-service-chat.json"
+          className="h-full w-full"
+          loop={true}
+        />
+      </div>
+      <p className="mt-5 text-sm font-bold text-foreground">{title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+      {/* {actionText && actionHref && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push(actionHref)}
+          className="mt-4 h-9 gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs"
+        >
+          <Plus className="h-4 w-4" />
+          <span>{actionText}</span>
+        </Button>
+      )} */}
+    </div>
+  );
+}
 
 export function CommentsDashboard() {
   const router = useRouter();
@@ -118,19 +155,7 @@ export function CommentsDashboard() {
   };
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-6 select-none">
-      {/* <div className="mb-1 flex items-center gap-3 border-b border-border pb-3 lg:hidden">
-        <button
-          type="button"
-          onClick={() => router.push('/profile')}
-          aria-label="بازگشت"
-          className="-me-1 flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
-        >
-          <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
-        </button>
-        <span className="text-sm font-bold text-foreground">نظرات و پرسش‌ها</span>
-      </div> */}
-
+    <div className="flex w-full flex-1 flex-col gap-6 select-none" dir="rtl">
       <div className="flex w-full flex-col gap-2 border-b border-border pb-5">
         <div className="flex items-center gap-2">
           <MessageSquare aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
@@ -141,6 +166,7 @@ export function CommentsDashboard() {
         </p>
       </div>
 
+      {/* تب‌ها */}
       <div className="flex w-full shrink-0 select-none items-center gap-4 overflow-x-auto px-1 py-2 scrollbar-none">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key;
@@ -176,6 +202,7 @@ export function CommentsDashboard() {
         })}
       </div>
 
+      {/* تب در انتظار نظر */}
       {activeTab === 'pending' ? (
         <div className="flex w-full flex-col gap-5">
           {isPendingLoading ? (
@@ -223,14 +250,17 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
-              <Clock aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
-              <span className="text-xs font-bold text-muted-foreground">کالایی در انتظار نظر شما وجود ندارد.</span>
-            </div>
+            <EmptyState
+              title="کالایی در انتظار نظر شما وجود ندارد"
+              description="تمامی کالاهای خریداری‌شده توسط شما بررسی و ثبت نظر شده‌اند."
+              actionText="مشاهده سفارش‌ها"
+              actionHref="/profile/orders"
+            />
           )}
         </div>
       ) : null}
 
+      {/* تب نظرات محصولات */}
       {activeTab === 'comments' ? (
         <div className="flex w-full flex-col gap-5">
           {isCommentsLoading ? (
@@ -306,14 +336,17 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
-              <MessageSquare aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
-              <span className="text-xs font-bold text-muted-foreground">هنوز نظری ثبت نکرده‌اید.</span>
-            </div>
+            <EmptyState
+              title="هنوز نظری ثبت نکرده‌اید"
+              description="نظرات و بازخوردهای شما درباره محصولات در این بخش نمایش داده می‌شوند."
+              actionText="مشاهده سفارش‌ها و ثبت نظر"
+              actionHref="/profile/orders"
+            />
           )}
         </div>
       ) : null}
 
+      {/* تب پرسش‌ها */}
       {activeTab === 'inquiries' ? (
         <div className="flex w-full flex-col gap-5">
           {isInquiriesLoading ? (
@@ -373,14 +406,17 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
-              <Search aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
-              <span className="text-xs font-bold text-muted-foreground">هنوز پرسشی ثبت نکرده‌اید.</span>
-            </div>
+            <EmptyState
+              title="هنوز پرسشی ثبت نکرده‌اید"
+              description="پرسش‌های مطرح‌شده توسط شما درباره کالاها در این بخش قابل مشاهده و پیگیری است."
+              actionText="مشاهده محصولات"
+              actionHref="/search"
+            />
           )}
         </div>
       ) : null}
 
+      {/* تب نظرات بلاگ */}
       {activeTab === 'blogComments' ? (
         <div className="flex w-full flex-col gap-5">
           {isBlogCommentsLoading ? (
@@ -440,10 +476,12 @@ export function CommentsDashboard() {
               />
             </div>
           ) : (
-            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-card py-16 text-center">
-              <BookOpen aria-hidden="true" className="h-10 w-10 text-muted-foreground/60" />
-              <span className="text-xs font-bold text-muted-foreground">هنوز دیدگاهی برای مقالات ثبت نکرده‌اید.</span>
-            </div>
+            <EmptyState
+              title="هنوز دیدگاهی برای مقالات ثبت نکرده‌اید"
+              description="نظرات شما در بخش مقالات و وبلاگ پس از ثبت در این قسمت نمایش داده می‌شوند."
+              actionText="مشاهده مقالات بلاگ"
+              actionHref="/blog"
+            />
           )}
         </div>
       ) : null}

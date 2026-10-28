@@ -19,7 +19,7 @@ export function PartHeaderCard({ partSlug, categorySlug, partName }: PartHeaderC
       <Card className="flex w-full flex-col justify-between gap-5 p-4 md:flex-row md:items-center shadow-xs">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
-            <span className="text-xs font-bold text-primary">یدک‌چی</span>
+            <span className="text-xs font-bold text-primary">یدکچی</span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-2xs font-bold text-muted-foreground md:text-xs">قطعه انتخاب شده:</span>

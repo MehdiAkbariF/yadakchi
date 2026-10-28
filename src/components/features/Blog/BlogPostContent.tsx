@@ -17,7 +17,7 @@ export interface BlogPostContentProps {
 
 export function BlogPostContent({ post }: BlogPostContentProps) {
   const breadcrumbItems = [
-    { id: 'blog-root', title: 'مجله تخصصی یدک‌چی', href: '/blog' },
+    { id: 'blog-root', title: 'مجله تخصصی یدکچی', href: '/blog' },
     ...(post.category
       ? [{ id: post.category.id, title: post.category.title, href: `/blog?category=${post.category.id}` }]
       : []),
@@ -199,7 +199,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
           <div className="flex w-full flex-col gap-3 overflow-hidden rounded-lg border border-accent bg-muted/50 p-5 sm:p-6">
             <div className="flex items-center gap-2 font-bold text-primary">
               <BookOpen aria-hidden="true" className="h-4 w-4 shrink-0" />
-              <span className="text-xs">مجله قطعات یدک‌چی</span>
+              <span className="text-xs">مجله قطعات یدکچی</span>
             </div>
             <h4 className="text-sm font-bold text-foreground">علاقه‌مند به مطالب بیشتر هستید؟</h4>
             <p className="text-xs leading-relaxed text-muted-foreground">

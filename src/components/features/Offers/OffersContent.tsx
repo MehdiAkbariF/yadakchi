@@ -26,7 +26,7 @@ export function OffersContent() {
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
 
-  const breadcrumbItems = [{ id: 'offers-root', title: 'یدک‌چی آف (تخفیف‌ها)' }];
+  const breadcrumbItems = [{ id: 'offers-root', title: 'یدکچی آف (تخفیف‌ها)' }];
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -42,7 +42,7 @@ export function OffersContent() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xs font-bold text-muted-foreground">جشنواره تخفیف‌ها</span>
-              <span className="mt-0.5 text-xs font-bold text-foreground">یدک‌چی آف</span>
+              <span className="mt-0.5 text-xs font-bold text-foreground">یدکچی آف</span>
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@ export function OffersContent() {
             <span className="text-sm font-bold tracking-wide">جشنواره تخفیف‌های طلایی</span>
           </div>
           <h2 className="mt-1 text-2xl font-bold text-foreground">
-            تخفیف‌های شگفت‌انگیز یدک‌چی آف
+            تخفیف‌های شگفت‌انگیز یدکچی آف
           </h2>
           <p className="mt-0.5 max-w-md text-xs leading-relaxed text-muted-foreground">
             فرصت استثنایی خرید لوازم یدکی و قطعات خودرو با بیشترین تخفیف‌ها از فروشگاه‌های معتبر سراسر کشور
@@ -101,7 +101,7 @@ export function OffersContent() {
           <div className="hidden md:block">
             <div className="mb-2 flex w-full items-center justify-between border-b border-border pb-3">
               <Typography variant="h3" className="font-bold text-foreground">
-                یدک‌چی آف
+                یدکچی آف
               </Typography>
               <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">
                 {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا دارای تخفیف

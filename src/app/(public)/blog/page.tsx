@@ -6,16 +6,16 @@ import { getBlogService } from '@/domains/blog/services/blog.service';
 import { BlogListContent } from '@/components/features/Blog/BlogListContent';
 
 export const metadata: Metadata = {
-  title: 'مجله تخصصی خودرو و قطعات یدکی | یدک‌چی',
-  description: 'دانشنامه و مقالات تخصصی معرفی، نگهداری، عیب‌یابی و راهنمای خرید انواع قطعات خودرو و لوازم یدکی در یدک‌چی.',
+  title: 'مجله تخصصی خودرو و قطعات یدکی | یدکچی',
+  description: 'دانشنامه و مقالات تخصصی معرفی، نگهداری، عیب‌یابی و راهنمای خرید انواع قطعات خودرو و لوازم یدکی در یدکچی.',
   alternates: {
     canonical: 'https://www.yadakchi.com/blog',
   },
   openGraph: {
-    title: 'مجله تخصصی خودرو و قطعات یدکی | یدک‌چی',
+    title: 'مجله تخصصی خودرو و قطعات یدکی | یدکچی',
     description: 'راهنمای جامع و مقالات تخصصی دنیای خودرو و لوازم یدکی در ایران',
     url: 'https://www.yadakchi.com/blog',
-    siteName: 'یدک‌چی',
+    siteName: 'یدکچی',
     locale: 'fa_IR',
     type: 'website',
   },

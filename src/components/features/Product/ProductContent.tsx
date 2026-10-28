@@ -241,7 +241,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
   const hasTimedDiscount = hasDiscount && !!discountExpiration;
 
   const metaItems = [
-    `فروشگاه: ${currentSelectedSeller?.shop?.title || 'یدک‌چی'}`,
+    `فروشگاه: ${currentSelectedSeller?.shop?.title || 'یدکچی'}`,
     `${toPersianDigits(product.views || 0)} بازدید اخیر`,
     `${toPersianDigits(product.salesCount || 0)} خرید موفق`,
   ];
@@ -490,7 +490,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
               className="py-1 text-center text-xs font-bold text-shop hover:underline"
               onClick={() => setIsNotifySuccessOpen(false)}
             >
-              جستجوی قطعات در یدک‌چی
+              جستجوی قطعات در یدکچی
             </Link>
           </div>
         </ModalBody>

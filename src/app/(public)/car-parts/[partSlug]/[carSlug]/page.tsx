@@ -29,14 +29,14 @@ export async function generateMetadata({ params }: CarPartsPageProps): Promise<M
     const partName = categoryData?.category?.name || params.partSlug;
 
     return {
-      title: `خرید لوازم یدکی و قطعات ${partName} ${carName} | یدک‌چی`,
-      description: `خرید، مقایسه قیمت و سفارش آنلاین قطعات گروه ${partName} مخصوص خودروی ${carName} با ضمانت اصالت کالا و ارسال سریع در یدک‌چی.`,
+      title: `خرید لوازم یدکی و قطعات ${partName} ${carName} | یدکچی`,
+      description: `خرید، مقایسه قیمت و سفارش آنلاین قطعات گروه ${partName} مخصوص خودروی ${carName} با ضمانت اصالت کالا و ارسال سریع در یدکچی.`,
       alternates: {
         canonical: `https://www.yadakchi.com/car-parts/${params.partSlug}/${params.carSlug}`,
       },
     };
   } catch {
-    return { title: 'یدک‌چی' };
+    return { title: 'یدکچی' };
   }
 }
 

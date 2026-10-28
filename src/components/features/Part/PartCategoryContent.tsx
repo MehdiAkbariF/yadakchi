@@ -51,8 +51,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
 
   return (
     <div className="flex w-full flex-col gap-6" dir="rtl">
-      
-      {/* هدر چسبان موبایل: پرکننده ۱۰۰٪ عرض صفحه (Edge-to-Edge) بدون فاصله از کناره‌ها */}
+      {/* هدر چسبان موبایل */}
       <div
         className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
       >
@@ -124,7 +123,6 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           partCategoryId={categoryData?.category?.id}
         />
 
-        {/* کانتینر محصولات با min-w-0 حیاتی برای جلوگیری از بریده شدن کارت‌ها */}
         <div className="flex flex-1 min-w-0 flex-col items-stretch gap-6">
           <div className="hidden md:block">
             <PartCategoryHeaderCard
@@ -189,7 +187,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
 
       <ChangeCategoryModal isOpen={isChangeCatOpen} onClose={() => setIsChangeCatOpen(false)} />
 
-     <SelectPartModal
+      <SelectPartModal
         isOpen={isSelectPartOpen}
         onClose={() => setIsSelectPartOpen(false)}
         slug={slug}

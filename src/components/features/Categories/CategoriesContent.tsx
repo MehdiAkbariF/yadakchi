@@ -153,21 +153,27 @@ export function CategoriesContent() {
 
           {matchedParts.length > 0 ? (
             <div className="grid w-full grid-cols-2 gap-3 pb-8 sm:grid-cols-3">
-              {matchedParts.map((part: any) => (
-                <Link
-                  key={part.id}
-                  href={`/part-category/${encodeURIComponent(part.categoryEnglishTitle)}?partId=${part.id}&categoryId=${part.categoryId}`}
-                  className="flex h-28 select-none flex-col items-center justify-center gap-2 rounded-xl border border-border/70 bg-card p-3 text-center shadow-2xs transition-all hover:border-primary/50"
-                >
-                  <PartItemIcon icon={part.icon} name={part.name} />
-                  <span className="line-clamp-2 w-full text-2xs font-semibold leading-relaxed text-foreground">
-                    {part.name}
-                  </span>
-                  <span className="text-3xs text-muted-foreground">
-                    دسته: {part.categoryName}
-                  </span>
-                </Link>
-              ))}
+              {matchedParts.map((part: any) => {
+                const categorySlug = part.categoryId || part.categoryEnglishTitle;
+                const partSlug = encodeURIComponent(part.englishTitle || part.id);
+                const partHref = `/parts/${categorySlug}/${partSlug}`;
+
+                return (
+                  <Link
+                    key={part.id}
+                    href={partHref}
+                    className="flex h-28 select-none flex-col items-center justify-center gap-2 rounded-xl border border-border/70 bg-card p-3 text-center shadow-2xs transition-all hover:border-primary/50"
+                  >
+                    <PartItemIcon icon={part.icon} name={part.name} />
+                    <span className="line-clamp-2 w-full text-2xs font-semibold leading-relaxed text-foreground">
+                      {part.name}
+                    </span>
+                    <span className="text-3xs text-muted-foreground">
+                      دسته: {part.categoryName}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -232,7 +238,7 @@ export function CategoriesContent() {
             })}
           </div>
 
-          {/* ستون چپ: قطعات دسته‌بندی با مدل دقیق آدرس درخواستی */}
+          {/* ستون چپ: قطعات دسته‌بندی متصل به صفحه قطعه (/parts) */}
           <div className="h-full min-h-0 flex-1 overflow-y-auto overscroll-contain bg-card p-4 scrollbar-none pb-8">
             {activeCategory ? (
               <div className="flex w-full flex-col gap-4">
@@ -241,30 +247,37 @@ export function CategoriesContent() {
                     همه قطعات {activeCategory.name}
                   </span>
                   <Link
-                    href={`/part-category/${encodeURIComponent(activeCategory.englishTitle)}?categoryId=${activeCategory.id}`}
-                    prefetch={false}
-                    className="flex items-center gap-1 text-2xs font-bold text-primary hover:underline"
-                  >
-                    <span>مشاهده همه</span>
-                    <ArrowLeft aria-hidden="true" className="h-3 w-3" />
-                  </Link>
+  href={`/part-category/${encodeURIComponent(activeCategory.englishTitle || activeCategory.id)}`}
+  prefetch={false}
+  className="flex items-center gap-1 text-2xs font-bold text-primary hover:underline"
+>
+  <span>مشاهده همه</span>
+  <ArrowLeft aria-hidden="true" className="h-3 w-3" />
+</Link>
                 </div>
 
                 {activeCategory.parts && activeCategory.parts.length > 0 ? (
                   <div className="grid w-full grid-cols-2 gap-3 pb-8">
-                    {activeCategory.parts.map((part) => (
-                      <Link
-                        key={part.id}
-                        href={`/part-category/${encodeURIComponent(activeCategory.englishTitle)}?partId=${part.id}&categoryId=${activeCategory.id}`}
-                        prefetch={false}
-                        className="flex h-28 select-none flex-col items-center justify-center gap-2 rounded-xl border border-border/70 bg-card p-3 text-center shadow-2xs transition-all duration-fast hover:border-primary/50 hover:shadow-xs active:scale-95"
-                      >
-                        <PartItemIcon icon={part.icon} name={part.name} />
-                        <span className="line-clamp-2 w-full text-2xs font-semibold leading-relaxed text-foreground">
-                          {part.name}
-                        </span>
-                      </Link>
-                    ))}
+                    {activeCategory.parts.map((part) => {
+                      // هدایت مستقیم قطعه به صفحه /parts
+                      const categorySlug = activeCategory.id;
+                      const partSlug = encodeURIComponent(part.englishTitle || part.id);
+                      const partHref = `/parts/${categorySlug}/${partSlug}`;
+
+                      return (
+                        <Link
+                          key={part.id}
+                          href={partHref}
+                          prefetch={false}
+                          className="flex h-28 select-none flex-col items-center justify-center gap-2 rounded-xl border border-border/70 bg-card p-3 text-center shadow-2xs transition-all duration-fast hover:border-primary/50 hover:shadow-xs active:scale-95"
+                        >
+                          <PartItemIcon icon={part.icon} name={part.name} />
+                          <span className="line-clamp-2 w-full text-2xs font-semibold leading-relaxed text-foreground">
+                            {part.name}
+                          </span>
+                        </Link>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="flex w-full items-center justify-center py-12 text-xs text-muted-foreground">
@@ -281,7 +294,7 @@ export function CategoriesContent() {
         </div>
       )}
 
-      {/* نوار پایین اپلیکیشن با تب دسته‌بندی روشن (پرکننده کف صفحه و بدون فاصله سفید) */}
+      {/* نوار پایین اپلیکیشن با تب دسته‌بندی روشن */}
       <BottomNav />
     </div>
   );

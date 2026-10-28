@@ -41,7 +41,7 @@ export function BestsellersContent() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xs font-bold text-muted-foreground">محبوب‌ترین‌های بازار</span>
-              <span className="mt-0.5 text-xs font-bold text-foreground">پرفروش‌ترین‌های یدک‌چی</span>
+              <span className="mt-0.5 text-xs font-bold text-foreground">پرفروش‌ترین‌های یدکچی</span>
             </div>
           </div>
         </div>

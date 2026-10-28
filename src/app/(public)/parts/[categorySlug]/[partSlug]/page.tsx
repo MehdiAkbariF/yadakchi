@@ -2,6 +2,7 @@
 
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { getHttpClient } from '@/core/http/client';
 import { getPartService } from '@/domains/front/part/services/part.service';
 import { getProductService } from '@/domains/front/product/services/product.service';
@@ -12,115 +13,189 @@ import { PartDetailsContent } from '@/components/features/Part/PartDetailsConten
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 
 interface PartPageProps {
-  params: { categorySlug: string; partSlug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ categorySlug: string; partSlug: string }> | { categorySlug: string; partSlug: string };
+  searchParams:
+    | Promise<{ [key: string]: string | string[] | undefined }>
+    | { [key: string]: string | string[] | undefined };
 }
 
-export async function generateMetadata({ params }: { params: { categorySlug: string; partSlug: string } }): Promise<Metadata> {
-  const client = getHttpClient();
+/**
+ * کش کردن درخواست GetPartPage برای جلوگیری از ۲ بار صدا زدن API در SSR
+ */
+const getCachedPartData = cache(async (partSlug: string) => {
+  const partService = getPartService();
   try {
-    const response = await client.get<any>('/api/Front/GetPartPage', {
-      params: { PartEnglishName: params.partSlug }
-    });
-    const seo = response.data?.seoInformation || {};
-    const title = seo.title && seo.title !== 'no seo' ? seo.title : (response.data?.name || 'یدک‌چی');
-    const description = seo.description && seo.description !== 'no seo' ? seo.description : (response.data?.description || '');
+    const cleanSlug = decodeURIComponent(partSlug || '');
+    return await partService.getPartPage(cleanSlug);
+  } catch (error: any) {
+    const status = error?.status ?? error?.response?.status;
+    if (status === 404) return null;
+    throw error;
+  }
+});
+
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                سئو و متادیتا                               */
+/* -------------------------------------------------------------------------- */
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categorySlug: string; partSlug: string }> | { categorySlug: string; partSlug: string };
+}): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(params);
+  const { categorySlug, partSlug: rawPartSlug } = resolvedParams;
+
+  if (!rawPartSlug) return { title: 'قطعه یدکی | یدک‌چی' };
+
+  try {
+    const partSlug = decodeURIComponent(rawPartSlug);
+    const partData = await getCachedPartData(partSlug);
+    if (!partData) return { title: 'قطعه یدکی | یدک‌چی' };
+
+    const seo = partData.seoInformation || {};
+    const title = seo.title && seo.title !== 'no seo' ? seo.title : `${partData.name || 'قطعه یدکی'} | یدک‌چی`;
+    const description =
+      seo.description && seo.description !== 'no seo'
+        ? seo.description
+        : partData.description
+          ? partData.description.replace(/<[^>]*>/g, '').slice(0, 160)
+          : 'خرید آنلاین قطعات یدکی خودرو در یدک‌چی';
+    const canonicalUrl = `https://www.yadakchi.com/parts/${categorySlug}/${encodeURIComponent(partSlug)}`;
+
     return {
       title,
       description,
-      alternates: {
-        canonical: `https://www.yadakchi.com/parts/${params.categorySlug}/${params.partSlug}`,
-      },
+      alternates: { canonical: canonicalUrl },
     };
   } catch {
-    return { title: 'یدک‌چی' };
+    return { title: 'قطعه یدکی | یدک‌چی' };
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                 صفحه اصلی                                  */
+/* -------------------------------------------------------------------------- */
+
 export default async function PartPage({ params, searchParams }: PartPageProps) {
-  const queryClient = new QueryClient();
-  const partService = getPartService();
-  const productService = getProductService();
-  const brandService = getBrandService();
-  const carService = getCarService();
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const { categorySlug, partSlug: rawPartSlug } = resolvedParams;
 
-  let partData = null;
-
-  try {
-    partData = await partService.getPartPage(params.partSlug);
-  } catch (error: any) {
-    if (error?.status === 404) {
-      notFound();
-    }
+  if (!rawPartSlug) {
+    notFound();
   }
+
+  const partSlug = decodeURIComponent(rawPartSlug);
+  const partData = await getCachedPartData(partSlug);
 
   if (!partData) {
     notFound();
   }
 
-  queryClient.setQueryData(['front', 'parts', 'page', params.partSlug, undefined], partData);
+  // استخراج امن categoryId (از دیتای قطعه یا از روی UUID در URL)
+  const isCategorySlugUuid = /^[0-9a-fA-F-]{36}$/.test(categorySlug);
+  const categoryId: string | undefined = partData.category?.id || (isCategorySlugUuid ? categorySlug : undefined);
 
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+
+  queryClient.setQueryData(['front', 'parts', 'page', partSlug, undefined], partData);
+
+  const fromPrice = resolvedSearchParams.fromPrice ? Number(resolvedSearchParams.fromPrice) : undefined;
+  const toPrice = resolvedSearchParams.toPrice ? Number(resolvedSearchParams.toPrice) : undefined;
+  const pageNumber = resolvedSearchParams.page ? Math.max(1, Number(resolvedSearchParams.page)) : 1;
+  const pageSize = resolvedSearchParams.pageSize ? Math.max(1, Number(resolvedSearchParams.pageSize)) : 30;
+
+  // 🎯 فیلترها کاملاً منطبق با اسکیما Swagger متد /api/Search/products
   const filters: SearchProductsRequest = {
-    partCategoryEnglishTitle: params.categorySlug,
-    partEnglishTitle: params.partSlug,
-    isProductInStock: searchParams.inStock === 'true' ? true : undefined,
-    isSellerInUserCity: searchParams.userCity === 'true' ? true : undefined,
-    fromPrice: searchParams.fromPrice ? Number(searchParams.fromPrice) : undefined,
-    toPrice: searchParams.toPrice ? Number(searchParams.toPrice) : undefined,
-    orderType: (searchParams.sort as any) || 'Selected',
-    pageNumber: searchParams.page ? Number(searchParams.page) : 1,
-    pageSize: searchParams.pageSize ? Number(searchParams.pageSize) : 30,
-    brandIds: typeof searchParams.brandIds === 'string' ? [searchParams.brandIds] : Array.isArray(searchParams.brandIds) ? searchParams.brandIds : undefined,
-    carIds: typeof searchParams.carIds === 'string' ? [searchParams.carIds] : Array.isArray(searchParams.carIds) ? searchParams.carIds : undefined,
-    types: typeof searchParams.types === 'string' ? [searchParams.types] as any : Array.isArray(searchParams.types) ? searchParams.types : undefined,
+    partIds: partData?.id ? [partData.id] : undefined,
+    partCategoryIds: categoryId ? [categoryId] : undefined,
+    onlyInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
+    fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
+    toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
+    orderType: (resolvedSearchParams.sort as any) || 'Selected',
+    pageNumber: !isNaN(pageNumber) ? pageNumber : 1,
+    pageSize: !isNaN(pageSize) ? pageSize : 30,
+    brandIds:
+      typeof resolvedSearchParams.brandIds === 'string'
+        ? [resolvedSearchParams.brandIds]
+        : Array.isArray(resolvedSearchParams.brandIds)
+          ? resolvedSearchParams.brandIds
+          : undefined,
+    carIds:
+      typeof resolvedSearchParams.carIds === 'string'
+        ? [resolvedSearchParams.carIds]
+        : Array.isArray(resolvedSearchParams.carIds)
+          ? resolvedSearchParams.carIds
+          : undefined,
+    types:
+      typeof resolvedSearchParams.types === 'string'
+        ? ([Number(resolvedSearchParams.types)] as any)
+        : Array.isArray(resolvedSearchParams.types)
+          ? (resolvedSearchParams.types.map(Number) as any)
+          : undefined,
   };
 
-  try {
-    await Promise.all([
-      queryClient.prefetchQuery({
-        queryKey: ['front', 'products', 'search', filters],
-        queryFn: () => productService.searchProducts(filters),
-      }),
-      queryClient.prefetchQuery({
-        queryKey: ['reference', 'brands', 'names', {}],
-        queryFn: () => brandService.getBrandsName({}),
-      }),
-      queryClient.prefetchQuery({
-        queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
-        queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
-      }),
-      queryClient.prefetchQuery({
-        queryKey: ['front', 'parts', 'categories-flat', 'all'],
-        queryFn: async () => {
-          const client = getHttpClient();
-          const response = await client.get<any[]>('/api/Front/PartCategories', {
-            params: { CarId: '' }
-          });
-          return Array.isArray(response.data) ? response.data : [];
-        },
-      }),
-    ]);
-  } catch (error) {}
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'products', 'search', filters],
+      queryFn: () => productService.searchProducts(filters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const client = getHttpClient();
+        const response = await client.get<any[]>('/api/Front/PartCategories');
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
 
   const schemaJson = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    "@id": `https://www.yadakchi.com/parts/${params.categorySlug}/${params.partSlug}/#webpage`,
-    "url": `https://www.yadakchi.com/parts/${params.categorySlug}/${params.partSlug}`,
-    "name": partData.name,
-    "description": partData.description,
-    "isPartOf": {
-      "@id": "https://www.yadakchi.com/#website"
-    }
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `https://www.yadakchi.com/parts/${categorySlug}/${encodeURIComponent(partSlug)}/#webpage`,
+    url: `https://www.yadakchi.com/parts/${categorySlug}/${encodeURIComponent(partSlug)}`,
+    name: partData.name,
+    description: partData.description ? partData.description.replace(/<[^>]*>/g, '').slice(0, 200) : '',
+    isPartOf: { '@id': 'https://www.yadakchi.com/#website' },
   };
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
       />
-      <PartDetailsContent categorySlug={params.categorySlug} partSlug={params.partSlug} />
+      <PartDetailsContent
+        categorySlug={categorySlug}
+        partSlug={partSlug}
+        partId={partData.id}
+        categoryId={categoryId}
+      />
     </HydrationBoundary>
   );
 }

@@ -15,23 +15,23 @@ export async function generateMetadata({ params }: CarPageProps): Promise<Metada
 
   if (!carData) {
     return {
-      title: 'قطعات خودرو | یدک‌چی',
+      title: 'قطعات خودرو | یدکچی',
     };
   }
 
   const cleanDesc = carData.description || '';
 
   return {
-    title: `خرید لوازم یدکی و قطعات ${carData.model} | یدک‌چی`,
+    title: `خرید لوازم یدکی و قطعات ${carData.model} | یدکچی`,
     description: cleanDesc.slice(0, 160) || `خرید جدیدترین قطعات یدکی، لوازم بدنه و ابزارآلات تخصصی خودروی ${carData.model} با ضمانت اصالت کالا و ارسال سریع از فروشگاه‌های معتبر سراسر کشور.`,
     alternates: {
       canonical: `https://www.yadakchi.com/car/${params.slug}`,
     },
     openGraph: {
-      title: `خرید لوازم یدکی و قطعات ${carData.model} | یدک‌چی`,
-      description: cleanDesc.slice(0, 160) || `خرید قطعات خودروی ${carData.model} در بازارگاه تخصصی یدک‌چی`,
+      title: `خرید لوازم یدکی و قطعات ${carData.model} | یدکچی`,
+      description: cleanDesc.slice(0, 160) || `خرید قطعات خودروی ${carData.model} در بازارگاه تخصصی یدکچی`,
       url: `https://www.yadakchi.com/car/${params.slug}`,
-      siteName: 'یدک‌چی',
+      siteName: 'یدکچی',
       locale: 'fa_IR',
       type: 'website',
       images: [

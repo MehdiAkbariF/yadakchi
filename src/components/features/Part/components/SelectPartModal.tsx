@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Search, SlidersHorizontal, Inbox, Package } from 'lucide-react';
-import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { getHttpClient } from '@/core/http/client';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { Input } from '@/components/primitives/Input/Input';
@@ -14,7 +14,7 @@ import { getFullUrl } from '@/core/utils/formatters';
 export interface SelectPartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  slug: string; // PartCategoryEnglishTitle
+  slug: string; // PartCategoryEnglishTitle یا PartCategoryId
   categoryName: string;
   carSlug?: string;
   categoryId?: string;
@@ -30,54 +30,77 @@ export function SelectPartModal({
 }: SelectPartModalProps) {
   const router = useRouter();
   const [partSearch, setPartSearch] = React.useState('');
-  const debouncedSearch = useDebounce(partSearch, 400);
-  const [page, setPage] = React.useState(1);
-  const [accumulatedParts, setAccumulatedParts] = React.useState<any[]>([]);
+  const debouncedSearch = useDebounce(partSearch, 300);
 
-  const { data: partsResponse, isLoading, isFetching } = useTypedQuery<any>(
-    ['front', 'parts', 'by-category-lazy', slug, debouncedSearch, page],
-    async () => {
-      const client = getHttpClient();
-      const response = await client.get<any>('/api/Front/PartList', {
-        params: {
-          PartCategoryEnglishTitle: slug,
-          Name: debouncedSearch || undefined,
-          PageNumber: page,
-          PageSize: 30,
-        },
-      });
-      return response.data?.pagedParts || { items: [], totalPages: 1 };
-    },
-    { enabled: isOpen && !!slug, staleTime: 0, gcTime: 0 }
-  );
+  // تشخیص هوشمند شناسه (GUID) یا عنوان انگلیسی اسلاگ
+  const isGuid = /^[0-9a-fA-F-]{36}$/.test(slug || '');
+  const resolvedCategoryId = categoryId || (isGuid ? slug : undefined);
+  const resolvedCategorySlug = !isGuid && slug ? slug : undefined;
 
-  const hasMore = partsResponse ? page < partsResponse.totalPages : false;
-
+  // بازنشانی مقدار اینپوت سرچ با باز شدن مجدد مودال
   React.useEffect(() => {
     if (isOpen) {
       setPartSearch('');
-      setPage(1);
-      setAccumulatedParts([]);
     }
   }, [isOpen]);
 
-  React.useEffect(() => {
-    setPage(1);
-    setAccumulatedParts([]);
-  }, [debouncedSearch]);
+  // ✅ استفاده از useInfiniteQuery پایدار: مشکل خالی شدن در دفعات بعدی را ۱۰۰٪ حل می‌کند
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: [
+      'front',
+      'parts',
+      'by-category-infinite',
+      resolvedCategoryId,
+      resolvedCategorySlug,
+      debouncedSearch,
+    ],
+    queryFn: async ({ pageParam = 1 }) => {
+      const client = getHttpClient();
+      const params: Record<string, any> = {
+        Name: debouncedSearch ? debouncedSearch.trim() : undefined,
+        PageNumber: pageParam,
+        PageSize: 30,
+      };
 
-  React.useEffect(() => {
-    if (partsResponse?.items) {
-      if (page === 1) setAccumulatedParts(partsResponse.items);
-      else setAccumulatedParts((prev) => [...prev, ...partsResponse.items]);
-    }
-  }, [partsResponse, page]);
+      if (resolvedCategoryId) {
+        params.PartCategoryId = resolvedCategoryId;
+      }
+      if (resolvedCategorySlug) {
+        params.PartCategoryEnglishTitle = resolvedCategorySlug;
+      }
 
+      const response = await client.get<any>('/api/Front/PartList', { params });
+      return response.data?.pagedParts || response.data || { items: [], totalPages: 1 };
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const totalPages = lastPage?.totalPages || 1;
+      const nextPage = allPages.length + 1;
+      return nextPage <= totalPages ? nextPage : undefined;
+    },
+    initialPageParam: 1,
+    enabled: isOpen && !!(resolvedCategoryId || resolvedCategorySlug),
+    staleTime: 5 * 60 * 1000, // ۵ دقیقه کش پایدار در مرورگر
+  });
+
+  // تجمیع مستقیم آیتم‌ها از کش بدون وابستگی به useEffect
+  const allParts = React.useMemo(() => {
+    return data?.pages?.flatMap((page) => page.items || []) || [];
+  }, [data]);
+
+  // اسکرول بی‌نهایت برای لود صفحات بعدی
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (!hasMore || isFetching || isLoading) return;
+    if (!hasNextPage || isFetchingNextPage || isLoading) return;
     const target = e.currentTarget;
-    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= 15;
-    if (isAtBottom) setPage((prev) => prev + 1);
+    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= 40;
+    if (isAtBottom) {
+      fetchNextPage();
+    }
   };
 
   const handleSelectPart = (part: any) => {
@@ -91,15 +114,25 @@ export function SelectPartModal({
     }
 
     if (resolvedCarSlug) {
-      router.push(`/car-parts/${encodeURIComponent(part.englishTitle)}/${encodeURIComponent(resolvedCarSlug)}?partId=${part.id}`);
+      router.push(
+        `/car-parts/${encodeURIComponent(part.englishTitle || part.id)}/${encodeURIComponent(resolvedCarSlug)}?partId=${part.id}`
+      );
       onClose();
       return;
     }
 
-    // هدایت دقیق به روت part-category با فیلتر partId و categoryId (هرگز ۴۰۴ نمی‌دهد)
-    const targetCatId = categoryId || part.categoryId || part.partCategoryId || '';
-    const catQuery = targetCatId ? `&categoryId=${targetCatId}` : '';
-    router.push(`/part-category/${encodeURIComponent(slug)}?partId=${part.id}${catQuery}`);
+    // هدایت مستقیم و تمیز به صفحه خود قطعه
+    const targetCategorySlug =
+      resolvedCategorySlug ||
+      part.categoryEnglishTitle ||
+      resolvedCategoryId ||
+      part.categoryId ||
+      part.partCategoryId ||
+      'category';
+
+    const targetPartSlug = encodeURIComponent(part.englishTitle || part.id);
+
+    router.push(`/parts/${targetCategorySlug}/${targetPartSlug}`);
     onClose();
   };
 
@@ -126,9 +159,9 @@ export function SelectPartModal({
           onScroll={handleScroll}
           className="flex-1 overflow-y-auto pe-1 ps-1 scrollbar-thin md:max-h-80"
         >
-          {accumulatedParts.length > 0 ? (
+          {allParts.length > 0 ? (
             <div className="grid w-full grid-cols-2 gap-3 py-1 sm:grid-cols-3">
-              {accumulatedParts.map((part: any) => (
+              {allParts.map((part: any) => (
                 <Card
                   key={part.id}
                   onClick={() => handleSelectPart(part)}
@@ -145,7 +178,9 @@ export function SelectPartModal({
                       <Package aria-hidden="true" className="h-6 w-6 text-primary/70" />
                     )}
                   </div>
-                  <span className="w-full truncate text-xs font-bold text-foreground">{part.name}</span>
+                  <span className="w-full truncate text-xs font-bold text-foreground">
+                    {part.name}
+                  </span>
                 </Card>
               ))}
             </div>
@@ -158,11 +193,11 @@ export function SelectPartModal({
             )
           )}
 
-          {isFetching ? (
-            <div className="flex w-full items-center justify-center py-3">
+          {(isFetchingNextPage || (isLoading && allParts.length === 0)) && (
+            <div className="flex w-full items-center justify-center py-4">
               <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin text-primary" />
             </div>
-          ) : null}
+          )}
         </div>
       </ModalBody>
     </Modal>

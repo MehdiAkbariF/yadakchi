@@ -4,16 +4,14 @@ import * as React from 'react';
 import {
   ShoppingBag,
   Check,
-  Store,
   ShieldCheck,
   Truck,
   Award,
   SlidersHorizontal,
   ChevronDown,
-  RotateCcw,
   CheckCircle2,
-  Clock,
   MapPin,
+  Package,
 } from 'lucide-react';
 import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
 import { useGetShopPage } from '@/domains/front/shop/hooks/shop.hooks';
@@ -23,10 +21,9 @@ import { ProductSearchCard } from '@/components/features/ProductCard/ProductSear
 import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
-import { Card } from '@/components/composites/Card';
 import { Typography } from '@/components/primitives/Typography';
 import { BottomSheet } from '@/components/composites/BottomSheet/BottomSheet';
-import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
+import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl, toPersianDigits } from '@/core/utils/formatters';
 
@@ -51,7 +48,8 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
   const currentFilters = { ...filters, shopId: id };
 
   const { data: shopData, isLoading: isShopLoading } = useGetShopPage(id);
-  const { data: productsResponse, isLoading: isProductsLoading } = useSearchProducts(currentFilters);
+  const { data: productsResponse, isLoading: isProductsLoading } =
+    useSearchProducts(currentFilters);
 
   const products = productsResponse?.items || [];
   const totalCount = productsResponse?.totalCount || 0;
@@ -63,151 +61,226 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
   };
 
   const activeSortLabel =
-    SORT_OPTIONS.find((o) => o.value === (filters.orderType || 'Selected'))?.label || 'منتخب';
+    SORT_OPTIONS.find((o) => o.value === (filters.orderType || 'Selected'))?.label ||
+    'منتخب';
 
   const breadcrumbItems = [
     { id: 'shops-root', title: 'فروشگاه‌ها', href: '/shops' },
     { id: 'shop-active', title: shopData?.shopTitle || 'فروشگاه انتخابی' },
   ];
 
-  const delayedPercent = shopData?.shopPerformanceReport?.sellerSentDelayedPercentage ?? 0;
-  const returnPercent = shopData?.shopPerformanceReport?.nonUserReturnPercentage ?? 0;
-  const onTimePercent = shopData?.shopPerformanceReport?.sellerSentOnTimePercentage ?? 0;
+  const delayedPercent =
+    shopData?.shopPerformanceReport?.sellerSentDelayedPercentage ?? 0;
+  const returnPercent =
+    shopData?.shopPerformanceReport?.nonUserReturnPercentage ?? 0;
+  const onTimePercent =
+    shopData?.shopPerformanceReport?.sellerSentOnTimePercentage ?? 0;
+
+  // ۱. درصد ارسال به‌موقع
+  const onTimeScore = Math.max(0, Math.min(100, Math.round(100 - delayedPercent)));
+  // ۲. درصد بدون مرجوعی
+  const noReturnScore = Math.max(0, Math.min(100, Math.round(100 - returnPercent)));
+  // ۳. درصد تعهد ارسال
+  const commitmentScore = Math.max(0, Math.min(100, Math.round(onTimePercent)));
+
+  const shopInitial = shopData?.shopTitle
+    ? shopData.shopTitle.trim().charAt(0).toUpperCase()
+    : 'ی';
 
   return (
-    <div className="flex w-full flex-col gap-5 sm:gap-6" dir="rtl">
-      
-      {/* ================= 1. نوار چسبان موبایل: لبه تا لبه (Edge-to-Edge) در 56px ================= */}
-      <div
-        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] select-none items-center justify-between gap-2.5 border-b border-border/80 bg-card/95 px-4 py-2.5 shadow-xs backdrop-blur-md md:hidden rounded-none"
-      >
+    <div className="flex w-full flex-col gap-3 sm:gap-6" dir="rtl">
+      {/* ================= 1. نوار چسبان موبایل ================= */}
+      <div className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] select-none items-center justify-between gap-2 border-b border-border/80 bg-card/95 px-3 py-2 shadow-xs backdrop-blur-md md:hidden">
         <button
           type="button"
           onClick={() => setIsMobileFiltersOpen(true)}
-          className="flex h-9 flex-1 select-none items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-card px-3 text-xs font-bold text-foreground shadow-2xs active:scale-95 transition-transform"
+          className="flex h-8 flex-1 select-none items-center justify-center gap-1 rounded-lg border border-border/80 bg-card px-2 text-2xs font-bold text-foreground active:scale-95 transition-transform"
         >
-          <SlidersHorizontal className="h-4 w-4 shrink-0 text-primary" />
+          <SlidersHorizontal className="h-3.5 w-3.5 shrink-0 text-foreground/80" />
           <span>فیلترها</span>
         </button>
 
         <button
           type="button"
           onClick={() => setIsMobileSortOpen(true)}
-          className="flex h-9 flex-1 select-none items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-card px-3 text-xs font-bold text-foreground shadow-2xs active:scale-95 transition-transform"
+          className="flex h-8 flex-1 select-none items-center justify-center gap-1 rounded-lg border border-border/80 bg-card px-2 text-2xs font-bold text-foreground active:scale-95 transition-transform"
         >
           <span className="truncate">{activeSortLabel}</span>
-          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
         </button>
 
-        <span className="flex h-9 shrink-0 items-center justify-center rounded-xl bg-muted px-2.5 text-3xs font-bold text-muted-foreground">
+        <span className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-3xs font-bold text-muted-foreground">
           {toPersianDigits(totalCount)} کالا
         </span>
       </div>
 
       <Breadcrumb items={breadcrumbItems} className="hidden px-4 md:flex md:px-0" />
 
-      {/* ================= 2. بنر و شناسنامه رسمی شرکتی فروشگاه (Corporate Header) ================= */}
+      {/* ================= 2. هدر فروشگاه ================= */}
       {isShopLoading ? (
-        <div className="h-44 w-full animate-pulse rounded-2xl bg-muted/40" />
-      ) : (
-        <Card className="flex w-full flex-col justify-between gap-6 rounded-3xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/20 p-5 sm:p-6 shadow-xs lg:flex-row lg:items-center">
-          
-          {/* ستون راست: مشخصات و لوگوی فروشگاه */}
-          <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border/80 bg-card p-1.5 shadow-2xs md:h-24 md:w-24">
-              {shopData?.logo ? (
-                <img
-                  src={getFullUrl(shopData.logo)}
-                  className="h-full w-full object-contain"
-                  alt={shopData.shopTitle}
-                />
-              ) : (
-                <Store className="h-10 w-10 text-muted-foreground/60" />
-              )}
-            </div>
+        <div className="relative w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs sm:rounded-3xl">
+          {/* بنر فقط در دسکتاپ */}
+          <Skeleton className="hidden h-32 w-full rounded-none sm:block" />
 
-            <div className="flex flex-col gap-1.5 min-w-0">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h1 className="text-base sm:text-xl font-black text-foreground truncate">
-                  {shopData?.shopTitle}
-                </h1>
-                <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-3xs font-bold text-emerald-600 dark:text-emerald-400">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  فروشنده تایید شده یدک‌چی
-                </span>
+          <div className="relative px-3 pb-3 pt-3 sm:px-7 sm:pb-7 sm:pt-0">
+            <div className="flex items-center gap-2.5 sm:-mt-14 sm:items-end sm:gap-4">
+              <Skeleton className="h-14 w-14 shrink-0 rounded-xl border-2 border-card sm:h-28 sm:w-28 sm:rounded-2xl sm:border-4" />
+              <div className="space-y-1.5 pb-0.5 sm:space-y-2 sm:pb-2">
+                <Skeleton className="h-4 w-32 rounded-md sm:h-6 sm:w-48" />
+                <Skeleton className="h-3 w-24 rounded-md sm:h-4 sm:w-32" />
               </div>
+            </div>
+            <div className="mt-3 grid grid-cols-4 gap-1.5 border-t border-border/50 pt-3 sm:mt-6 sm:gap-3 sm:pt-5">
+              <Skeleton className="h-10 rounded-lg sm:h-16 sm:rounded-2xl" />
+              <Skeleton className="h-10 rounded-lg sm:h-16 sm:rounded-2xl" />
+              <Skeleton className="h-10 rounded-lg sm:h-16 sm:rounded-2xl" />
+              <Skeleton className="h-10 rounded-lg sm:h-16 sm:rounded-2xl" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="relative w-full overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/30 shadow-xs transition-all sm:rounded-3xl">
+          {/* بنر بالایی: فقط در دسکتاپ */}
+          <div className="relative hidden h-15 w-full overflow-hidden border-b border-border/60 bg-gradient-to-l from-muted/60 via-muted/30 to-muted/10 p-4 sm:block">
+            <div className="absolute end-4 top-4 flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-foreground shadow-2xs backdrop-blur-md">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full text-xs font-semibold text-muted-foreground">
+                <CheckCircle2 className="h-3 w-3 text-success" />
+                فروشنده رسمی
+              </span>
+            </div>
+          </div>
 
-              <div className="flex flex-wrap items-center gap-3 text-2xs text-muted-foreground">
-                <span className="flex items-center gap-1 font-semibold">
-                  <Store className="h-3.5 w-3.5 text-primary" />
-                  {toPersianDigits(shopData?.shopProductCount || 0)} قطعه یدکی فعال
-                </span>
-
-                {shopData?.address && (
-                  <>
-                    <span className="text-border">|</span>
-                    <span className="flex items-center gap-1 truncate max-w-[280px]">
-                      <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                      {shopData.address}
-                    </span>
-                  </>
+          {/* بخش اطلاعات و آمار فروشگاه */}
+          <div className="relative px-3 pb-3 pt-3 sm:px-7 sm:pb-7 sm:pt-0">
+            {/* آواتار و نام فروشگاه */}
+            <div className="flex flex-row items-center gap-2.5 sm:-mt-14 sm:items-end sm:gap-4.5">
+              {/* لوگوی گوشه‌گرد — در موبایل خیلی کوچک‌تر */}
+              <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-card bg-muted/20 p-0.5 shadow-sm sm:h-28 sm:w-28 sm:rounded-2xl sm:border-4 sm:p-1">
+                {shopData?.logo ? (
+                  <img
+                    src={getFullUrl(shopData.logo)}
+                    className="h-full w-full rounded-lg object-contain sm:rounded-xl"
+                    alt={shopData.shopTitle}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-lg bg-muted text-base font-black text-foreground sm:rounded-xl sm:text-3xl">
+                    {shopInitial}
+                  </div>
                 )}
               </div>
+
+              {/* نام و متادیتا — در موبایل فشرده */}
+              <div className="flex min-w-0 flex-col gap-0.5 pb-0.5 sm:gap-1.5 sm:pb-1">
+                <div className="flex items-center gap-1.5 sm:gap-2.5">
+                  <h1 className="truncate text-sm font-bold text-foreground sm:text-2xl">
+                    {shopData?.shopTitle}
+                  </h1>
+                  {/* بج کوچک فروشنده رسمی فقط در موبایل (به‌جای بنر) */}
+                  <span
+                    className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-3xs font-semibold text-success sm:hidden"
+                    title="فروشنده رسمی"
+                  >
+                    <CheckCircle2 className="h-3 w-3" />
+                  </span>
+                </div>
+
+                {/* متادیتا — در موبایل یک خط خیلی کوچک */}
+                <div className="flex flex-wrap items-center gap-1.5 text-3xs text-muted-foreground font-medium sm:gap-3 sm:text-2xs">
+                  <span className="flex items-center gap-0.5 sm:gap-1">
+                    <Package className="h-3 w-3 text-muted-foreground sm:h-3.5 sm:w-3.5" />
+                    {toPersianDigits(shopData?.shopProductCount || 0)} قطعه
+                  </span>
+
+                  {shopData?.address && (
+                    <>
+                      <span className="text-border">|</span>
+                      <span className="flex max-w-[160px] items-center gap-0.5 truncate sm:max-w-[320px] sm:gap-1">
+                        <MapPin className="h-3 w-3 shrink-0 text-muted-foreground sm:h-3.5 sm:w-3.5" />
+                        {shopData.address}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* کارت‌های عملکرد — در موبایل ۴ آیتم فشرده بدون متن توضیحی */}
+            <div className="mt-3 grid grid-cols-4 gap-1.5 border-t border-border/70 pt-3 sm:mt-6 sm:gap-3 sm:pt-5">
+              {/* شاخص ۱: عملکرد کلی */}
+              <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border/70 bg-muted/30 p-1.5 text-center transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:p-3 sm:text-right">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground sm:h-10 sm:w-10 sm:rounded-xl">
+                  <Award className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
+                </div>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-[9px] font-medium text-muted-foreground sm:text-3xs">
+                    عملکرد
+                  </span>
+                  <span className="truncate text-[10px] font-bold text-foreground sm:text-sm">
+                    عالی
+                  </span>
+                </div>
+              </div>
+
+              {/* شاخص ۲: ارسال به موقع */}
+              <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border/70 bg-muted/30 p-1.5 text-center transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:p-3 sm:text-right">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground sm:h-10 sm:w-10 sm:rounded-xl">
+                  <Truck className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
+                </div>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-[9px] font-medium text-muted-foreground sm:text-3xs">
+                    ارسال
+                  </span>
+                  <span
+                    className="truncate text-[10px] font-bold text-foreground sm:text-sm"
+                    dir="ltr"
+                  >
+                    {toPersianDigits(onTimeScore)}٪
+                  </span>
+                </div>
+              </div>
+
+              {/* شاخص ۳: بدون مرجوعی */}
+              <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border/70 bg-muted/30 p-1.5 text-center transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:p-3 sm:text-right">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground sm:h-10 sm:w-10 sm:rounded-xl">
+                  <ShieldCheck className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
+                </div>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-[9px] font-medium text-muted-foreground sm:text-3xs">
+                    مرجوعی
+                  </span>
+                  <span
+                    className="truncate text-[10px] font-bold text-foreground sm:text-sm"
+                    dir="ltr"
+                  >
+                    {toPersianDigits(noReturnScore)}٪
+                  </span>
+                </div>
+              </div>
+
+              {/* شاخص ۴: تعهد تامین */}
+              <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border/70 bg-muted/30 p-1.5 text-center transition-colors hover:bg-muted/60 sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:p-3 sm:text-right">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground sm:h-10 sm:w-10 sm:rounded-xl">
+                  <Check className="h-3.5 w-3.5 stroke-[2.5] sm:h-5 sm:w-5" />
+                </div>
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-[9px] font-medium text-muted-foreground sm:text-3xs">
+                    تعهد
+                  </span>
+                  <span
+                    className="truncate text-[10px] font-bold text-foreground sm:text-sm"
+                    dir="ltr"
+                  >
+                    {toPersianDigits(commitmentScore)}٪
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* ستون چپ: شاخص‌های کیفی و عملکرد شرکتی (KPIs) */}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 border-t border-dashed border-border/70 pt-4 lg:border-t-0 lg:pt-0">
-            
-            {/* شاخص ۱: رضایت کلی */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-3 text-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary mb-1">
-                <Award className="h-4 w-4" />
-              </div>
-              <span className="text-3xs text-muted-foreground">عملکرد کلی</span>
-              <span className="mt-0.5 text-xs font-black text-foreground">عالی</span>
-            </div>
-
-            {/* شاخص ۲: تحویل به موقع */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-3 text-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 mb-1">
-                <Truck className="h-4 w-4" />
-              </div>
-              <span className="text-3xs text-muted-foreground">ارسال به‌موقع</span>
-              <span className="mt-0.5 text-xs font-black text-foreground" dir="ltr">
-                {toPersianDigits(100 - delayedPercent)}٪
-              </span>
-            </div>
-
-            {/* شاخص ۳: سلامت کالا */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-3 text-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 mb-1">
-                <CheckCircle2 className="h-4 w-4" />
-              </div>
-              <span className="text-3xs text-muted-foreground">بدون مرجوعی</span>
-              <span className="mt-0.5 text-xs font-black text-foreground" dir="ltr">
-                {toPersianDigits(100 - returnPercent)}٪
-              </span>
-            </div>
-
-            {/* شاخص ۴: پایبندی به تعهدات */}
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/60 p-3 text-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 mb-1">
-                <Check className="h-4 w-4" />
-              </div>
-              <span className="text-3xs text-muted-foreground">تعهد ارسال</span>
-              <span className="mt-0.5 text-xs font-black text-foreground" dir="ltr">
-                {toPersianDigits(onTimePercent)}٪
-              </span>
-            </div>
-
-          </div>
-        </Card>
+        </div>
       )}
 
-      {/* ================= 3. بخش محصولات و سایدبار فیلتر (کاملاً هم‌عرض با بنر بالا) ================= */}
+      {/* ================= 3. بخش محصولات و سایدبار فیلتر ================= */}
       <div className="flex w-full items-start gap-6 md:gap-8">
-        
         {/* سایدبار فیلترهای جستجو */}
         <SearchSidebar
           filters={currentFilters}
@@ -217,13 +290,14 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
           onClose={() => setIsMobileFiltersOpen(false)}
         />
 
-        {/* کانتینر محصولات با min-w-0 تضمین‌کننده تراز و عدم بریدگی کارت‌ها */}
-        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-5">
-          
-          {/* مرتب‌سازی شرکتی مدرن در دسکتاپ */}
-          <div className="hidden items-center justify-between border-b border-border/80 pb-3 md:flex select-none">
+        {/* کانتینر محصولات */}
+        <div className="flex min-w-0 flex-1 flex-col items-stretch gap-5">
+          {/* مرتب‌سازی دسکتاپ */}
+          <div className="hidden select-none items-center justify-between border-b border-border/80 pb-3 md:flex">
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-bold text-muted-foreground">مرتب‌سازی بر اساس:</span>
+              <span className="text-xs font-bold text-muted-foreground">
+                مرتب‌سازی بر اساس:
+              </span>
               <div className="flex items-center gap-1.5">
                 {SORT_OPTIONS.map((opt) => {
                   const isActive = (filters.orderType || 'Selected') === opt.value;
@@ -236,7 +310,7 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
                         'rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all duration-fast',
                         isActive
                           ? 'bg-primary text-primary-foreground shadow-xs'
-                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
                       )}
                     >
                       {opt.label}
@@ -260,7 +334,7 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -275,8 +349,11 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
               </div>
             </>
           ) : (
-            <div className="mx-2 flex select-none flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center shadow-xs">
-              <ShoppingBag aria-hidden="true" className="mb-4 h-12 w-12 text-muted-foreground/30" />
+            <div className="mx-2 flex select-none flex-col items-center justify-center rounded-3xl py-16 text-center shadow-xs">
+              <ShoppingBag
+                aria-hidden="true"
+                className="mb-4 h-12 w-12 text-muted-foreground/30"
+              />
               <Typography variant="h4" className="font-black text-foreground">
                 کالایی در این فروشگاه یافت نشد
               </Typography>
@@ -285,7 +362,6 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
               </p>
             </div>
           )}
-
         </div>
       </div>
 
@@ -304,7 +380,9 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
                 onClick={() => handleMobileSortSelect(opt.value)}
                 className={cn(
                   'flex w-full items-center justify-between py-3.5 text-xs font-bold transition-colors outline-none',
-                  isActive ? 'text-primary' : 'text-foreground hover:bg-muted/30'
+                  isActive
+                    ? 'text-primary'
+                    : 'text-foreground hover:bg-muted/30',
                 )}
               >
                 <span>{opt.label}</span>
@@ -314,7 +392,6 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
           })}
         </div>
       </BottomSheet>
-
     </div>
   );
 }

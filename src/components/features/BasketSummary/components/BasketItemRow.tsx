@@ -15,31 +15,64 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
   const addToBasket = useAddToBasket();
   const deleteFromBasket = useDeleteFromBasket();
 
-  const originalPrice = item.price?.originalPriceRaw || 0;
-  const finalPrice = item.price?.finalTotalPriceRaw / item.quantity || 0;
+  const shopProduct = item.shopProduct || {};
+  const product = shopProduct.product || item.product || {};
+  const targetShopProductId = item.shopProductId || shopProduct.id;
+
+  const shopName = item.shop?.shopTitle || item.shop?.title || product.shopName || 'یدکچی';
+  const warrantyTitle = item.warranty || shopProduct.warrantySupport?.title;
+
+  const maxAllowedQuantity =
+    item.maxQuantity || shopProduct.maxQuantityPerOrder || shopProduct.quantity || 10;
+  const canIncrease =
+    item.canIncrease !== undefined ? item.canIncrease : item.quantity < maxAllowedQuantity;
+  const canDecrease =
+    item.canDecrease !== undefined ? item.canDecrease : item.quantity > 1;
+
+  const originalUnitPrice = item.originalPrice ?? item.price?.originalPriceRaw ?? 0;
+  const finalUnitPrice =
+    item.finalUnitPrice ?? (item.quantity ? item.finalTotalPrice / item.quantity : 0);
+  const finalTotalPrice = item.finalTotalPrice ?? item.price?.finalTotalPriceRaw ?? 0;
+  const discountAmount = item.discountAmount ?? (originalUnitPrice - finalUnitPrice);
+
+  const hasDiscount = discountAmount > 0 && originalUnitPrice > finalUnitPrice;
   const discountPercentage =
-    originalPrice > finalPrice
-      ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100)
+    hasDiscount && originalUnitPrice > 0
+      ? Math.round(((originalUnitPrice - finalUnitPrice) / originalUnitPrice) * 100)
       : 0;
 
+  /**
+   * ✅ اصلاح: نمایش روش ارسال واقعی بر اساس `shipmentMethod`
+   * منطق قبلی `tipaxShipmentPrice > 0` همیشه true می‌شد و همیشه «تیپاکس» نمایش می‌داد.
+   */
+  const shipmentMethod = item.shipmentMethod; // از BasketSummary اضافه شده
+  const isTipaxShipping = shipmentMethod === 'Tipax';
+  const isSnappBoxShipping = shipmentMethod === 'SnappBox';
+  const isDirectShipping =
+    shipmentMethod === 'DirectShipment' ||
+    shipmentMethod === 'Seller' ||
+    (!shipmentMethod && !!shopProduct.isDirectShipping);
+
   const handleIncrease = async () => {
-    if (activeLoading || !item.canIncrease) return;
+    if (activeLoading || !canIncrease) return;
     setActiveLoading(true);
     try {
-      await addToBasket.mutateAsync({ shopProductId: item.shopProductId, quantity: 1 });
+      await addToBasket.mutateAsync({ shopProductId: targetShopProductId, quantity: 1 });
       showToast.success('تعداد کالا افزایش یافت');
-    } catch {} finally {
+    } catch {
+    } finally {
       setActiveLoading(false);
     }
   };
 
   const handleDecrease = async () => {
-    if (activeLoading || !item.canDecrease) return;
+    if (activeLoading || !canDecrease) return;
     setActiveLoading(true);
     try {
-      await deleteFromBasket.mutateAsync({ shopProductId: item.shopProductId, quantity: 1 });
+      await deleteFromBasket.mutateAsync({ shopProductId: targetShopProductId, quantity: 1 });
       showToast.success('تعداد کالا کاهش یافت');
-    } catch {} finally {
+    } catch {
+    } finally {
       setActiveLoading(false);
     }
   };
@@ -48,9 +81,13 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
     if (activeLoading) return;
     setActiveLoading(true);
     try {
-      await deleteFromBasket.mutateAsync({ shopProductId: item.shopProductId, quantity: item.quantity });
+      await deleteFromBasket.mutateAsync({
+        shopProductId: targetShopProductId,
+        quantity: item.quantity,
+      });
       showToast.success('کالا از سبد خرید حذف شد');
-    } catch {} finally {
+    } catch {
+    } finally {
       setActiveLoading(false);
     }
   };
@@ -62,8 +99,8 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
       <div className="flex shrink-0 flex-row items-center gap-3 md:flex-col">
         <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-2 md:h-28 md:w-28">
           <img
-            src={getFullUrl(item.product?.image)}
-            alt={item.product?.title || 'محصول'}
+            src={getFullUrl(product?.image)}
+            alt={product?.title || 'محصول'}
             className="h-full w-full object-contain"
           />
         </div>
@@ -73,7 +110,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             <button
               type="button"
               onClick={handleIncrease}
-              disabled={!item.canIncrease || activeLoading}
+              disabled={!canIncrease || activeLoading}
               aria-label="افزایش تعداد"
               className="p-1 text-muted-foreground transition-colors hover:text-primary disabled:opacity-30"
             >
@@ -89,7 +126,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             <button
               type="button"
               onClick={handleDecrease}
-              disabled={!item.canDecrease || activeLoading}
+              disabled={!canDecrease || activeLoading}
               aria-label="کاهش تعداد"
               className="p-1 text-muted-foreground transition-colors hover:text-primary disabled:opacity-30"
             >
@@ -97,44 +134,52 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             </button>
           </div>
           <span className="text-2xs text-muted-foreground">
-            حداکثر {formatPersianNumber(item.maxQuantity || 5)} عدد
+            حداکثر {formatPersianNumber(maxAllowedQuantity)} عدد
           </span>
         </div>
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <h3 className="text-xs font-bold leading-6 text-foreground md:text-sm">{item.product?.title}</h3>
+        <h3 className="text-xs font-bold leading-6 text-foreground md:text-sm">
+          {product?.title}
+        </h3>
 
         <div className="flex flex-col gap-2 text-2xs text-muted-foreground md:text-xs">
           <div className="flex items-center gap-1.5">
             <Store aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <span>فروشنده: {item.shop?.title || item.product?.shopName || 'پیروز یدک'}</span>
+            <span>فروشنده: {shopName}</span>
           </div>
 
           <div className="flex items-center gap-1.5">
-            {item.warranty ? (
+            {warrantyTitle ? (
               <>
                 <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-success" />
-                <span>{item.warranty}</span>
+                <span>{warrantyTitle}</span>
               </>
             ) : (
               <>
-                <ShieldAlert aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <ShieldAlert
+                  aria-hidden="true"
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                />
                 <span>گارانتی اصالت و سلامت فیزیکی کالا</span>
               </>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 text-muted-foreground">
+          {/* ✅ نمایش روش ارسال واقعی */}
+          {/* <div className="flex items-center gap-1.5 text-muted-foreground">
             <Truck aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
-            {item.isTipaxShipping ? (
+            {isTipaxShipping ? (
               <span>ارسال توسط تیپاکس</span>
-            ) : item.isDirectShipping ? (
+            ) : isDirectShipping ? (
               <span>ارسال مستقیم توسط فروشنده</span>
-            ) : (
+            ) : isSnappBoxShipping ? (
               <span>ارسال فوری با یدکچی اکسپرس</span>
+            ) : (
+              <span>ارسال با یدکچی</span>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -150,16 +195,20 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
         </button>
 
         <div className="order-1 flex flex-col items-end gap-1 md:order-2">
-          {item.price?.hasDiscount && discountPercentage > 0 ? (
+          {hasDiscount && discountPercentage > 0 ? (
             <div className="flex items-center gap-1.5">
-              <span className="text-2xs text-muted-foreground line-through">{item.price.unitPrice}</span>
+              <span className="text-2xs text-muted-foreground line-through">
+                {formatPersianNumber(originalUnitPrice)} تومان
+              </span>
               <span className="rounded-full bg-destructive px-1.5 py-0.5 text-2xs font-bold text-destructive-foreground">
                 {toPersianDigits(discountPercentage)}٪
               </span>
             </div>
           ) : null}
           <div className="flex items-baseline gap-1">
-            <span className="text-sm font-bold text-foreground md:text-base">{item.price?.finalTotalPrice}</span>
+            <span className="text-sm font-bold text-foreground md:text-base">
+              {formatPersianNumber(finalTotalPrice)} تومان
+            </span>
           </div>
         </div>
       </div>

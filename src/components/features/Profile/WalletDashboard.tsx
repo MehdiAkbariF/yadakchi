@@ -25,6 +25,7 @@ import { Button } from '@/components/primitives/Button/Button';
 import { Select } from '@/components/primitives/Select/Select';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
 import { WithdrawModal } from './components/WithdrawModal';
 import { toPersianDigits } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
@@ -104,7 +105,7 @@ export function WalletDashboard() {
               </div>
 
               <Wifi className="h-5 w-5 text-white/50 rotate-90" />
-              <span className="text-xs font-black tracking-widest text-white/80"> کیف پول</span>
+              <span className="text-xs font-black tracking-widest text-white/80">کیف پول</span>
             </div>
 
             <button
@@ -242,11 +243,25 @@ export function WalletDashboard() {
               })}
             </div>
           ) : (
-            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center shadow-xs">
-              <CreditCard className="h-10 w-10 text-muted-foreground/30 mb-1" />
-              <span className="text-xs font-bold text-muted-foreground">
+            <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-12 text-center shadow-xs">
+              <div className="mx-auto flex h-48 w-48 max-w-full items-center justify-center -mb-2">
+                <LottiePlayer path="/anumations/money-with-wings.json" className="h-full w-full" loop={true} />
+              </div>
+              <p className="text-sm font-bold text-foreground mt-5">
                 هیچ درخواست برداشتی در این دسته یافت نشد.
-              </span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                شما تاکنون درخواست تسویه حسابی با این وضعیت ثبت نکرده‌اید.
+              </p>
+              {/* <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsWithdrawModalOpen(true)}
+                className="mt-4 h-9 gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>ثبت درخواست برداشت وجه</span>
+              </Button> */}
             </div>
           )}
 
@@ -305,11 +320,16 @@ export function WalletDashboard() {
               ))}
             </div>
           ) : (
-            <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center shadow-xs">
-              <Wallet className="h-10 w-10 text-muted-foreground/30 mb-1" />
-              <span className="text-xs font-bold text-muted-foreground">
+            <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-12 text-center shadow-xs">
+              <div className="mx-auto flex h-48 w-48 max-w-full items-center justify-center -mb-2">
+                <LottiePlayer path="/anumations/money-with-wings.json" className="h-full w-full" loop={true} />
+              </div>
+              <p className="text-sm font-bold text-foreground mt-5">
                 هیچ تراکنشی در حساب شما ثبت نشده است.
-              </span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                گردش حساب و تراکنش‌های مالی شما در این بخش نمایش داده خواهند شد.
+              </p>
             </div>
           )}
 

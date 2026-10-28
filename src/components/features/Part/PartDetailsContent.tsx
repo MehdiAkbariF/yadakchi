@@ -21,64 +21,100 @@ import { SelectPartModal } from './components/SelectPartModal';
 export interface PartDetailsContentProps {
   categorySlug: string;
   partSlug: string;
+  partId?: string;
+  categoryId?: string | null;
 }
 
-export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsContentProps) {
+export function PartDetailsContent({
+  categorySlug,
+  partSlug,
+  partId,
+  categoryId,
+}: PartDetailsContentProps) {
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
   const [isSelectPartOpen, setIsSelectPartOpen] = React.useState(false);
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
-  const currentFilters = {
-    ...filters,
-    partCategoryEnglishTitle: categorySlug,
-    partEnglishTitle: partSlug,
-  };
-
   const { data: partData } = useGetPartPage(partSlug);
+
+  const resolvedPartId = partId || partData?.id;
+  const resolvedCategoryId = categoryId || partData?.category?.id;
+
+  const currentFilters = React.useMemo(() => {
+    return {
+      ...filters,
+      partIds: resolvedPartId ? [resolvedPartId] : undefined,
+      partCategoryIds: resolvedCategoryId ? [resolvedCategoryId] : undefined,
+    };
+  }, [filters, resolvedPartId, resolvedCategoryId]);
+
   const { data: productsResponse, isLoading } = useSearchProducts(currentFilters);
 
   const products = productsResponse?.items || [];
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
 
-  const rawBreadcrumbs = (partData as any)?.breadCrumbs || [];
-  const breadcrumbItems = [
-    { id: 'categories-root', title: 'دسته‌بندی‌ها', href: '/categories' },
-    ...rawBreadcrumbs.map((b: any, idx: number) => {
-      const isLast = idx === rawBreadcrumbs.length - 1;
-      return {
-        id: b.id,
-        title: b.title,
-        href: isLast ? undefined : `/part-category/${b.englishTitle}`,
-      };
-    }),
-  ];
+  // ساخت منوی نان‌ریزه (Breadcrumb)
+  const breadcrumbItems = React.useMemo(() => {
+    const rawBreadcrumbs = (partData as any)?.breadCrumbs || [];
+    if (rawBreadcrumbs.length > 0) {
+      return [
+        { id: 'categories-root', title: 'دسته‌بندی‌ها', href: '/categories' },
+        ...rawBreadcrumbs.map((b: any, idx: number) => {
+          const isLast = idx === rawBreadcrumbs.length - 1;
+          return {
+            id: b.id,
+            title: b.title,
+            href: isLast ? undefined : `/part-category/${b.englishTitle}`,
+          };
+        }),
+      ];
+    }
+
+    return [
+      { id: 'categories-root', title: 'دسته‌بندی‌ها', href: '/categories' },
+      ...(partData?.category?.name
+        ? [
+            {
+              id: partData.category.id || 'cat-id',
+              title: partData.category.name,
+              href: `/part-category/${partData.category.englishTitle || categorySlug}`,
+            },
+          ]
+        : []),
+      ...(partData?.name
+        ? [
+            {
+              id: partData.id || 'part-id',
+              title: partData.name,
+              href: undefined as any,
+            },
+          ]
+        : []),
+    ];
+  }, [partData, categorySlug]);
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full" dir="rtl">
+      {/* نوار چسبان کنترل‌های موبایل */}
       <div
         style={{ top: isHeaderMinimized ? '56px' : '122px' }}
         className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
       >
         <div className="flex w-full items-center justify-between">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-accent bg-accent text-2xs font-bold text-primary">
-              یدک‌چی
-            </div>
-            <div className="flex min-w-0 flex-col">
-              <span className="text-2xs font-bold leading-none text-muted-foreground">قطعه انتخابی</span>
-              <span className="mt-1 truncate text-xs font-bold leading-none text-foreground">
-                {partData?.name || 'قطعه یدکی'}
-              </span>
-            </div>
+          <div className="flex min-w-0 flex-col">
+            <span className="text-3xs font-bold text-muted-foreground">قطعه انتخابی</span>
+            <span className="mt-0.5 truncate text-xs font-black text-foreground">
+              {partData?.name || 'قطعه یدکی'}
+            </span>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               type="button"
               onClick={() => setIsSelectPartOpen(true)}
-              className="rounded-md bg-accent px-3.5 py-1.5 text-2xs font-bold text-accent-foreground outline-none"
+              className="rounded-md bg-accent px-3.5 py-1.5 text-2xs font-bold text-accent-foreground outline-none active:scale-95 transition-transform"
             >
               تغییر قطعه
             </button>
@@ -110,26 +146,26 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
 
       <div className="flex w-full items-start gap-6 md:gap-8">
         <SearchSidebar
-          filters={currentFilters}
+          filters={currentFilters as any}
           onFilterChange={(name, val) => setFilter(name, val)}
           onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}
           onClose={() => setIsMobileFiltersOpen(false)}
           hidePartFilter
-          partId={partData?.id}
+          partId={resolvedPartId}
         />
 
-        <div className="flex flex-1 flex-col items-stretch gap-6">
+        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-6">
           <div className="hidden md:block">
             <PartHeaderCard
               partSlug={partSlug}
               categorySlug={categorySlug}
-              partName={partData?.name || 'پمپ بنزین با درجه باک'}
+              partName={partData?.name || 'قطعه یدکی'}
             />
           </div>
 
           <div className="block w-full lg:hidden">
-            <ShopProductAdBanner partId={partData?.id} />
+            <ShopProductAdBanner partId={resolvedPartId} />
           </div>
 
           <div className="hidden md:block">
@@ -148,7 +184,7 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -181,11 +217,13 @@ export function PartDetailsContent({ categorySlug, partSlug }: PartDetailsConten
         />
       ) : null}
 
+      {/* ✅ ارسال مشخصات واقعی دسته والد تا لیست قطعات خالی نماند */}
       <SelectPartModal
         isOpen={isSelectPartOpen}
         onClose={() => setIsSelectPartOpen(false)}
-        slug={categorySlug}
-        categoryName={partData?.name || 'قطعه یدکی'}
+        slug={partData?.category?.englishTitle || categorySlug}
+        categoryName={partData?.category?.name || 'گروه قطعات'}
+        categoryId={resolvedCategoryId}
       />
     </div>
   );

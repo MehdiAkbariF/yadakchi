@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/primitives/Button';
 import { cn } from '@/design-system/utils/cn';
 
@@ -25,48 +25,32 @@ export function MobileBottomAction({
   leftContent,
   icon,
   className,
-  forceShowKey,
   variant = 'default',
 }: MobileBottomActionProps) {
-  const [isVisible, setIsVisible] = React.useState(true);
-  const lastScrollY = React.useRef(0);
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const diff = Math.abs(currentScrollY - lastScrollY.current);
-
-      if (currentScrollY < 10) {
-        setIsVisible(true);
-      } else if (diff > 5) {
-        setIsVisible(currentScrollY <= lastScrollY.current);
-      }
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    setMounted(true);
   }, []);
 
-  React.useEffect(() => {
-    setIsVisible(true);
-  }, [forceShowKey]);
+  if (!mounted) return null;
 
-  return (
-    <motion.div
-      initial={{ y: 0, opacity: 1 }}
-      animate={{ y: isVisible ? 0 : 150, opacity: isVisible ? 1 : 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+  return createPortal(
+    <div
+      dir="rtl"
       className={cn(
-        'lg:hidden fixed bottom-16 inset-x-0 z-fixed bg-card border-t border-border px-4 py-3 shadow-sm',
+        // ✅ چسبیدن دقیق به بالای باتم‌ناو با bottom-16 (ارتفاع ۶۴ پیکسل)
+        'lg:hidden fixed bottom-16 inset-x-0 z-40 w-full',
+        'bg-card/95 backdrop-blur-md border-t border-border px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]',
         'flex items-center justify-between gap-4',
         className
       )}
     >
       {leftContent ? (
-        <div className="flex min-w-0 flex-col items-start text-start">{leftContent}</div>
+        <div className="flex min-w-0 flex-col items-start text-start shrink-0">{leftContent}</div>
       ) : null}
-      <div className={cn('flex-1', leftContent ? 'max-w-[60%]' : 'w-full')}>
+
+      <div className={cn('flex-1', leftContent ? 'max-w-[62%]' : 'w-full')}>
         <Button
           variant={variant === 'notify' ? 'destructive' : disabled ? 'outline' : 'primary'}
           size="lg"
@@ -75,11 +59,12 @@ export function MobileBottomAction({
           isLoading={isLoading}
           disabled={variant === 'notify' ? false : disabled}
           leftIcon={icon}
-          className="h-11 rounded-md text-sm font-semibold"
+          className="h-11 rounded-xl text-xs sm:text-sm font-bold shadow-xs"
         >
           {label}
         </Button>
       </div>
-    </motion.div>
+    </div>,
+    document.body
   );
 }

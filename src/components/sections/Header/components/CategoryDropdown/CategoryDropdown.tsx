@@ -52,26 +52,64 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
   };
 
   /**
-   * تولید آدرس دقیق برای دسته‌بندی اصلی:
-   * اگر صفحه روی search سوار است یا part-category، پارامترهای ضروری فرستاده می‌شوند.
+   * 🐛 دیباگ: بررسی مقادیر قبل از ساخت URL
    */
-  const getMainCategoryUrl = (cat: any) => {
-    if (!cat) return '#';
-    // در صورتی که صفحه با id کار کند:
-    // return `/part-category/${cat.id}`;
-    // در ساختار فعلی:
-    const targetSlug = cat.englishTitle || cat.id;
-    return `/part-category/${targetSlug}?categoryId=${cat.id}`;
+  const debugPartFields = (cat: any, part: any) => {
+    if (!cat || !part) return;
+
+    console.groupCollapsed(`🔍 [CategoryDropdown] Debug URL for part: ${part.name}`);
+    console.log('Category →', {
+      id: cat.id,
+      name: cat.name,
+      englishTitle: cat.englishTitle,
+    });
+    console.log('Part →', {
+      id: part.id,
+      name: part.name,
+      englishTitle: part.englishTitle,
+      hasSpace: typeof part.englishTitle === 'string' && part.englishTitle.includes(' '),
+      hasParens: typeof part.englishTitle === 'string' && /[()]/.test(part.englishTitle),
+      hasSlash: typeof part.englishTitle === 'string' && part.englishTitle.includes('/'),
+    });
+
+    const encodedPart = encodeURIComponent(part.englishTitle || '');
+    const url = `/parts/${cat.id}/${encodedPart}`;
+
+    console.log('Part (encoded):', encodedPart);
+    console.log('👉 Final URL:', url);
+    console.groupEnd();
   };
 
   /**
-   * تولید آدرس دقیق برای زیر دسته (قطعه):
-   * ارسال شناسه قطعه (partId) و شناسه دسته‌بندی اصلی (categoryId)
+   * دسته‌بندی اصلی → صفحه مشاهده همه (part-category)
+   */
+const getMainCategoryUrl = (cat: any) => {
+  if (!cat) return '#';
+  const targetSlug = encodeURIComponent(cat.englishTitle || cat.id);
+  return `/part-category/${targetSlug}`; // ✅ بدون پارامتر اضافه
+};
+
+  /**
+   * زیردسته (قطعه) → صفحه /parts
+   *
+   * ⚠️ نکات مهم:
+   * - API `GetPartPage` فقط `PartEnglishName` می‌گیرد.
+   * - `categorySlug` به API پاس داده نمی‌شود؛ فقط برای ساخت مسیر Next.js لازم است.
+   * - `part.englishTitle` ممکن است شامل فاصله یا پرانتز باشد (مثل "Throttle Body O-Ring")
+   *   که باعث خراب شدن URL و 404 می‌شود → با `encodeURIComponent` حل می‌شود.
+   * - برای `categorySlug` از `cat.id` (UUID) استفاده می‌کنیم تا نیازی به encode نباشد.
    */
   const getSubCategoryUrl = (cat: any, part: any) => {
     if (!cat || !part) return '#';
-    const targetSlug = cat.englishTitle || cat.id;
-    return `/part-category/${targetSlug}?partId=${part.id}&categoryId=${cat.id}`;
+
+    debugPartFields(cat, part);
+
+    const categorySlug = cat.id; // UUID امن
+    const partSlug = encodeURIComponent(part.englishTitle || '');
+    const url = `/parts/${categorySlug}/${partSlug}`;
+
+    console.log('🔗 [getSubCategoryUrl] Final URL:', url);
+    return url;
   };
 
   return (
@@ -95,7 +133,7 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
 
       {!isLoading && !isError && categories.length > 0 && (
         <>
-          {/* ستون راست: لیست دسته‌بندی‌های اصلی */}
+          {/* ستون راست: دسته‌بندی‌های اصلی */}
           <div className="w-[240px] shrink-0 overflow-y-auto border-l border-border bg-muted/20 py-2">
             {categories.map((category) => {
               const isActive = activeCategory?.id === category.id;
@@ -162,9 +200,6 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
 
                   <Link
                     href={getMainCategoryUrl(activeCategory)}
-                    onClick={() => {
-                      console.log('[MegaMenu] Clicked Main Category URL:', getMainCategoryUrl(activeCategory));
-                    }}
                     className="flex items-center gap-1 text-xs text-primary transition-colors hover:underline"
                   >
                     مشاهده همه قطعات این گروه
@@ -173,36 +208,16 @@ export function CategoryDropdown({ isOpen }: CategoryDropdownProps) {
                 </div>
 
                 {activeCategory.parts && activeCategory.parts.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2.5">
                     {activeCategory.parts.map((part: any) => {
-                      const hasPartImageFailed = failedImages[part.id] || !part.icon;
-                      const PartFallbackIcon = getFallbackIcon(part.name);
                       const partHref = getSubCategoryUrl(activeCategory, part);
 
                       return (
                         <Link
                           key={part.id}
                           href={partHref}
-                          onClick={() => {
-                            console.log('[MegaMenu] Clicked Subpart URL:', partHref, {
-                              categoryId: activeCategory.id,
-                              partId: part.id,
-                              partName: part.name,
-                            });
-                          }}
-                          className="flex items-center gap-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary hover:translate-x-1 duration-150 truncate"
+                          className="py-1 text-sm font-medium text-muted-foreground transition-all duration-150 hover:text-primary hover:-translate-x-1 truncate block"
                         >
-                          {!hasPartImageFailed ? (
-                            <img
-                              src={part.icon}
-                              alt={part.iconAlt || part.name}
-                              className="h-5 w-5 shrink-0 object-contain rounded"
-                              onError={() => handleImageError(part.id)}
-                              loading="lazy"
-                            />
-                          ) : (
-                            <PartFallbackIcon className="h-4 w-4 shrink-0 text-muted-foreground/80" />
-                          )}
                           <span className="truncate">{part.name}</span>
                         </Link>
                       );

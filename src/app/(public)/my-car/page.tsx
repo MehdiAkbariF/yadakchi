@@ -306,7 +306,7 @@ export default function MyCarPage() {
             </span>
           </div>
           <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            با وارد کردن مقدار کیلومتر کارکرد خودرو، یدک‌چی زمان سرویس دوره ای رو بهت یادآوری میکنه
+            با وارد کردن مقدار کیلومتر کارکرد خودرو، یدکچی زمان سرویس دوره ای رو بهت یادآوری میکنه
           </p>
         </div>
 

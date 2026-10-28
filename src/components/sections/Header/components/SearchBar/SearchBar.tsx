@@ -52,7 +52,7 @@ export interface SearchBarProps {
 }
 
 export function SearchBar({
-  placeholder = 'جستجو در یدک‌چی...',
+  placeholder = 'جستجو در یدکچی...',
   className = '',
   onSearch,
   isMobile = false,
@@ -185,7 +185,7 @@ export function SearchBar({
     const currentWord = DEFAULT_ROTATING_KEYWORDS[keywordIndex];
     return (
       <div className="pointer-events-none flex h-5 select-none items-center overflow-hidden text-xs" dir="rtl">
-        <span className="ms-1 shrink-0 text-muted-foreground">جستجو در</span>
+        <span className="ms-1 shrink-0 text-muted-foreground ml-1">جستجو در</span>
         <AnimatePresence mode="wait">
           <motion.span
             key={currentWord}

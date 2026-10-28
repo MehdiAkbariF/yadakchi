@@ -10,6 +10,7 @@ export interface CheckoutInvoiceProps {
   finalPayablePrice: number;
   onSubmit: () => void;
   isLoading: boolean;
+  isMethodSelected?: boolean;
 }
 
 export function CheckoutInvoice({
@@ -18,9 +19,16 @@ export function CheckoutInvoice({
   finalPayablePrice,
   onSubmit,
   isLoading,
+  isMethodSelected = true,
 }: CheckoutInvoiceProps) {
   const formatNumber = (val: number) =>
-    new Intl.NumberFormat('fa-IR').format(Math.round(val / 10));
+    new Intl.NumberFormat('fa-IR').format(Math.round((val || 0) / 10));
+
+  /**
+   * ✅ اصلاح: حذف `basket.totalPrice` (فیلد ناموجود در ریسپانس)
+   * استفاده فقط از `totalOriginalPrice` که در ریسپانس بک‌اند موجود است.
+   */
+  const totalOriginalPrice = basket.totalOriginalPrice ?? 0;
 
   return (
     <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]">
@@ -35,12 +43,12 @@ export function CheckoutInvoice({
         <div className="flex items-center justify-between text-muted-foreground">
           <span>قیمت کل محصولات</span>
           <span className="font-semibold text-foreground">
-            {formatNumber(basket.totalOriginalPrice || basket.totalPrice || 0)} تومان
+            {formatNumber(totalOriginalPrice)} تومان
           </span>
         </div>
 
         {basket.totalDiscountValue > 0 ? (
-          <div className="flex items-center justify-between text-destructive font-semibold">
+          <div className="flex items-center justify-between font-semibold text-destructive">
             <span>سود شما از خرید</span>
             <span>- {formatNumber(basket.totalDiscountValue)} تومان</span>
           </div>
@@ -52,7 +60,11 @@ export function CheckoutInvoice({
             <span>مجموع هزینه ارسال</span>
           </div>
           <span className="font-semibold text-foreground">
-            {totalShipment > 0 ? `${formatNumber(totalShipment)} تومان` : 'انتخاب نشده'}
+            {isMethodSelected
+              ? totalShipment === 0
+                ? 'رایگان'
+                : `${formatNumber(totalShipment)} تومان`
+              : 'انتخاب نشده'}
           </span>
         </div>
       </div>
@@ -79,7 +91,6 @@ export function CheckoutInvoice({
         <ChevronLeft aria-hidden="true" className="h-4 w-4 stroke-[2.5]" />
       </Button>
 
-      {/* بخش اعتمادسازی و پشتیبانی خرید */}
       <div className="mt-5 flex flex-col gap-2.5 border-t border-dashed border-border/70 pt-4 text-2xs text-muted-foreground">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 shrink-0 text-success" />

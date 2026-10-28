@@ -125,7 +125,7 @@ export function ProductGallery({
             <Ticket aria-hidden="true" className="h-3.5 w-3.5" />
             <span>تخفیف {toPersianDigits(discountPercent || 0)}٪</span>
             {countdown ? (
-              <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-3xs font-bold font-mono" dir="ltr">
+              <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-3xs font-bold " dir="ltr">
                 {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:
                 {String(countdown.s).padStart(2, '0')}
               </span>

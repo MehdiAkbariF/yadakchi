@@ -20,7 +20,7 @@ export default function OfflinePage() {
       <h1 className="text-base md:text-lg font-black mb-2">ارتباط شما با اینترنت قطع شده است</h1>
       
       <p className="text-xs md:text-sm text-muted-foreground font-iran-sans max-w-xs leading-relaxed mb-6">
-        برای استفاده از امکانات یدک‌چی نیاز به اتصال فعال شبکه دارید. لطفا اتصال دیتا یا وای‌فای گوشی خود را بررسی کنید.
+        برای استفاده از امکانات یدکچی نیاز به اتصال فعال شبکه دارید. لطفا اتصال دیتا یا وای‌فای گوشی خود را بررسی کنید.
       </p>
 
       {/* دکمه تلاش مجدد پنهان روی باکس */}

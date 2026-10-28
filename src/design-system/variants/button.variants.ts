@@ -24,6 +24,12 @@ export const buttonVariants = cva(
           'border border-input bg-background text-foreground',
           'hover:bg-accent hover:text-accent-foreground',
         ],
+        // ✅ واریانت جدید: توخالی با خط دور و متن نارنجی
+        'outline-primary': [
+          'border border-primary/80 bg-transparent text-primary',
+          'hover:bg-primary/10 hover:border-primary',
+          'active:bg-primary/20',
+        ],
         ghost: [
           'text-foreground',
           'hover:bg-accent hover:text-accent-foreground',
