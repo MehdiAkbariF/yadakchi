@@ -141,9 +141,11 @@ export class CommentService {
     }
   }
 
-  async deleteComment(commentId: string): Promise<void> {
+async deleteComment(commentId: string): Promise<void> {
     try {
-      await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT, { id: commentId });
+      await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT, {
+        data: { id: commentId }
+      });
     } catch (error) {
       logger.error('[CommentService] Delete comment failed:', error);
       throw errorManager.normalize(error);
@@ -160,10 +162,10 @@ export class CommentService {
     }
   }
 
-  async unlikeComment(likeId: string): Promise<void> {
+async unlikeComment(likeId: string): Promise<void> {
     try {
       await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT_LIKE, {
-        params: { id: likeId }
+        id: likeId,
       });
     } catch (error) {
       logger.error('[CommentService] Unlike comment failed:', error);

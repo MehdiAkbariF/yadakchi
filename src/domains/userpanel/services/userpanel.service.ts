@@ -173,7 +173,7 @@ export class UserPanelService {
     }
   }
 
-  async submitReturnRequest(subOrderId: string, items: any[], files?: File[]): Promise<void> {
+async submitReturnRequest(subOrderId: string, items: any[], files?: File[]): Promise<any> {
     try {
       const formData = new FormData();
       formData.append('SubOrderId', subOrderId);
@@ -183,6 +183,13 @@ export class UserPanelService {
         formData.append(`Items[${index}].Quantity`, String(item.quantity));
         formData.append(`Items[${index}].ReturnRequestReasonId`, item.returnRequestReasonId);
         formData.append(`Items[${index}].Description`, item.description);
+
+        if (item.files && item.files.length > 0) {
+          item.files.forEach((file: File) => {
+            formData.append(`Items[${index}].Images`, file);
+            formData.append('ReturnRequestImages', file);
+          });
+        }
       });
       
       if (files && files.length > 0) {
@@ -191,15 +198,19 @@ export class UserPanelService {
         });
       }
 
-      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_RETURN_REQUEST, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await this.httpClient.post<any>(
+        USERPANEL_ENDPOINTS.POST_RETURN_REQUEST,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+      );
+      return response.data;
     } catch (error) {
       logger.error('[UserPanelService] Submit return request failed:', error);
       throw errorManager.normalize(error);
     }
   }
-
   async getReturnRequestDetails(id: string): Promise<any> {
     try {
       const response = await this.httpClient.get<any>(

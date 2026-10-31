@@ -406,3 +406,44 @@ export interface FavoriteProductsResponseDto {
   totalCount: number;
   items: FavoriteProductItemDto[];
 }
+
+export interface OrderReceiptItemDto {
+  productCode: number;
+  productTitle: string;
+  shopTitle: string;
+  quantity: number;
+  originalPrice: number;
+  discountAmount: number;
+  finalTotalPrice: number;
+  shipmentPrice: number;
+}
+
+export interface OrderReceiptShipmentItemDto {
+  id: string;
+  orderReceiptId: string;
+  shopTitle: string;
+  shipmentPrice: number;
+  shipmentMethod: string;
+}
+
+export interface OrderReceiptDto {
+  orderId: string;
+  type: string;
+  receiptNumber: string;
+  orderNumber: number;
+  buyerFullName: string;
+  buyerEconomicCode: string | null;
+  buyerRegistrationNumber: string | null;
+  buyerNationalCode: string | null;
+  buyerPhoneNumber: string;
+  buyerAddress: string;
+  buyerPostalCode: string;
+  totalShipmentPrice: number;
+  discountCodeValue: number;
+  referalCodeDiscountValue: number;
+  totalDiscountValue: number;
+  totalYadakchiDiscountValue: number;
+  totalFinalPrice: number;
+  orderReceiptItems: OrderReceiptItemDto[];
+  shipmentItems: OrderReceiptShipmentItemDto[];
+}

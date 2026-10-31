@@ -106,9 +106,11 @@ export class InquiryService {
     }
   }
 
-  async deleteInquiry(inquiryId: string): Promise<void> {
+async deleteInquiry(inquiryId: string): Promise<void> {
     try {
-      await this.httpClient.delete(INQUIRY_ENDPOINTS.DELETE_INQUIRY, { id: inquiryId });
+      await this.httpClient.delete(INQUIRY_ENDPOINTS.DELETE_INQUIRY, {
+        data: { id: inquiryId }
+      });
     } catch (error) {
       logger.error('[InquiryService] Delete inquiry failed:', error);
       throw errorManager.normalize(error);
@@ -125,10 +127,10 @@ export class InquiryService {
     }
   }
 
-  async unlikeInquiry(likeId: string): Promise<void> {
+async unlikeInquiry(likeId: string): Promise<void> {
     try {
       await this.httpClient.delete(INQUIRY_ENDPOINTS.DELETE_INQUIRY_LIKE, {
-        params: { id: likeId }
+        id: likeId,
       });
     } catch (error) {
       logger.error('[InquiryService] Unlike inquiry failed:', error);
@@ -177,10 +179,10 @@ export class InquiryService {
 let inquiryServiceInstance: InquiryService | null = null;
 
 export function getInquiryService(): InquiryService {
-  if (!userPanelServiceInstance) {
-    userPanelServiceInstance = new InquiryService();
+  if (!inquiryServiceInstance) {
+    inquiryServiceInstance = new InquiryService();
   }
-  return userPanelServiceInstance;
+  return inquiryServiceInstance;
 }
 
 let userPanelServiceInstance: InquiryService | null = null;

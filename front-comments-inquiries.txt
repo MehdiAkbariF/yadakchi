@@ -1,0 +1,1584 @@
+
+========================================================
+FILE: src\components\features\Product\components\ProductCommentsSection.tsx
+========================================================
+
+'use client';
+
+import * as React from 'react';
+import { Star, ThumbsUp, ThumbsDown, User, MessageSquare, ArrowLeft, Clock } from 'lucide-react';
+import { useGetProductComments, useGetProductCommentsAverage } from '@/domains/front/product/hooks/product.hooks';
+import { useCreateComment, useLikeComment, useUnlikeComment } from '@/domains/front/comment/hooks/comment.hooks';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+import { toPersianDigits } from '@/core/utils/formatters';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+
+function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: { path: string; className?: string; loop?: boolean }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/')
+          ? path.replace('/anumations/', '/animations/')
+          : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+        if (!animationData || !isMounted || !containerRef.current) return;
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch {}
+    };
+
+    init();
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
+
+export interface ProductCommentsSectionProps {
+  productId: string;
+  productTitle?: string;
+}
+
+export function ProductCommentsSection({ productId, productTitle = 'قطعه یدکی' }: ProductCommentsSectionProps) {
+  const [orderBy, setOrderBy] = React.useState('Newest');
+  const [page, setPage] = React.useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = React.useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = React.useState(false);
+
+  const { user } = useAuth();
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'کاربر';
+
+  const [rate, setRate] = React.useState(0);
+  const [hoverRate, setHoverRate] = React.useState(0);
+  const [commentText, setCommentText] = React.useState('');
+  const [isIncognito, setIsIncognito] = React.useState(false);
+
+  const { data: average } = useGetProductCommentsAverage(productId);
+  const { data: commentsResponse, isLoading } = useGetProductComments(productId, orderBy, page);
+  const createComment = useCreateComment();
+  const likeComment = useLikeComment();
+  const unlikeComment = useUnlikeComment();
+
+  const comments = commentsResponse?.items || [];
+
+  const handleCommentSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (rate === 0) {
+      showToast.error('لطفاً امتیاز خود به این کالا را انتخاب کنید');
+      return;
+    }
+    if (commentText.trim().length < 10) {
+      showToast.error('متن نظر شما باید حداقل ۱۰ کاراکتر باشد');
+      return;
+    }
+    try {
+      await createComment.mutateAsync({ productId, comment: commentText, rate, isIncognito });
+      setRate(0);
+      setCommentText('');
+      setIsIncognito(false);
+      setIsWriteModalOpen(false);
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
+      showToast.error(error.userMessage || 'خطا در ثبت دیدگاه شما');
+    }
+  };
+
+  const handleLike = (comment: any) => {
+    if (comment.userLiked) unlikeComment.mutate(comment.id);
+    else likeComment.mutate({ productCommentId: comment.id, likeStatus: 'Like' });
+  };
+
+  const handleDislike = (comment: any) => {
+    if (comment.userDisLiked) unlikeComment.mutate(comment.id);
+    else likeComment.mutate({ productCommentId: comment.id, likeStatus: 'Dislike' });
+  };
+
+  return (
+    <div className="mt-6 flex w-full flex-col gap-6">
+      <h3 className="text-sm font-bold text-foreground md:text-base">امتیاز و نظرات کاربران</h3>
+
+      <div className="grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-10">
+        <div className="flex w-full flex-col gap-5 rounded-lg border border-border bg-card p-5 shadow-xs lg:sticky lg:top-[196px] lg:col-span-3">
+          {average ? (
+            <div className="flex w-full flex-col items-center gap-5">
+              <div className="flex flex-col items-center justify-center gap-2 text-center">
+                <span className="text-4xl font-bold text-foreground">
+                  {toPersianDigits(average.averageRate.toFixed(1))}
+                </span>
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      aria-hidden="true"
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        i < Math.round(average.averageRate)
+                          ? 'fill-warning text-warning'
+                          : 'text-border'
+                      )}
+                    />
+                  ))}
+                </div>
+                <span className="mt-1 text-2xs font-bold text-muted-foreground">
+                  از {toPersianDigits(average.allRatesCount)} امتیاز ثبت شده
+                </span>
+              </div>
+
+              <div className="flex w-full flex-col gap-2.5 border-t border-dashed border-border pt-4">
+                {[
+                  { label: '۵ ستاره', value: average.starPercentages.five },
+                  { label: '۴ ستاره', value: average.starPercentages.four },
+                  { label: '۳ ستاره', value: average.starPercentages.three },
+                  { label: '۲ ستاره', value: average.starPercentages.two },
+                  { label: '۱ ستاره', value: average.starPercentages.one },
+                ].map((star, idx) => (
+                  <div key={idx} className="flex w-full items-center gap-3.5 text-xs text-muted-foreground">
+                    <span className="w-11 shrink-0 font-bold">{star.label}</span>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        style={{ width: `${star.value}%` }}
+                        className="absolute inset-y-0 end-0 rounded-full bg-warning"
+                      />
+                    </div>
+                    <span className="w-8 shrink-0 font-bold">{toPersianDigits(star.value)}%</span>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsWriteModalOpen(true)}
+                className="mt-2 flex h-10 w-full items-center gap-1.5 border-shop/40 text-xs font-bold text-shop hover:bg-shop/5"
+              >
+                <MessageSquare aria-hidden="true" className="h-4 w-4" />
+                <span>دیدگاه خود را بنویسید</span>
+              </Button>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex w-full flex-col gap-4 lg:col-span-7">
+          <div className="flex items-center gap-4 overflow-x-auto border-b border-dashed border-border pb-2.5 py-1 scrollbar-none">
+            <span className="shrink-0 text-xs font-bold text-muted-foreground">نمایش بر اساس:</span>
+            {[
+              { value: 'Newest', label: 'جدیدترین‌ها' },
+              { value: 'Oldest', label: 'قدیمی‌ترین‌ها' },
+              { value: 'MostLike', label: 'مفیدترین‌ها' },
+              { value: 'LeastLike', label: 'کمترین امتیاز' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  setOrderBy(opt.value);
+                  setPage(1);
+                }}
+                className={cn(
+                  'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none',
+                  orderBy === opt.value
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {isLoading ? (
+              <span className="text-xs text-muted-foreground">در حال لود دیدگاه‌ها...</span>
+            ) : comments.length > 0 ? (
+              comments.map((comment: any) => (
+                <div key={comment.id} className="flex gap-4 rounded-md border border-border bg-card p-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                    <User aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-foreground">{comment.creator}</span>
+                        {(comment as any).isConfirmed === false ? (
+                          <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-2xs font-bold text-warning">
+                            <Clock aria-hidden="true" className="h-3 w-3" />
+                            در حال بررسی
+                          </span>
+                        ) : null}
+                      </div>
+                      <span className="text-2xs text-muted-foreground">
+                        {toPersianDigits(comment.createDateFormatted)}
+                      </span>
+                    </div>
+
+                    <div className="mt-1 flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          aria-hidden="true"
+                          className={cn(
+                            'h-3 w-3 shrink-0',
+                            i < comment.rate ? 'fill-warning text-warning' : 'text-border'
+                          )}
+                        />
+                      ))}
+                    </div>
+
+                    <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">{comment.comment}</p>
+
+                    {comment.userBoughtFrom ? (
+                      <span className="mt-3 inline-block rounded-full bg-success/10 px-2.5 py-0.5 text-2xs font-bold text-success">
+                        خریدار این کالا از فروشگاه {comment.userBoughtFrom}
+                      </span>
+                    ) : null}
+
+                    <div className="mt-4 flex items-center justify-end gap-4 border-t border-dashed border-border pt-2.5">
+                      <button
+                        type="button"
+                        onClick={() => handleLike(comment)}
+                        disabled={likeComment.isPending || unlikeComment.isPending}
+                        className={cn(
+                          'flex items-center gap-1 text-2xs font-bold transition-colors',
+                          comment.userLiked ? 'text-success' : 'text-muted-foreground hover:text-success'
+                        )}
+                      >
+                        <ThumbsUp aria-hidden="true" className="h-3.5 w-3.5" />
+                        <span>({toPersianDigits(comment.likes)})</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDislike(comment)}
+                        disabled={likeComment.isPending || unlikeComment.isPending}
+                        className={cn(
+                          'flex items-center gap-1 text-2xs font-bold transition-colors',
+                          comment.userDisLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
+                        )}
+                      >
+                        <ThumbsDown aria-hidden="true" className="h-3.5 w-3.5" />
+                        <span>({toPersianDigits(comment.dislikes)})</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <span className="text-xs text-muted-foreground">
+                  هیچ دیدگاهی برای این کالا ثبت نشده است. اولین نفری باشید که نظر خود را ثبت می‌کند!
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsWriteModalOpen(true)}
+                  className="flex shrink-0 items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+                >
+                  <span>ثبت دیدگاه</span>
+                  <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="text-sm font-bold text-foreground">ثبت دیدگاه جدید</ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="p-5 pt-4">
+          <form onSubmit={handleCommentSubmit} className="flex w-full flex-col gap-4">
+            <div className="flex w-full flex-col gap-1 border-b border-border pb-3">
+              <span className="text-2xs font-bold text-muted-foreground">نام کالا:</span>
+              <span className="text-xs font-bold leading-relaxed text-foreground">
+                {toPersianDigits(productTitle)}
+              </span>
+            </div>
+
+            <div className="flex w-full flex-col items-center justify-center gap-2 border-b border-dashed border-border py-2 text-center">
+              <span className="text-xs font-bold text-muted-foreground">امتیاز شما به کالا *</span>
+              <div className="mt-1 flex items-center gap-1.5" dir="ltr">
+                {[1, 2, 3, 4, 5].map((starValue) => {
+                  const isHighlighted = (hoverRate || rate) >= starValue;
+                  return (
+                    <button
+                      key={starValue}
+                      type="button"
+                      onMouseEnter={() => setHoverRate(starValue)}
+                      onMouseLeave={() => setHoverRate(0)}
+                      onClick={() => setRate(starValue)}
+                      aria-label={`${starValue} ستاره`}
+                      className="p-1 outline-none"
+                    >
+                      <Star
+                        aria-hidden="true"
+                        className={cn(
+                          'h-7 w-7 shrink-0',
+                          isHighlighted ? 'fill-warning text-warning' : 'text-border'
+                        )}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <TextArea
+              label="متن نظر *"
+              placeholder="نظر خود را در مورد این کالا به اشتراک بگذارید..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="h-28 text-xs"
+              required
+            />
+
+            <div className="mt-1 flex w-full items-start gap-2.5 border-t border-dashed border-border pt-4 select-none">
+              <Checkbox checked={isIncognito} onChange={(checked) => setIsIncognito(checked)} />
+              <div>
+                <span className="block text-xs font-bold text-foreground">ارسال به صورت ناشناس</span>
+                <span className="mt-0.5 block text-2xs text-muted-foreground">
+                  در صورت فعال‌سازی، نام شما به کاربران نمایش داده نخواهد شد.
+                </span>
+              </div>
+            </div>
+          </form>
+        </ModalBody>
+
+        <div className="flex w-full shrink-0 flex-row gap-2.5 border-t border-border p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsWriteModalOpen(false)}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            isLoading={createComment.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+            onClick={() => handleCommentSubmit()}
+          >
+            ثبت نظر نهایی
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} className="w-full max-w-md">
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <LottiePlayer path="/anumations/Rate-cong.json" className="mx-auto h-72 w-72 max-w-full" loop={false} />
+
+          <h4 className="text-base font-bold leading-relaxed text-foreground">
+            {userName} عزیز، از ارسال نظر شما ممنونیم
+          </h4>
+
+          <p className="text-xs font-bold text-shop">با نوشتن این نظر به بقیه هم کمک بزرگی کردی</p>
+
+          <p className="mx-auto max-w-xs text-xs leading-relaxed text-muted-foreground">
+            نظر شما ثبت شد و پس از بررسی و تایید پشتیبانی، برای دیگران هم به اشتراک گذاشته می‌شود.
+          </p>
+
+          <Button
+            variant="primary"
+            onClick={() => setIsSuccessModalOpen(false)}
+            className="mt-3 h-8 px-4 text-2xs font-bold shadow-xs"
+          >
+            متوجه شدم
+          </Button>
+        </ModalBody>
+      </Modal>
+    </div>
+  );
+}
+
+
+========================================================
+FILE: src\components\features\Product\components\ProductInquiriesSection.tsx
+========================================================
+
+'use client';
+
+import * as React from 'react';
+import { User, MessageSquare, ThumbsUp, ThumbsDown, HelpCircle, ArrowLeft, Clock } from 'lucide-react';
+import { useGetProductInquiries } from '@/domains/front/product/hooks/product.hooks';
+import { useCreateInquiry, useLikeInquiry, useUnlikeInquiry } from '@/domains/front/inquiry/hooks/inquiry.hooks';
+import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+import { toPersianDigits } from '@/core/utils/formatters';
+
+export interface ProductInquiriesSectionProps {
+  productId: string;
+}
+
+export function ProductInquiriesSection({ productId }: ProductInquiriesSectionProps) {
+  const [orderBy, setOrderBy] = React.useState('Latest');
+  const [page, setPage] = React.useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = React.useState(false);
+  const [inquiryText, setInquiryText] = React.useState('');
+
+  const { data: inquiriesResponse, isLoading } = useGetProductInquiries(productId, orderBy, page);
+  const createInquiry = useCreateInquiry();
+  const likeInquiry = useLikeInquiry();
+  const unlikeInquiry = useUnlikeInquiry();
+
+  const inquiries = inquiriesResponse?.items || [];
+
+  const handleInquirySubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (inquiryText.trim().length < 5) {
+      showToast.error('متن پرسش شما باید حداقل ۵ کاراکتر باشد');
+      return;
+    }
+    try {
+      await createInquiry.mutateAsync({ productId, comment: inquiryText });
+      showToast.success('پرسش شما با موفقیت ثبت شد و پس از تایید مدیران سیستم نمایش داده خواهد شد');
+      setInquiryText('');
+      setIsWriteModalOpen(false);
+    } catch (error: any) {
+      showToast.error(error?.userMessage || 'خطا در ثبت پرسش شما');
+    }
+  };
+
+  const handleLike = (inquiry: any) => {
+    if (inquiry.userLiked) unlikeInquiry.mutate(inquiry.id);
+    else likeInquiry.mutate({ productInquiryId: inquiry.id, likeStatus: 'Like' });
+  };
+
+  const handleDislike = (inquiry: any) => {
+    if (inquiry.userDisLiked) unlikeInquiry.mutate(inquiry.id);
+    else likeInquiry.mutate({ productInquiryId: inquiry.id, likeStatus: 'Dislike' });
+  };
+
+  return (
+    <div className="mt-6 flex w-full flex-col gap-6 pb-12">
+      <h3 className="text-sm font-bold text-foreground md:text-base">پرسش‌ها و پاسخ‌ها</h3>
+
+      <div className="flex flex-col items-center justify-between gap-4 border-b border-border pb-2.5 md:flex-row">
+        <div className="flex items-center gap-4 overflow-x-auto py-1 scrollbar-none">
+          <span className="shrink-0 text-xs font-bold text-muted-foreground">نمایش بر اساس:</span>
+          {[
+            { value: 'Latest', label: 'جدیدترین' },
+            { value: 'Oldest', label: 'قدیمی‌ترین' },
+            { value: 'MostPopular', label: 'مفیدترین' },
+            { value: 'MostReplied', label: 'بیشترین پاسخ' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setOrderBy(opt.value);
+                setPage(1);
+              }}
+              className={cn(
+                'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none',
+                orderBy === opt.value
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground'
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsWriteModalOpen(true)}
+          className="flex h-9 shrink-0 items-center gap-1 border-shop/40 text-xs font-bold text-shop hover:bg-shop/5"
+        >
+          <MessageSquare aria-hidden="true" className="h-3.5 w-3.5" />
+          <span>شما هم سوال خود را بپرسید</span>
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-5">
+        {isLoading ? (
+          <span className="text-xs text-muted-foreground">در حال بارگذاری پرسش‌ها...</span>
+        ) : inquiries.length > 0 ? (
+          inquiries.map((inquiry: any) => (
+            <div key={inquiry.id} className="flex flex-col gap-4 rounded-md border border-border bg-card p-4">
+              <div className="flex w-full items-start gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                  <User aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-foreground">{inquiry.creator}</span>
+                      {(inquiry as any).isConfirmed === false ? (
+                        <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-2xs font-bold text-warning">
+                          <Clock aria-hidden="true" className="h-3 w-3" />
+                          در حال بررسی
+                        </span>
+                      ) : null}
+                    </div>
+                    <span className="text-2xs text-muted-foreground">{inquiry.createDateFormatted}</span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-foreground">{inquiry.comment}</p>
+                </div>
+              </div>
+
+              {inquiry.bestReply ? (
+                <div className="me-6 flex gap-3 rounded-e-md border-s-2 border-primary bg-accent/50 p-3.5 md:me-10">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-accent">
+                    <User aria-hidden="true" className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-xs font-bold text-primary">{inquiry.bestReply.creator} (پاسخ برتر)</span>
+                      <span className="text-2xs text-muted-foreground">{inquiry.bestReply.createDateFormatted}</span>
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{inquiry.bestReply.comment}</p>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex items-center justify-end gap-4 border-t border-dashed border-border pt-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleLike(inquiry)}
+                  disabled={likeInquiry.isPending || unlikeInquiry.isPending}
+                  className={cn(
+                    'flex items-center gap-1 text-2xs font-bold transition-colors',
+                    inquiry.userLiked ? 'text-success' : 'text-muted-foreground hover:text-success'
+                  )}
+                >
+                  <ThumbsUp aria-hidden="true" className="h-3.5 w-3.5" />
+                  <span>({toPersianDigits(inquiry.likes)})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDislike(inquiry)}
+                  disabled={likeInquiry.isPending || unlikeInquiry.isPending}
+                  className={cn(
+                    'flex items-center gap-1 text-2xs font-bold transition-colors',
+                    inquiry.userDisLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
+                  )}
+                >
+                  <ThumbsDown aria-hidden="true" className="h-3.5 w-3.5" />
+                  <span>({toPersianDigits(inquiry.dislikes)})</span>
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <span className="text-xs text-muted-foreground">
+              هیچ پرسشی برای این کالا ثبت نشده است. اولین سوال خود را بپرسید!
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsWriteModalOpen(true)}
+              className="flex shrink-0 items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+            >
+              <span>ثبت پرسش</span>
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <HelpCircle aria-hidden="true" className="h-4 w-4 text-primary" />
+            شما هم سوال خودتون رو بپرسید
+          </ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="p-5 pt-4">
+          <form onSubmit={handleInquirySubmit} className="flex w-full flex-col gap-4">
+            <TextArea
+              label="متن پرسش شما *"
+              placeholder="پرسش خود را در مورد این کالا مطرح نمایید..."
+              value={inquiryText}
+              onChange={(e) => setInquiryText(e.target.value)}
+              className="h-28 text-xs"
+              required
+            />
+          </form>
+        </ModalBody>
+
+        <div className="flex w-full shrink-0 flex-row gap-2.5 border-t border-border p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsWriteModalOpen(false)}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            isLoading={createInquiry.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+            onClick={() => handleInquirySubmit()}
+          >
+            ثبت پرسش نهایی
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+
+========================================================
+FILE: src\domains\front\comment\endpoints\comment.endpoints.ts
+========================================================
+
+// src/domains/front/comment/endpoints/comment.endpoints.ts
+
+export const COMMENT_ENDPOINTS = {
+  GET_PRODUCT_COMMENTS: '/api/Front/ProductComments',
+  GET_COMMENT_REPLIES: '/api/Front/ProductCommentReplies',
+  GET_COMMENT_AVERAGE: '/api/Front/ProductCommentsAverageRate',
+  
+  // User Panel
+  GET_PENDING_COMMENTS: '/api/UserPanel/PendingComment',
+  GET_USER_COMMENTS: '/api/UserPanel/UserProductComments',
+  POST_COMMENT: '/api/UserPanel/ProductComment',
+  PUT_COMMENT: '/api/UserPanel/ProductComment',
+  DELETE_COMMENT: '/api/UserPanel/ProductComment',
+  POST_COMMENT_LIKE: '/api/UserPanel/ProductCommentLike',
+  DELETE_COMMENT_LIKE: '/api/UserPanel/ProductCommentLike',
+} as const;
+
+========================================================
+FILE: src\domains\front\comment\hooks\comment.hooks.ts
+========================================================
+
+// src/domains/front/comment/hooks/comment.hooks.ts
+
+import { UseQueryOptions } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { getCommentService } from '../services/comment.service';
+import { CommentFilters, CreateCommentRequest, UpdateCommentRequest, LikeCommentRequest } from '../types/view.types';
+import { CommentViewModel } from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+
+const commentService = getCommentService();
+
+export function useGetProductComments(
+  filters: CommentFilters,
+  options?: Omit<UseQueryOptions<PaginatedResult<CommentViewModel>>, 'queryKey' | 'queryFn'>
+) {
+  return useTypedQuery(
+    ['front', 'comments', 'product', filters.productId, filters],
+    () => commentService.getProductComments(filters),
+    {
+      placeholderData: (previousData) => previousData,
+      staleTime: 60 * 1000,
+      ...options,
+    }
+  );
+}
+
+export function useGetCommentReplies(
+  commentId: string,
+  pageNumber: number = 1,
+  pageSize: number = 30
+) {
+  return useTypedQuery(
+    ['front', 'comments', 'replies', commentId, pageNumber, pageSize],
+    () => commentService.getCommentReplies(commentId, pageNumber, pageSize),
+    {
+      staleTime: 60 * 1000,
+      enabled: !!commentId,
+    }
+  );
+}
+
+export function useGetCommentAverage(productId: string) {
+  return useTypedQuery(
+    ['front', 'comments', 'average', productId],
+    () => commentService.getCommentAverage(productId),
+    {
+      staleTime: 5 * 60 * 1000,
+      enabled: !!productId,
+    }
+  );
+}
+
+export function useCreateComment() {
+  return useTypedMutation(
+    (request: CreateCommentRequest) => commentService.createComment(request)
+  );
+}
+
+export function useUpdateComment() {
+  return useTypedMutation(
+    (request: UpdateCommentRequest) => commentService.updateComment(request)
+  );
+}
+
+export function useDeleteComment() {
+  return useTypedMutation(
+    (commentId: string) => commentService.deleteComment(commentId)
+  );
+}
+
+export function useLikeComment() {
+  return useTypedMutation(
+    (request: LikeCommentRequest) => commentService.likeComment(request)
+  );
+}
+
+export function useUnlikeComment() {
+  return useTypedMutation(
+    (likeId: string) => commentService.unlikeComment(likeId)
+  );
+}
+
+export function useGetPendingComments(pageNumber: number = 1, pageSize: number = 30) {
+  return useTypedQuery(
+    ['user', 'comments', 'pending', pageNumber, pageSize],
+    () => commentService.getPendingComments(pageNumber, pageSize),
+    {
+      staleTime: 30 * 1000,
+    }
+  );
+}
+
+export function useGetUserComments(pageNumber: number = 1, pageSize: number = 30) {
+  return useTypedQuery(
+    ['user', 'comments', 'user', pageNumber, pageSize],
+    () => commentService.getUserComments(pageNumber, pageSize),
+    {
+      staleTime: 30 * 1000,
+    }
+  );
+}
+
+========================================================
+FILE: src\domains\front\comment\services\comment.service.ts
+========================================================
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { COMMENT_ENDPOINTS } from '../endpoints/comment.endpoints';
+import { CommentMapper } from '../mappers/comment.mapper';
+import { UserPanelMapper } from '@/domains/userpanel/mappers/userpanel.mapper';
+import { CommentFilters, CreateCommentRequest, UpdateCommentRequest, LikeCommentRequest } from '../types/view.types';
+import { CommentApiDto, CommentReplyApiDto, CommentAverageApiDto } from '../types/dto.types';
+import { CommentViewModel, CommentAverageViewModel } from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+
+export class CommentService {
+  private readonly httpClient = getHttpClient();
+
+  async getProductComments(filters: CommentFilters): Promise<PaginatedResult<CommentViewModel>> {
+    try {
+      const params: Record<string, unknown> = {
+        ProductId: filters.productId,
+        OrderBy: filters.orderBy || 'Newest',
+        PageNumber: filters.pageNumber || 1,
+        PageSize: filters.pageSize || 30,
+      };
+
+      const response = await this.httpClient.get<{
+        items: CommentApiDto[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(COMMENT_ENDPOINTS.GET_PRODUCT_COMMENTS, { params });
+
+      const items = response.data.items.map(dto => {
+        const domain = CommentMapper.toDomain(dto);
+        return CommentMapper.toView(domain);
+      });
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[CommentService] Get product comments failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getCommentReplies(commentId: string, pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<CommentViewModel>> {
+    try {
+      const response = await this.httpClient.get<{
+        items: CommentReplyApiDto[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(COMMENT_ENDPOINTS.GET_COMMENT_REPLIES, {
+        params: { CommentId: commentId, PageNumber: pageNumber, PageSize: pageSize }
+      });
+
+      const items = response.data.items.map(dto => {
+        const domain = {
+          ...dto,
+          productId: '',
+          rate: 0,
+          replyCount: 0,
+          parentId: commentId,
+        } as CommentApiDto;
+        const commentDomain = CommentMapper.toDomain(domain);
+        return CommentMapper.toView(commentDomain);
+      });
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[CommentService] Get comment replies failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getCommentAverage(productId: string): Promise<CommentAverageViewModel> {
+    try {
+      const response = await this.httpClient.get<CommentAverageApiDto>(
+        COMMENT_ENDPOINTS.GET_COMMENT_AVERAGE,
+        { params: { Id: productId } }
+      );
+      return CommentMapper.toViewAverage(response.data);
+    } catch (error) {
+      logger.error('[CommentService] Get comment average failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async createComment(request: CreateCommentRequest): Promise<CommentViewModel> {
+    try {
+      const dto = CommentMapper.toCreateRequest(request);
+      const response = await this.httpClient.post<CommentApiDto>(
+        COMMENT_ENDPOINTS.POST_COMMENT,
+        dto
+      );
+      const domain = CommentMapper.toDomain(response.data);
+      return CommentMapper.toView(domain);
+    } catch (error) {
+      logger.error('[CommentService] Create comment failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async updateComment(request: UpdateCommentRequest): Promise<CommentViewModel> {
+    try {
+      const dto = CommentMapper.toUpdateRequest(request);
+      const response = await this.httpClient.put<CommentApiDto>(
+        COMMENT_ENDPOINTS.PUT_COMMENT,
+        dto
+      );
+      const domain = CommentMapper.toDomain(response.data);
+      return CommentMapper.toView(domain);
+    } catch (error) {
+      logger.error('[CommentService] Update comment failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async deleteComment(commentId: string): Promise<void> {
+    try {
+      await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT, { id: commentId });
+    } catch (error) {
+      logger.error('[CommentService] Delete comment failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async likeComment(request: LikeCommentRequest): Promise<void> {
+    try {
+      const dto = CommentMapper.toLikeRequest(request);
+      await this.httpClient.post(COMMENT_ENDPOINTS.POST_COMMENT_LIKE, dto);
+    } catch (error) {
+      logger.error('[CommentService] Like comment failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async unlikeComment(likeId: string): Promise<void> {
+    try {
+      await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT_LIKE, {
+        params: { id: likeId }
+      });
+    } catch (error) {
+      logger.error('[CommentService] Unlike comment failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getPendingComments(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<any>> {
+    try {
+      const response = await this.httpClient.get<{
+        items: any[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(COMMENT_ENDPOINTS.GET_PENDING_COMMENTS, {
+        params: { PageNumber: pageNumber, PageSize: pageSize }
+      });
+
+      const items = response.data.items.map(dto => {
+        const domain = UserPanelMapper.toDomainPendingComment(dto);
+        return UserPanelMapper.toViewPendingComment(domain);
+      });
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[CommentService] Get pending comments failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getUserComments(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<any>> {
+    try {
+      const response = await this.httpClient.get<{
+        items: any[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(COMMENT_ENDPOINTS.GET_USER_COMMENTS, {
+        params: { PageNumber: pageNumber, PageSize: pageSize }
+      });
+
+      const items = response.data.items.map(dto => {
+        const domain = UserPanelMapper.toDomainUserComment(dto);
+        return UserPanelMapper.toViewUserComment(domain);
+      });
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[CommentService] Get user comments failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+}
+
+let commentServiceInstance: CommentService | null = null;
+
+export function getCommentService(): CommentService {
+  if (!commentServiceInstance) {
+    commentServiceInstance = new CommentService();
+  }
+  return commentServiceInstance;
+}
+
+========================================================
+FILE: src\domains\front\comment\types\dto.types.ts
+========================================================
+
+// src/domains/front/comment/types/dto.types.ts
+
+export interface CommentApiDto {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  isIncognito: boolean;
+  rate: number;
+  comment: string;
+  likes: number;
+  dislikes: number;
+  isLikedByUser?: boolean;
+  parentId?: string;
+  replyCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommentReplyApiDto {
+  id: string;
+  commentId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  isIncognito: boolean;
+  comment: string;
+  likes: number;
+  dislikes: number;
+  isLikedByUser?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CommentAverageApiDto {
+  averageRate: number;
+  totalComments: number;
+  rateDistribution: {
+    one: number;
+    two: number;
+    three: number;
+    four: number;
+    five: number;
+  };
+}
+
+export interface CreateCommentRequestDto {
+  productId: string;
+  comment: string;
+  rate: number;
+  isIncognito: boolean;
+}
+
+export interface UpdateCommentRequestDto {
+  id: string;
+  rate: number;
+}
+
+export interface LikeCommentRequestDto {
+  productCommentId: string;
+  likeStatus: 'Like' | 'Dislike';
+}
+
+========================================================
+FILE: src\domains\front\comment\types\view.types.ts
+========================================================
+
+// src/domains/front/comment/types/view.types.ts
+
+export interface CommentViewModel {
+  id: string;
+  productId: string;
+  user: {
+    id: string;
+    name: string;
+    avatar: string | null;
+    isIncognito: boolean;
+    displayName: string;
+  };
+  rate: number;
+  rateStars: number;
+  content: string;
+  likes: {
+    likes: number;
+    dislikes: number;
+    isLikedByUser: boolean;
+  };
+  parentId: string | null;
+  replyCount: number;
+  replyCountText: string;
+  metadata: {
+    createdAt: string;
+    updatedAt: string;
+    timeAgo: string;
+  };
+}
+
+export interface CommentAverageViewModel {
+  averageRate: number;
+  totalComments: number;
+  rateDistribution: {
+    one: number;
+    two: number;
+    three: number;
+    four: number;
+    five: number;
+  };
+  ratePercentage: {
+    one: number;
+    two: number;
+    three: number;
+    four: number;
+    five: number;
+  };
+}
+
+export interface CreateCommentRequest {
+  productId: string;
+  comment: string;
+  rate: number;
+  isIncognito: boolean;
+}
+
+export interface UpdateCommentRequest {
+  id: string;
+  rate: number;
+}
+
+export interface LikeCommentRequest {
+  productCommentId: string;
+  likeStatus: 'Like' | 'Dislike';
+}
+
+export interface CommentFilters {
+  productId: string;
+  orderBy?: 'Newest' | 'Oldest' | 'MostLike' | 'LeastLike';
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+========================================================
+FILE: src\domains\front\inquiry\endpoints\inquiry.endpoints.ts
+========================================================
+
+// src/domains/front/inquiry/endpoints/inquiry.endpoints.ts
+
+export const INQUIRY_ENDPOINTS = {
+  GET_PRODUCT_INQUIRIES: '/api/Front/ProductInquiries',
+  GET_INQUIRY_REPLIES: '/api/Front/ProductInquiryReplies',
+  
+  // User Panel
+  GET_USER_INQUIRIES: '/api/UserPanel/GetUserInquiries',
+  POST_INQUIRY: '/api/UserPanel/ProductInquiry',
+  DELETE_INQUIRY: '/api/UserPanel/ProductInquiry',
+  POST_INQUIRY_LIKE: '/api/UserPanel/ProductInquiryLike',
+  DELETE_INQUIRY_LIKE: '/api/UserPanel/ProductInquiryLike',
+} as const;
+
+========================================================
+FILE: src\domains\front\inquiry\hooks\inquiry.hooks.ts
+========================================================
+
+// src/domains/front/inquiry/hooks/inquiry.hooks.ts
+
+import { UseQueryOptions } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { getInquiryService } from '../services/inquiry.service';
+import { InquiryFilters, CreateInquiryRequest, LikeInquiryRequest } from '../types/view.types';
+import { InquiryViewModel } from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+
+const inquiryService = getInquiryService();
+
+export function useGetProductInquiries(
+  filters: InquiryFilters,
+  options?: Omit<UseQueryOptions<PaginatedResult<InquiryViewModel>>, 'queryKey' | 'queryFn'>
+) {
+  return useTypedQuery(
+    ['front', 'inquiries', 'product', filters.productId, filters],
+    () => inquiryService.getProductInquiries(filters),
+    {
+      placeholderData: (previousData) => previousData,
+      staleTime: 60 * 1000,
+      ...options,
+    }
+  );
+}
+
+export function useGetInquiryReplies(
+  inquiryId: string,
+  pageNumber: number = 1,
+  pageSize: number = 30
+) {
+  return useTypedQuery(
+    ['front', 'inquiries', 'replies', inquiryId, pageNumber, pageSize],
+    () => inquiryService.getInquiryReplies(inquiryId, pageNumber, pageSize),
+    {
+      staleTime: 60 * 1000,
+      enabled: !!inquiryId,
+    }
+  );
+}
+
+export function useCreateInquiry() {
+  return useTypedMutation(
+    (request: CreateInquiryRequest) => inquiryService.createInquiry(request)
+  );
+}
+
+export function useDeleteInquiry() {
+  return useTypedMutation(
+    (inquiryId: string) => inquiryService.deleteInquiry(inquiryId)
+  );
+}
+
+export function useLikeInquiry() {
+  return useTypedMutation(
+    (request: LikeInquiryRequest) => inquiryService.likeInquiry(request)
+  );
+}
+
+export function useUnlikeInquiry() {
+  return useTypedMutation(
+    (likeId: string) => inquiryService.unlikeInquiry(likeId)
+  );
+}
+
+export function useGetUserInquiries(pageNumber: number = 1, pageSize: number = 30) {
+  return useTypedQuery(
+    ['user', 'inquiries', 'user', pageNumber, pageSize],
+    () => inquiryService.getUserInquiries(pageNumber, pageSize),
+    {
+      staleTime: 30 * 1000,
+    }
+  );
+}
+
+// Export all as default for better compatibility
+export default {
+  useGetProductInquiries,
+  useGetInquiryReplies,
+  useCreateInquiry,
+  useDeleteInquiry,
+  useLikeInquiry,
+  useUnlikeInquiry,
+  useGetUserInquiries,
+};
+
+========================================================
+FILE: src\domains\front\inquiry\services\inquiry.service.ts
+========================================================
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { INQUIRY_ENDPOINTS } from '../endpoints/inquiry.endpoints';
+import { InquiryMapper } from '../mappers/inquiry.mapper';
+import { UserPanelMapper } from '@/domains/userpanel/mappers/userpanel.mapper';
+import { InquiryFilters, CreateInquiryRequest, LikeInquiryRequest } from '../types/view.types';
+import { InquiryApiDto } from '../types/dto.types';
+import { InquiryViewModel } from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+
+export class InquiryService {
+  private readonly httpClient = getHttpClient();
+
+  async getProductInquiries(filters: InquiryFilters): Promise<PaginatedResult<InquiryViewModel>> {
+    try {
+      const params: Record<string, unknown> = {
+        ProductId: filters.productId,
+        OrderBy: filters.orderBy || 'Latest',
+        PageNumber: filters.pageNumber || 1,
+        PageSize: filters.pageSize || 30,
+      };
+
+      const response = await this.httpClient.get<{
+        items: InquiryApiDto[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(INQUIRY_ENDPOINTS.GET_PRODUCT_INQUIRIES, { params });
+
+      const items = response.data.items.map(dto => {
+        const domain = InquiryMapper.toDomain(dto);
+        return InquiryMapper.toView(domain);
+      });
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[InquiryService] Get product inquiries failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getInquiryReplies(inquiryId: string, pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<InquiryViewModel>> {
+    try {
+      const response = await this.httpClient.get<{
+        items: InquiryApiDto[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(INQUIRY_ENDPOINTS.GET_INQUIRY_REPLIES, {
+        params: { InquiryId: inquiryId, PageNumber: pageNumber, PageSize: pageSize }
+      });
+
+      const items = response.data.items.map(dto => {
+        const domain = InquiryMapper.toDomain(dto);
+        return InquiryMapper.toView(domain);
+      });
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[InquiryService] Get inquiry replies failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async createInquiry(request: CreateInquiryRequest): Promise<InquiryViewModel> {
+    try {
+      const dto = InquiryMapper.toCreateRequest(request);
+      const response = await this.httpClient.post<InquiryApiDto>(
+        INQUIRY_ENDPOINTS.POST_INQUIRY,
+        dto
+      );
+      const domain = InquiryMapper.toDomain(response.data);
+      return InquiryMapper.toView(domain);
+    } catch (error) {
+      logger.error('[InquiryService] Create inquiry failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async deleteInquiry(inquiryId: string): Promise<void> {
+    try {
+      await this.httpClient.delete(INQUIRY_ENDPOINTS.DELETE_INQUIRY, { id: inquiryId });
+    } catch (error) {
+      logger.error('[InquiryService] Delete inquiry failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async likeInquiry(request: LikeInquiryRequest): Promise<void> {
+    try {
+      const dto = InquiryMapper.toLikeRequest(request);
+      await this.httpClient.post(INQUIRY_ENDPOINTS.POST_INQUIRY_LIKE, dto);
+    } catch (error) {
+      logger.error('[InquiryService] Like inquiry failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async unlikeInquiry(likeId: string): Promise<void> {
+    try {
+      await this.httpClient.delete(INQUIRY_ENDPOINTS.DELETE_INQUIRY_LIKE, {
+        params: { id: likeId }
+      });
+    } catch (error) {
+      logger.error('[InquiryService] Unlike inquiry failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getUserInquiries(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<any>> {
+    try {
+      const response = await this.httpClient.get<{
+        items: any[];
+        pageNumber: number;
+        pageSize: number;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(INQUIRY_ENDPOINTS.GET_USER_INQUIRIES, {
+        params: { PageNumber: pageNumber, PageSize: pageSize }
+      });
+
+      const items = response.data.items.map(dto => {
+        const domain = UserPanelMapper.toDomainUserInquiry(dto);
+        return UserPanelMapper.toViewUserInquiry(domain);
+      });
+
+      return {
+        items,
+        pageNumber: response.data.pageNumber,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.hasNextPage,
+        hasPreviousPage: response.data.hasPreviousPage,
+        hasMore: response.data.hasNextPage,
+        from: (response.data.pageNumber - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.pageNumber * response.data.pageSize, response.data.totalCount),
+      };
+    } catch (error) {
+      logger.error('[InquiryService] Get user inquiries failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+}
+
+let inquiryServiceInstance: InquiryService | null = null;
+
+export function getInquiryService(): InquiryService {
+  if (!userPanelServiceInstance) {
+    userPanelServiceInstance = new InquiryService();
+  }
+  return userPanelServiceInstance;
+}
+
+let userPanelServiceInstance: InquiryService | null = null;
+
+========================================================
+FILE: src\domains\front\inquiry\types\dto.types.ts
+========================================================
+
+// src/domains/front/inquiry/types/dto.types.ts
+
+export interface InquiryApiDto {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  comment: string;
+  likes: number;
+  dislikes: number;
+  isLikedByUser?: boolean;
+  replyCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InquiryReplyApiDto {
+  id: string;
+  inquiryId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  comment: string;
+  likes: number;
+  dislikes: number;
+  isLikedByUser?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInquiryRequestDto {
+  productId: string;
+  comment: string;
+}
+
+export interface LikeInquiryRequestDto {
+  productInquiryId: string;
+  likeStatus: 'Like' | 'Dislike';
+}
+
+========================================================
+FILE: src\domains\front\inquiry\types\view.types.ts
+========================================================
+
+// src/domains/front/inquiry/types/view.types.ts
+
+export interface InquiryViewModel {
+  id: string;
+  productId: string;
+  user: {
+    id: string;
+    name: string;
+    avatar: string | null;
+    displayName: string;
+  };
+  content: string;
+  likes: {
+    likes: number;
+    dislikes: number;
+    isLikedByUser: boolean;
+  };
+  replyCount: number;
+  replyCountText: string;
+  metadata: {
+    createdAt: string;
+    updatedAt: string;
+    timeAgo: string;
+  };
+}
+
+export interface CreateInquiryRequest {
+  productId: string;
+  comment: string;
+}
+
+export interface LikeInquiryRequest {
+  productInquiryId: string;
+  likeStatus: 'Like' | 'Dislike';
+}
+
+export interface InquiryFilters {
+  productId: string;
+  orderBy?: 'Latest' | 'Oldest' | 'MostPopular' | 'MostReplied' | 'LeastReplied';
+  pageNumber?: number;
+  pageSize?: number;
+}

@@ -1,6 +1,6 @@
 // src/domains/front/comment/hooks/comment.hooks.ts
 
-import { UseQueryOptions } from '@tanstack/react-query';
+import { useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getCommentService } from '../services/comment.service';
 import { CommentFilters, CreateCommentRequest, UpdateCommentRequest, LikeCommentRequest } from '../types/view.types';
@@ -51,8 +51,15 @@ export function useGetCommentAverage(productId: string) {
 }
 
 export function useCreateComment() {
+  const queryClient = useQueryClient();
   return useTypedMutation(
-    (request: CreateCommentRequest) => commentService.createComment(request)
+    (request: CreateCommentRequest) => commentService.createComment(request),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['front', 'comments'] });
+        queryClient.invalidateQueries({ queryKey: ['front', 'product'] });
+      }
+    }
   );
 }
 
@@ -69,17 +76,30 @@ export function useDeleteComment() {
 }
 
 export function useLikeComment() {
+  const queryClient = useQueryClient();
   return useTypedMutation(
-    (request: LikeCommentRequest) => commentService.likeComment(request)
+    (request: LikeCommentRequest) => commentService.likeComment(request),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['front', 'comments'] });
+        queryClient.invalidateQueries({ queryKey: ['front', 'product'] });
+      }
+    }
   );
 }
 
 export function useUnlikeComment() {
+  const queryClient = useQueryClient();
   return useTypedMutation(
-    (likeId: string) => commentService.unlikeComment(likeId)
+    (likeId: string) => commentService.unlikeComment(likeId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['front', 'comments'] });
+        queryClient.invalidateQueries({ queryKey: ['front', 'product'] });
+      }
+    }
   );
 }
-
 export function useGetPendingComments(pageNumber: number = 1, pageSize: number = 30) {
   return useTypedQuery(
     ['user', 'comments', 'pending', pageNumber, pageSize],

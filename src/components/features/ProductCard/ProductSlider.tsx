@@ -8,6 +8,7 @@ import { ProductStandardCard } from './ProductStandardCard';
 import { Typography } from '@/components/primitives/Typography';
 import { SliderSkeleton } from './SliderSkeleton';
 import { cn } from '@/design-system/utils/cn';
+import { toPersianDigits } from '@/core/utils/formatters';
 
 export interface ProductSliderProps {
   title: string;
@@ -17,6 +18,7 @@ export interface ProductSliderProps {
   viewAllLink?: string;
   className?: string;
   showTimer?: boolean;
+  totalSalesCount?: number; // ✅ تعداد کل فروشندگان / محصولات
 }
 
 export function ProductSlider({
@@ -26,6 +28,7 @@ export function ProductSlider({
   isError,
   viewAllLink = '#',
   className,
+  totalSalesCount,
 }: ProductSliderProps) {
   const carouselRef = React.useRef<HTMLDivElement>(null);
   const [dragWidth, setDragWidth] = React.useState(0);
@@ -77,27 +80,33 @@ export function ProductSlider({
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Wrench aria-hidden="true" className="h-4 w-4 shrink-0" />
           </div>
-          <Typography variant="h4" className="font-bold text-foreground">
-            {title}
-          </Typography>
+          <div className="flex items-center gap-2">
+            <Typography variant="h4" className="font-bold text-foreground">
+              {title}
+            </Typography>
+            {totalSalesCount !== undefined && totalSalesCount > 0 && (
+              <span className="rounded-md bg-muted px-2 py-0.5 text-2xs font-bold text-muted-foreground tabular-nums">
+                {toPersianDigits(totalSalesCount)} کالا
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* دکمه مشاهده همه با هویت بصری مشخص */}
+        {/* دکمه مشاهده همه با رنگ آبی درخواستی */}
         <Link
           href={viewAllLink}
           prefetch={false}
-          className="group inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary-hover sm:text-sm"
+          className="group inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 sm:text-sm"
         >
           <span>مشاهده همه</span>
           <ChevronLeft aria-hidden="true" className="h-4 w-4 stroke-[2.25] transition-transform duration-fast group-hover:-translate-x-1" />
         </Link>
       </div>
 
-      {/* کانتینر اسلایدر: سفید شفاف (bg-card) با حاشیه بسیار ظریف و سایه نرم */}
+      {/* کانتینر اسلایدر */}
       <div className="group relative w-full overflow-hidden rounded-xl border border-border/70 bg-card p-4 shadow-xs">
         {products.length > 4 ? (
           <>
-            {/* دکمه راست: شناور، سفید با سایه متمایز */}
             <button
               type="button"
               onClick={() => handleScroll('right')}
@@ -107,7 +116,6 @@ export function ProductSlider({
               <ChevronRight aria-hidden="true" className="h-4 w-4" />
             </button>
 
-            {/* دکمه چپ: شناور، سفید با سایه متمایز */}
             <button
               type="button"
               onClick={() => handleScroll('left')}

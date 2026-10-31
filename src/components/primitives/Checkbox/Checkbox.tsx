@@ -20,7 +20,7 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
       <label
         htmlFor={checkboxId}
         className={cn(
-          'flex items-center gap-2 select-none',
+          'group flex items-center gap-2.5 select-none',
           disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
           className
         )}
@@ -34,20 +34,22 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
           disabled={disabled}
           onClick={() => !disabled && onChange(!checked)}
           className={cn(
-            'h-5 w-5 shrink-0 rounded-sm border flex items-center justify-center',
-            'transition-colors duration-fast ease-in-out',
+            'h-5 w-5 shrink-0 rounded-md border flex items-center justify-center',
+            'transition-all duration-fast ease-in-out',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             checked
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-input bg-card hover:border-primary'
+              ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+              : 'border-input bg-card group-hover:border-primary/80 group-hover:bg-accent/40'
           )}
         >
           {checked ? (
-            <Check aria-hidden="true" className="h-3 w-3 stroke-[3]" />
+            <Check aria-hidden="true" className="h-3.5 w-3.5 stroke-[3] text-primary-foreground" />
           ) : null}
         </button>
         {label ? (
-          <span className="text-sm text-foreground">{label}</span>
+          <span className="text-sm font-medium text-foreground group-hover:text-foreground/90">
+            {label}
+          </span>
         ) : null}
       </label>
     );

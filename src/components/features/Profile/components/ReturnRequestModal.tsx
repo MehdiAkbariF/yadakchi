@@ -1,220 +1,333 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { Button } from '@/components/primitives/Button/Button';
 import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
 import { useGetReturnRequestReasons, useSubmitReturnRequest } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { showToast } from '@/core/utils/toast';
-import { Paperclip, FileText, X, AlertTriangle } from 'lucide-react';
+import { Paperclip, FileText, X, RotateCcw, Package } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+
+interface ItemFormState {
+  selected: boolean;
+  quantity: number;
+  reasonId: string;
+  description: string;
+  files: File[];
+}
 
 interface ReturnRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   subOrder: any;
-  item: any;
 }
 
-export function ReturnRequestModal({ isOpen, onClose, subOrder, item }: ReturnRequestModalProps) {
+export function ReturnRequestModal({ isOpen, onClose, subOrder }: ReturnRequestModalProps) {
+  const router = useRouter();
   const { data: reasons = [] } = useGetReturnRequestReasons();
   const submitReturn = useSubmitReturnRequest();
 
-  const [selectedReasonId, setSelectedReasonId] = useState('');
-  const [returnQuantity, setReturnQuantity] = useState(1);
-  const [description, setDescription] = useState('');
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [itemsState, setItemsState] = React.useState<Record<string, ItemFormState>>({});
 
-  // ✅ پاک کردن فرم هنگام باز شدن مودال
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedReasonId('');
-      setReturnQuantity(1);
-      setDescription('');
-      setAttachments([]);
+  React.useEffect(() => {
+    if (isOpen && subOrder?.subOrderItems) {
+      const initial: Record<string, ItemFormState> = {};
+      subOrder.subOrderItems.forEach((it: any) => {
+        initial[it.id] = {
+          selected: false,
+          quantity: 1,
+          reasonId: '',
+          description: '',
+          files: [],
+        };
+      });
+      setItemsState(initial);
     }
-  }, [isOpen]);
+  }, [isOpen, subOrder]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      // محدودیت ۵ تصویر و بررسی نوع فایل
-      const validFiles = filesArray.filter(file => file.type.startsWith('image/'));
-      const remainingSlots = 5 - attachments.length;
-      
-      if (validFiles.length > remainingSlots) {
-        showToast.error(`شما فقط می‌توانید ${remainingSlots} تصویر دیگر آپلود کنید`);
-      }
-      
-      setAttachments(prev => [...prev, ...validFiles].slice(0, 5));
-    }
+  if (!subOrder) return null;
+
+  const handleToggleSelect = (itemId: string) => {
+    setItemsState((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        selected: !prev[itemId]?.selected,
+      },
+    }));
   };
 
-  const handleRemoveFile = (idx: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== idx));
+  const handleQuantityChange = (itemId: string, qty: number) => {
+    setItemsState((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], quantity: qty },
+    }));
   };
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleReasonChange = (itemId: string, reasonId: string) => {
+    setItemsState((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], reasonId },
+    }));
+  };
+
+  const handleDescChange = (itemId: string, desc: string) => {
+    setItemsState((prev) => ({
+      ...prev,
+      [itemId]: { ...prev[itemId], description: desc },
+    }));
+  };
+
+  const handleAddFiles = (itemId: string, newFiles: FileList | null) => {
+    if (!newFiles) return;
+    const arrayFiles = Array.from(newFiles).filter((f) => f.type.startsWith('image/'));
+    setItemsState((prev) => {
+      const current = prev[itemId]?.files || [];
+      const merged = [...current, ...arrayFiles].slice(0, 5);
+      return {
+        ...prev,
+        [itemId]: { ...prev[itemId], files: merged },
+      };
+    });
+  };
+
+  const handleRemoveFile = (itemId: string, fileIndex: number) => {
+    setItemsState((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        files: (prev[itemId]?.files || []).filter((_, i) => i !== fileIndex),
+      },
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedReasonId) {
-      showToast.error('لطفاً علت اصلی مرجوعی کالا را انتخاب کنید');
+    const selectedItemIds = Object.keys(itemsState).filter((id) => itemsState[id]?.selected);
+
+    if (selectedItemIds.length === 0) {
+      showToast.error('لطفاً حداقل یک کالا را برای مرجوعی انتخاب کنید');
       return;
     }
 
-    if (description.trim().length < 10) {
-      showToast.error('لطفاً دلیل مرجوعی را با جزئیات بیشتر (حداقل ۱۰ کاراکتر) توضیح دهید');
-      return;
+    for (const id of selectedItemIds) {
+      const state = itemsState[id];
+      if (!state.reasonId) {
+        showToast.error('لطفاً علت مرجوعی را برای تمام کالاهای انتخاب‌شده مشخص کنید');
+        return;
+      }
+      if (state.description.trim().length < 10) {
+        showToast.error('شرح علت مرجوعی برای هر کالا باید حداقل ۱۰ کاراکتر باشد');
+        return;
+      }
     }
 
     try {
-      const itemsPayload = [
-        {
-          subOrderItemId: item.id,
-          quantity: returnQuantity,
-          returnRequestReasonId: selectedReasonId,
-          description: description,
-        }
-      ];
-
-      await submitReturn.mutateAsync({
-        subOrderId: subOrder.id,
-        items: itemsPayload,
-        files: attachments,
+      const itemsPayload = selectedItemIds.map((id) => {
+        const state = itemsState[id];
+        return {
+          subOrderItemId: id,
+          quantity: state.quantity,
+          returnRequestReasonId: state.reasonId,
+          description: state.description.trim(),
+          files: state.files,
+        };
       });
 
-      showToast.success('درخواست مرجوعی شما با موفقیت ثبت شد و به بخش مدیریت ارجاع گردید');
+      const response: any = await submitReturn.mutateAsync({
+        subOrderId: subOrder.id,
+        items: itemsPayload,
+      });
+
+      showToast.success('درخواست مرجوعی با موفقیت ثبت شد');
       onClose();
-    } catch (error: any) {
-      showToast.error(error.userMessage || 'خطا در ثبت درخواست مرجوعی کالا');
+
+      const returnId = response?.id || response?.data?.id || response?.returnRequestId;
+      if (returnId) {
+        router.push(`/profile/returns/${returnId}`);
+      } else {
+        router.push('/profile/returns');
+      }
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در ثبت درخواست مرجوعی');
     }
   };
 
-  const quantityOptions = Array.from({ length: item?.quantity || 1 }, (_, i) => ({
-    value: String(i + 1),
-    label: `${toPersianDigits(i + 1)} عدد`,
+  const reasonOptions = reasons.map((r: any) => ({
+    value: r.id,
+    label: r.name,
   }));
 
-  if (!item) return null;
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
+    <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-2xl">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="font-bold text-sm text-foreground flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-destructive" />
-          ثبت درخواست مرجوعی کالا
+        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <RotateCcw className="h-5 w-5 text-destructive" />
+          <span>ثبت درخواست مرجوعی مرسوله ({subOrder.shop?.shopTitle})</span>
         </ModalTitle>
       </ModalHeader>
 
-      <ModalBody className="p-5 pt-4">
-        <form onSubmit={handleFormSubmit} className="flex flex-col gap-4.5 w-full">
-          
-          {/* اطلاعات کوتاه کالا */}
-          <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border">
-            <div className="w-12 h-12 shrink-0 rounded-lg border bg-card flex items-center justify-center overflow-hidden p-0.5">
-              <img src={getFullUrl(item.shopProduct.product.image)} className="w-full h-full object-contain" alt="" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-xs font-bold text-foreground truncate block">{item.shopProduct.product.title}</span>
-              <span className="text-[10px] text-muted-foreground block mt-0.5">فروشگاه: {subOrder.shop?.shopTitle}</span>
-            </div>
+      <ModalBody className="max-h-[75vh] overflow-y-auto p-4 sm:p-6" dir="rtl">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs leading-relaxed text-foreground">
+            کالاهایی که قصد مرجوع کردن آن‌ها را دارید انتخاب فرمایید. پس از تأیید درخواست، کارشناسان ما وضعیت را بررسی و تیکت پشتیبانی فعال خواهد شد.
           </div>
 
-          {/* دلیل مرجوعی */}
-          <div className="w-full">
-            <Select
-              label="علت اصلی مرجوعی کالا *"
-              placeholder="علت مرجوعی را انتخاب کنید..."
-              value={selectedReasonId}
-              onChange={(e) => setSelectedReasonId(e.target.value)}
-              options={reasons.map((r: any) => ({ value: r.id, label: r.name }))}
-              required
-            />
-          </div>
+          <div className="flex flex-col gap-4">
+            {subOrder.subOrderItems?.map((item: any) => {
+              const state = itemsState[item.id] || {
+                selected: false,
+                quantity: 1,
+                reasonId: '',
+                description: '',
+                files: [],
+              };
 
-          {/* تعداد مرجوعی */}
-          {item.quantity > 1 && (
-            <div className="w-full">
-              <Select
-                label="تعداد کالای مرجوعی *"
-                value={String(returnQuantity)}
-                onChange={(e) => setReturnQuantity(Number(e.target.value))}
-                options={quantityOptions}
-                required
-              />
-            </div>
-          )}
+              const quantityOptions = Array.from({ length: item.quantity || 1 }, (_, i) => ({
+                value: String(i + 1),
+                label: `${toPersianDigits(i + 1)} عدد`,
+              }));
 
-          {/* شرح جزییات */}
-          <div className="w-full">
-            <TextArea
-              label="شرح علت و جزییات مرجوعی کالا *"
-              placeholder="لطفاً جزییات، عیوب یا مغایرت‌های فنی کالا را در این بخش بنویسید..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="h-24 text-xs"
-              required
-            />
-          </div>
-
-          {/* مدارک و آپلود عکس */}
-          <div className="flex flex-col gap-2 w-full border-t border-dashed pt-4">
-            <span className="text-xs font-bold text-foreground mb-1">تصاویر کالای معیوب یا مغایر (حداکثر ۵ تصویر)</span>
-            <div className="flex flex-wrap gap-2.5 items-center">
-              <label className="h-10 px-4 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
-                <Paperclip className="h-4 w-4" />
-                <span>انتخاب عکس کالا</span>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-
-              {attachments.map((file, idx) => (
-                <div 
-                  key={idx}
-                  className="h-10 px-2.5 rounded-xl border bg-muted/20 text-[9px] font-bold text-foreground flex items-center gap-1.5 max-w-[120px] shrink-0"
+              return (
+                <div
+                  key={item.id}
+                  className={cn(
+                    'rounded-2xl border p-4 transition-colors',
+                    state.selected ? 'border-primary/50 bg-primary/5' : 'border-border/70 bg-card'
+                  )}
                 >
-                  <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
-                  <span className="truncate flex-1">{file.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveFile(idx)}
-                    className="p-0.5 hover:bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={state.selected}
+                      onChange={() => handleToggleSelect(item.id)}
+                      className="mt-1"
+                    />
+
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-card p-1">
+                        {item.shopProduct?.product?.image ? (
+                          <img
+                            src={getFullUrl(item.shopProduct.product.image)}
+                            alt=""
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <Package className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="line-clamp-1 text-xs font-bold text-foreground">
+                          {item.shopProduct?.product?.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          تعداد خریداری شده: {toPersianDigits(item.quantity)} عدد
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {state.selected && (
+                    <div className="mt-4 flex flex-col gap-3 border-t border-border/60 pt-4">
+                      {item.quantity > 1 && (
+                        <div className="w-full sm:w-48">
+                          <Select
+                            label="تعداد مرجوعی *"
+                            value={String(state.quantity)}
+                            onChange={(e) => handleQuantityChange(item.id, Number(e.target.value))}
+                            options={quantityOptions}
+                            required
+                          />
+                        </div>
+                      )}
+
+                      <div className="w-full">
+                        <Select
+                          label="علت مرجوعی *"
+                          placeholder="انتخاب دلیل..."
+                          value={state.reasonId}
+                          onChange={(e) => handleReasonChange(item.id, e.target.value)}
+                          options={reasonOptions}
+                          required
+                        />
+                      </div>
+
+                      <div className="w-full">
+                        <TextArea
+                          label="توضیحات و شرح مشکل *"
+                          placeholder="مشکل، عیب یا مغایرت قطعه را به دقت شرح دهید (حداقل ۱۰ کاراکتر)..."
+                          value={state.description}
+                          onChange={(e) => handleDescChange(item.id, e.target.value)}
+                          className="h-20 text-xs"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2 pt-1">
+                        <span className="text-xs font-bold text-muted-foreground">
+                          تصاویر قطعه معیوب یا مغایر (حداکثر ۵ تصویر)
+                        </span>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <label className="flex h-9 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-primary/40 px-3 text-xs font-bold text-primary hover:bg-primary/5">
+                            <Paperclip className="h-4 w-4" />
+                            <span>افزودن عکس</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={(e) => handleAddFiles(item.id, e.target.files)}
+                              className="hidden"
+                            />
+                          </label>
+
+                          {state.files.map((file, fIdx) => (
+                            <div
+                              key={fIdx}
+                              className="flex h-9 max-w-[130px] items-center gap-2 rounded-xl border bg-muted/30 px-2 text-xs font-semibold text-foreground"
+                            >
+                              <FileText className="h-4 w-4 shrink-0 text-primary" />
+                              <span className="truncate flex-1">{file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveFile(item.id, fIdx)}
+                                className="rounded-full p-1 text-muted-foreground hover:text-destructive"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
+          <div className="mt-4 flex items-center justify-end gap-3 border-t border-border/60 pt-4">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-xs font-bold">
+              انصراف
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              isLoading={submitReturn.isPending}
+              className="h-9 px-5 text-xs font-bold shadow-xs"
+            >
+              ثبت نهایی درخواست مرجوعی
+            </Button>
+          </div>
         </form>
       </ModalBody>
-
-      <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 rounded-xl text-xs h-10 font-bold"
-        >
-          انصراف
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          isLoading={submitReturn.isPending}
-          className="flex-1 rounded-xl text-xs h-10 font-bold"
-          onClick={handleFormSubmit}
-        >
-          ثبت درخواست مرجوعی
-        </Button>
-      </div>
     </Modal>
   );
 }

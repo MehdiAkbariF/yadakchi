@@ -1,10 +1,15 @@
 ﻿'use client';
+
 import * as React from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGetProductPageData } from '@/domains/front/product/hooks/product.hooks';
-import { useAddToBasket as useGlobalAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import {
+  useGetBasket,
+  useAddToBasket,
+  useDeleteFromBasket,
+} from '@/domains/front/basket/hooks/basket.hooks';
 import { ProductHeader } from './components/ProductHeader';
 import { ConditionSelector } from './components/ConditionSelector';
 import { SpecHighlights } from './components/SpecHighlights';
@@ -91,6 +96,11 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
   const { data: clientData, isLoading } = useGetProductPageData(productCode);
   const pageData = clientData || initialData;
 
+  // دریافت سبد خرید کاربر
+  const { data: basketData } = useGetBasket();
+  const addToBasket = useAddToBasket();
+  const deleteFromBasket = useDeleteFromBasket();
+
   const defaultCondition = React.useMemo((): 'New' | 'Stock' | 'TakeOff' => {
     if (!pageData?.shopProducts) return 'New';
     const sp = pageData.shopProducts;
@@ -108,12 +118,11 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
   const [isIntroExpanded, setIsIntroExpanded] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState('intro');
   const [isMobileSubmitting, setIsMobileSubmitting] = React.useState(false);
+  const [isBasketUpdating, setIsBasketUpdating] = React.useState(false);
   const [isNotifying, setIsNotifying] = React.useState(false);
   const [isNotifySuccessOpen, setIsNotifySuccessOpen] = React.useState(false);
   const [lottieKey, setLottieKey] = React.useState(0);
   const [metaIndex, setMetaIndex] = React.useState(0);
-
-  const addToBasket = useGlobalAddToBasket();
 
   const introRef = React.useRef<HTMLDivElement>(null);
   const specsRef = React.useRef<HTMLDivElement>(null);
@@ -191,6 +200,42 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     allAvailableSellersList[0] ||
     null;
 
+  // استخراج تمام اقلام موجود در سبد خرید (سازگار با هر دو ساختار تخت و گروه‌بندی شده)
+  const basketItems: any[] = React.useMemo(() => {
+    if (!basketData) return [];
+    if (Array.isArray(basketData.items)) return basketData.items;
+    if (Array.isArray((basketData as any).subBaskets)) {
+      return (basketData as any).subBaskets.flatMap((sb: any) => sb.items || sb.subBasketItems || []);
+    }
+    return [];
+  }, [basketData]);
+
+  // بررسی اینکه آیا فروشنده انتخاب‌شده در سبد خرید کاربر هست یا خیر
+  const currentBasketItem = React.useMemo(() => {
+    if (!currentSelectedSeller || basketItems.length === 0) return null;
+    return (
+      basketItems.find(
+        (it: any) => (it.shopProductId || it.shopProduct?.id) === currentSelectedSeller.id
+      ) || null
+    );
+  }, [currentSelectedSeller, basketItems]);
+
+  const isInBasket = !!currentBasketItem && currentBasketItem.quantity > 0;
+  const basketQuantity = currentBasketItem?.quantity || 0;
+
+  // سقف مجاز موجودی انبار فروشنده
+  const maxAllowedQuantity = React.useMemo(() => {
+  const stockQuantity = Number(currentSelectedSeller?.quantity);
+  if (!isNaN(stockQuantity) && stockQuantity > 0) {
+    return stockQuantity;
+  }
+  return Number(
+    currentBasketItem?.inventory?.maxQuantity ||
+    currentBasketItem?.maxQuantity ||
+    currentSelectedSeller?.maxQuantityPerOrder ||
+    10
+  );
+}, [currentSelectedSeller, currentBasketItem]);
   const galleryImages = React.useMemo(() => {
     const all = [product.image, ...(product.gallery || [])].filter(Boolean) as string[];
     return Array.from(new Set(all));
@@ -205,14 +250,53 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
+  // افزودن اولیه به سبد خرید
   const handleMobileAddToBasket = async () => {
     if (!currentSelectedSeller) return;
     setIsMobileSubmitting(true);
     try {
       await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
       showToast.success('قطعه با موفقیت به سبد خرید شما افزوده شد');
-    } catch {} finally {
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در افزودن به سبد خرید');
+    } finally {
       setIsMobileSubmitting(false);
+    }
+  };
+
+  // افزایش تعداد کالا در سبد خرید
+  const handleIncreaseBasket = async () => {
+    if (!currentSelectedSeller || isBasketUpdating) return;
+    if (basketQuantity >= maxAllowedQuantity) {
+      showToast.error(`حداکثر موجودی قابل سفارش این قطعه ${toPersianDigits(maxAllowedQuantity)} عدد است`);
+      return;
+    }
+    setIsBasketUpdating(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      showToast.success('تعداد کالا افزایش یافت');
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در افزایش تعداد کالا');
+    } finally {
+      setIsBasketUpdating(false);
+    }
+  };
+
+  // کاهش یا حذف کالا از سبد خرید
+  const handleDecreaseBasket = async () => {
+    if (!currentSelectedSeller || isBasketUpdating || basketQuantity <= 0) return;
+    setIsBasketUpdating(true);
+    try {
+      await deleteFromBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      if (basketQuantity === 1) {
+        showToast.success('کالا از سبد خرید حذف شد');
+      } else {
+        showToast.success('تعداد کالا کاهش یافت');
+      }
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در کاهش تعداد کالا');
+    } finally {
+      setIsBasketUpdating(false);
     }
   };
 
@@ -265,7 +349,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
 
       <div className="flex flex-col">
         {currentSelectedSeller.hasDiscount ? (
-          <span className="mb-0.5 text-2xs leading-none text-muted-foreground line-through">
+          <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
             {currentSelectedSeller.retailPrice}
           </span>
         ) : null}
@@ -278,7 +362,8 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
 
   return (
     <div className="flex w-full flex-col gap-1 mt-3 md:mt-0">
-      <div className="flex w-full select-none items-center gap-1.5 overflow-x-auto py-1.5 text-2xs text-muted-foreground scrollbar-none md:text-xs">
+      {/* بردکرامب */}
+      <div className="flex w-full select-none items-center gap-2 overflow-x-auto py-2 text-2xs text-muted-foreground scrollbar-none md:text-xs">
         <Link href="/" className="transition-colors hover:text-primary">
           خانه
         </Link>
@@ -288,8 +373,8 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             ? getProductUrl(product.code, product.title)
             : `/part-category/${crumb.englishTitle}`;
           return (
-            <div key={crumb.id || idx} className="flex items-center gap-1.5">
-              <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <div key={crumb.id || idx} className="flex items-center gap-2">
+              <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
               {isLast ? (
                 <span className="max-w-[180px] truncate font-bold text-foreground md:max-w-none">
                   {crumb.title}
@@ -350,7 +435,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             productTitle={product.title}
           />
 
-          {/* تب‌های ۴ گانه اصلاح‌شده: دقیقاً چسبیده به هدر در 56px موبایل و 68px دسکتاپ، لبه تا لبه بدون ردیوس */}
+          {/* نوار چسبان تب‌های معرفی، مشخصات و نظرات */}
           <div className="sticky top-[56px] lg:top-[68px] z-30 mt-6 -mx-4 flex h-12 w-[calc(100%+2rem)] items-center gap-6 overflow-x-auto border-b border-border bg-card px-4 shadow-xs backdrop-blur-md scrollbar-none transition-all duration-normal md:mx-0 md:w-full md:px-0 rounded-none lg:gap-8">
             {[
               { id: 'intro', label: 'معرفی کالا', ref: introRef },
@@ -384,15 +469,15 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
                   __html: product.description || 'توضیحی برای این کالا ثبت نشده است.',
                 }}
               />
-              {!isIntroExpanded ? (
+              {!isIntroExpanded && (
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-background to-transparent" />
-              ) : null}
+              )}
             </div>
             <div className="mt-3 flex justify-start">
               <button
                 type="button"
                 onClick={() => setIsIntroExpanded(!isIntroExpanded)}
-                className="flex items-center gap-0.5 text-xs font-bold text-shop hover:underline"
+                className="flex items-center gap-1 text-xs font-bold text-shop hover:underline"
               >
                 <span>{isIntroExpanded ? 'مشاهده کمتر' : 'مشاهده بیشتر'}</span>
                 {isIntroExpanded ? (
@@ -408,12 +493,22 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             <ProductSpecsTable specGroups={product.specGroups} />
           </div>
 
+          {/* بخش نظرات با پاس دادن صحیح عنوان و تصویر محصول */}
           <div ref={commentsRef} className="border-b border-border pb-6 pt-8">
-            <ProductCommentsSection productId={product.id} />
+            <ProductCommentsSection
+              productId={product.id}
+              productTitle={product.title}
+              productImage={product.image}
+            />
           </div>
 
+          {/* بخش پرسش و پاسخ با پاس دادن صحیح عنوان و تصویر محصول */}
           <div ref={inquiriesRef} className="pt-8">
-            <ProductInquiriesSection productId={product.id} />
+            <ProductInquiriesSection
+              productId={product.id}
+              productTitle={product.title}
+              productImage={product.image}
+            />
           </div>
 
           <div className="mt-6 w-full lg:hidden">
@@ -434,10 +529,12 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
         </div>
       </div>
 
+      {/* اکشن بار پایین صفحه در موبایل با تشخیص هوشمند وجود در سبد خرید */}
       <MobileBottomAction
         variant={currentSelectedSeller ? 'default' : 'notify'}
         label={currentSelectedSeller ? 'افزودن به سبد خرید' : 'موجود شد خبرم کن'}
         leftContent={leftPriceContent}
+        
         onClick={() => {
           if (currentSelectedSeller) handleMobileAddToBasket();
           else handleNotifyMe();
@@ -452,6 +549,12 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           )
         }
         forceShowKey={selectedCondition}
+        isInBasket={isInBasket}
+        basketQuantity={basketQuantity}
+        maxStock={maxAllowedQuantity}
+        onIncrease={handleIncreaseBasket}
+        onDecrease={handleDecreaseBasket}
+        isUpdatingQuantity={isBasketUpdating}
       />
 
       <Modal

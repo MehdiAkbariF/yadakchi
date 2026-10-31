@@ -42,7 +42,7 @@ export function NavItem({
         )}
       >
         {Icon && <Icon className="h-3 w-3 xl:h-4 xl:w-4" />}
-        <span className="whitespace-nowrap">{label}</span>
+        <span className="whitespace-nowrap font-medium">{label}</span>
         {hasDropdown && (
           <ChevronDown className={cn('h-3 w-3 transition-transform', isOpen && 'rotate-180')} />
         )}

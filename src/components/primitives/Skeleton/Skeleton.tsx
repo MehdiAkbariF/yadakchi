@@ -6,9 +6,9 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const variantClasses = {
-  rect: 'rounded-lg',
+  rect: 'rounded-xl',
   circle: 'rounded-full',
-  text: 'rounded h-4 w-full',
+  text: 'rounded-md h-4 w-full',
 } as const;
 
 export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
@@ -17,7 +17,9 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       ref={ref}
       aria-hidden="true"
       className={cn(
-        'animate-pulse bg-muted',
+        // انیمیشن شیمر طبیعی با کنتراست مشخص در تمام تم‌ها
+        'relative overflow-hidden bg-muted/70',
+        'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-gradient-to-r before:from-transparent before:via-foreground/5 before:to-transparent',
         variantClasses[variant],
         className
       )}

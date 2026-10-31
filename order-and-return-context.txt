@@ -1,0 +1,2607 @@
+
+========================================================
+FILE: src\components\features\Profile\components\ReturnRequestModal.tsx
+========================================================
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { Button } from '@/components/primitives/Button/Button';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { useGetReturnRequestReasons, useSubmitReturnRequest } from '@/domains/userpanel/hooks/userpanel.hooks';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { showToast } from '@/core/utils/toast';
+import { Paperclip, FileText, X, AlertTriangle } from 'lucide-react';
+
+interface ReturnRequestModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  subOrder: any;
+  item: any;
+}
+
+export function ReturnRequestModal({ isOpen, onClose, subOrder, item }: ReturnRequestModalProps) {
+  const { data: reasons = [] } = useGetReturnRequestReasons();
+  const submitReturn = useSubmitReturnRequest();
+
+  const [selectedReasonId, setSelectedReasonId] = useState('');
+  const [returnQuantity, setReturnQuantity] = useState(1);
+  const [description, setDescription] = useState('');
+  const [attachments, setAttachments] = useState<File[]>([]);
+
+  // ✅ پاک کردن فرم هنگام باز شدن مودال
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedReasonId('');
+      setReturnQuantity(1);
+      setDescription('');
+      setAttachments([]);
+    }
+  }, [isOpen]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      // محدودیت ۵ تصویر و بررسی نوع فایل
+      const validFiles = filesArray.filter(file => file.type.startsWith('image/'));
+      const remainingSlots = 5 - attachments.length;
+      
+      if (validFiles.length > remainingSlots) {
+        showToast.error(`شما فقط می‌توانید ${remainingSlots} تصویر دیگر آپلود کنید`);
+      }
+      
+      setAttachments(prev => [...prev, ...validFiles].slice(0, 5));
+    }
+  };
+
+  const handleRemoveFile = (idx: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedReasonId) {
+      showToast.error('لطفاً علت اصلی مرجوعی کالا را انتخاب کنید');
+      return;
+    }
+
+    if (description.trim().length < 10) {
+      showToast.error('لطفاً دلیل مرجوعی را با جزئیات بیشتر (حداقل ۱۰ کاراکتر) توضیح دهید');
+      return;
+    }
+
+    try {
+      const itemsPayload = [
+        {
+          subOrderItemId: item.id,
+          quantity: returnQuantity,
+          returnRequestReasonId: selectedReasonId,
+          description: description,
+        }
+      ];
+
+      await submitReturn.mutateAsync({
+        subOrderId: subOrder.id,
+        items: itemsPayload,
+        files: attachments,
+      });
+
+      showToast.success('درخواست مرجوعی شما با موفقیت ثبت شد و به بخش مدیریت ارجاع گردید');
+      onClose();
+    } catch (error: any) {
+      showToast.error(error.userMessage || 'خطا در ثبت درخواست مرجوعی کالا');
+    }
+  };
+
+  const quantityOptions = Array.from({ length: item?.quantity || 1 }, (_, i) => ({
+    value: String(i + 1),
+    label: `${toPersianDigits(i + 1)} عدد`,
+  }));
+
+  if (!item) return null;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md w-full">
+      <ModalHeader onClose={onClose}>
+        <ModalTitle className="font-bold text-sm text-foreground flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+          ثبت درخواست مرجوعی کالا
+        </ModalTitle>
+      </ModalHeader>
+
+      <ModalBody className="p-5 pt-4">
+        <form onSubmit={handleFormSubmit} className="flex flex-col gap-4.5 w-full">
+          
+          {/* اطلاعات کوتاه کالا */}
+          <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border">
+            <div className="w-12 h-12 shrink-0 rounded-lg border bg-card flex items-center justify-center overflow-hidden p-0.5">
+              <img src={getFullUrl(item.shopProduct.product.image)} className="w-full h-full object-contain" alt="" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-bold text-foreground truncate block">{item.shopProduct.product.title}</span>
+              <span className="text-[10px] text-muted-foreground block mt-0.5">فروشگاه: {subOrder.shop?.shopTitle}</span>
+            </div>
+          </div>
+
+          {/* دلیل مرجوعی */}
+          <div className="w-full">
+            <Select
+              label="علت اصلی مرجوعی کالا *"
+              placeholder="علت مرجوعی را انتخاب کنید..."
+              value={selectedReasonId}
+              onChange={(e) => setSelectedReasonId(e.target.value)}
+              options={reasons.map((r: any) => ({ value: r.id, label: r.name }))}
+              required
+            />
+          </div>
+
+          {/* تعداد مرجوعی */}
+          {item.quantity > 1 && (
+            <div className="w-full">
+              <Select
+                label="تعداد کالای مرجوعی *"
+                value={String(returnQuantity)}
+                onChange={(e) => setReturnQuantity(Number(e.target.value))}
+                options={quantityOptions}
+                required
+              />
+            </div>
+          )}
+
+          {/* شرح جزییات */}
+          <div className="w-full">
+            <TextArea
+              label="شرح علت و جزییات مرجوعی کالا *"
+              placeholder="لطفاً جزییات، عیوب یا مغایرت‌های فنی کالا را در این بخش بنویسید..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="h-24 text-xs"
+              required
+            />
+          </div>
+
+          {/* مدارک و آپلود عکس */}
+          <div className="flex flex-col gap-2 w-full border-t border-dashed pt-4">
+            <span className="text-xs font-bold text-foreground mb-1">تصاویر کالای معیوب یا مغایر (حداکثر ۵ تصویر)</span>
+            <div className="flex flex-wrap gap-2.5 items-center">
+              <label className="h-10 px-4 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
+                <Paperclip className="h-4 w-4" />
+                <span>انتخاب عکس کالا</span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+
+              {attachments.map((file, idx) => (
+                <div 
+                  key={idx}
+                  className="h-10 px-2.5 rounded-xl border bg-muted/20 text-[9px] font-bold text-foreground flex items-center gap-1.5 max-w-[120px] shrink-0"
+                >
+                  <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span className="truncate flex-1">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile(idx)}
+                    className="p-0.5 hover:bg-muted rounded-full flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </form>
+      </ModalBody>
+
+      <div className="flex flex-row gap-2.5 p-5 pt-4 border-t border-border/50 w-full shrink-0">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          className="flex-1 rounded-xl text-xs h-10 font-bold"
+        >
+          انصراف
+        </Button>
+        <Button
+          type="submit"
+          variant="primary"
+          isLoading={submitReturn.isPending}
+          className="flex-1 rounded-xl text-xs h-10 font-bold"
+          onClick={handleFormSubmit}
+        >
+          ثبت درخواست مرجوعی
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+========================================================
+FILE: src\components\features\Profile\components\ReturnShipmentModal.tsx
+========================================================
+
+'use client';
+
+import * as React from 'react';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { Button } from '@/components/primitives/Button/Button';
+import { Input } from '@/components/primitives/Input/Input';
+import { Select } from '@/components/primitives/Select/Select';
+import { useSubmitReturnShipmentReceipt } from '@/domains/userpanel/hooks/userpanel.hooks';
+import { showToast } from '@/core/utils/toast';
+import { Truck, UploadCloud, CheckCircle, FileText, X } from 'lucide-react';
+
+interface ReturnShipmentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  returnRequestId: string;
+}
+
+const SHIPMENT_METHODS = [
+  { value: 'Tipax', label: 'تیپاکس' },
+  { value: 'Post', label: 'پست پیشتاز' },
+  { value: 'Carrier', label: 'باربری / چاپار' },
+  { value: 'Direct', label: 'پیک / تحویل مستقیم' },
+];
+
+export function ReturnShipmentModal({ isOpen, onClose, returnRequestId }: ReturnShipmentModalProps) {
+  const submitReceipt = useSubmitReturnShipmentReceipt();
+
+  const [method, setMethod] = React.useState('Tipax');
+  const [traceNumber, setTraceNumber] = React.useState('');
+  const [file, setFile] = React.useState<File | null>(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setMethod('Tipax');
+      setTraceNumber('');
+      setFile(null);
+    }
+  }, [isOpen]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!traceNumber.trim()) {
+      showToast.error('لطفاً شماره رهگیری بارنامه پستی را وارد کنید');
+      return;
+    }
+
+    if (!file) {
+      showToast.error('لطفاً تصویر فیش یا بارنامه ارسال را بارگذاری کنید');
+      return;
+    }
+
+    try {
+      await submitReceipt.mutateAsync({
+        id: returnRequestId,
+        method,
+        traceNumber: traceNumber.trim(),
+        file,
+      });
+      showToast.success('اطلاعات بارنامه با موفقیت ثبت شد و روند بازگشت وجه آغاز گردید');
+      onClose();
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در ثبت اطلاعات بارنامه پستی');
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-md">
+      <ModalHeader onClose={onClose}>
+        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <Truck className="h-5 w-5 text-primary" />
+          <span>ثبت مشخصات ارسال کالای مرجوعی</span>
+        </ModalTitle>
+      </ModalHeader>
+
+      <ModalBody className="p-5 pt-3">
+        <form onSubmit={handleSubmit} className="flex w-full flex-col gap-4">
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed text-foreground">
+            پس از تحویل کالا به پست یا تیپاکس، شماره بارنامه و تصویر قبض ارسال را در این بخش ثبت کنید تا بررسی شود.
+          </div>
+
+          <div className="w-full">
+            <Select
+              label="شیوه ارسال مرسوله *"
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              options={SHIPMENT_METHODS}
+              required
+            />
+          </div>
+
+          <div className="w-full">
+            <label className="mb-1 block text-2xs font-bold text-muted-foreground">کد یا شماره رهگیری بارنامه *</label>
+            <Input
+              placeholder="مثال: ۲۴۴۵۸۹۶۳۱۰۰۲"
+              value={traceNumber}
+              onChange={(e) => setTraceNumber(e.target.value)}
+              dir="ltr"
+              className="h-10 text-xs "
+              required
+            />
+          </div>
+
+          {/* بارگذاری تصویر فیش */}
+          <div className="flex w-full flex-col gap-2">
+            <span className="text-2xs font-bold text-muted-foreground">تصویر قبض پستی یا رسید باربری *</span>
+            {!file ? (
+              <label className="flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-card p-4 text-center transition-colors hover:border-primary hover:bg-primary/5">
+                <UploadCloud className="h-6 w-6 text-primary mb-1" />
+                <span className="text-xs font-bold text-foreground">برای انتخاب عکس فیش کلیک کنید</span>
+                <span className="text-2xs text-muted-foreground mt-0.5">فرمت‌های مجاز: JPG, PNG</span>
+                <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              </label>
+            ) : (
+              <div className="flex items-center justify-between rounded-xl border border-success/30 bg-success/5 p-3">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <FileText className="h-5 w-5 text-success shrink-0" />
+                  <span className="truncate text-xs font-semibold text-foreground">{file.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFile(null)}
+                  className="rounded-full p-1 text-muted-foreground hover:bg-secondary hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-2 flex w-full gap-3 border-t border-border/60 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-10 flex-1 rounded-xl text-xs font-bold"
+            >
+              انصراف
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={submitReceipt.isPending}
+              className="h-10 flex-1 rounded-xl text-xs font-bold shadow-xs"
+            >
+              ثبت نهایی بارنامه
+            </Button>
+          </div>
+        </form>
+      </ModalBody>
+    </Modal>
+  );
+}
+
+========================================================
+FILE: src\components\features\Profile\ReturnsList.tsx
+========================================================
+
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  RotateCcw,
+  ChevronLeft,
+  Truck,
+  Package,
+  ShoppingBag,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  FileText,
+  AlertCircle,
+  Store,
+} from 'lucide-react';
+import { useGetReturnRequests } from '@/domains/userpanel/hooks/userpanel.hooks';
+import { Card } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button/Button';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { Pagination } from '@/components/composites/Pagination/Pagination';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
+import { ReturnShipmentModal } from './components/ReturnShipmentModal';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl, toPersianDigits } from '@/core/utils/formatters';
+
+interface ReturnsListProps {
+  initialStatus: string;
+  initialPage: number;
+}
+
+const STATUS_TABS = [
+  { id: '', label: 'همه', icon: RotateCcw },
+  { id: 'Pending', label: 'در انتظار بررسی', icon: Clock },
+  { id: 'NeedsMoreDocumentation', label: 'نیاز به مدارک', icon: FileText },
+  { id: 'WaitingForSellerResponse', label: 'در انتظار فروشنده', icon: Store },
+  { id: 'Confirmed', label: 'تأیید شده', icon: CheckCircle2 },
+  { id: 'TraceNumberAdded', label: 'کد رهگیری ثبت شد', icon: Truck },
+  { id: 'SentBack', label: 'ارسال به فروشنده', icon: Truck },
+  { id: 'Received', label: 'دریافت شد', icon: Package },
+  { id: 'Refunded', label: 'بازگشت وجه', icon: RotateCcw },
+  { id: 'Denied', label: 'رد شده', icon: XCircle },
+] as const;
+
+export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
+  const router = useRouter();
+  const [status, setStatus] = React.useState(initialStatus);
+  const [page, setPage] = React.useState(initialPage);
+  const [selectedReturnId, setSelectedReturnId] = React.useState<string | null>(
+    null,
+  );
+
+  const { data: returnsResponse, isLoading } = useGetReturnRequests(
+    page,
+    status || undefined,
+  );
+
+  const returns = returnsResponse?.items || [];
+  const totalPages = returnsResponse?.totalPages || 1;
+
+  const handleTabChange = (newStatus: string) => {
+    setStatus(newStatus);
+    setPage(1);
+    router.push(`/profile/returns?status=${newStatus}`);
+  };
+
+const getReturnStatusMeta = (s: string) => {
+  switch (s) {
+    case 'Pending':
+      return { label: 'در انتظار بررسی', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+    case 'NeedsMoreDocumentation':
+      return { label: 'نیاز به مدارک بیشتر', color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' };
+    case 'WaitingForSellerResponse':
+      return { label: 'در انتظار پاسخ فروشنده', color: 'text-purple-500 bg-purple-500/10 border-purple-500/20' };
+    case 'Confirmed':
+      return { label: 'تأیید شده', color: 'text-primary bg-primary/10 border-primary/20' };
+    case 'TraceNumberAdded':
+      return { label: 'کد رهگیری ثبت شد', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
+    case 'SentBack':
+      return { label: 'ارسال به فروشنده', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
+    case 'Received':
+      return { label: 'دریافت شده', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+    case 'Refunded':
+      return { label: 'بازگشت وجه انجام شد', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+    case 'Denied':
+      return { label: 'رد شده', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
+    default:
+      return { label: s, color: 'text-muted-foreground bg-muted border-border' };
+  }
+};
+
+  return (
+    <div className="flex w-full flex-col gap-5" dir="rtl">
+      {/* هدر دسکتاپ */}
+      <div className="hidden lg:flex flex-col gap-1 border-b border-border/70 pb-4">
+        <div className="flex items-center gap-2">
+          <RotateCcw className="h-5 w-5 text-primary" />
+          <h1 className="text-base font-black text-foreground sm:text-lg">
+            درخواست‌های مرجوعی
+          </h1>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          پیگیری وضعیت درخواست‌های مرجوعی، ثبت بارنامه ارسال و مشاهده بازگشت وجه
+        </p>
+      </div>
+
+      {/* تب‌های وضعیت */}
+      <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 scrollbar-none select-none">
+        {STATUS_TABS.map((tab) => {
+          const TabIcon = tab.icon;
+          const isActive = status === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id)}
+              className={cn(
+                'flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold transition-all duration-150',
+                isActive
+                  ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                  : 'border-border/80 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground',
+              )}
+            >
+              <TabIcon
+                className={cn(
+                  'h-4 w-4',
+                  isActive ? 'text-primary-foreground' : 'text-muted-foreground',
+                )}
+              />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* لیست */}
+      {isLoading ? (
+        <PageLoading label="در حال دریافت درخواست‌های مرجوعی..." />
+      ) : returns.length > 0 ? (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {returns.map((req: any) => {
+              const meta = getReturnStatusMeta(req.status);
+
+              return (
+                <Card
+                  key={req.id}
+                  className="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-4.5 shadow-xs transition-colors hover:border-primary/30 sm:p-5"
+                >
+                  <div>
+                    {/* ردیف بالا: شماره درخواست و وضعیت */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-xs text-muted-foreground">
+                          شماره درخواست:
+                        </span>
+                        <span className="font-bold text-foreground" dir="ltr">
+                          #{toPersianDigits(req.requestNumber)}
+                        </span>
+                      </div>
+
+                      <span
+                        className={cn(
+                          'rounded-lg border px-2.5 py-0.5 text-2xs font-bold',
+                          meta.color,
+                        )}
+                      >
+                        {meta.label}
+                      </span>
+                    </div>
+
+                    {/* ردیف کالا و فروشگاه */}
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-card p-1">
+                        {req.productImage ? (
+                          <img
+                            src={getFullUrl(req.productImage)}
+                            alt={req.productTitle}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <Package className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+
+                      <div className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className="line-clamp-1 text-xs font-bold text-foreground">
+                          {req.productTitle}
+                        </span>
+                        <span className="text-2xs text-muted-foreground">
+                          فروشگاه: {req.shopTitle}
+                        </span>
+                        <span className="text-2xs text-muted-foreground">
+                          تاریخ ثبت: {req.createDateFormatted}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* مبلغ بازگشتی */}
+                    <div className="mt-3 flex items-center justify-between border-t border-dashed border-border/60 pt-2.5">
+                      <span className="text-2xs text-muted-foreground">
+                        مبلغ قابل بازگشت:
+                      </span>
+                      <span className="text-sm font-black text-primary">
+                        {req.totlaPayBackAmount}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* اکشن‌ها */}
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/50 pt-3">
+                 {req.status === 'Confirmed' && (
+  <Button
+    variant="primary"
+    size="sm"
+    onClick={() => setSelectedReturnId(req.id)}
+    className="h-8 gap-1.5 rounded-lg text-3xs font-bold"
+  >
+    <Truck className="h-3.5 w-3.5" />
+    ثبت بارنامه ارسال
+  </Button>
+)}
+
+                    {req.status !== 'Confirmed' && <div />}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/profile/orders/${req.id}`)
+                      }
+                      className="h-8 gap-1 rounded-lg text-3xs font-bold text-primary hover:bg-primary/5"
+                    >
+                      <span>جزئیات</span>
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(p) => {
+              setPage(p);
+              router.push(`/profile/returns?status=${status}&page=${p}`);
+            }}
+          />
+        </div>
+      ) : (
+        <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-12 text-center shadow-xs">
+          <div className="mx-auto -mb-2 flex h-48 w-48 max-w-full items-center justify-center">
+            <LottiePlayer
+              path="/animations/packaging-for-delivery.json"
+              className="h-full w-full"
+              loop={true}
+            />
+          </div>
+          <p className="mt-5 text-sm font-bold text-foreground">
+            درخواستی در این دسته وجود ندارد
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            شما هیچ درخواست مرجوعی با وضعیت «
+            {STATUS_TABS.find((t) => t.id === status)?.label}» ثبت نکرده‌اید.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/profile/orders')}
+            className="mt-4 h-9 gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            <span>مشاهده سفارش‌ها</span>
+          </Button>
+        </div>
+      )}
+
+      {/* مودال ثبت بارنامه */}
+      {selectedReturnId && (
+        <ReturnShipmentModal
+          isOpen={!!selectedReturnId}
+          onClose={() => setSelectedReturnId(null)}
+          returnRequestId={selectedReturnId}
+        />
+      )}
+    </div>
+  );
+}
+
+========================================================
+FILE: src\domains\userpanel\endpoints\userpanel.endpoints.ts
+========================================================
+
+export const USERPANEL_ENDPOINTS = {
+  GET_USER_PROFILE: '/api/UserPanel/User',
+  PUT_USER_PROFILE: '/api/UserPanel/User',
+  UPDATE_PHONE: '/api/UserPanel/UpdatePhoneNumber',
+  CONFIRM_CURRENT_PHONE: '/api/UserPanel/ConfirmCurrentPhoneNumberOTPCode',
+  CONFIRM_NEW_PHONE: '/api/UserPanel/ConfirmNewPhoneNumberOTPCode',
+  GET_ORDERS: '/api/UserPanel/Orders',
+  GET_ORDER: '/api/UserPanel/Order',
+  GET_ORDER_RECEIPT: '/api/UserPanel/OrderReceipt',
+  RETRY_PAYMENT: '/api/UserPanel/RetryOrderPayment',
+  CANCEL_ORDER: '/api/UserPanel/UserCancelOrder',
+  GET_CANCEL_REASONS: '/api/UserPanel/SubOrderCancelationReason',
+  MARK_SUBORDER_RECEIVED: '/api/UserPanel/SubOrderReceived',
+  MARK_SUBORDER_NOT_RECEIVED: '/api/UserPanel/SubOrderNotReceived',
+  GET_RETURN_REASONS: '/api/UserPanel/ReturnRequestReason',
+  POST_RETURN_REQUEST: '/api/UserPanel/ReturnRequest',
+  GET_RETURN_REQUEST: '/api/UserPanel/ReturnRequest',
+  GET_RETURN_REQUESTS: '/api/UserPanel/ReturnRequests',
+  POST_RETURN_SHIPMENT: '/api/UserPanel/ReturnRequestSent',
+  GET_WALLET: '/api/UserPanel/Wallet',
+  GET_TRANSACTIONS: '/api/UserPanel/Transactions',
+  POST_WITHDRAW: '/api/UserPanel/UserWithdrawRequest',
+  GET_WITHDRAW_REQUESTS: '/api/UserPanel/UserWithdrawRequests',
+  GET_BANK_ACCOUNTS: '/api/UserPanel/BankAccount',
+  POST_BANK_ACCOUNT: '/api/UserPanel/BankAccount',
+  PUT_DEFAULT_BANK_ACCOUNT: '/api/UserPanel/DefaultBankAccount',
+  GET_VEHICLES: '/api/UserPanel/UserVehicle',
+  POST_VEHICLE: '/api/UserPanel/UserVehicle',
+  PUT_VEHICLE: '/api/UserPanel/UserVehicle',
+  DELETE_VEHICLE: '/api/UserPanel/UserVehicle',
+  GET_NOTIFICATIONS: '/api/UserPanel/UserPanelNotificationsList',
+  GET_NOTIFICATION: '/api/UserPanel/UserPanelNotification',
+  POST_SHOP_REQUEST: '/api/UserPanel/ShopRequest',
+  GET_PENDING_COMMENTS: '/api/UserPanel/PendingComment',
+  GET_USER_COMMENTS: '/api/UserPanel/UserProductComments',
+  POST_PRODUCT_COMMENT: '/api/UserPanel/ProductComment',
+  PUT_PRODUCT_COMMENT: '/api/UserPanel/ProductComment',
+  DELETE_PRODUCT_COMMENT: '/api/UserPanel/ProductComment',
+  POST_COMMENT_LIKE: '/api/UserPanel/ProductCommentLike',
+  DELETE_COMMENT_LIKE: '/api/UserPanel/ProductCommentLike',
+  GET_INQUIRIES: '/api/UserPanel/GetUserInquiries',
+  POST_INQUIRY: '/api/UserPanel/ProductInquiry',
+  DELETE_INQUIRY: '/api/UserPanel/ProductInquiry',
+  POST_INQUIRY_LIKE: '/api/UserPanel/ProductInquiryLike',
+  DELETE_INQUIRY_LIKE: '/api/UserPanel/ProductInquiryLike',
+  GET_ADVANTAGES: '/api/UserPanel/ShopAdvantages',
+  GET_DISADVANTAGES: '/api/UserPanel/ShopDisadvantages',
+  POST_SHOP_COMMENT: '/api/UserPanel/ShopComment',
+  GET_FAVORITES: '/api/UserPanel/ProductFavorite',
+  GET_RECENT_VIEWS: '/api/UserPanel/LastShopProductViews'
+} as const;
+
+========================================================
+FILE: src\domains\userpanel\hooks\userpanel.hooks.ts
+========================================================
+
+'use client';
+
+import { useQueryClient } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { getUserPanelService } from '../services/userpanel.service';
+import { OrderListItemViewModel, WalletViewModel, TransactionViewModel, UserVehicleViewModel, NotificationItemViewModel, WithdrawRequestItemViewModel } from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+import { OrderDetailsDto, BankAccountDto } from '../types/dto.types';
+
+const userPanelService = getUserPanelService();
+
+export function usePostShopRequest() {
+  return useTypedMutation(
+    () => userPanelService.postShopRequest()
+  );
+}
+
+export function useGetOrderDetails(orderId: string) {
+  return useTypedQuery<OrderDetailsDto>(
+    ['user', 'orders', 'details', orderId],
+    () => userPanelService.getOrder(orderId),
+    { enabled: !!orderId }
+  );
+}
+
+export function useGetOrders(status?: string, searchedValue?: string, orderBy?: string, pageNumber: number = 1) {
+  return useTypedQuery<PaginatedResult<OrderListItemViewModel>>(
+    ['user', 'orders', 'list', { status, searchedValue, orderBy, pageNumber }],
+    () => userPanelService.getOrders(status, searchedValue, orderBy, pageNumber, 10),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetOrderReceipt(orderId: string) {
+  return useTypedQuery<any>(
+    ['user', 'orders', 'receipt', orderId],
+    () => userPanelService.getOrderReceipt(orderId),
+    { enabled: !!orderId }
+  );
+}
+
+// اصلاح هوک پرداخت مجدد برای قبول و ارسال پاسخ حاوی لینک درگاه بانکی برگشت داده شده از سرویس
+export function useRetryOrderPayment() {
+  return useTypedMutation(
+    (orderId: string) => userPanelService.retryOrderPayment(orderId)
+  );
+}
+
+export function useGetSubOrderCancelReasons() {
+  return useTypedQuery<any[]>(
+    ['user', 'orders', 'cancel-reasons'],
+    () => userPanelService.getSubOrderCancelReasons(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ orderId, cancelationReasonId, userCancelationDescription }: { orderId: string; cancelationReasonId: string; userCancelationDescription: string }) =>
+      userPanelService.cancelOrder(orderId, cancelationReasonId, userCancelationDescription),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useMarkSubOrderReceived() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (subOrderId: string) => userPanelService.markSubOrderReceived(subOrderId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useMarkSubOrderNotReceived() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (subOrderId: string) => userPanelService.markSubOrderNotReceived(subOrderId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useSubmitSubOrderItemFeedback() {
+  return useTypedMutation(
+    (payload: any) => userPanelService.submitSubOrderItemFeedback(payload)
+  );
+}
+
+export function useGetReturnRequestReasons() {
+  return useTypedQuery<any[]>(
+    ['user', 'return-requests', 'reasons'],
+    () => userPanelService.getReturnRequestReasons(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useSubmitReturnRequest() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ subOrderId, items, files }: { subOrderId: string; items: any[]; files?: File[] }) =>
+      userPanelService.submitReturnRequest(subOrderId, items, files),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'return-requests'] });
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useGetReturnRequestDetails(id: string) {
+  return useTypedQuery<any>(
+    ['user', 'return-requests', 'details', id],
+    () => userPanelService.getReturnRequestDetails(id),
+    { enabled: !!id }
+  );
+}
+
+export function useGetReturnRequests(pageNumber: number = 1, status?: string, subOrderId?: string) {
+  return useTypedQuery<PaginatedResult<any>>(
+    ['user', 'return-requests', 'list', { pageNumber, status, subOrderId }],
+    () => userPanelService.getReturnRequests(pageNumber, 10, status, subOrderId),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useSubmitReturnShipmentReceipt() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ id, method, traceNumber, file }: { id: string; method: string; traceNumber: string; file: File }) =>
+      userPanelService.submitReturnShipmentReceipt(id, method, traceNumber, file),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'return-requests'] });
+      }
+    }
+  );
+}
+
+export function useGetWalletBalances() {
+  return useTypedQuery<WalletViewModel>(
+    ['user', 'wallet', 'balances'],
+    () => userPanelService.getWalletBalances(),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetTransactions(pageNumber: number = 1) {
+  return useTypedQuery<PaginatedResult<TransactionViewModel>>(
+    ['user', 'wallet', 'transactions', pageNumber],
+    () => userPanelService.getTransactions(pageNumber, 10),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetBankAccounts() {
+  return useTypedQuery<BankAccountDto[]>(
+    ['user', 'bank-accounts', 'list'],
+    () => userPanelService.getBankAccounts(),
+    { staleTime: 5 * 60 * 1000 }
+  );
+}
+
+export function useCreateBankAccount() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ cardNumber, shebaNumber }: { cardNumber: string; shebaNumber: string }) =>
+      userPanelService.createBankAccount(cardNumber, shebaNumber),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'bank-accounts'] });
+      }
+    }
+  );
+}
+
+export function useSetDefaultBankAccount() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (bankAccountId: string) => userPanelService.setDefaultBankAccount(bankAccountId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'bank-accounts'] });
+      }
+    }
+  );
+}
+
+export function useGetUserVehicles() {
+  return useTypedQuery<UserVehicleViewModel[]>(
+    ['user', 'vehicles', 'list'],
+    () => userPanelService.getUserVehicles(),
+    { staleTime: 5 * 60 * 1000 }
+  );
+}
+
+export function useCreateUserVehicle() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ carId, title, isDefault }: { carId: string; title: string; isDefault: boolean }) =>
+      userPanelService.createUserVehicle(carId, title, isDefault),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      }
+    }
+  );
+}
+
+export function useUpdateUserVehicle() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ id, title, mileage, oilKmLimit, lastServiceDate, isDefault }: { id: string; title: string; mileage: number | null; oilKmLimit: number | null; lastServiceDate: string | null; isDefault: boolean }) =>
+      userPanelService.updateUserVehicle(id, title, mileage, oilKmLimit, lastServiceDate, isDefault),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      }
+    }
+  );
+}
+
+export function useDeleteUserVehicle() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (id: string) => userPanelService.deleteUserVehicle(id),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      }
+    }
+  );
+}
+
+export function useGetUserNotifications(pageNumber: number = 1, pageSize: number = 30, channel?: string, priority?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest') {
+  return useTypedQuery<PaginatedResult<NotificationItemViewModel>>(
+    ['user', 'notifications', 'list', { pageNumber, channel, priority, isRead, orderBy }],
+    () => userPanelService.getUserNotifications(pageNumber, 10, channel, priority, undefined, undefined, undefined, isRead, orderBy),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetNotificationDetails(id: string) {
+  return useTypedQuery<any>(
+    ['user', 'notifications', 'details', id],
+    () => userPanelService.getNotificationDetails(id),
+    { enabled: !!id }
+  );
+}
+
+export function useGetShopAdvantages() {
+  return useTypedQuery<any[]>(
+    ['user', 'shop-feedback', 'advantages'],
+    () => userPanelService.getShopAdvantages(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useGetShopDisadvantages() {
+  return useTypedQuery<any[]>(
+    ['user', 'shop-feedback', 'disadvantages'],
+    () => userPanelService.getShopDisadvantages(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (formData: FormData) => userPanelService.updateProfile(formData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      }
+    }
+  );
+}
+
+export function useGetWithdrawRequests(pageNumber: number = 1, status?: string) {
+  return useTypedQuery<PaginatedResult<WithdrawRequestItemViewModel>>(
+    ['user', 'wallet', 'withdraw-requests', { pageNumber, status }],
+    () => userPanelService.getWithdrawRequests(pageNumber, 10, status),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useSubmitWithdrawRequest() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ amount, bankAccountId }: { amount: number; bankAccountId: string }) =>
+      userPanelService.submitWithdrawRequest(amount, bankAccountId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'wallet'] });
+      }
+    }
+  );
+}
+
+export function useGetFavoriteProducts(pageNumber: number = 1, order: string = 'Latest') {
+  return useTypedQuery<PaginatedResult<any>>(
+    ['user', 'favorites', 'list', { pageNumber, order }],
+    () => userPanelService.getFavoriteProducts(pageNumber, 30, order),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetRecentlyViewedProducts() {
+  return useTypedQuery<any[]>(
+    ['user', 'recent-views', 'list'],
+    () => userPanelService.getRecentlyViewedProducts(),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useRequestUpdatePhoneNumber() {
+  return useTypedMutation(
+    (phoneNumber: string) => userPanelService.requestUpdatePhoneNumber(phoneNumber)
+  );
+}
+
+export function useConfirmCurrentPhoneOTP() {
+  return useTypedMutation(
+    (otpCode: string) => userPanelService.confirmCurrentPhoneOTP(otpCode)
+  );
+}
+
+export function useConfirmNewPhoneOTP() {
+  return useTypedMutation(
+    (otpCode: string) => userPanelService.confirmNewPhoneOTP(otpCode)
+  );
+}
+
+========================================================
+FILE: src\domains\userpanel\services\userpanel.service.ts
+========================================================
+
+import { getHttpClient } from '@/core/http/client';
+import { errorManager } from '@/core/errors/error-manager';
+import { logger } from '@/core/utils/logger';
+import { USERPANEL_ENDPOINTS } from '../endpoints/userpanel.endpoints';
+import { UserPanelMapper } from '../mappers/userpanel.mapper';
+import { 
+  OrdersListResponseDto, 
+  OrderDetailsDto, 
+  WalletDto, 
+  TransactionsResponseDto, 
+  BankAccountDto, 
+  UserVehicleDto, 
+  NotificationsListResponseDto, 
+  WithdrawRequestsResponseDto,
+  FavoriteProductsResponseDto
+} from '../types/dto.types';
+import { 
+  OrderListItemViewModel, 
+  WalletViewModel, 
+  TransactionViewModel, 
+  UserVehicleViewModel, 
+  NotificationItemViewModel, 
+  WithdrawRequestItemViewModel
+} from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+
+export class UserPanelService {
+  private readonly httpClient = getHttpClient();
+
+  async postShopRequest(): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_SHOP_REQUEST);
+    } catch (error) {
+      logger.error('[UserPanelService] Post shop request failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getOrder(orderId: string): Promise<OrderDetailsDto> {
+    try {
+      const response = await this.httpClient.get<OrderDetailsDto>(
+        USERPANEL_ENDPOINTS.GET_ORDER,
+        { params: { Id: orderId } }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[UserPanelService] Get order failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getOrders(status?: string, searchedValue?: string, orderBy?: string, pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<OrderListItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<OrdersListResponseDto>(
+        USERPANEL_ENDPOINTS.GET_ORDERS,
+        {
+          params: {
+            Status: status || '',
+            SearchedValue: searchedValue || '',
+            OrderBy: orderBy || '',
+            PageNumber: pageNumber,
+            PageSize: pageSize
+          }
+        }
+      );
+      const items = (response.data.items || []).map(dto => UserPanelMapper.toViewOrder(UserPanelMapper.toDomainOrder(dto)));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[UserPanelService] Get orders failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getOrderReceipt(orderId: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        USERPANEL_ENDPOINTS.GET_ORDER_RECEIPT,
+        { params: { OrderId: orderId } }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[UserPanelService] Get order receipt failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  // اصلاح متد برای بازگرداندن پاسخ حاوی لینک درگاه بانکی به کلاینت
+  async retryOrderPayment(orderId: string): Promise<any> {
+    try {
+      const response = await this.httpClient.post<any>(
+        USERPANEL_ENDPOINTS.RETRY_PAYMENT, 
+        { orderId }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[UserPanelService] Retry order payment failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getSubOrderCancelReasons(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        USERPANEL_ENDPOINTS.GET_CANCEL_REASONS
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[UserPanelService] Get suborder cancel reasons failed:', error);
+      return [];
+    }
+  }
+
+  async cancelOrder(orderId: string, cancelationReasonId: string, userCancelationDescription: string): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.CANCEL_ORDER, {
+        orderId,
+        cancelationReasonId,
+        userCancelationDescription
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Cancel order failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async markSubOrderReceived(subOrderId: string): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.MARK_SUBORDER_RECEIVED, { subOrderId });
+    } catch (error) {
+      logger.error('[UserPanelService] Mark suborder received failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async markSubOrderNotReceived(subOrderId: string): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.MARK_SUBORDER_NOT_RECEIVED, { subOrderId });
+    } catch (error) {
+      logger.error('[UserPanelService] Mark suborder not received failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async submitSubOrderItemFeedback(payload: any): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_SHOP_COMMENT, payload);
+    } catch (error) {
+      logger.error('[UserPanelService] Submit item feedback failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getReturnRequestReasons(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        USERPANEL_ENDPOINTS.GET_RETURN_REASONS
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[UserPanelService] Get return request reasons failed:', error);
+      return [];
+    }
+  }
+
+  async submitReturnRequest(subOrderId: string, items: any[], files?: File[]): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('SubOrderId', subOrderId);
+      
+      items.forEach((item, index) => {
+        formData.append(`Items[${index}].SubOrderItemId`, item.subOrderItemId);
+        formData.append(`Items[${index}].Quantity`, String(item.quantity));
+        formData.append(`Items[${index}].ReturnRequestReasonId`, item.returnRequestReasonId);
+        formData.append(`Items[${index}].Description`, item.description);
+      });
+      
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          formData.append('ReturnRequestImages', file);
+        });
+      }
+
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_RETURN_REQUEST, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Submit return request failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getReturnRequestDetails(id: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        USERPANEL_ENDPOINTS.GET_RETURN_REQUEST,
+        { params: { Id: id } }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[UserPanelService] Get return request details failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+async getReturnRequests(
+  pageNumber: number = 1,
+  pageSize: number = 30,
+  status?: string,
+  subOrderId?: string,
+): Promise<PaginatedResult<any>> {
+  try {
+    const params: Record<string, any> = {
+      PageNumber: pageNumber,
+      PageSize: pageSize,
+    };
+    if (status && status.trim()) params.Status = status;
+    if (subOrderId && subOrderId.trim()) params.SubOrderId = subOrderId;
+
+    const response = await this.httpClient.get<any>(
+      USERPANEL_ENDPOINTS.GET_RETURN_REQUESTS,
+      { params },
+    );
+
+    const items = (response.data.items || []).map((dto: any) =>
+      UserPanelMapper.toViewReturnRequest(UserPanelMapper.toDomainReturnRequest(dto)),
+    );
+
+    return {
+      items,
+      pageNumber: response.data.currentPage,
+      pageSize: response.data.pageSize,
+      totalCount: response.data.totalCount,
+      totalPages: response.data.totalPages,
+      hasNextPage: response.data.currentPage < response.data.totalPages,
+      hasPreviousPage: response.data.currentPage > 1,
+      hasMore: response.data.currentPage < response.data.totalPages,
+      from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+      to: Math.min(
+        response.data.currentPage * response.data.pageSize,
+        response.data.totalCount,
+      ),
+    };
+  } catch (error) {
+    logger.error('[UserPanelService] Get return requests failed:', error);
+    throw errorManager.normalize(error);
+  }
+}
+
+  async submitReturnShipmentReceipt(id: string, method: string, traceNumber: string, file: File): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('Id', id);
+      formData.append('Method', method);
+      formData.append('TraceNumber', traceNumber);
+      formData.append('ReturnShipmentReceipt', file);
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_RETURN_SHIPMENT, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Submit return shipment receipt failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getWalletBalances(): Promise<WalletViewModel> {
+    try {
+      const response = await this.httpClient.get<WalletDto>(
+        USERPANEL_ENDPOINTS.GET_WALLET
+      );
+      return UserPanelMapper.toViewWallet(UserPanelMapper.toDomainWallet(response.data));
+    } catch (error) {
+      logger.error('[UserPanelService] Get wallet balances failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getTransactions(pageNumber: number = 1, pageSize: number = 30): Promise<PaginatedResult<TransactionViewModel>> {
+    try {
+      const response = await this.httpClient.get<TransactionsResponseDto>(
+        USERPANEL_ENDPOINTS.GET_TRANSACTIONS,
+        { params: { PageNumber: pageNumber, PageSize: pageSize } }
+      );
+      const items = (response.data.items || []).map(dto => UserPanelMapper.toViewTransaction(UserPanelMapper.toDomainTransaction(dto)));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[UserPanelService] Get transactions failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getBankAccounts(): Promise<BankAccountDto[]> {
+    try {
+      const response = await this.httpClient.get<BankAccountDto[]>(
+        USERPANEL_ENDPOINTS.GET_BANK_ACCOUNTS
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      logger.error('[UserPanelService] Get bank accounts failed:', error);
+      return [];
+    }
+  }
+
+  async createBankAccount(cardNumber: string, shebaNumber: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('CardNumber', cardNumber);
+      formData.append('ShebaNumber', shebaNumber);
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_BANK_ACCOUNT, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Create bank account failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async setDefaultBankAccount(bankAccountId: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('BankAccountId', bankAccountId);
+      await this.httpClient.put(USERPANEL_ENDPOINTS.PUT_DEFAULT_BANK_ACCOUNT, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Set default bank account failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getUserVehicles(): Promise<UserVehicleViewModel[]> {
+    try {
+      const response = await this.httpClient.get<UserVehicleDto[]>(
+        USERPANEL_ENDPOINTS.GET_VEHICLES
+      );
+      return (response.data || []).map(dto => UserPanelMapper.toViewVehicle(UserPanelMapper.toDomainVehicle(dto)));
+    } catch (error) {
+      logger.error('[UserPanelService] Get user vehicles failed:', error);
+      throw error;
+    }
+  }
+
+  async createUserVehicle(carId: string, title: string, isDefault: boolean): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_VEHICLE, { carId, title, isDefault });
+    } catch (error) {
+      logger.error('[UserPanelService] Create user vehicle failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async updateUserVehicle(id: string, title: string, mileage: number | null, oilKmLimit: number | null, lastServiceDate: string | null, isDefault: boolean): Promise<void> {
+    try {
+      await this.httpClient.put(USERPANEL_ENDPOINTS.PUT_VEHICLE, {
+        id,
+        title,
+        mileage,
+        oilKmLimit,
+        lastServiceDate,
+        isDefault
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Update user vehicle failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async deleteUserVehicle(id: string): Promise<void> {
+    try {
+      await this.httpClient.delete(USERPANEL_ENDPOINTS.DELETE_VEHICLE, { id });
+    } catch (error) {
+      logger.error('[UserPanelService] Delete user vehicle failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getUserNotifications(pageNumber: number = 1, pageSize: number = 30, channel?: string, priority?: string, audienceType?: string, receiverAppliationType?: string, timePeriod?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest'): Promise<PaginatedResult<NotificationItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<NotificationsListResponseDto>(
+        USERPANEL_ENDPOINTS.GET_NOTIFICATIONS,
+        {
+          params: {
+            PageNumber: pageNumber,
+            PageSize: pageSize,
+            Channel: channel || '',
+            Priority: priority || '',
+            AudienceType: audienceType || '',
+            ReceiverAppliationType: receiverAppliationType || '',
+            TimePeriod: timePeriod || '',
+            IsRead: isRead !== undefined ? isRead : '',
+            OrderBy: orderBy || 'Latest'
+          }
+        }
+      );
+      const items = (response.data.items || []).map(dto => UserPanelMapper.toViewNotification(UserPanelMapper.toDomainNotification(dto)));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[UserPanelService] Get user notifications failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getNotificationDetails(id: string): Promise<any> {
+    try {
+      const response = await this.httpClient.get<any>(
+        USERPANEL_ENDPOINTS.GET_NOTIFICATION,
+        { params: { Id: id } }
+      );
+      return response.data;
+    } catch (error) {
+      logger.error('[UserPanelService] Get notification details failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getShopAdvantages(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        USERPANEL_ENDPOINTS.GET_ADVANTAGES
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      logger.error('[UserPanelService] Get shop advantages failed:', error);
+      return [];
+    }
+  }
+
+  async getShopDisadvantages(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        USERPANEL_ENDPOINTS.GET_DISADVANTAGES
+      );
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      logger.error('[UserPanelService] Get shop disadvantages failed:', error);
+      return [];
+    }
+  }
+
+  async updateProfile(formData: FormData): Promise<void> {
+    try {
+      await this.httpClient.put(USERPANEL_ENDPOINTS.PUT_USER_PROFILE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Update profile failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getWithdrawRequests(pageNumber: number = 1, pageSize: number = 30, status?: string): Promise<PaginatedResult<WithdrawRequestItemViewModel>> {
+    try {
+      const response = await this.httpClient.get<WithdrawRequestsResponseDto>(
+        USERPANEL_ENDPOINTS.GET_WITHDRAW_REQUESTS,
+        { params: { PageNumber: pageNumber, PageSize: pageSize, Status: status || '' } }
+      );
+      const items = (response.data.items || []).map(dto => UserPanelMapper.toViewWithdrawRequest(UserPanelMapper.toDomainWithdrawRequest(dto)));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[UserPanelService] Get withdraw requests failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async submitWithdrawRequest(amount: number, bankAccountId: string): Promise<void> {
+    try {
+      await this.httpClient.post(USERPANEL_ENDPOINTS.POST_WITHDRAW, {
+        amount,
+        bankAccountId
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Submit withdraw request failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getFavoriteProducts(pageNumber: number = 1, pageSize: number = 30, order: string = 'Latest'): Promise<PaginatedResult<any>> {
+    try {
+      const response = await this.httpClient.get<FavoriteProductsResponseDto>(
+        USERPANEL_ENDPOINTS.GET_FAVORITES,
+        { params: { PageNumber: pageNumber, PageSize: pageSize, Order: order } }
+      );
+      const items = (response.data.items || []).map(dto => UserPanelMapper.toFavoriteProductView(dto));
+      return {
+        items,
+        pageNumber: response.data.currentPage,
+        pageSize: response.data.pageSize,
+        totalCount: response.data.totalCount,
+        totalPages: response.data.totalPages,
+        hasNextPage: response.data.currentPage < response.data.totalPages,
+        hasPreviousPage: response.data.currentPage > 1,
+        hasMore: response.data.currentPage < response.data.totalPages,
+        from: (response.data.currentPage - 1) * response.data.pageSize + 1,
+        to: Math.min(response.data.currentPage * response.data.pageSize, response.data.totalCount)
+      };
+    } catch (error) {
+      logger.error('[UserPanelService] Get favorite products failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async getRecentlyViewedProducts(): Promise<any[]> {
+    try {
+      const response = await this.httpClient.get<any[]>(
+        USERPANEL_ENDPOINTS.GET_RECENT_VIEWS
+      );
+      return (response.data || []).map(dto => UserPanelMapper.toRecentlyViewedProductView(dto));
+    } catch (error) {
+      logger.error('[UserPanelService] Get recently viewed products failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async requestUpdatePhoneNumber(phoneNumber: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('PhoneNumber', phoneNumber);
+      await this.httpClient.put(USERPANEL_ENDPOINTS.UPDATE_PHONE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Request update phone failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async confirmCurrentPhoneOTP(otpCode: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('OTPCode', otpCode);
+      await this.httpClient.put(USERPANEL_ENDPOINTS.CONFIRM_CURRENT_PHONE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Confirm current phone OTP failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+
+  async confirmNewPhoneOTP(otpCode: string): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append('OTPCode', otpCode);
+      await this.httpClient.put(USERPANEL_ENDPOINTS.CONFIRM_NEW_PHONE, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    } catch (error) {
+      logger.error('[UserPanelService] Confirm new phone OTP failed:', error);
+      throw errorManager.normalize(error);
+    }
+  }
+}
+
+let userPanelServiceInstance: UserPanelService | null = null;
+
+export function getUserPanelService(): UserPanelService {
+  if (!userPanelServiceInstance) {
+    userPanelServiceInstance = new UserPanelService();
+  }
+  return userPanelServiceInstance;
+}
+
+========================================================
+FILE: src\domains\userpanel\types\domain.types.ts
+========================================================
+
+export interface OrderListItem {
+  id: string;
+  status: string;
+  statusLabel: string;
+  orderNumber: number;
+  totalOriginalPrice: number;
+  totalDiscountValue: number;
+  totalFinalPrice: number;
+  totalShipmentPrice: number;
+  subOrderItemCount: number;
+  payableUntil: string;
+  createDate: string;
+  shopProductImages: string[];
+}
+
+export interface Wallet {
+  id: string;
+  withdrawableBalance: number;
+  unwithdrawableBalance: number;
+  advertisementBalance: number;
+}
+
+export interface Transaction {
+  type: string;
+  typeLabel: string;
+  amount: number;
+  traceNo: string | null;
+  isSuccess: boolean;
+  createDate: string;
+}
+
+export interface UserVehicle {
+  id: string;
+  title: string;
+  oilKmLimit: number | null;
+  mileage: number | null;
+  isDefault: boolean;
+  lastServiceDate: string | null;
+  createDate: string;
+  carModel: string;
+  carManufacturerName: string;
+  carManufacturerLogo: string;
+  carCover: string;
+}
+
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  imageUrl: string | null;
+  linkType: string | null;
+  linkText: string | null;
+  channel: string;
+  priority: string | null;
+  isRead: boolean;
+  createDate: string;
+}
+
+export interface PendingCommentItem {
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  shopTitle: string;
+  lastSaleDate: string;
+}
+
+export interface UserCommentItem {
+  id: string;
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  comment: string;
+  rate: number;
+  likes: number;
+  dislikes: number;
+  isConfirmed: boolean;
+  createDate: string;
+}
+
+export interface UserInquiryItem {
+  id: string;
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  comment: string;
+  likes: number;
+  dislikes: number;
+  replyCount: number;
+  isConfirmed: boolean;
+  createDate: string;
+}
+
+export interface ReturnRequestItem {
+  id: string;
+  requestNumber: number;
+  status: string;
+  statusLabel: string;
+  shopTitle: string;
+  shopLogo: string;
+  totlaPayBackAmount: number;
+  createDate: string;
+  productImage: string;
+  productTitle: string;
+}
+
+export interface WithdrawRequestItem {
+  id: string;
+  amount: number;
+  status: 'Pending' | 'Paid' | 'Cancelled';
+  statusLabel: string;
+  cardNumber: string;
+  shebaNumber: string;
+  createDate: string;
+}
+
+========================================================
+FILE: src\domains\userpanel\types\dto.types.ts
+========================================================
+
+export interface SubOrderItemDto {
+  id: string;
+  shopProductId: string;
+  quantity: number;
+  status: string;
+  originalPrice: number;
+  discountAmount: number;
+  discountPercent: number;
+  finalUnitPrice: number;
+  finalTotalPrice: number;
+  shipmentPrice: number;
+  shopProduct: {
+    id: string;
+    type: string;
+    quantity: number;
+    product: {
+      id: string;
+      productCode: number;
+      title: string;
+      image: string;
+      description: string;
+      partNumber: string | null;
+      averageRate: number;
+      rateCount: number;
+      likes: number;
+      views: number;
+      brand: any;
+    };
+  };
+  feedback: any;
+}
+
+// در src/domains/userpanel/types/dto.types.ts
+
+export interface SubOrderDto {
+  id: string;
+  status: string;
+  subOrderNumber: number;
+  recieveDate: string | null;
+  shipmentDate: string | null;
+  shipmentMethod: 'Local' | 'Tipax' | 'DirectShipment' | 'SnappBox' | string;
+  directShipmentOption: string | null;
+  snappBoxShipmentStatus: string | null;
+  traceNumber: string | null;
+  driverFullName: string | null;
+  driverMobile: string | null;
+  driverImageUrl: string | null;
+  shipmentCompanyName: string | null;
+  shipmentReceiptImage: string | null;
+  shopId: string;
+  orderId: string;
+  shipmentPrice: number;
+  totalOriginalPrice: number;
+  totalDiscountValue: number;
+  totalFinalPrice: number;
+  createDate: string;
+  shop: {
+    id: string;
+    shopTitle: string;
+    logo: string;
+    highestDiscount: number;
+    averageRate: number;
+    ranking: number;
+  };
+  subOrderItems: SubOrderItemDto[];
+}
+
+export interface UserLocationDto {
+  id: string;
+  title: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  postalCode: string;
+  plaque: string;
+  unit: string;
+  isUserReceiver: boolean;
+  receiverFullName: string;
+  receiverMobile: string;
+  receiverNationalCode: string;
+  cityId: string;
+  city: string | null;
+  provinceId: string | null;
+  province: string | null;
+  isDefault: boolean;
+}
+
+export interface OrderDetailsDto {
+  id: string;
+  orderNumber: number;
+  status: string;
+  discountCodeId: string | null;
+  discountCodeValue: number | null;
+  referalCodeUsed: string | null;
+  referalCodeDiscountValue: number;
+  totalOriginalPrice: number;
+  totalDiscountValue: number;
+  totalYadakchiDiscountValue: number;
+  totalFinalPrice: number;
+  totalShipmentPrice: number;
+  createDate: string;
+  payableUntil: string;
+  userCancelationDescription: string | null;
+  subOrders: SubOrderDto[];
+  userLocation: UserLocationDto;
+  transactions: any[];
+}
+
+export interface OrderListItemDto {
+  id: string;
+  status: string;
+  orderNumber: number;
+  totalOriginalPrice: number;
+  totalDiscountValue: number;
+  totalFinalPrice: number;
+  totalShipmentPrice: number;
+  subOrderItemCount: number;
+  payableUntil: string;
+  createDate: string;
+  shopProductImages: string[];
+}
+
+export interface OrdersListResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: OrderListItemDto[];
+}
+
+export interface WalletDto {
+  id: string;
+  withdrawableBalance: number;
+  unwithdrawableBalance: number;
+  advertisementBalance: number;
+}
+
+export interface TransactionItemDto {
+  type: string;
+  amount: number;
+  traceNo: string | null;
+  isSuccess: boolean;
+  createDate: string;
+}
+
+export interface TransactionsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: TransactionItemDto[];
+}
+
+export interface BankAccountDto {
+  id: string;
+  shopId: string | null;
+  cardNumber: string;
+  shebaNumber: string;
+  bankId: string | null;
+  ownerName: string | null;
+  isDefault: boolean;
+  bank: any;
+}
+
+export interface VehicleCarDto {
+  id: string;
+  carTypeId: string;
+  carManufacturerId: string;
+  model: string;
+  seoInformationId: string;
+  englishTitle: string;
+  description: string;
+  cover: string;
+  coverAlt: string;
+  carManufacturer: {
+    id: string;
+    name: string;
+    country: string | null;
+    icon: string;
+    iconAlt: string;
+    countryFlag: string | null;
+    countryName: string | null;
+  };
+}
+
+export interface UserVehicleDto {
+  id: string;
+  title: string;
+  oilKmLimit: number | null;
+  nextServiceKM: number | null;
+  mileage: number | null;
+  isDefault: boolean;
+  lastServiceDate: string | null;
+  createDate: string;
+  car: VehicleCarDto;
+}
+
+export interface NotificationContentDto {
+  id: string;
+  title: string;
+  body: string;
+  imageUrl: string | null;
+  linkType: string | null;
+  linkText: string | null;
+  channel: string;
+  priority: string | null;
+  audienceType: string | null;
+  receiverAppliationType: string;
+}
+
+export interface NotificationItemDto {
+  id: string;
+  type: string;
+  notificationContent: NotificationContentDto;
+  isRead: boolean;
+  isReceived: boolean;
+  createDate: string;
+}
+
+export interface NotificationsListResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: NotificationItemDto[];
+}
+
+export interface PendingCommentItemDto {
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  shopTitle: string;
+  lastSaleDate: string;
+}
+
+export interface PendingCommentsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: PendingCommentItemDto[];
+}
+
+export interface UserCommentItemDto {
+  id: string;
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  comment: string;
+  rate: number;
+  likes: number;
+  dislikes: number;
+  replyCount: number;
+  isConfirmed: boolean;
+  updateRateAttempts: number;
+  userBoughtFrom: string | null;
+  isIncognito: boolean;
+  createDate: string;
+}
+
+export interface UserCommentsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: UserCommentItemDto[];
+}
+
+export interface UserInquiryItemDto {
+  id: string;
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  comment: string;
+  likes: number;
+  dislikes: number;
+  replyCount: number;
+  isConfirmed: boolean;
+  createDate: string;
+}
+
+export interface UserInquiriesResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: UserInquiryItemDto[];
+}
+
+export interface ReturnRequestItemDto {
+  id: string;
+  returnRequestNumber: number;
+  adminDescription: string;
+  ticketId: string;
+  subOrderId: string;
+  sellerId: string | null;
+  status: string;
+  returnRequestReturnMethod: string;
+  traceNumber: string;
+  returnShipmentPrice: number;
+  totalShipmentPaybackAmount: number;
+  totalReturnShipmentPaybackAmount: number;
+  totalItemPaybackAmount: number;
+  totlaPayBackAmount: number;
+  confirmedDate: string;
+  sentDate: string | null;
+  receivedDate: string | null;
+  shop: {
+    id: string;
+    shopTitle: string;
+    logo: string;
+    highestDiscount: number;
+    averageRate: number;
+    ranking: number;
+  };
+  items: Array<{
+    id: string;
+    productImage: string;
+    productTitle: string;
+    quantity: number;
+    description: string;
+    returnRequestImages: Array<{ image: string }>;
+  }>;
+}
+
+export interface ReturnRequestsListResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: ReturnRequestItemDto[];
+}
+
+export interface ReturnRequestReasonDto {
+  id: string;
+  name: string;
+  description: string;
+  penaltyFactor: number;
+}
+
+export interface SubOrderCancelReasonDto {
+  id: string;
+  name: string;
+  description: string;
+  penaltyFactor: number;
+}
+
+export interface AdvantageDto {
+  id: string;
+  title: string;
+}
+
+export interface WithdrawRequestItemDto {
+  id: string;
+  amount: number;
+  status: 'Pending' | 'Paid' | 'Cancelled';
+  bankAccountId: string;
+  cardNumber?: string;
+  shebaNumber?: string;
+  createDate: string;
+  bankAccount?: BankAccountDto;
+}
+
+export interface WithdrawRequestsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: WithdrawRequestItemDto[];
+}
+
+export interface FavoriteProductItemDto {
+  id: string;
+  shopProductsQuantity: number;
+  nominatedRialRetailPrice: number;
+  nominatedRialFinalPrice: number;
+  discountPercentage: number;
+  rateCount: number;
+  product: {
+    id: string;
+    title: string;
+    productCode: number;
+    image: string;
+    imageAlt: string;
+    averageRate: number;
+    likes: number;
+    viewsAndClicks: number;
+    totalSalesCount: number;
+    nominatedShopProduct: {
+      id: string;
+      shopTitle: string;
+      quantity: number;
+      rialRetailPrice: number;
+      discountPercentage: number;
+      rialFinalPrice: number;
+      type: 'New' | 'Stock' | 'TakeOff';
+      isAdvertised: boolean;
+    } | null;
+  };
+}
+
+export interface FavoriteProductsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: FavoriteProductItemDto[];
+}
+
+========================================================
+FILE: src\domains\userpanel\types\view.types.ts
+========================================================
+
+export interface OrderListItemViewModel {
+  id: string;
+  status: string;
+  statusLabel: string;
+  orderNumber: number;
+  totalOriginalPrice: string;
+  totalDiscountValue: string;
+  totalFinalPrice: string;
+  totalShipmentPrice: string;
+  subOrderItemCount: number;
+  payableUntil: string;
+  createDate: string;
+  createDateFormatted: string;
+  shopProductImages: string[];
+}
+
+export interface WalletViewModel {
+  withdrawableBalance: string;
+  unwithdrawableBalance: string;
+  advertisementBalance: string;
+  totalBalance: string;
+}
+
+export interface TransactionViewModel {
+  type: string;
+  typeLabel: string;
+  amount: string;
+  traceNo: string | null;
+  isSuccess: boolean;
+  createDate: string;
+  createDateFormatted: string;
+}
+
+export interface UserVehicleViewModel {
+  id: string;
+  title: string;
+  oilKmLimit: string;
+  oilKmLimitRaw: number | null;
+  mileage: string;
+  mileageRaw: number | null;
+  isDefault: boolean;
+  lastServiceDate: string | null;
+  lastServiceDateFormatted: string;
+  createDate: string;
+  carModel: string;
+  carManufacturerName: string;
+  carManufacturerLogo: string;
+  carCover: string;
+}
+
+export interface NotificationItemViewModel {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  imageUrl: string | null;
+  linkType: string | null;
+  linkText: string | null;
+  channel: string;
+  channelLabel: string;
+  priority: string | null;
+  isRead: boolean;
+  createDate: string;
+  createDateFormatted: string;
+}
+
+export interface PendingCommentItemViewModel {
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  shopTitle: string;
+  lastSaleDate: string;
+  lastSaleDateFormatted: string;
+}
+
+export interface UserCommentItemViewModel {
+  id: string;
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  comment: string;
+  rate: number;
+  likes: number;
+  dislikes: number;
+  isConfirmed: boolean;
+  createDate: string;
+  createDateFormatted: string;
+}
+
+export interface UserInquiryItemViewModel {
+  id: string;
+  productId: string;
+  productTitle: string;
+  productImage: string;
+  comment: string;
+  likes: number;
+  dislikes: number;
+  replyCount: number;
+  isConfirmed: boolean;
+  createDate: string;
+  createDateFormatted: string;
+}
+
+export interface ReturnRequestItemViewModel {
+  id: string;
+  requestNumber: number;
+  status: string;
+  statusLabel: string;
+  shopTitle: string;
+  shopLogo: string;
+  totlaPayBackAmount: string;
+  createDate: string;
+  createDateFormatted: string;
+  productImage: string;
+  productTitle: string;
+}
+
+export interface WithdrawRequestItemViewModel {
+  id: string;
+  amount: string;
+  status: 'Pending' | 'Paid' | 'Cancelled';
+  statusLabel: string;
+  statusColor: 'warning' | 'success' | 'destructive';
+  cardNumber: string;
+  shebaNumber: string;
+  createDateFormatted: string;
+}
+
+========================================================
+FILE: src\components\features\BasketPayment\components\PaymentInvoice.tsx
+========================================================
+
+'use client';
+
+import { Lock, ArrowLeft, Briefcase, FileCheck, ShieldCheck } from 'lucide-react';
+import { Card, CardTitle } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+
+export interface PaymentInvoiceProps {
+  productPrice: number;
+  discountPrice: number;
+  shippingPrice: number;
+  finalPrice: number;
+  isLegalInvoice: boolean;
+  isLegalUser: boolean;
+  isSubmitting: boolean;
+  onLegalInvoiceChange: (checked: boolean) => void;
+  onPayment: () => void;
+  onCompleteLegalInfo: () => void;
+}
+
+export function PaymentInvoice({
+  productPrice,
+  discountPrice,
+  shippingPrice,
+  finalPrice,
+  isLegalInvoice,
+  isLegalUser,
+  isSubmitting,
+  onLegalInvoiceChange,
+  onPayment,
+  onCompleteLegalInfo,
+}: PaymentInvoiceProps) {
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat('fa-IR').format(Math.round(value));
+
+  return (
+    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]">
+      <CardTitle className="mb-4 flex items-center gap-2 border-b border-border/60 pb-3.5 font-bold text-foreground">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <FileCheck aria-hidden="true" className="h-4 w-4" />
+        </div>
+        <span className="text-sm">صورتحساب نهایی</span>
+      </CardTitle>
+
+      <div className="mb-4 space-y-3.5 border-b border-border/60 pb-4 text-xs">
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>مجموع قیمت قطعات</span>
+          <span className="font-semibold text-foreground">{formatPrice(productPrice)} تومان</span>
+        </div>
+
+        {discountPrice > 0 ? (
+          <div className="flex items-center justify-between font-semibold text-destructive">
+            <span>تخفیف اعمال‌شده</span>
+            <span>- {formatPrice(discountPrice)} تومان</span>
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>هزینه بسته‌بندی و ارسال</span>
+          <span className="font-semibold text-foreground">
+            {shippingPrice > 0 ? `${formatPrice(shippingPrice)} تومان` : 'رایگان'}
+          </span>
+        </div>
+      </div>
+
+      <div className="mb-6 flex items-baseline justify-between">
+        <span className="text-xs font-bold text-foreground">مبلغ نهایی قابل پرداخت:</span>
+        <div className="flex items-baseline gap-1">
+          <span className="text-xl font-bold text-primary">{formatPrice(finalPrice)}</span>
+          <span className="text-2xs font-semibold text-muted-foreground">تومان</span>
+        </div>
+      </div>
+
+      <Button
+        variant="primary"
+        size="lg"
+        fullWidth
+        onClick={onPayment}
+        isLoading={isSubmitting}
+        className="flex h-11 items-center justify-center gap-2 rounded-lg text-xs font-bold shadow-xs transition-transform active:scale-[0.99]"
+      >
+        <Lock className="h-4 w-4" />
+        <span>پرداخت امن و ثبت نهایی سفارش</span>
+        <ArrowLeft aria-hidden="true" className="me-1 h-4 w-4" />
+      </Button>
+
+      {/* بخش صدور فاکتور حقوقی/رسمی */}
+      <div className="mt-5 w-full space-y-3 border-t border-dashed border-border/70 pt-4">
+        <div className="flex items-start gap-2.5">
+          <Checkbox
+            checked={isLegalInvoice}
+            disabled={!isLegalUser}
+            onChange={onLegalInvoiceChange}
+          />
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold text-foreground">درخواست صدور فاکتور رسمی حقوقی</span>
+            <p className="select-none text-2xs leading-relaxed text-muted-foreground">
+              فاکتور رسمی شرکتی با کد اقتصادی صادر و در پنل کاربری قابل دریافت خواهد بود.
+            </p>
+            {!isLegalUser ? (
+              <span className="text-2xs font-semibold text-destructive">
+                اطلاعات حقوقی شرکت شما هنوز تایید نشده است.
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        {!isLegalUser ? (
+          <button
+            type="button"
+            onClick={onCompleteLegalInfo}
+            className="flex items-center gap-1.5 text-xs font-bold text-primary outline-none hover:underline"
+          >
+            <Briefcase className="h-3.5 w-3.5" />
+            <span>تکمیل و ارسال مدارک حقوقی</span>
+          </button>
+        ) : null}
+
+        <div className="flex items-center justify-center gap-1.5 pt-2 text-2xs text-muted-foreground">
+          <ShieldCheck className="h-3.5 w-3.5 text-success" />
+          <span>تضمین بازگشت وجه در صورت عدم انطباق کالا</span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+========================================================
+FILE: src\components\features\Checkout\components\CheckoutInvoice.tsx
+========================================================
+
+'use client';
+
+import { CreditCard, ChevronLeft, ShieldCheck, Truck, Headphones } from 'lucide-react';
+import { Card, CardTitle } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button';
+
+export interface CheckoutInvoiceProps {
+  basket: any;
+  totalShipment: number;
+  finalPayablePrice: number;
+  onSubmit: () => void;
+  isLoading: boolean;
+  isMethodSelected?: boolean;
+}
+
+export function CheckoutInvoice({
+  basket,
+  totalShipment,
+  finalPayablePrice,
+  onSubmit,
+  isLoading,
+  isMethodSelected = true,
+}: CheckoutInvoiceProps) {
+  const formatNumber = (val: number) =>
+    new Intl.NumberFormat('fa-IR').format(Math.round((val || 0) / 10));
+
+  /**
+   * ✅ اصلاح: حذف `basket.totalPrice` (فیلد ناموجود در ریسپانس)
+   * استفاده فقط از `totalOriginalPrice` که در ریسپانس بک‌اند موجود است.
+   */
+  const totalOriginalPrice = basket.totalOriginalPrice ?? 0;
+
+  return (
+    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]">
+      <CardTitle className="mb-4 flex items-center gap-2 border-b border-border/60 pb-3.5 font-bold text-foreground">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <CreditCard aria-hidden="true" className="h-4 w-4" />
+        </div>
+        <span className="text-sm">خلاصه صورتحساب</span>
+      </CardTitle>
+
+      <div className="mb-4 space-y-3.5 border-b border-border/60 pb-4 text-xs">
+        <div className="flex items-center justify-between text-muted-foreground">
+          <span>قیمت کل محصولات</span>
+          <span className="font-semibold text-foreground">
+            {formatNumber(totalOriginalPrice)} تومان
+          </span>
+        </div>
+
+        {basket.totalDiscountValue > 0 ? (
+          <div className="flex items-center justify-between font-semibold text-destructive">
+            <span>سود شما از خرید</span>
+            <span>- {formatNumber(basket.totalDiscountValue)} تومان</span>
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-between text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Truck className="h-3.5 w-3.5" />
+            <span>مجموع هزینه ارسال</span>
+          </div>
+          <span className="font-semibold text-foreground">
+            {isMethodSelected
+              ? totalShipment === 0
+                ? 'رایگان'
+                : `${formatNumber(totalShipment)} تومان`
+              : 'انتخاب نشده'}
+          </span>
+        </div>
+      </div>
+
+      <div className="mb-6 flex items-baseline justify-between">
+        <span className="text-xs font-bold text-foreground">مبلغ نهایی قابل پرداخت:</span>
+        <div className="flex items-baseline gap-1">
+          <span className="text-lg font-bold text-primary">
+            {formatNumber(finalPayablePrice)}
+          </span>
+          <span className="text-2xs font-semibold text-muted-foreground">تومان</span>
+        </div>
+      </div>
+
+      <Button
+        variant="primary"
+        size="lg"
+        fullWidth
+        onClick={onSubmit}
+        isLoading={isLoading}
+        className="flex h-11 items-center justify-center gap-1.5 rounded-lg text-xs font-bold shadow-xs transition-transform active:scale-[0.99]"
+      >
+        <span>تایید شیوه ارسال و پرداخت</span>
+        <ChevronLeft aria-hidden="true" className="h-4 w-4 stroke-[2.5]" />
+      </Button>
+
+      <div className="mt-5 flex flex-col gap-2.5 border-t border-dashed border-border/70 pt-4 text-2xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
+          <span>ضمانت اصالت و سلامت فیزیکی قطعات</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Headphones className="h-4 w-4 shrink-0 text-primary" />
+          <span>پشتیبانی فنی در صورت عدم تطابق با خودرو</span>
+        </div>
+      </div>
+    </Card>
+  );
+}

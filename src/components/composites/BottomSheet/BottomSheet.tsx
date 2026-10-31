@@ -35,7 +35,7 @@ export function BottomSheet({ isOpen, onClose, title, children, className }: Bot
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 bg-foreground/40 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         aria-hidden="true"
       />
       <motion.div
@@ -51,13 +51,14 @@ export function BottomSheet({ isOpen, onClose, title, children, className }: Bot
         transition={{ type: 'spring', stiffness: 350, damping: 35 }}
         className={cn(
           'relative z-10 flex flex-col max-h-[85vh] w-full max-w-lg',
-          'bg-background rounded-t-xl shadow-lg',
+          'bg-background rounded-t-2xl shadow-xl border-t border-border/80',
           className
         )}
       >
-        <div className="w-full flex flex-col items-center shrink-0 gap-2 py-3 border-b border-border cursor-grab active:cursor-grabbing">
-          <div className="h-1.5 w-12 rounded-full bg-border" />
-          <span className="px-4 text-center text-base font-semibold text-foreground">{title}</span>
+        <div className="w-full flex flex-col items-center shrink-0 gap-2.5 py-3.5 border-b border-border cursor-grab active:cursor-grabbing">
+          {/* دستگیره با رنگ مشخص‌تر و با کانتراست بالا */}
+          <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 active:bg-muted-foreground/60 transition-colors" />
+          <span className="px-4 text-center text-base font-bold text-foreground">{title}</span>
         </div>
         <div className="flex-1 overflow-y-auto p-5 scrollbar-none">{children}</div>
       </motion.div>

@@ -1,0 +1,395 @@
+﻿'use client';
+
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+
+export interface BottomSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function BottomSheet({ isOpen, onClose, title, children, className }: BottomSheetProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  if (!mounted || !isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-modal flex items-end justify-center" role="dialog" aria-modal="true">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-foreground/40 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+      <motion.div
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.1}
+        onDragEnd={(_, info) => {
+          if (info.offset.y > 100) onClose();
+        }}
+        initial={{ y: '100%' }}
+        animate={{ y: '0%' }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+        className={cn(
+          'relative z-10 flex flex-col max-h-[85vh] w-full max-w-lg',
+          'bg-background rounded-t-xl shadow-lg',
+          className
+        )}
+      >
+        <div className="w-full flex flex-col items-center shrink-0 gap-2 py-3 border-b border-border cursor-grab active:cursor-grabbing">
+          <div className="h-1.5 w-12 rounded-full bg-border" />
+          <span className="px-4 text-center text-base font-semibold text-foreground">{title}</span>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5 scrollbar-none">{children}</div>
+      </motion.div>
+    </div>,
+    document.body
+  );
+}
+'use client';
+
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import Link from 'next/link';
+import { Plus, Minus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
+import { Button } from '@/components/primitives/Button';
+import { cn } from '@/design-system/utils/cn';
+import { toPersianDigits } from '@/core/utils/formatters';
+
+export interface MobileBottomActionProps {
+  label: string;
+  onClick: () => void;
+  isLoading?: boolean;
+  disabled?: boolean;
+  leftContent?: React.ReactNode;
+  icon?: React.ReactNode;
+  className?: string;
+  forceShowKey?: unknown;
+  variant?: 'default' | 'notify';
+
+  // ویژگی‌های کنترل تعداد در سبد خرید
+  isInBasket?: boolean;
+  basketQuantity?: number;
+  maxStock?: number;
+  onIncrease?: () => void;
+  onDecrease?: () => void;
+  isUpdatingQuantity?: boolean;
+}
+
+export function MobileBottomAction({
+  label,
+  onClick,
+  isLoading,
+  disabled,
+  leftContent,
+  icon,
+  className,
+  variant = 'default',
+  isInBasket = false,
+  basketQuantity = 0,
+  maxStock,
+  onIncrease,
+  onDecrease,
+  isUpdatingQuantity = false,
+}: MobileBottomActionProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  // ✅ بررسی دقیق سقف موجودی انبار (اگر maxStock معتبر باشد و تعداد به آن رسیده باشد)
+  const numericMaxStock = Number(maxStock);
+  const isMaxStockReached =
+    !isNaN(numericMaxStock) && numericMaxStock > 0 && basketQuantity >= numericMaxStock;
+
+  return createPortal(
+    <div
+      dir="rtl"
+      className={cn(
+        // چسبیدن دقیق به بالای BottomNav (ارتفاع ۶۴ پیکسل) با z-index استاندارد
+        'lg:hidden fixed bottom-16 inset-x-0 z-40 w-full',
+        'bg-card/95 backdrop-blur-md border-t border-border px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]',
+        'flex items-center justify-between gap-3',
+        className
+      )}
+    >
+      {/* بخش سمت راست: قیمت و فروشنده */}
+      {leftContent ? (
+        <div className="flex min-w-0 flex-col items-start text-start shrink-0">{leftContent}</div>
+      ) : null}
+
+      {/* بخش اکشن اصلی */}
+      <div className={cn('flex-1 min-w-0', leftContent ? 'max-w-[65%]' : 'w-full')}>
+        {isInBasket && basketQuantity > 0 ? (
+          /* ================= کنترلر حرفه‌ای افزایش و کاهش تعداد ================= */
+          <div className="flex items-center justify-between h-11 w-full rounded-xl border border-primary/30 bg-primary/5 px-2 shadow-xs select-none">
+            {/* دکمه افزایش - غیرفعال هنگام رسیدن به سقف موجودی انبار */}
+            <button
+              type="button"
+              onClick={onIncrease}
+              disabled={isUpdatingQuantity || isMaxStockReached}
+              aria-label="افزایش تعداد"
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs transition-all active:scale-90',
+                (isUpdatingQuantity || isMaxStockReached) && 'opacity-40 cursor-not-allowed active:scale-100'
+              )}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+
+            {/* شمارشگر در وسط */}
+            <div className="flex flex-col items-center justify-center px-2 min-w-0">
+              {isUpdatingQuantity ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <>
+                  <span className="text-xs sm:text-sm font-black text-primary tabular-nums">
+                    {toPersianDigits(basketQuantity)} عدد
+                  </span>
+                  {isMaxStockReached ? (
+                    <span className="text-3xs font-bold text-destructive leading-none mt-0.5 whitespace-nowrap">
+                      حداکثر موجودی ({toPersianDigits(numericMaxStock)})
+                    </span>
+                  ) : null}
+                </>
+              )}
+            </div>
+
+            {/* دکمه کاهش یا حذف */}
+            <button
+              type="button"
+              onClick={onDecrease}
+              disabled={isUpdatingQuantity}
+              aria-label={basketQuantity === 1 ? 'حذف از سبد' : 'کاهش تعداد'}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90',
+                basketQuantity === 1
+                  ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                  : 'bg-primary/10 text-primary hover:bg-primary/20',
+                isUpdatingQuantity && 'opacity-40 cursor-not-allowed active:scale-100'
+              )}
+            >
+              {basketQuantity === 1 ? (
+                <Trash2 className="h-4 w-4" />
+              ) : (
+                <Minus className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        ) : (
+          /* ================= دکمه عادی افزودن به سبد یا خبرم کن ================= */
+          <Button
+            variant={variant === 'notify' ? 'destructive' : disabled ? 'outline' : 'primary'}
+            size="lg"
+            fullWidth
+            onClick={onClick}
+            isLoading={isLoading}
+            disabled={variant === 'notify' ? false : disabled}
+            leftIcon={icon}
+            className="h-11 rounded-xl text-xs sm:text-sm font-bold shadow-xs whitespace-nowrap"
+          >
+            {label}
+          </Button>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+import * as React from 'react';
+import { Check } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+
+export interface CheckboxProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label?: string;
+  className?: string;
+  disabled?: boolean;
+  id?: string;
+}
+
+export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
+  ({ checked, onChange, label, className, disabled, id }, ref) => {
+    const generatedId = React.useId();
+    const checkboxId = id ?? generatedId;
+
+    return (
+      <label
+        htmlFor={checkboxId}
+        className={cn(
+          'flex items-center gap-2 select-none',
+          disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+          className
+        )}
+      >
+        <button
+          ref={ref}
+          id={checkboxId}
+          type="button"
+          role="checkbox"
+          aria-checked={checked}
+          disabled={disabled}
+          onClick={() => !disabled && onChange(!checked)}
+          className={cn(
+            'h-5 w-5 shrink-0 rounded-sm border flex items-center justify-center',
+            'transition-colors duration-fast ease-in-out',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            checked
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-input bg-card hover:border-primary'
+          )}
+        >
+          {checked ? (
+            <Check aria-hidden="true" className="h-3 w-3 stroke-[3]" />
+          ) : null}
+        </button>
+        {label ? (
+          <span className="text-sm text-foreground">{label}</span>
+        ) : null}
+      </label>
+    );
+  }
+);
+
+Checkbox.displayName = 'Checkbox';
+'use client';
+
+import * as React from 'react';
+import { Button } from '@/components/primitives/Button';
+
+export interface PriceSliderProps {
+  min: number;
+  max: number;
+  value: [number, number];
+  onChange: (value: [number, number]) => void;
+  onApply: () => void;
+}
+
+export function PriceSlider({ min, max, value, onChange, onApply }: PriceSliderProps) {
+  const [minVal, setMinVal] = React.useState(value[0]);
+  const [maxVal, setMaxVal] = React.useState(value[1]);
+
+  React.useEffect(() => {
+    setMinVal(value[0]);
+    setMaxVal(value[1]);
+  }, [value]);
+
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = Math.min(Number(e.target.value), maxVal - 50000);
+    setMinVal(next);
+    onChange([next, maxVal]);
+  };
+
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next = Math.max(Number(e.target.value), minVal + 50000);
+    setMaxVal(next);
+    onChange([minVal, next]);
+  };
+
+  const formatPrice = (val: number) => new Intl.NumberFormat('fa-IR').format(val / 10);
+
+  const minPercent = ((minVal - min) / (max - min)) * 100;
+  const maxPercent = ((maxVal - min) / (max - min)) * 100;
+
+  return (
+    <div className="flex w-full flex-col gap-5 pt-3 select-none">
+      <div className="relative flex h-1.5 w-full items-center rounded-full bg-border" dir="ltr">
+        <div
+          style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
+          className="absolute h-full rounded-full bg-primary"
+        />
+
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={minVal}
+          onChange={handleMinChange}
+          aria-label="حداقل قیمت"
+          className="pointer-events-none absolute z-20 h-1.5 w-full cursor-pointer appearance-none opacity-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5"
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={maxVal}
+          onChange={handleMaxChange}
+          aria-label="حداکثر قیمت"
+          className="pointer-events-none absolute z-20 h-1.5 w-full cursor-pointer appearance-none opacity-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:w-5"
+        />
+
+        <div
+          style={{ left: `${minPercent}%` }}
+          className="pointer-events-none absolute z-30 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-primary bg-card shadow-sm"
+          aria-hidden="true"
+        />
+        <div
+          style={{ left: `${maxPercent}%` }}
+          className="pointer-events-none absolute z-30 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-primary bg-card shadow-sm"
+          aria-hidden="true"
+        />
+      </div>
+
+      <div className="flex items-center justify-between px-1 text-2xs font-semibold text-muted-foreground">
+        <span>از {formatPrice(minVal)} تومان</span>
+        <span>تا {formatPrice(maxVal)} تومان</span>
+      </div>
+
+      <Button type="button" variant="primary" size="sm" onClick={onApply} fullWidth>
+        اعمال محدوده قیمت
+      </Button>
+    </div>
+  );
+}
+import * as React from 'react';
+import { cn } from '@/design-system/utils/cn';
+
+export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'rect' | 'circle' | 'text';
+}
+
+const variantClasses = {
+  rect: 'rounded-lg',
+  circle: 'rounded-full',
+  text: 'rounded h-4 w-full',
+} as const;
+
+export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
+  ({ className, variant = 'rect', ...props }, ref) => (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className={cn(
+        'animate-pulse bg-muted',
+        variantClasses[variant],
+        className
+      )}
+      {...props}
+    />
+  )
+);
+
+Skeleton.displayName = 'Skeleton';

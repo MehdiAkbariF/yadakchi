@@ -1,6 +1,6 @@
 // src/domains/front/inquiry/hooks/inquiry.hooks.ts
 
-import { UseQueryOptions } from '@tanstack/react-query';
+import { useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getInquiryService } from '../services/inquiry.service';
 import { InquiryFilters, CreateInquiryRequest, LikeInquiryRequest } from '../types/view.types';
@@ -40,8 +40,15 @@ export function useGetInquiryReplies(
 }
 
 export function useCreateInquiry() {
+  const queryClient = useQueryClient();
   return useTypedMutation(
-    (request: CreateInquiryRequest) => inquiryService.createInquiry(request)
+    (request: CreateInquiryRequest) => inquiryService.createInquiry(request),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['front', 'inquiries'] });
+        queryClient.invalidateQueries({ queryKey: ['front', 'product'] });
+      }
+    }
   );
 }
 
@@ -52,14 +59,28 @@ export function useDeleteInquiry() {
 }
 
 export function useLikeInquiry() {
+  const queryClient = useQueryClient();
   return useTypedMutation(
-    (request: LikeInquiryRequest) => inquiryService.likeInquiry(request)
+    (request: LikeInquiryRequest) => inquiryService.likeInquiry(request),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['front', 'inquiries'] });
+        queryClient.invalidateQueries({ queryKey: ['front', 'product'] });
+      }
+    }
   );
 }
 
 export function useUnlikeInquiry() {
+  const queryClient = useQueryClient();
   return useTypedMutation(
-    (likeId: string) => inquiryService.unlikeInquiry(likeId)
+    (likeId: string) => inquiryService.unlikeInquiry(likeId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['front', 'inquiries'] });
+        queryClient.invalidateQueries({ queryKey: ['front', 'product'] });
+      }
+    }
   );
 }
 

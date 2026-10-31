@@ -55,7 +55,6 @@ export function useGetNominatedProductsByCategory(
   );
 }
 
-// هوک دریافت کالاهای مشاهده‌شده و بازدیدهای اخیر کاربر از بک‌اند
 export function useGetVisitedProducts() {
   const selectedCity = useAppStore((state) => state.selectedCity);
   const [mounted, setMounted] = useState(false);
@@ -76,7 +75,6 @@ export function useGetVisitedProducts() {
         });
         return response.data;
       } catch (e) {
-        // در صورت عدم وجود این اندپوینت خاص در سرور، از کالاهای منتخب استفاده می‌شود
         return productService.getNominatedProducts(cityId || undefined);
       }
     },
@@ -277,40 +275,62 @@ export function useGetProductInquiries(productId: string, orderBy: string = 'Lat
 }
 
 export function useIsUserFavoriteProduct(productCode: number) {
-  return useTypedQuery(
+  return useTypedQuery<boolean>(
     ['front', 'products', 'is-favorite', productCode],
-    () => productService.isUserFavoriteProduct(productCode),
+    async () => {
+      const client = getHttpClient();
+      const response = await client.get<boolean>('/api/Front/IsUserFavoriteProduct', {
+        params: { productCode }
+      });
+      return Boolean(response.data);
+    },
     {
       staleTime: 10 * 1000,
-      enabled: !!productCode && productCode > 0
+      enabled: !!productCode && productCode > 0,
     }
   );
 }
-
 export function useAddFavorite(productCode: number) {
   const queryClient = useQueryClient();
   return useTypedMutation(
-    (productId: string) => productService.addFavorite(productId),
+    async (productId: string) => {
+      const client = getHttpClient();
+      const formData = new FormData();
+      formData.append('ProductId', productId);
+      const res = await client.post('/api/UserPanel/ProductFavorite', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data;
+    },
     {
       onSuccess: () => {
         queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], true);
+        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
       }
     }
   );
 }
-
 export function useDeleteFavorite(productCode: number) {
   const queryClient = useQueryClient();
   return useTypedMutation(
-    (productId: string) => productService.deleteFavorite(productId),
+    async (productId: string) => {
+      const client = getHttpClient();
+      const formData = new FormData();
+      formData.append('ProductId', productId);
+      const res = await client.delete('/api/UserPanel/ProductFavorite', {
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data;
+    },
     {
       onSuccess: () => {
         queryClient.setQueryData(['front', 'products', 'is-favorite', productCode], false);
+        queryClient.invalidateQueries({ queryKey: ['front', 'products', 'is-favorite', productCode] });
       }
     }
   );
 }
-
 export function useSubmitProductReport() {
   return useTypedMutation(
     ({ productId, reportSubjectId, description }: { productId: string; reportSubjectId: string; description: string }) =>

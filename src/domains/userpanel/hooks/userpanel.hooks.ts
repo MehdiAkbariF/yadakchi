@@ -5,7 +5,7 @@ import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.ho
 import { getUserPanelService } from '../services/userpanel.service';
 import { OrderListItemViewModel, WalletViewModel, TransactionViewModel, UserVehicleViewModel, NotificationItemViewModel, WithdrawRequestItemViewModel } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
-import { OrderDetailsDto, BankAccountDto } from '../types/dto.types';
+import { OrderDetailsDto, BankAccountDto, OrderReceiptDto } from '../types/dto.types';
 
 const userPanelService = getUserPanelService();
 
@@ -32,7 +32,7 @@ export function useGetOrders(status?: string, searchedValue?: string, orderBy?: 
 }
 
 export function useGetOrderReceipt(orderId: string) {
-  return useTypedQuery<any>(
+  return useTypedQuery<OrderReceiptDto>(
     ['user', 'orders', 'receipt', orderId],
     () => userPanelService.getOrderReceipt(orderId),
     { enabled: !!orderId }

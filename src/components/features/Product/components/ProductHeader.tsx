@@ -38,20 +38,24 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
   const [reportDescription, setReportDescription] = React.useState('');
-  const [localIsFavorite, setLocalIsFavorite] = React.useState<boolean | undefined>(undefined);
+  const [localIsFavorite, setLocalIsFavorite] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
+  // همگام‌سازی کامل استیت محلی با پاسخ واقعی سرور به محض لود
   React.useEffect(() => {
-    if (rawIsFavorite !== undefined) setLocalIsFavorite(rawIsFavorite);
+    if (rawIsFavorite !== undefined && rawIsFavorite !== null) {
+      setLocalIsFavorite(Boolean(rawIsFavorite));
+    }
   }, [rawIsFavorite]);
 
   const handleFavoriteToggle = async () => {
     const previousState = localIsFavorite;
     const nextState = !previousState;
-    setLocalIsFavorite(nextState);
+    setLocalIsFavorite(nextState); // آپدیت آنی و بدون تأخیر در UI (Optimistic Update)
+
     try {
       if (previousState) {
         await deleteFavorite.mutateAsync(product.id);
@@ -61,16 +65,19 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         showToast.success('به علاقه‌مندی‌ها اضافه شد');
       }
     } catch (err: any) {
-      setLocalIsFavorite(previousState);
+      setLocalIsFavorite(previousState); // ریست کردن در صورت خطا
+      
+      // اگر از قبل در سرور لایک شده بود ولی فرانت‌ند آفلاین یا ناپدید بود، وضعیت را روی true ست کن
       if (
         err?.message?.includes('قبلا ثبت شده است') ||
-        err?.userMessage?.includes('قبلا ثبت شده است')
+        err?.userMessage?.includes('قبلا ثبت شده است') ||
+        err?.response?.status === 400
       ) {
         setLocalIsFavorite(true);
         queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], true);
         return;
       }
-      showToast.error(err.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
+      showToast.error(err?.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
     }
   };
 
@@ -99,7 +106,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
       setSelectedSubjectId('');
       setReportDescription('');
     } catch (error: any) {
-      showToast.error(error.userMessage || 'خطا در ثبت گزارش خطا');
+      showToast.error(error?.userMessage || 'خطا در ثبت گزارش خطا');
     }
   };
 
@@ -125,9 +132,9 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
           <button
             type="button"
             onClick={() => setIsReportModalOpen(true)}
-            className="flex items-center gap-0.5 text-2xs font-bold text-muted-foreground outline-none hover:text-destructive"
+            className="flex items-center gap-1 text-2xs font-bold text-muted-foreground outline-none hover:text-destructive transition-colors"
           >
-            <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5" />
+            <AlertTriangle aria-hidden="true" className="h-4 w-4" />
             <span>گزارش کالا</span>
           </button>
         </div>
@@ -137,14 +144,14 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
             type="button"
             onClick={handleShare}
             aria-label="اشتراک‌گذاری"
-            className="rounded-md border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+            className="rounded-xl border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
           >
             <Share2 aria-hidden="true" className="h-4 w-4" />
           </button>
           <button
             type="button"
             aria-label="مقایسه"
-            className="rounded-md border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+            className="rounded-xl border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
           >
             <Scale aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -154,7 +161,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
             disabled={isFavLoading || addFavorite.isPending || deleteFavorite.isPending}
             aria-label={localIsFavorite ? 'حذف از علاقه‌مندی' : 'افزودن به علاقه‌مندی'}
             aria-pressed={localIsFavorite}
-            className="select-none rounded-md border border-border p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive disabled:opacity-40"
+            className="select-none rounded-xl border border-border p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive disabled:opacity-40"
           >
             {addFavorite.isPending || deleteFavorite.isPending ? (
               <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
@@ -163,7 +170,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
                 aria-hidden="true"
                 className={cn(
                   'h-4 w-4 transition-colors duration-fast',
-                  localIsFavorite ? 'fill-destructive text-destructive' : 'text-muted-foreground'
+                  localIsFavorite ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'
                 )}
               />
             )}
@@ -179,7 +186,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         <button
           type="button"
           onClick={onScrollToComments}
-          className="flex cursor-pointer items-center gap-1 outline-none"
+          className="flex cursor-pointer items-center gap-1.5 outline-none"
         >
           <Star aria-hidden="true" className="h-4 w-4 shrink-0 fill-warning text-warning" />
           <span className="font-bold text-foreground">{toPersianDigits(product.averageRate)}</span>
@@ -221,7 +228,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
           />
         </ModalBody>
 
-        <ModalFooter className="gap-2.5 p-5 pt-4">
+        <ModalFooter className="gap-3 p-5 pt-4">
           <Button
             type="button"
             variant="outline"

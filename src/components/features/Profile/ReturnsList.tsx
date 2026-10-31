@@ -12,7 +12,6 @@ import {
   Clock,
   XCircle,
   FileText,
-  AlertCircle,
   Store,
 } from 'lucide-react';
 import { useGetReturnRequests } from '@/domains/userpanel/hooks/userpanel.hooks';
@@ -47,9 +46,7 @@ export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
   const router = useRouter();
   const [status, setStatus] = React.useState(initialStatus);
   const [page, setPage] = React.useState(initialPage);
-  const [selectedReturnId, setSelectedReturnId] = React.useState<string | null>(
-    null,
-  );
+  const [selectedReturnId, setSelectedReturnId] = React.useState<string | null>(null);
 
   const { data: returnsResponse, isLoading } = useGetReturnRequests(
     page,
@@ -65,30 +62,30 @@ export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
     router.push(`/profile/returns?status=${newStatus}`);
   };
 
-const getReturnStatusMeta = (s: string) => {
-  switch (s) {
-    case 'Pending':
-      return { label: 'در انتظار بررسی', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
-    case 'NeedsMoreDocumentation':
-      return { label: 'نیاز به مدارک بیشتر', color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' };
-    case 'WaitingForSellerResponse':
-      return { label: 'در انتظار پاسخ فروشنده', color: 'text-purple-500 bg-purple-500/10 border-purple-500/20' };
-    case 'Confirmed':
-      return { label: 'تأیید شده', color: 'text-primary bg-primary/10 border-primary/20' };
-    case 'TraceNumberAdded':
-      return { label: 'کد رهگیری ثبت شد', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
-    case 'SentBack':
-      return { label: 'ارسال به فروشنده', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
-    case 'Received':
-      return { label: 'دریافت شده', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
-    case 'Refunded':
-      return { label: 'بازگشت وجه انجام شد', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
-    case 'Denied':
-      return { label: 'رد شده', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
-    default:
-      return { label: s, color: 'text-muted-foreground bg-muted border-border' };
-  }
-};
+  const getReturnStatusMeta = (s: string) => {
+    switch (s) {
+      case 'Pending':
+        return { label: 'در انتظار بررسی', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+      case 'NeedsMoreDocumentation':
+        return { label: 'نیاز به مدارک بیشتر', color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' };
+      case 'WaitingForSellerResponse':
+        return { label: 'در انتظار پاسخ فروشنده', color: 'text-purple-500 bg-purple-500/10 border-purple-500/20' };
+      case 'Confirmed':
+        return { label: 'تأیید شده', color: 'text-primary bg-primary/10 border-primary/20' };
+      case 'TraceNumberAdded':
+        return { label: 'کد رهگیری ثبت شد', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
+      case 'SentBack':
+        return { label: 'ارسال به فروشنده', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
+      case 'Received':
+        return { label: 'دریافت شده', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+      case 'Refunded':
+        return { label: 'بازگشت وجه انجام شد', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+      case 'Denied':
+        return { label: 'رد شده', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
+      default:
+        return { label: s, color: 'text-muted-foreground bg-muted border-border' };
+    }
+  };
 
   return (
     <div className="flex w-full flex-col gap-5" dir="rtl">
@@ -117,7 +114,7 @@ const getReturnStatusMeta = (s: string) => {
               type="button"
               onClick={() => handleTabChange(tab.id)}
               className={cn(
-                'flex shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold transition-all duration-150',
+                'flex shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all duration-150',
                 isActive
                   ? 'border-primary bg-primary text-primary-foreground shadow-xs'
                   : 'border-border/80 bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground',
@@ -147,13 +144,13 @@ const getReturnStatusMeta = (s: string) => {
               return (
                 <Card
                   key={req.id}
-                  className="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-4.5 shadow-xs transition-colors hover:border-primary/30 sm:p-5"
+                  className="flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-4 shadow-xs transition-colors hover:border-primary/30 sm:p-5"
                 >
                   <div>
                     {/* ردیف بالا: شماره درخواست و وضعیت */}
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-primary" />
+                        <FileText className="h-4 w-4 text-primary" />
                         <span className="text-xs text-muted-foreground">
                           شماره درخواست:
                         </span>
@@ -164,7 +161,7 @@ const getReturnStatusMeta = (s: string) => {
 
                       <span
                         className={cn(
-                          'rounded-lg border px-2.5 py-0.5 text-2xs font-bold',
+                          'rounded-lg border px-2 py-1 text-xs font-bold',
                           meta.color,
                         )}
                       >
@@ -190,18 +187,18 @@ const getReturnStatusMeta = (s: string) => {
                         <span className="line-clamp-1 text-xs font-bold text-foreground">
                           {req.productTitle}
                         </span>
-                        <span className="text-2xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           فروشگاه: {req.shopTitle}
                         </span>
-                        <span className="text-2xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           تاریخ ثبت: {req.createDateFormatted}
                         </span>
                       </div>
                     </div>
 
                     {/* مبلغ بازگشتی */}
-                    <div className="mt-3 flex items-center justify-between border-t border-dashed border-border/60 pt-2.5">
-                      <span className="text-2xs text-muted-foreground">
+                    <div className="mt-3 flex items-center justify-between border-t border-dashed border-border/60 pt-3">
+                      <span className="text-xs text-muted-foreground">
                         مبلغ قابل بازگشت:
                       </span>
                       <span className="text-sm font-black text-primary">
@@ -212,30 +209,29 @@ const getReturnStatusMeta = (s: string) => {
 
                   {/* اکشن‌ها */}
                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/50 pt-3">
-                 {req.status === 'Confirmed' && (
-  <Button
-    variant="primary"
-    size="sm"
-    onClick={() => setSelectedReturnId(req.id)}
-    className="h-8 gap-1.5 rounded-lg text-3xs font-bold"
-  >
-    <Truck className="h-3.5 w-3.5" />
-    ثبت بارنامه ارسال
-  </Button>
-)}
+                    {req.status === 'Confirmed' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => setSelectedReturnId(req.id)}
+                        className="h-8 gap-2 rounded-lg text-xs font-bold"
+                      >
+                        <Truck className="h-4 w-4" />
+                        <span>ثبت بارنامه ارسال</span>
+                      </Button>
+                    )}
 
                     {req.status !== 'Confirmed' && <div />}
 
+                    {/* اصلاح ریدایرکت به صفحه تکی مرجوعی */}
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        router.push(`/profile/orders/${req.id}`)
-                      }
-                      className="h-8 gap-1 rounded-lg text-3xs font-bold text-primary hover:bg-primary/5"
+                      onClick={() => router.push(`/profile/returns/${req.id}`)}
+                      className="h-8 gap-1 rounded-lg text-xs font-bold text-primary hover:bg-primary/5"
                     >
-                      <span>جزئیات</span>
-                      <ChevronLeft className="h-3.5 w-3.5" />
+                      <span>جزئیات درخواست</span>
+                      <ChevronLeft className="h-4 w-4" />
                     </Button>
                   </div>
                 </Card>
@@ -272,7 +268,7 @@ const getReturnStatusMeta = (s: string) => {
             variant="outline"
             size="sm"
             onClick={() => router.push('/profile/orders')}
-            className="mt-4 h-9 gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs"
+            className="mt-4 h-9 gap-2 rounded-xl px-5 text-xs font-bold shadow-xs"
           >
             <ShoppingBag className="h-4 w-4" />
             <span>مشاهده سفارش‌ها</span>

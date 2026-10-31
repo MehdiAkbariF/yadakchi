@@ -8,25 +8,25 @@ export const darkTheme = {
   popover:               '#151A20',
   'popover-foreground':  '#F4F6F8',
 
-  primary:               '#F17B4C',
-  'primary-foreground':  '#FFFFFF',
-  'primary-hover':       '#F4956E',
-  'primary-active':      '#EE612A',
+  primary:               '#F37643',
+  'primary-foreground':  '#0F1317', // اصلاح شد: روی پس زمینه نارنجی روشن، متن تیره کنتراست بالاتری دارد
+  'primary-hover':       '#F69165',
+  'primary-active':      '#EE5717',
 
   secondary:             '#212831',
   'secondary-foreground':'#F4F6F8',
 
   muted:                 '#212831',
-  'muted-foreground':    '#A0A8B2',
+  'muted-foreground':    '#A8B1BC',
 
   accent:                '#391A0F',
   'accent-foreground':   '#F8BFAB',
 
-  destructive:           '#E03E3E',
+  destructive:           '#EF4444',
   'destructive-foreground':'#FFFFFF',
 
-  success:               '#2BB65E',
-  'success-foreground':  '#FFFFFF',
+  success:               '#25B85C',
+  'success-foreground':  '#0F1317',
 
   warning:               '#F59E0B',
   'warning-foreground':  '#0F1317',
@@ -34,9 +34,9 @@ export const darkTheme = {
   info:                  '#3B82F6',
   'info-foreground':     '#FFFFFF',
 
-  border:                '#232A34',
-  input:                 '#232A34',
-  ring:                  '#F17B4C',
+  border:                '#2D3643', // اصلاح شد: واضح‌تر شدن بوردرها در دارک مد
+  input:                 '#2D3643',
+  ring:                  '#F37643',
 
   shop:                  '#3D94C6',
   'shop-foreground':     '#FFFFFF',

@@ -42,7 +42,6 @@ export function ProductStandardCard({
     product?.name ||
     '';
 
-  // استخراج ۳ مقدار مورد نظر برای اسلایدر
   const shopName = product?.shopTitle || nominated?.shopTitle || product?.shop?.name || '';
   const scoreValue = product?.score ?? nominated?.score ?? product?.averageRate ?? 5;
   const quantityValue = product?.quantity ?? nominated?.quantity ?? 0;
@@ -84,24 +83,20 @@ export function ProductStandardCard({
       ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
       : nominated?.discountPercentage || product?.discount?.percent || 0);
 
-  // تنظیم دقیق اسلایدر فقط بین: نام فروشگاه، امتیاز و موجودی
   const tickerItems = React.useMemo(() => {
     const items: { text: string; icon: any; isShop?: boolean }[] = [];
 
-    // ۱. نام فروشگاه
     items.push({
       text: shopName ? `فروشگاه: ${shopName}` : 'فروشگاه: یدکچی',
       icon: Store,
       isShop: true,
     });
 
-    // ۲. امتیاز (Score)
     items.push({
       text: `امتیاز: ${toPersianDigits(scoreValue)} از ۵`,
       icon: Star,
     });
 
-    // ۳. موجودی (Quantity)
     items.push({
       text: quantityValue > 0 ? `موجودی در انبار: ${toPersianDigits(quantityValue)} عدد` : 'وضعیت: ناموجود در انبار',
       icon: Package,
@@ -201,7 +196,7 @@ export function ProductStandardCard({
         ref={impressionRef}
         className={cn(
           'relative flex h-full w-full select-none flex-col items-center rounded-lg border border-border bg-card p-3 transition-all duration-normal sm:p-3.5',
-          'hover:border-primary/40 hover:shadow-sm',
+          'hover:border-primary/50 hover:shadow-md',
           className
         )}
       >
@@ -216,7 +211,7 @@ export function ProductStandardCard({
           />
 
           {showRating ? (
-            <div className="absolute start-2 top-2 z-10 flex items-center justify-center rounded-sm bg-card/85 px-2 py-0.5 backdrop-blur-sm">
+            <div className="absolute start-2 top-2 z-10 flex items-center justify-center rounded-md bg-card/90 px-2 py-0.5 shadow-sm backdrop-blur-sm">
               {renderStars()}
             </div>
           ) : null}
@@ -228,7 +223,6 @@ export function ProductStandardCard({
           </h4>
         </div>
 
-        {/* بخش اسلایدر اختصاصی بین نام فروشگاه، امتیاز و موجودی */}
         <div className="flex w-full select-none flex-col items-stretch">
           {isMounted && tickerLength > 0 ? (
             <div className="relative mt-0.5 flex h-6 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground sm:text-xs">
@@ -261,7 +255,6 @@ export function ProductStandardCard({
                 </AnimatePresence>
               </div>
 
-              {/* نسخه موبایل (اسلایدر برای موبایل نیز فعال شد) */}
               <div className="relative flex h-full w-full items-center justify-start gap-1.5 truncate md:hidden">
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -299,7 +292,8 @@ export function ProductStandardCard({
         <div className="mt-auto flex w-full items-center justify-between pt-2">
           <div
             className={cn(
-              'shrink-0 rounded-sm border border-accent bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground transition-opacity duration-fast',
+              'shrink-0 rounded-md px-2 py-0.5 text-xs font-bold transition-opacity duration-fast',
+              'bg-destructive text-destructive-foreground',
               hasDiscount && discountPercent > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
             )}
           >
@@ -308,19 +302,19 @@ export function ProductStandardCard({
 
           <div className="flex min-w-0 flex-col items-end">
             {hasDiscount && originalPriceToman > finalPriceToman ? (
-              <span className="text-2xs font-medium text-muted-foreground line-through sm:text-xs">
+              <span className="text-xs font-medium text-muted-foreground/90 line-through">
                 {formatPrice(originalPriceToman)}
               </span>
             ) : null}
-            <div className="mt-0.5 flex items-center gap-0.5">
+            <div className="mt-0.5 flex items-center gap-1">
               {isOutOfStock ? (
                 <span className="text-sm font-bold text-destructive sm:text-base">ناموجود</span>
               ) : (
                 <>
-                  <span className="text-base font-bold text-foreground sm:text-lg">
+                  <span className="text-base font-extrabold text-foreground sm:text-lg">
                     {formatPrice(finalPriceToman)}
                   </span>
-                  <span className="text-2xs text-muted-foreground">تومان</span>
+                  <span className="text-2xs font-medium text-muted-foreground">تومان</span>
                 </>
               )}
             </div>
