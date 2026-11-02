@@ -1,74 +1,122 @@
 ﻿'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import {
   Store,
   MapPin,
   AlertTriangle,
-  Loader2,
   Star,
   Zap,
-  ShoppingBag,
-  Maximize2,
+  ChevronLeft,
   ShieldCheck,
   Truck,
+  Award,
 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
-import { useAddToBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { useGetReportSubjects, useSubmitShopReport } from '@/domains/front/shop/hooks/shop.hooks';
 import { Select } from '@/components/primitives/Select/Select';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { showToast } from '@/core/utils/toast';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { SellerBasketControl } from './SellerBasketControl';
 
 export interface SellersListProps {
   activeSellers: any;
   selectedSellerId: string | null;
   onSelectSeller: (id: string) => void;
+  onSellerAddedToBasket?: (id: string) => void;
   productTitle?: string;
 }
 
-const DESKTOP_MAX_VISIBLE = 4;
+const DESKTOP_MAX_VISIBLE = 1;
+
+function getShopHref(seller: any): string {
+  const shop = seller.shop || {};
+  const shopId = shop.id || seller.shopId;
+  return `/shops/${shopId}`;
+}
 
 export function SellersList({
   activeSellers,
   selectedSellerId,
   onSelectSeller,
+  onSellerAddedToBasket,
   productTitle = 'قطعه یدکی',
 }: SellersListProps) {
   const [reportShop, setReportShop] = React.useState<any | null>(null);
-  const [loadingSellerId, setLoadingSellerId] = React.useState<string | null>(null);
   const [isAllSellersModalOpen, setIsAllSellersModalOpen] = React.useState(false);
 
   const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
   const [reportDescription, setReportDescription] = React.useState('');
 
-  const addToBasket = useAddToBasket();
   const { data: reportSubjects = [] } = useGetReportSubjects('ShopProductReport');
   const submitReport = useSubmitShopReport();
 
-  const onlineList = activeSellers.online || [];
+  // ── خواندن سبد برای تشخیص فروشگاه‌های درون سبد ─────────────
+  const { data: basketData } = useGetBasket();
 
+  const basketMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    if (!basketData) return map;
+
+    const items: any[] =
+      (Array.isArray(basketData.items) && basketData.items) ||
+      (Array.isArray((basketData as any).subBaskets) &&
+        (basketData as any).subBaskets.flatMap(
+          (sb: any) => sb.items || sb.subBasketItems || []
+        )) ||
+      [];
+
+    items.forEach((it: any) => {
+      const spid =
+        it.shopProductId ??
+        it.shopProduct?.id ??
+        it.product?.shopProductId ??
+        it.shopProduct?.shopProductId;
+      const qty = Number(it.quantity ?? 0);
+      if (spid && qty > 0) map.set(spid, qty);
+    });
+
+    return map;
+  }, [basketData]);
+
+  // ── لیست کامل (هم online هم local) ─────────────────────────
+  const allSellersList = React.useMemo(
+    () => [...(activeSellers.online || []), ...(activeSellers.local || [])],
+    [activeSellers.online, activeSellers.local]
+  );
+
+  const hasMoreOnline = allSellersList.length > DESKTOP_MAX_VISIBLE;
+
+  // ── محاسبه فروشگاه‌هایی که در صفحه نمایش داده می‌شوند ───────
+  // قاعده:
+  // 1. فروشگاه انتخاب‌شده فعلی همیشه نمایش داده شود
+  // 2. هر فروشگاهی که در سبد است همیشه نمایش داده شود
+  // 3. بقیه فروشگاه‌ها تا سقف DESKTOP_MAX_VISIBLE
   const visibleOnline = React.useMemo(() => {
-    return onlineList.slice(0, DESKTOP_MAX_VISIBLE);
-  }, [onlineList]);
+    const mustShowIds = new Set<string>();
+  // فروشگاه اول (منتخب) همیشه
+  if (allSellersList[0]) mustShowIds.add(allSellersList[0].id);
+  if (selectedSellerId) mustShowIds.add(selectedSellerId);
+  basketMap.forEach((qty, id) => {
+    if (qty > 0) mustShowIds.add(id);
+  });
 
-  const hasMoreOnline = onlineList.length > DESKTOP_MAX_VISIBLE;
+    // فروشگاه‌های must-show از لیست کامل
+    const mustShow = allSellersList.filter((s: any) => mustShowIds.has(s.id));
 
-  const handleAddOnlineToBasket = async (e: React.MouseEvent, seller: any) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setLoadingSellerId(seller.id);
-    try {
-      await addToBasket.mutateAsync({ shopProductId: seller.id, quantity: 1 });
-      showToast.success('قطعه با موفقیت به سبد خرید افزوده شد');
-    } catch {
-    } finally {
-      setLoadingSellerId(null);
-    }
-  };
+    // بقیه فروشگاه‌ها (نه در must-show)
+    const rest = allSellersList.filter((s: any) => !mustShowIds.has(s.id));
+
+    // تعداد باقی‌مانده برای نمایش
+    const remaining = Math.max(0, DESKTOP_MAX_VISIBLE - mustShow.length);
+
+    return [...mustShow, ...rest.slice(0, remaining)];
+  }, [allSellersList, selectedSellerId, basketMap]);
 
   const handleReportSubmit = async () => {
     if (!selectedSubjectId) {
@@ -91,8 +139,13 @@ export function SellersList({
     }
   };
 
-  const renderSellerCard = (seller: any) => {
+  const renderSellerCard = (
+    seller: any,
+    isFeatured = false,
+    mode: 'list' | 'modal' = 'list'
+  ) => {
     const isSelected = selectedSellerId === seller.id;
+    const shopHref = getShopHref(seller);
 
     const originalPriceRaw = seller.retailPriceRaw || 0;
     const finalPriceRaw = seller.finalPriceRaw || 0;
@@ -103,21 +156,28 @@ export function SellersList({
 
     const discountPercent = seller.discountPercentage || calculatedPercent || 0;
     const hasDiscount = !!(
-      (seller.hasDiscount || (originalPriceRaw > 0 && finalPriceRaw > 0 && originalPriceRaw > finalPriceRaw)) &&
+      (seller.hasDiscount ||
+        (originalPriceRaw > 0 && finalPriceRaw > 0 && originalPriceRaw > finalPriceRaw)) &&
       discountPercent > 0
     );
 
-    return (
-      <div
-        key={seller.id}
-        onClick={() => onSelectSeller(seller.id)}
-        className={cn(
-          'relative flex w-full cursor-pointer flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4 rounded-2xl bg-card p-4 border shadow-xs transition-all duration-200',
-          isSelected
-            ? 'border-foreground/30 bg-muted/40 ring-1 ring-foreground/10'
-            : 'border-border/80 hover:border-border hover:bg-muted/10'
+    const cardClassName = cn(
+      'relative flex w-full cursor-pointer flex-col lg:flex-row lg:items-center lg:justify-between gap-3 lg:gap-4 rounded-2xl bg-card p-4 border shadow-xs transition-all duration-200 no-underline text-inherit',
+      isSelected
+        ? 'border-foreground/30 bg-muted/40 ring-1 ring-foreground/10'
+        : 'border-border/80 hover:border-border hover:bg-muted/10',
+      isFeatured && !isSelected && 'ring-1 ring-amber-300/50 dark:ring-amber-400/30'
+    );
+
+    const cardContent = (
+      <>
+        {isFeatured && (
+          <div className="absolute -top-2 right-3 z-10 inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-gradient-to-l from-amber-50 to-amber-100/70 px-2 py-0.5 text-[10px] font-bold text-amber-700 shadow-sm dark:border-amber-400/30 dark:from-amber-500/10 dark:to-amber-400/5 dark:text-amber-300">
+            <Award className="h-3 w-3" aria-hidden="true" />
+            <span>منتخب</span>
+          </div>
         )}
-      >
+
         {hasDiscount && (
           <div className="flex lg:hidden items-center justify-between rounded-xl bg-destructive/10 px-3 py-1 text-2xs font-bold text-destructive">
             <div className="flex items-center gap-1">
@@ -132,7 +192,11 @@ export function SellersList({
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-1">
               {seller.shop?.logo ? (
-                <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
+                <img
+                  src={getFullUrl(seller.shop.logo)}
+                  className="h-full w-full object-contain"
+                  alt=""
+                />
               ) : (
                 <Store className="h-5 w-5 text-muted-foreground" />
               )}
@@ -157,7 +221,9 @@ export function SellersList({
                 <span className="flex items-center gap-1 truncate">
                   <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
                   <span className="truncate max-w-[90px]">
-                    {(seller.shop as any)?.cityName || seller.shop?.address?.split('،')[0] || 'تهران'}
+                    {(seller.shop as any)?.cityName ||
+                      seller.shop?.address?.split('،')[0] ||
+                      'تهران'}
                   </span>
                 </span>
               </div>
@@ -183,7 +249,9 @@ export function SellersList({
           <div className="flex items-center gap-2">
             <Truck className="h-4 w-4 text-primary shrink-0" />
             <span className="text-muted-foreground">ارسال:</span>
-            <span className="font-bold text-foreground truncate">{seller.dayOfDeliveryLabel}</span>
+            <span className="font-bold text-foreground truncate">
+              {seller.dayOfDeliveryLabel}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -214,22 +282,15 @@ export function SellersList({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={(e) => handleAddOnlineToBasket(e, seller)}
-              disabled={loadingSellerId === seller.id}
-              className="h-9 gap-1.5 rounded-xl px-3 sm:px-4 text-xs font-bold shadow-xs whitespace-nowrap"
-            >
-              {loadingSellerId === seller.id ? (
-                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <ShoppingBag aria-hidden="true" className="h-4 w-4" />
-                  <span>افزودن به سبد</span>
-                </>
-              )}
-            </Button>
+            <SellerBasketControl
+              seller={seller}
+              onAddedToBasket={() => {
+                onSellerAddedToBasket?.(seller.id);
+                if (mode === 'modal') {
+                  setIsAllSellersModalOpen(false);
+                }
+              }}
+            />
 
             <button
               type="button"
@@ -245,41 +306,81 @@ export function SellersList({
             </button>
           </div>
         </div>
+      </>
+    );
+
+    if (mode === 'modal') {
+      return (
+        <Link
+          key={seller.id}
+          href={shopHref}
+          onClick={() => setIsAllSellersModalOpen(false)}
+          className={cardClassName}
+        >
+          {cardContent}
+        </Link>
+      );
+    }
+
+    return (
+      <div
+        key={seller.id}
+        onClick={() => onSelectSeller(seller.id)}
+        className={cardClassName}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelectSeller(seller.id);
+          }
+        }}
+      >
+        {cardContent}
       </div>
     );
   };
 
   return (
     <div className="relative mt-2 flex w-full select-none flex-col gap-4" dir="rtl">
-      {/* تایتل ساده به‌جای تب */}
       <div className="flex w-full items-center gap-2 border-b border-border pb-3">
         <Store className="h-5 w-5 text-primary shrink-0" />
         <h3 className="text-sm font-bold text-foreground md:text-base">
           فروشندگان اینترنتی این قطعه
         </h3>
         <span className="rounded-md bg-muted px-2 py-0.5 text-3xs font-bold text-muted-foreground">
-          {toPersianDigits(onlineList.length)} فروشگاه
+          {toPersianDigits(allSellersList.length)} فروشگاه
         </span>
       </div>
 
-      {/* محتوای لیست فروشندگان */}
       <div className="flex flex-col gap-3">
-        {onlineList.length > 0 ? (
+        {allSellersList.length > 0 ? (
           <>
             <div className="flex flex-col gap-3">
-              {visibleOnline.map((s: any) => renderSellerCard(s))}
+              {visibleOnline.map((s: any) => {
+                // isFeatured فقط برای اولین فروشگاه در حالت اولیه است
+                // اگر visibleOnline به هم خورد (چون فروشگاه در سبد اضافه شد)،
+                // همچنان اولین فروشگاه لیست را featured نشان می‌دهیم
+                const originalIndex = allSellersList.findIndex(
+                  (x: any) => x.id === s.id
+                );
+                return renderSellerCard(s, originalIndex === 0, 'list');
+              })}
             </div>
 
             {hasMoreOnline && (
-              <div className="flex w-full justify-center pt-2">
-                <Button
-                  variant="outline"
+              <div className="flex w-full justify-start pt-1">
+                <button
+                  type="button"
                   onClick={() => setIsAllSellersModalOpen(true)}
-                  className="h-10 gap-2 rounded-2xl px-6 text-xs font-bold border-primary/40 text-primary hover:bg-primary/5 shadow-2xs"
+                  className="group inline-flex items-center gap-1 rounded-lg px-1 py-0.5 text-xs font-bold text-blue-600 transition-colors hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-blue-400 dark:hover:text-blue-300"
                 >
-                  <Maximize2 className="h-4 w-4" />
-                  <span>مشاهده همه فروشندگان ({toPersianDigits(onlineList.length)} فروشگاه)</span>
-                </Button>
+                  <span>مشاهده همه فروشندگان</span>
+                  <ChevronLeft
+                    className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"
+                    aria-hidden="true"
+                  />
+                </button>
               </div>
             )}
           </>
@@ -293,20 +394,31 @@ export function SellersList({
       <Modal
         isOpen={isAllSellersModalOpen}
         onClose={() => setIsAllSellersModalOpen(false)}
-        className="w-full max-w-4xl overflow-hidden rounded-2xl"
+        className="w-full md:max-w-5xl xl:max-w-6xl overflow-hidden md:rounded-2xl"
       >
         <ModalHeader onClose={() => setIsAllSellersModalOpen(false)}>
           <ModalTitle className="flex items-center gap-2 text-sm font-black text-foreground">
             <Store className="h-5 w-5 text-primary" />
-            <span>لیست کامل فروشندگان این قطعه ({toPersianDigits(onlineList.length)} فروشگاه)</span>
+            <span>
+              لیست کامل فروشندگان این قطعه ({toPersianDigits(allSellersList.length)} فروشگاه)
+            </span>
           </ModalTitle>
         </ModalHeader>
-        <ModalBody className="p-4 md:p-5 max-h-[80dvh] overflow-y-auto no-scrollbar flex flex-col gap-3" dir="rtl">
-          {onlineList.map((s: any) => renderSellerCard(s))}
+        <ModalBody
+          className="p-4 md:p-5 max-h-[80dvh] overflow-y-auto no-scrollbar flex flex-col gap-3"
+          dir="rtl"
+        >
+          {allSellersList.map((s: any, index: number) =>
+            renderSellerCard(s, index === 0, 'modal')
+          )}
         </ModalBody>
       </Modal>
 
-      <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md overflow-hidden rounded-2xl">
+      <Modal
+        isOpen={!!reportShop}
+        onClose={() => setReportShop(null)}
+        className="w-full max-w-md overflow-hidden md:rounded-2xl"
+      >
         <ModalHeader onClose={() => setReportShop(null)}>
           <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
             <AlertTriangle aria-hidden="true" className="h-5 w-5 text-destructive" />
@@ -319,7 +431,10 @@ export function SellersList({
             placeholder="دلیل گزارش را انتخاب کنید..."
             value={selectedSubjectId}
             onChange={(e) => setSelectedSubjectId(e.target.value)}
-            options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+            options={reportSubjects.map((sub: any) => ({
+              value: sub.id,
+              label: sub.title,
+            }))}
           />
           <TextArea
             label="توضیحات تکمیلی"

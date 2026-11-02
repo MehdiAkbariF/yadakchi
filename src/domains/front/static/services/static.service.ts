@@ -5,34 +5,26 @@ import { errorManager } from '@/core/errors/error-manager';
 import { logger } from '@/core/utils/logger';
 import { STATIC_ENDPOINTS } from '../endpoints/static.endpoints';
 import { StaticMapper } from '../mappers/static.mapper';
-import { 
-  FAQFilters, 
-  ContactUsRequest, 
-  NewsletterRequest 
-} from '../types/view.types';
-import { 
-  StaticPageApiDto, 
-  StaticPageCategoryApiDto,
+import { FAQFilters, ContactUsRequest, NewsletterRequest } from '../types/view.types';
+import {
+  StaticPageApiDto,
   FAQApiDto,
   ContactUsSubjectApiDto,
   ToolTipApiDto,
-  MarketMessageApiDto
+  MarketMessageApiDto,
 } from '../types/dto.types';
-import { 
-  StaticPageViewModel, 
+import {
+  StaticPageViewModel,
   StaticPageCategoryViewModel,
   FAQViewModel,
   ContactUsSubjectViewModel,
   ToolTipViewModel,
-  MarketMessageViewModel
+  MarketMessageViewModel,
 } from '../types/view.types';
 
 export class StaticService {
   private readonly httpClient = getHttpClient();
-  /**
-   * دریافت یک صفحه استاتیک بر اساس englishTitle
-   * خروجی واقعی API: { id, title, englishTitle, url, content, seoInformation }
-   */
+
   async getStaticPage(title: string): Promise<StaticPageViewModel | null> {
     try {
       const response = await this.httpClient.get<StaticPageApiDto>(
@@ -40,7 +32,6 @@ export class StaticService {
         { params: { Title: title } }
       );
 
-      // اگر پاسخ خالی یا نامعتبر بود
       if (!response.data || !response.data.id) {
         return null;
       }
@@ -48,7 +39,6 @@ export class StaticService {
       const domain = StaticMapper.toDomainPage(response.data);
       return StaticMapper.toViewPage(domain);
     } catch (error: any) {
-      // 404 → کاربر باید not-found ببینه
       if (error?.status === 404) {
         return null;
       }
@@ -57,21 +47,13 @@ export class StaticService {
     }
   }
 
-  /**
-   * دریافت لیست دسته‌بندی‌های صفحات استاتیک (برای فوتر)
-   * خروجی واقعی API: [{ title, staticPages: [{ id, title, englishTitle, url }] }]
-   */
   async getStaticPageCategories(): Promise<StaticPageCategoryViewModel[]> {
     try {
       const response = await this.httpClient.get<any[]>(
         STATIC_ENDPOINTS.GET_STATIC_PAGE_CATEGORY
       );
-
-      if (!Array.isArray(response.data)) {
-        return [];
-      }
-
-      return response.data.map(dto => StaticMapper.toViewCategory(dto));
+      if (!Array.isArray(response.data)) return [];
+      return response.data.map((dto) => StaticMapper.toViewCategory(dto));
     } catch (error) {
       logger.error('[StaticService] Get static page categories failed:', error);
       return [];
@@ -84,13 +66,10 @@ export class StaticService {
         FAQCategoryId: filters.categoryId || '',
         QorA: filters.qorA || '',
       };
-
-      const response = await this.httpClient.get<FAQApiDto[]>(
-        STATIC_ENDPOINTS.GET_FAQ,
-        { params }
-      );
-
-      return response.data.map(dto => StaticMapper.toViewFAQ(dto));
+      const response = await this.httpClient.get<FAQApiDto[]>(STATIC_ENDPOINTS.GET_FAQ, {
+        params,
+      });
+      return response.data.map((dto) => StaticMapper.toViewFAQ(dto));
     } catch (error) {
       logger.error('[StaticService] Get FAQ failed:', error);
       return [];
@@ -102,8 +81,7 @@ export class StaticService {
       const response = await this.httpClient.get<ContactUsSubjectApiDto[]>(
         STATIC_ENDPOINTS.GET_CONTACT_US_SUBJECTS
       );
-
-      return response.data.map(dto => StaticMapper.toViewContactSubject(dto));
+      return response.data.map((dto) => StaticMapper.toViewContactSubject(dto));
     } catch (error) {
       logger.error('[StaticService] Get contact us subjects failed:', error);
       return [];
@@ -117,19 +95,12 @@ export class StaticService {
       formData.append('Fullname', request.fullname);
       formData.append('Description', request.description);
       formData.append('PhoneNumber', request.phoneNumber);
-      if (request.email) {
-        formData.append('Email', request.email);
-      }
+      if (request.email) formData.append('Email', request.email);
       if (request.attachments) {
-        request.attachments.forEach(file => {
-          formData.append('Attachments', file);
-        });
+        request.attachments.forEach((file) => formData.append('Attachments', file));
       }
-
       await this.httpClient.post(STATIC_ENDPOINTS.POST_CONTACT_US, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
     } catch (error) {
       logger.error('[StaticService] Submit contact us failed:', error);
@@ -143,7 +114,6 @@ export class StaticService {
         STATIC_ENDPOINTS.GET_TOOL_TIP,
         { params: { Key: key } }
       );
-
       return StaticMapper.toViewToolTip(response.data);
     } catch (error) {
       logger.error('[StaticService] Get tool tip failed:', error);
@@ -161,7 +131,6 @@ export class StaticService {
         STATIC_ENDPOINTS.GET_MARKET_MESSAGE,
         { params }
       );
-
       return StaticMapper.toViewMarketMessage(response.data);
     } catch (error) {
       logger.error('[StaticService] Get market message failed:', error);
@@ -173,11 +142,8 @@ export class StaticService {
     try {
       const formData = new FormData();
       formData.append('Email', request.email);
-
       await this.httpClient.post(STATIC_ENDPOINTS.POST_NEWSLETTER, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
     } catch (error) {
       logger.error('[StaticService] Subscribe newsletter failed:', error);
@@ -185,12 +151,9 @@ export class StaticService {
     }
   }
 
-  // اصلاح کلیدی متد لود ساعت سرور: از آنجا که سرور استرینگ خام برمی‌گرداند، مستقیم آن را پارس و به Date تبدیل می‌کنیم
   async getCurrentTime(): Promise<Date> {
     try {
-      const response = await this.httpClient.get<string>(
-        STATIC_ENDPOINTS.GET_CURRENT_TIME
-      );
+      const response = await this.httpClient.get<string>(STATIC_ENDPOINTS.GET_CURRENT_TIME);
       return new Date(response.data);
     } catch (error) {
       logger.error('[StaticService] Get current time failed:', error);

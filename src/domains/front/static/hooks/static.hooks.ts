@@ -3,13 +3,13 @@
 import { UseQueryOptions } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { getStaticService } from '../services/static.service';
-import { 
-  FAQFilters, 
-  ContactUsRequest, 
+import {
+  FAQFilters,
+  ContactUsRequest,
   NewsletterRequest,
   StaticPageViewModel,
   FAQViewModel,
-  ToolTipViewModel
+  ToolTipViewModel,
 } from '../types/view.types';
 
 const staticService = getStaticService();
@@ -33,9 +33,7 @@ export function useGetStaticPageCategories() {
   return useTypedQuery(
     ['front', 'static-page-categories'],
     () => staticService.getStaticPageCategories(),
-    {
-      staleTime: 15 * 60 * 1000,
-    }
+    { staleTime: 15 * 60 * 1000 }
   );
 }
 
@@ -46,10 +44,7 @@ export function useGetFAQ(
   return useTypedQuery(
     ['front', 'faq', filters],
     () => staticService.getFAQ(filters),
-    {
-      staleTime: 10 * 60 * 1000,
-      ...options,
-    }
+    { staleTime: 10 * 60 * 1000, ...options }
   );
 }
 
@@ -57,15 +52,13 @@ export function useGetContactUsSubjects() {
   return useTypedQuery(
     ['front', 'contact-us-subjects'],
     () => staticService.getContactUsSubjects(),
-    {
-      staleTime: 10 * 60 * 1000,
-    }
+    { staleTime: 10 * 60 * 1000 }
   );
 }
 
 export function useSubmitContactUs() {
-  return useTypedMutation(
-    (request: ContactUsRequest) => staticService.submitContactUs(request)
+  return useTypedMutation((request: ContactUsRequest) =>
+    staticService.submitContactUs(request)
   );
 }
 
@@ -76,11 +69,7 @@ export function useGetToolTip(
   return useTypedQuery(
     ['front', 'tool-tip', key],
     () => staticService.getToolTip(key),
-    {
-      staleTime: 15 * 60 * 1000,
-      enabled: !!key,
-      ...options,
-    }
+    { staleTime: 15 * 60 * 1000, enabled: !!key, ...options }
   );
 }
 
@@ -92,28 +81,25 @@ export function useGetMarketMessage(params: {
   return useTypedQuery(
     ['front', 'market-message', params],
     () => staticService.getMarketMessage(params),
-    {
-      staleTime: 10 * 60 * 1000,
-    }
+    { staleTime: 10 * 60 * 1000 }
   );
 }
 
 export function useSubscribeNewsletter() {
-  return useTypedMutation(
-    (request: NewsletterRequest) => staticService.subscribeNewsletter(request)
+  return useTypedMutation((request: NewsletterRequest) =>
+    staticService.subscribeNewsletter(request)
   );
 }
-
 
 export function useGetCurrentTime() {
   return useTypedQuery(
     ['front', 'current-time'],
     () => staticService.getCurrentTime(),
     {
-      staleTime: 30 * 1000, // ۳۰ ثانیه
+      staleTime: 30 * 1000,
       refetchOnWindowFocus: true,
       refetchOnMount: true,
-      retry: 1, // در صورت خطا، یک بار تلاش مجدد
+      retry: 1,
     }
   );
 }

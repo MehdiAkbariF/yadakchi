@@ -1,19 +1,21 @@
 // src/domains/front/static/types/domain.types.ts
 
+export interface StaticPageSeo {
+  metaTitle: string | null;
+  metaDescription: string | null;
+  metaKeywords: string | null;
+  canonicalUrl: string | null;
+}
+
 export interface StaticPage {
   id: string;
   title: string;
   englishTitle: string;
   url: string;
   content: string;
-  seo: StaticPageSEO | null;
-}
-
-export interface StaticPageSEO {
-  metaTitle?: string;
-  metaDescription?: string;
-  metaKeywords?: string;
-  canonicalUrl?: string;
+  css: string;               // ← اضافه شد
+  noIndex: boolean;          // ← اضافه شد
+  seo: StaticPageSeo | null;
 }
 
 export interface FAQ {

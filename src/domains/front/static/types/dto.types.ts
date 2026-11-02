@@ -2,7 +2,6 @@
 
 // ============================================
 // Static Page
-// ساختار واقعی پاسخ API: /api/Front/StaticPage?Title=...
 // ============================================
 export interface StaticPageSeoApiDto {
   id: string;
@@ -18,12 +17,13 @@ export interface StaticPageApiDto {
   englishTitle: string;
   url: string;
   content: string;
+  css?: string;              // ← اضافه شد
+  noIndex?: boolean;         // ← اضافه شد
   seoInformation: StaticPageSeoApiDto | null;
 }
 
 // ============================================
 // Static Page Category
-// ساختار واقعی پاسخ API: /api/Front/StaticPageCategory
 // ============================================
 export interface StaticPageItemApiDto {
   id: string;

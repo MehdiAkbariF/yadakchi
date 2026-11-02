@@ -70,9 +70,12 @@ export function Modal({
       <div
         ref={modalRef}
         className={cn(
+          // ⭐ موبایل: تمام‌صفحه، بدون ردیوس
           'relative z-10 flex flex-col bg-background overflow-hidden',
           'w-full h-full max-h-full max-w-none rounded-none',
-          'md:w-full md:max-w-2xl md:h-auto md:max-h-[90vh] md:rounded-xl md:shadow-lg',
+          // ⭐ دسکتاپ: بزرگ ولی نه تمام‌صفحه
+          'md:w-[92vw] md:max-w-4xl md:h-auto md:max-h-[92vh] md:rounded-2xl md:shadow-2xl',
+          'xl:max-w-5xl',
           className
         )}
         tabIndex={-1}
@@ -96,7 +99,7 @@ export const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
         className={cn(
           'flex items-center justify-between gap-3 shrink-0 w-full',
           'px-4 py-3 md:px-6 md:py-4',
-          'border-b border-border md:border-b md:border-border',
+          'border-b border-border',
           className
         )}
         {...props}

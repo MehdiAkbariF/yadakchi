@@ -1,0 +1,3167 @@
+﻿
+
+================================================================================
+FILE: src\app\(public)\layout.tsx
+================================================================================
+
+// src/app/(public)/layout.tsx
+
+import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+
+interface PublicLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function PublicLayout({ children }: PublicLayoutProps) {
+
+  return <MainLayout>{children}</MainLayout>;
+}
+
+================================================================================
+FILE: src\app\(public)\basket\page.tsx
+================================================================================
+
+
+import dynamic from 'next/dynamic';
+
+const BasketSummary = dynamic(
+  () => import('@/components/features/BasketSummary/BasketSummary'),
+  { ssr: false }
+);
+
+export default async function BasketPage() {
+  return (
+    
+      <BasketSummary />
+ 
+  );
+}
+
+================================================================================
+FILE: src\app\(public)\basket-payment\page.tsx
+================================================================================
+
+
+import dynamic from 'next/dynamic';
+
+const BasketPaymentContent = dynamic(
+  () => import('@/components/features/BasketPayment/BasketPaymentContent'),
+  { ssr: false }
+);
+
+export default async function BasketPaymentPage() {
+  return (
+ 
+      <BasketPaymentContent />
+
+  );
+}
+
+================================================================================
+FILE: src\app\(public)\checkout\page.tsx
+================================================================================
+
+
+import dynamic from 'next/dynamic';
+
+const CheckoutContent = dynamic(
+  () => import('@/components/features/Checkout/CheckoutContent'),
+  { ssr: false }
+);
+
+export default async function CheckoutPage() {
+  return (
+    
+      <CheckoutContent />
+    
+  );
+}FILE NOT FOUND: src\app\(public)\product\[...slug]\page.tsx
+
+
+================================================================================
+FILE: src\components\features\BasketSummary\BasketSummary.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ShoppingCart, ArrowLeft, Sparkles, Flame } from 'lucide-react';
+import { useGetBasket, useCheckoutBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { BasketItemRow } from './components/BasketItemRow';
+import { BasketInvoice } from './components/BasketInvoice';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { Button } from '@/components/primitives/Button';
+import { Typography } from '@/components/primitives/Typography';
+import { showToast } from '@/core/utils/toast';
+import { toPersianDigits } from '@/core/utils/formatters';
+
+function LottiePlayer({
+  path,
+  className = 'w-48 h-48',
+  loop = true,
+}: {
+  path: string;
+  className?: string;
+  loop?: boolean;
+}) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/')
+          ? path.replace('/anumations/', '/animations/')
+          : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+        if (!animationData || !isMounted || !containerRef.current) return;
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch {}
+    };
+    init();
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
+
+export function BasketSummary() {
+  const router = useRouter();
+  const { data: basketData, isLoading, isFetching } = useGetBasket();
+  const checkoutBasket = useCheckoutBasket();
+  const basket = basketData as any;
+
+  /**
+   * ✅ اصلاح ۱: انتقال `shipmentMethod` از sub به item
+   * تا BasketItemRow بتواند روش ارسال واقعی را نمایش دهد.
+   */
+  const allItems = React.useMemo(() => {
+    if (!basket?.subBaskets || !Array.isArray(basket.subBaskets)) return [];
+    return basket.subBaskets.flatMap((sub: any) => {
+      const items = sub.subBasketItems || sub.items || [];
+      return items.map((item: any) => ({
+        ...item,
+        shop: item.shop || sub.shop,
+        shipmentMethod: sub.shipmentMethod, // ✅ اضافه شد
+      }));
+    });
+  }, [basket]);
+
+  if (isLoading || (isFetching && !basket)) {
+    return <PageLoading label="در حال بارگذاری سبد خرید..." />;
+  }
+
+  if (!basket || basket.isEmpty || allItems.length === 0) {
+    return (
+      <div className="flex w-full select-none flex-col items-center justify-center rounded-3xl border border-dashed border-border/80 bg-card px-4 py-16 text-center shadow-xs mt-3">
+        <div className="-mt-2 mb-2 flex h-52 w-52 max-w-full items-center justify-center">
+          <LottiePlayer path="/anumations/shopping-cart.json" className="h-full w-full" />
+        </div>
+
+        <Typography variant="h3" className="text-base font-black text-foreground md:text-xl">
+          سبد خرید شما خالی است
+        </Typography>
+        <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground md:text-sm">
+          هیچ قطعه‌ای در سبد خرید شما وجود ندارد. می‌توانید برای جستجوی لوازم یدکی موردنیاز خود به صفحه جستجو مراجعه کنید.
+        </p>
+        <Link href="/search" prefetch={false} className="mt-6">
+          <Button variant="primary" className="h-11 rounded-2xl px-8 text-xs font-bold shadow-sm">
+            شروع خرید قطعات یدکی
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const handleContinue = async () => {
+    try {
+      await checkoutBasket.mutateAsync(undefined);
+      router.push('/checkout');
+    } catch (err: any) {
+      const responseData = err?.response?.data || err?.data;
+      if (
+        err?.status === 409 ||
+        err?.response?.status === 409 ||
+        responseData?.code === 'basket_already_checked_out'
+      ) {
+        router.push('/checkout');
+        return;
+      }
+      if (err?.status === 401 || err?.type === 'unauthorized') {
+        router.push(`/login?redirect=${encodeURIComponent('/basket')}`);
+        return;
+      }
+      showToast.error('خطا در فرآیند آماده‌سازی فاکتور خرید');
+    }
+  };
+
+  /**
+   * ✅ اصلاح ۲: مبلغ نهایی = totalFinalPrice + totalShipmentPrice
+   * در ریسپانس بک‌اند، totalFinalPrice شامل هزینه ارسال نیست.
+   */
+  const finalPriceValue =
+    (basket.totalFinalPrice ?? basket.total?.finalPrice ?? 0) +
+    (basket.totalShipmentPrice ?? 0);
+
+  const formattedFinalPrice =
+    typeof finalPriceValue === 'number'
+      ? `${new Intl.NumberFormat('fa-IR').format(finalPriceValue)} تومان`
+      : finalPriceValue;
+
+  const leftPriceContent = (
+    <div className="flex flex-col text-right">
+      <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ قابل پرداخت:</span>
+      <span className="text-sm font-black text-foreground" dir="ltr">
+        {formattedFinalPrice}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full select-none flex-col gap-8 mt-5 md:mt-0" dir="rtl">
+      <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
+        <div className="flex w-full flex-1 flex-col">
+          <div className="mb-2 flex w-fit items-center justify-between border-b-2 border-primary pb-3">
+            <span className="flex items-center gap-2 text-sm font-bold text-primary md:text-base">
+              سبد خرید
+              <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs text-accent-foreground">
+                {toPersianDigits(allItems.length)} کالا
+              </span>
+            </span>
+          </div>
+
+          <div className="w-full overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
+            {allItems.map((item: any) => (
+              <BasketItemRow key={item.id} item={item} />
+            ))}
+          </div>
+        </div>
+
+        <BasketInvoice basket={basket} />
+      </div>
+
+      {/* ✅ اصلاح ۳: حذف داده‌های هاردکد «پیشنهادها» */}
+      {/* این بخش باید از API بیاید. تا آن زمان، حذف شد. */}
+      {/* <div className="mt-4 flex w-full flex-col gap-6"> ... </div> */}
+
+      <MobileBottomAction
+        label="ادامه فرآیند خرید"
+        leftContent={leftPriceContent}
+        onClick={handleContinue}
+        isLoading={checkoutBasket.isPending}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+      />
+    </div>
+  );
+}
+
+export default BasketSummary;
+
+================================================================================
+FILE: src\components\features\BasketPayment\BasketPaymentContent.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { 
+  ArrowLeft, 
+  Clock, 
+  CheckCircle2, 
+  CreditCard, 
+  AlertCircle, 
+  ShoppingBag, 
+  ExternalLink,
+  RotateCcw
+} from 'lucide-react';
+import { useGetBasket, useInitiatePayment } from '@/domains/front/basket/hooks/basket.hooks';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { PaymentMethodCard } from './components/PaymentMethodCard';
+import { DiscountCard } from './components/DiscountCard';
+import { ReferralCard } from './components/ReferralCard';
+import { ItemsSummaryCard } from './components/ItemsSummaryCard';
+import { PaymentInvoice } from './components/PaymentInvoice';
+import { TrackingDetailsModal } from './components/TrackingDetailsModal';
+import { showToast } from '@/core/utils/toast';
+
+interface PendingPaymentInfo {
+  paymentUrl: string;
+  orderId?: string;
+  totalPrice?: number;
+  timestamp: number;
+}
+
+export default function BasketPaymentContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { data: basketData, isLoading: isBasketLoading } = useGetBasket();
+  const initiatePayment = useInitiatePayment();
+
+  const [isLegalInvoice, setIsLegalInvoice] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false);
+  const [pendingPayment, setPendingPayment] = React.useState<PendingPaymentInfo | null>(null);
+
+  // بررسی وضعیت سفارش معلق در سشن استوریج (در صورت بک زدن از درگاه)
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('yadakchi_pending_payment');
+        if (cached) {
+          const parsed: PendingPaymentInfo = JSON.parse(cached);
+          // اگر کمتر از ۲۰ دقیقه از ایجاد سفارش گذشته باشد هنوز معتبر است
+          if (Date.now() - parsed.timestamp < 20 * 60 * 1000) {
+            setPendingPayment(parsed);
+          } else {
+            sessionStorage.removeItem('yadakchi_pending_payment');
+          }
+        }
+      } catch {
+        // نادیده گرفتن خطا در پارس JSON
+      }
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      showToast.error('لطفاً ابتدا وارد حساب کاربری خود شوید');
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isAuthenticated, isAuthLoading, router, pathname]);
+
+  const basket = basketData as any;
+
+  if (isAuthLoading || isBasketLoading) {
+    return <PageLoading label="در حال آماده‌سازی امن درگاه پرداخت..." />;
+  }
+
+  if (!isAuthenticated) return null;
+
+  const productPriceRaw = basket?.total?.totalPriceRaw || basket?.totalOriginalPrice || 0;
+  const discountPriceRaw = basket?.total?.totalDiscountRaw || basket?.totalDiscountValue || 0;
+  const finalPriceRaw = basket?.total?.finalPriceRaw || basket?.totalFinalPrice || 0;
+  const shippingPriceRaw = typeof basket?.totalShipmentPrice === 'number' ? basket.totalShipmentPrice : 0;
+  const grandTotalRaw = finalPriceRaw + shippingPriceRaw;
+
+  // بررسی خالی بودن سبد خرید
+  const isBasketEmpty =
+    !basket ||
+    ((!basket.items || basket.items.length === 0) &&
+      (!basket.sellerBaskets || basket.sellerBaskets.length === 0) &&
+      finalPriceRaw === 0);
+
+  // -------------------------------------------------------------
+  // ۱. حالت UX عالی هنگام بک زدن از درگاه (سفارش در انتظار پرداخت)
+  // -------------------------------------------------------------
+  if (isBasketEmpty && pendingPayment) {
+    return (
+      <div className="mx-auto flex w-full max-w-xl flex-col items-center justify-center py-12 px-4 text-center select-none" dir="rtl">
+        <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-warning/15 text-warning ring-8 ring-warning/5">
+          <Clock className="h-10 w-10 animate-pulse" />
+        </div>
+
+        <h2 className="text-lg font-black text-foreground sm:text-xl">
+          سفارش شما ثبت شده و در انتظار پرداخت است
+        </h2>
+        
+        <p className="mt-2.5 max-w-md text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          سبد خرید شما به سفارش تبدیل شده و قطعات تا چند دقیقه دیگر برای شما رزرو خواهند ماند. چنانچه پرداخت را انجام نداده‌اید، می‌توانید مجدداً وارد درگاه شوید.
+        </p>
+
+        {pendingPayment.totalPrice ? (
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground">
+            <span className="text-muted-foreground">مبلغ قابل پرداخت:</span>
+            <span className="text-primary text-sm font-black">
+              {new Intl.NumberFormat('fa-IR').format(Math.round(pendingPayment.totalPrice / 10))} تومان
+            </span>
+          </div>
+        ) : null}
+
+        <div className="mt-8 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = pendingPayment.paymentUrl;
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
+          >
+            <span>ورود مجدد به درگاه و پرداخت</span>
+            <ExternalLink className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.removeItem('yadakchi_pending_payment');
+              router.push('/profile/orders');
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-input bg-card px-5 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95"
+          >
+            <span>مشاهده سفارش در پروفایل</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            sessionStorage.removeItem('yadakchi_pending_payment');
+            router.push('/');
+          }}
+          className="mt-6 text-2xs font-semibold text-muted-foreground hover:text-foreground"
+        >
+          انصراف و بازگشت به صفحه اصلی
+        </button>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // ۲. حالت سبد خرید کاملاً خالی (بدون سفارش معلق)
+  // -------------------------------------------------------------
+  if (isBasketEmpty) {
+    return (
+      <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center py-20 px-4 text-center select-none" dir="rtl">
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-muted text-muted-foreground/60">
+          <ShoppingBag className="h-10 w-10" />
+        </div>
+        <h2 className="text-base font-bold text-foreground">سبد خرید شما در حال حاضر خالی است</h2>
+        <p className="mt-2 text-xs text-muted-foreground">
+          برای ادامه خرید می‌توانید به صفحه قطعات و محصولات بازگردید.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push('/')}
+          className="mt-6 flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-6 text-xs font-bold text-primary-foreground shadow-xs transition-transform active:scale-95"
+        >
+          <span>مشاهده و انتخاب قطعات</span>
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // ۳. فرایند عادی پرداخت
+  // -------------------------------------------------------------
+  const isLegalUser = !!user?.isOrganizationInfoConfirmed;
+
+  const handlePayment = async () => {
+    setIsSubmitting(true);
+    try {
+      const paymentResponse = await initiatePayment.mutateAsync(isLegalInvoice);
+      const targetUrl = paymentResponse?.link || paymentResponse?.paymentUrl;
+      
+      if (targetUrl) {
+        // ✅ ذخیره در سشن برای مدیریت بازگشت (Back) کاربر از درگاه
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(
+            'yadakchi_pending_payment',
+            JSON.stringify({
+              paymentUrl: targetUrl,
+              orderId: paymentResponse?.orderId || paymentResponse?.id,
+              totalPrice: grandTotalRaw,
+              timestamp: Date.now(),
+            })
+          );
+        }
+
+        showToast.success('در حال انتقال امن به درگاه شاپرک...');
+        
+        // ✅ استفاده از replace به جای href تا صفحه پرداخت از History حذف شود
+        window.location.replace(targetUrl);
+      } else {
+        showToast.error('خطا در دریافت آدرس درگاه پرداخت');
+        setIsSubmitting(false);
+      }
+    } catch {
+      showToast.error('خطا در اتصال به درگاه پرداخت. لطفاً مجدداً تلاش کنید');
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCompleteLegalInfo = () => {
+    router.push('/profile/legal');
+  };
+
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat('fa-IR').format(Math.round(value / 10));
+
+  const leftPriceContent = (
+    <div className="flex flex-col">
+      <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ نهایی سفارش:</span>
+      <span className="text-sm font-bold text-foreground">
+        {formatPrice(grandTotalRaw)} تومان
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full select-none flex-col gap-6 py-2" dir="rtl">
+      {/* مرحله‌بندی پیشرفت خرید */}
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-2 pb-4 sm:px-4 sm:pb-2">
+        <div className="flex shrink-0 items-center gap-1.5 font-semibold text-success sm:gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
+            <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </div>
+          <span className="text-[10px] sm:text-xs">سبد خرید</span>
+        </div>
+
+        <div className="mx-1.5 h-[2px] flex-1 bg-success/50 sm:mx-3" />
+
+        <div className="flex shrink-0 items-center gap-1.5 font-semibold text-success sm:gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
+            <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </div>
+          <span className="text-[10px] sm:text-xs">زمان و شیوه ارسال</span>
+        </div>
+
+        <div className="mx-1.5 h-[2px] flex-1 bg-primary/50 sm:mx-3" />
+
+        <div className="flex shrink-0 items-center gap-1.5 font-bold text-primary sm:gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs sm:h-7 sm:w-7">
+            <CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </div>
+          <span className="text-[10px] sm:text-xs">پرداخت نهایی</span>
+        </div>
+      </div>
+
+      <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
+        <div className="flex w-full flex-1 flex-col gap-5">
+          <div className="flex items-center gap-2.5 rounded-xl border border-warning/40 bg-warning/[0.08] p-3.5 text-xs font-semibold text-warning">
+            <Clock className="h-4 w-4 shrink-0" />
+            <span>
+              قیمت و موجودی قطعات سبد شما به مدت <strong>۱۵ دقیقه</strong> در انبار رزرو شده است.
+            </span>
+          </div>
+
+          <PaymentMethodCard />
+          <DiscountCard />
+          <ReferralCard />
+          <ItemsSummaryCard onOpenTracking={() => setIsTrackingModalOpen(true)} />
+        </div>
+
+        <PaymentInvoice
+          productPrice={productPriceRaw / 10}
+          discountPrice={discountPriceRaw / 10}
+          shippingPrice={shippingPriceRaw / 10}
+          finalPrice={grandTotalRaw / 10}
+          isLegalInvoice={isLegalInvoice}
+          isLegalUser={isLegalUser}
+          isSubmitting={isSubmitting}
+          onLegalInvoiceChange={(checked) => setIsLegalInvoice(checked)}
+          onPayment={handlePayment}
+          onCompleteLegalInfo={handleCompleteLegalInfo}
+        />
+      </div>
+
+      <MobileBottomAction
+        label="پرداخت و تکمیل سفارش"
+        leftContent={leftPriceContent}
+        onClick={handlePayment}
+        isLoading={isSubmitting}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+      />
+
+      <TrackingDetailsModal
+        isOpen={isTrackingModalOpen}
+        onClose={() => setIsTrackingModalOpen(false)}
+      />
+    </div>
+  );
+}
+
+================================================================================
+FILE: src\components\features\Checkout\CheckoutContent.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Truck,
+  CreditCard,
+  Lock,
+  MapPin,
+  Info,
+} from 'lucide-react';
+import {
+  useGetCheckoutBasket,
+  useGetUserLocations,
+  useSetBasketShipment,
+  useSetBasketLocationAndPrice,
+} from '@/domains/front/basket/hooks/basket.hooks';
+import { CheckoutAddress } from './components/CheckoutAddress';
+import { CheckoutShipmentGroup } from './components/CheckoutShipmentGroup';
+import { CheckoutInvoice } from './components/CheckoutInvoice';
+import { AddressModal } from './components/AddressModal';
+import { AddressMapModal } from '@/components/composites/AddressMapModal/AddressMapModal';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { showToast } from '@/core/utils/toast';
+import { cn } from '@/design-system/utils/cn';
+
+/**
+ * ✅ مقدار enum ارسالی به سرور برای ارسال مستقیم = 'DirectShipment'
+ * مقدار 'Seller' فقط alias legacy است و نباید به سرور ارسال شود.
+ */
+const DIRECT_SHIPMENT_METHOD = 'DirectShipment';
+
+export function CheckoutContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+
+  const { data: rawBasket, isLoading: isBasketLoading } =
+    useGetCheckoutBasket();
+  const { data: locations = [], isLoading: isLocationsLoading } =
+    useGetUserLocations();
+
+  const setBasketLocation = useSetBasketLocationAndPrice();
+  const setBasketShipment = useSetBasketShipment();
+
+  const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = React.useState(false);
+  const [isNewAddressOpen, setIsNewAddressOpen] = React.useState(false);
+  const [selectedMethods, setSelectedMethods] = React.useState<
+    Record<string, string>
+  >({});
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const prevAddressIdRef = React.useRef<string | null>(null);
+  const hasTriggeredInitialLocationRef = React.useRef(false);
+
+  const [mapAddressData, setMapAddressData] = React.useState<{
+    address: string;
+    latitude: number;
+    longitude: number;
+    cityId: string;
+    cityName: string;
+    provinceName: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      showToast.error('لطفاً ابتدا وارد حساب کاربری خود شوید');
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [isAuthenticated, isAuthLoading, router, pathname]);
+
+  const basket = rawBasket as any;
+
+  // انتخاب هوشمند آدرس فعال
+  const activeAddress = React.useMemo(() => {
+    if (!locations || locations.length === 0) return null;
+    return (
+      locations.find((l: any) => l.id === basket?.userLocationId) ||
+      locations.find((l: any) => l.isDefault) ||
+      locations[0]
+    );
+  }, [locations, basket?.userLocationId]);
+
+  /**
+   * ✅ اصلاح ۱: در لود اول همیشه setBasketLocation را صدا بزن
+   * تا سرور هزینه‌های ارسال را بر اساس آدرس فعال محاسبه کند.
+   */
+  React.useEffect(() => {
+    if (!activeAddress?.id || !basket) return;
+
+    if (!hasTriggeredInitialLocationRef.current) {
+      hasTriggeredInitialLocationRef.current = true;
+      prevAddressIdRef.current = activeAddress.id;
+      if (!setBasketLocation.isPending) {
+        setBasketLocation.mutate(activeAddress.id);
+      }
+      return;
+    }
+
+    if (
+      prevAddressIdRef.current !== activeAddress.id &&
+      !setBasketLocation.isPending
+    ) {
+      prevAddressIdRef.current = activeAddress.id;
+      setBasketLocation.mutate(activeAddress.id);
+    }
+  }, [activeAddress?.id, basket, setBasketLocation]);
+
+  /**
+   * ✅ اصلاح ۲: مقداردهی پیش‌فرض selectedMethods
+   * - اگر سرور مقدار legacy 'Seller' برگرداند، به 'DirectShipment' نرمال می‌شود
+   *   تا در UI از 'DirectShipment' استفاده شود و هنگام ارسال هم همین مقدار برود.
+   * - اگر shipmentMethod از سرور نیامد، بر اساس price > 0 یک متد پیش‌فرض انتخاب می‌شود.
+   */
+  React.useEffect(() => {
+    if (!basket?.subBaskets?.length) return;
+
+    setSelectedMethods((prev) => {
+      const next = { ...prev };
+      basket.subBaskets.forEach((sub: any) => {
+        if (next[sub.id]) return;
+
+        if (sub.shipmentMethod) {
+          // نرمال‌سازی legacy: 'Seller' → 'DirectShipment'
+          next[sub.id] =
+            sub.shipmentMethod === 'Seller'
+              ? DIRECT_SHIPMENT_METHOD
+              : sub.shipmentMethod;
+          return;
+        }
+
+        const directPrice =
+          sub.directShipmentPrice ?? sub.sellerShipmentPrice ?? 0;
+        const snappPrice =
+          sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+        const tipaxPrice = sub.tipaxShipmentPrice ?? 0;
+
+        if (snappPrice > 0) next[sub.id] = 'SnappBox';
+        else if (tipaxPrice > 0) next[sub.id] = 'Tipax';
+        else if (directPrice > 0) next[sub.id] = DIRECT_SHIPMENT_METHOD;
+        else if (sub.isLocalShipmentAvailable) next[sub.id] = 'Local';
+      });
+      return next;
+    });
+  }, [basket]);
+
+  if (isAuthLoading || isBasketLoading || isLocationsLoading) {
+    return (
+      <PageLoading label="در حال بارگذاری اطلاعات تسویه حساب و آدرس‌ها..." />
+    );
+  }
+
+  if (!isAuthenticated || !basket || !basket.subBaskets?.length) return null;
+
+  const isShipmentLocked = !activeAddress || setBasketLocation.isPending;
+
+  const handleSelectShipment = (subBasketId: string, method: string) => {
+    if (isShipmentLocked) return;
+    setSelectedMethods((prev) => ({ ...prev, [subBasketId]: method }));
+  };
+
+  const handlePayment = async () => {
+    if (!activeAddress) {
+      showToast.error('لطفاً ابتدا آدرس تحویل سفارش خود را انتخاب کنید');
+      setIsAddressModalOpen(true);
+      return;
+    }
+
+    if (isShipmentLocked) {
+      showToast.error('در حال بروزرسانی هزینه‌های ارسال، لطفاً کمی صبر کنید');
+      return;
+    }
+
+    const unselectedSubBasket = basket.subBaskets.find(
+      (sub: any) => !selectedMethods[sub.id],
+    );
+    if (unselectedSubBasket) {
+      showToast.error(
+        `لطفاً شیوه ارسال مرسوله فروشگاه «${
+          unselectedSubBasket.shop?.shopTitle || ''
+        }» را مشخص کنید`,
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (basket.userLocationId !== activeAddress.id) {
+        await setBasketLocation.mutateAsync(activeAddress.id);
+      }
+
+      /**
+       * ✅ payload مستقیم ارسال می‌شود؛ 'DirectShipment' مقدار درست سرور است.
+       * هیچ mapping اضافی به 'Seller' انجام نمی‌شود.
+       */
+      const methodsPayload = basket.subBaskets.map((sub: any) => ({
+        subBasketId: sub.id,
+        shipmentMethod: selectedMethods[sub.id],
+      }));
+      await setBasketShipment.mutateAsync(methodsPayload);
+
+      showToast.success('اطلاعات نحوه ارسال تایید شد');
+      router.push('/basket-payment');
+    } catch (err: any) {
+      showToast.error(
+        err.userMessage ||
+          err?.response?.data?.message ||
+          'خطا در ثبت نهایی شیوه ارسال',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const calculateShipmentTotals = () => {
+    if (isShipmentLocked) return 0;
+    let total = 0;
+    basket.subBaskets.forEach((sub: any) => {
+      const method = selectedMethods[sub.id];
+      const directPrice =
+        sub.directShipmentPrice ?? sub.sellerShipmentPrice ?? 0;
+      const snappPrice =
+        sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+
+      if (method === 'SnappBox') total += snappPrice;
+      else if (method === 'Tipax') total += sub.tipaxShipmentPrice || 0;
+      else if (method === DIRECT_SHIPMENT_METHOD) total += directPrice;
+    });
+    return total;
+  };
+
+  const handleConfirmMapAddress = (data: {
+    address: string;
+    latitude: number;
+    longitude: number;
+    cityId: string;
+    cityName: string;
+    provinceName: string;
+  }) => {
+    setMapAddressData(data);
+    setIsNewAddressOpen(true);
+    setIsAddressModalOpen(true);
+  };
+
+  const totalShipment = calculateShipmentTotals();
+  const finalPayablePrice = (basket.totalFinalPrice || 0) + totalShipment;
+
+  const leftPriceContent = (
+    <div className="flex flex-col">
+      <span className="mb-0.5 text-2xs text-muted-foreground">
+        {isShipmentLocked
+          ? 'در حال استعلام هزینه ارسال...'
+          : 'مبلغ نهایی سفارش:'}
+      </span>
+      <span
+        className={cn(
+          'text-sm font-bold',
+          isShipmentLocked ? 'text-muted-foreground/60' : 'text-foreground',
+        )}
+      >
+        {isShipmentLocked
+          ? '---'
+          : `${new Intl.NumberFormat('fa-IR').format(
+              Math.round(finalPayablePrice / 10),
+            )} تومان`}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="flex w-full select-none flex-col gap-6 py-2">
+      {/* مرحله‌بندی پیشرفت خرید */}
+      <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-2 pb-2 sm:px-4">
+        <div className="flex shrink-0 items-center gap-1.5 text-muted-foreground sm:gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
+            <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </div>
+          <span className="whitespace-nowrap text-[10px] font-semibold sm:text-xs">
+            سبد خرید
+          </span>
+        </div>
+
+        <div className="mx-1.5 h-[2px] flex-1 bg-primary/40 sm:mx-3" />
+
+        <div className="flex shrink-0 items-center gap-1.5 font-bold text-primary sm:gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs sm:h-7 sm:w-7">
+            <Truck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </div>
+          <span className="whitespace-nowrap text-[10px] sm:text-xs">
+            زمان و شیوه ارسال
+          </span>
+        </div>
+
+        <div className="mx-1.5 h-[2px] flex-1 bg-border/80 sm:mx-3" />
+
+        <div className="flex shrink-0 items-center gap-1.5 text-muted-foreground/60 sm:gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card sm:h-7 sm:w-7">
+            <CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+          </div>
+          <span className="whitespace-nowrap text-[10px] font-medium sm:text-xs">
+            پرداخت نهایی
+          </span>
+        </div>
+      </div>
+
+      {/* بنر وضعیت */}
+      {isShipmentLocked && (
+        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4">
+          <Info className="h-5 w-5 shrink-0 text-warning" />
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-foreground">
+              {!activeAddress
+                ? 'برای مشاهده شیوه‌های ارسال، ابتدا آدرس خود را انتخاب کنید'
+                : 'در حال بروزرسانی هزینه‌های ارسال بر اساس آدرس شما...'}
+            </span>
+            <span className="mt-0.5 text-xs text-muted-foreground">
+              {!activeAddress
+                ? 'پس از انتخاب آدرس، لیست روش‌های ارسال و هزینه‌های آن به صورت خودکار نمایش داده می‌شود.'
+                : 'لطفاً چند لحظه صبر کنید.'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* بدنه اصلی */}
+      <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
+        <div className="flex w-full flex-1 flex-col gap-6">
+          <CheckoutAddress
+            activeAddress={activeAddress}
+            onOpenModal={() => setIsAddressModalOpen(true)}
+            isLocked={!activeAddress}
+          />
+
+          <div className="relative">
+            <div className="mb-3 flex items-center gap-2">
+              <div
+                className={cn(
+                  'flex h-6 w-6 items-center justify-center rounded-full text-2xs font-bold',
+                  isShipmentLocked
+                    ? 'bg-secondary text-muted-foreground/60'
+                    : 'bg-primary text-primary-foreground',
+                )}
+              >
+                ۲
+              </div>
+              <span
+                className={cn(
+                  'text-sm font-bold',
+                  isShipmentLocked
+                    ? 'text-muted-foreground/60'
+                    : 'text-foreground',
+                )}
+              >
+                شیوه ارسال
+              </span>
+            </div>
+
+            {isShipmentLocked ? (
+              <div className="relative min-h-[200px] overflow-hidden rounded-lg border border-dashed border-border bg-secondary/30">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 text-center backdrop-blur-sm">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-background shadow-md">
+                    <Lock className="h-7 w-7 text-muted-foreground/70" />
+                  </div>
+                  <span className="text-sm font-bold text-foreground">
+                    {!activeAddress
+                      ? 'این بخش پس از انتخاب آدرس فعال می‌شود'
+                      : 'در حال محاسبه هزینه ارسال...'}
+                  </span>
+                  <p className="max-w-sm text-xs text-muted-foreground">
+                    {!activeAddress
+                      ? 'با کلیک روی دکمه «انتخاب آدرس» در بالا، آدرس خود را مشخص کنید تا گزینه‌های ارسال نمایش داده شوند.'
+                      : 'در حال دریافت اطلاعات پست، تیپاکس و پیک بر اساس موقعیت مکانی شما...'}
+                  </p>
+                  {!activeAddress && (
+                    <button
+                      onClick={() => setIsAddressModalOpen(true)}
+                      className="mt-2 flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary-hover"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      انتخاب آدرس
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              basket.subBaskets.map((sub: any, index: number) => (
+                <CheckoutShipmentGroup
+                  key={sub.id}
+                  sub={sub}
+                  index={index}
+                  totalSubBaskets={basket.subBaskets.length}
+                  selectedMethod={selectedMethods[sub.id] || null}
+                  onSelectMethod={(method) =>
+                    handleSelectShipment(sub.id, method)
+                  }
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        <CheckoutInvoice
+          basket={basket}
+          totalShipment={totalShipment}
+          finalPayablePrice={finalPayablePrice}
+          onSubmit={handlePayment}
+          isLoading={isSubmitting || isShipmentLocked}
+          isMethodSelected={
+            Object.keys(selectedMethods).length === basket.subBaskets.length
+          }
+        />
+      </div>
+
+      <MobileBottomAction
+        label={
+          !activeAddress
+            ? 'ابتدا آدرس را انتخاب کنید'
+            : isShipmentLocked
+              ? 'در حال بروزرسانی...'
+              : 'تایید و رفتن به پرداخت'
+        }
+        leftContent={leftPriceContent}
+        onClick={handlePayment}
+        isLoading={isSubmitting}
+        icon={
+          !activeAddress ? (
+            <MapPin className="h-4 w-4" />
+          ) : (
+            <ArrowLeft className="h-4 w-4" />
+          )
+        }
+      />
+
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        locations={locations}
+        activeAddress={activeAddress}
+        onOpenMapModal={() => {
+          setIsAddressModalOpen(false);
+          setIsMapModalOpen(true);
+        }}
+        mapAddressData={mapAddressData}
+        isNewAddressOpen={isNewAddressOpen}
+        setIsNewAddressOpen={setIsNewAddressOpen}
+      />
+
+      <AddressMapModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        onConfirmAddress={handleConfirmMapAddress}
+      />
+    </div>
+  );
+}
+
+export default CheckoutContent;
+
+================================================================================
+FILE: src\components\features\Product\ProductContent.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag, Bell, LineChart } from 'lucide-react';
+import { useGetProductPageData, useGetProductPriceChart, useSubmitProductReport } from '@/domains/front/product/hooks/product.hooks';
+import {
+  useGetBasket,
+  useAddToBasket,
+  useDeleteFromBasket,
+} from '@/domains/front/basket/hooks/basket.hooks';
+import { ThreeDotsLoader } from '@/components/composites/Loading/ThreeDotsLoader';
+import { useGetReportSubjects } from '@/domains/front/shop/hooks/shop.hooks';
+import { ProductHeader } from './components/ProductHeader';
+import { ConditionSelector } from './components/ConditionSelector';
+import { SpecHighlights } from './components/SpecHighlights';
+import { SellersList } from './components/SellersList';
+import { ProductSpecsTable } from './components/ProductSpecsTable';
+import { ProductCommentsSection } from './components/ProductCommentsSection';
+import { ProductInquiriesSection } from './components/ProductInquiriesSection';
+import { ProductSideInvoice } from './components/ProductSideInvoice';
+import { ProductGallery } from './components/ProductGallery';
+import { ProductMinimalHeader } from './components/ProductMinimalHeader';
+import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@/components/composites/Modal/Modal';
+import { Button } from '@/components/primitives/Button/Button';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { toPersianDigits, getProductUrl } from '@/core/utils/formatters';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+
+const TAB_LABELS: Record<string, string> = {
+  intro: 'معرفی کالا',
+  specs: 'مشخصات فنی',
+  comments: 'امتیاز و نظرات',
+  inquiries: 'پرسش و پاسخ',
+};
+
+interface ProductContentProps {
+  productCode: number;
+  initialData?: any;
+}
+
+export function ProductContent({ productCode, initialData }: ProductContentProps) {
+  const { data: clientData, isLoading } = useGetProductPageData(productCode);
+  const pageData = clientData || initialData;
+
+  const { data: basketData } = useGetBasket();
+  const addToBasket = useAddToBasket();
+  const deleteFromBasket = useDeleteFromBasket();
+
+  const defaultCondition = React.useMemo((): 'New' | 'Stock' | 'TakeOff' => {
+    if (!pageData?.shopProducts) return 'New';
+    const sp = pageData.shopProducts;
+    const hasNew = (sp.newOnline?.length || 0) + (sp.newLocal?.length || 0) > 0 || !!sp.newNominated;
+    if (hasNew) return 'New';
+    const hasStock = (sp.stockOnline?.length || 0) + (sp.stockLocal?.length || 0) > 0 || !!sp.stockNominated;
+    if (hasStock) return 'Stock';
+    const hasTakeOff = (sp.takeOffOnline?.length || 0) + (sp.takeOffLocal?.length || 0) > 0 || !!sp.takeOffNominated;
+    if (hasTakeOff) return 'TakeOff';
+    return 'New';
+  }, [pageData]);
+
+  const [selectedCondition, setSelectedCondition] = React.useState<'New' | 'Stock' | 'TakeOff'>(defaultCondition);
+  const [activeSellerId, setActiveSellerId] = React.useState<string | null>(null);
+  const [isIntroExpanded, setIsIntroExpanded] = React.useState(false);
+  const [activeSection, setActiveSection] = React.useState('intro');
+  const [isMobileSubmitting, setIsMobileSubmitting] = React.useState(false);
+  const [isBasketUpdating, setIsBasketUpdating] = React.useState(false);
+  const [isNotifying, setIsNotifying] = React.useState(false);
+  const [isNotifySuccessOpen, setIsNotifySuccessOpen] = React.useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
+  const [isPriceChartOpen, setIsPriceChartOpen] = React.useState(false);
+  const [metaIndex, setMetaIndex] = React.useState(0);
+  const [isSheetAttached, setIsSheetAttached] = React.useState(false);
+
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
+  const submitProductReport = useSubmitProductReport();
+  const { data: reportSubjects = [] } = useGetReportSubjects('ProductReport');
+
+  const mobileViewportRef = React.useRef<HTMLDivElement>(null);
+  const sheetRef = React.useRef<HTMLDivElement>(null);
+
+  const dIntroRef = React.useRef<HTMLDivElement>(null);
+  const dSpecsRef = React.useRef<HTMLDivElement>(null);
+  const dCommentsRef = React.useRef<HTMLDivElement>(null);
+  const dInquiriesRef = React.useRef<HTMLDivElement>(null);
+
+  const mIntroRef = React.useRef<HTMLDivElement>(null);
+  const mSpecsRef = React.useRef<HTMLDivElement>(null);
+  const mCommentsRef = React.useRef<HTMLDivElement>(null);
+  const mInquiriesRef = React.useRef<HTMLDivElement>(null);
+
+  const lockRef = React.useRef(false);
+  const lockTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRafRef = React.useRef<number | null>(null);
+
+  const lock = (ms = 800) => {
+    lockRef.current = true;
+    if (lockTimer.current) clearTimeout(lockTimer.current);
+    lockTimer.current = setTimeout(() => { lockRef.current = false; }, ms);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (lockTimer.current) clearTimeout(lockTimer.current);
+      if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (pageData && defaultCondition) setSelectedCondition(defaultCondition);
+  }, [defaultCondition, pageData]);
+
+  React.useEffect(() => {
+    if (!pageData) return;
+
+    const isDesktop = window.innerWidth >= 1024;
+    const root = isDesktop ? null : mobileViewportRef.current;
+    if (!isDesktop && !root) return;
+
+    const desktopRefs = [
+      { id: 'intro', ref: dIntroRef },
+      { id: 'specs', ref: dSpecsRef },
+      { id: 'comments', ref: dCommentsRef },
+      { id: 'inquiries', ref: dInquiriesRef },
+    ];
+    const mobileRefs = [
+      { id: 'intro', ref: mIntroRef },
+      { id: 'specs', ref: mSpecsRef },
+      { id: 'comments', ref: mCommentsRef },
+      { id: 'inquiries', ref: mInquiriesRef },
+    ];
+
+    const activeRefs = isDesktop ? desktopRefs : mobileRefs;
+    const elements = activeRefs
+      .map((x) => ({ id: x.id, el: x.ref.current }))
+      .filter((x) => !!x.el) as { id: string; el: HTMLDivElement }[];
+
+    if (elements.length === 0) return;
+
+    const visibleMap = new Map<string, number>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (lockRef.current) return;
+
+        entries.forEach((entry) => {
+          const id = elements.find((x) => x.el === entry.target)?.id;
+          if (!id) return;
+          visibleMap.set(id, entry.isIntersecting ? entry.intersectionRatio : 0);
+        });
+
+        let best: { id: string; ratio: number } | null = null;
+        visibleMap.forEach((ratio, id) => {
+          if (ratio > 0 && (!best || ratio > best.ratio)) best = { id, ratio };
+        });
+
+        if (best) setActiveSection((best as { id: string }).id);
+      },
+      {
+        root,
+        rootMargin: '-88px 0px -55% 0px',
+        threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+      }
+    );
+
+    elements.forEach(({ el }) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [pageData]);
+
+  const handleMobileViewportScroll = () => {
+    const c = mobileViewportRef.current;
+    if (!c) return;
+    if (scrollRafRef.current !== null) return;
+
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const attached = c.scrollTop >= 370;
+      setIsSheetAttached((prev) => (prev === attached ? prev : attached));
+    });
+  };
+
+  React.useEffect(() => {
+    if (!pageData) return;
+    const interval = setInterval(() => setMetaIndex((prev) => (prev + 1) % 3), 3000);
+    return () => clearInterval(interval);
+  }, [pageData]);
+
+  if (!pageData && isLoading) {
+    return (
+      <div className="flex w-full min-h-[calc(100vh-160px)] items-center justify-center">
+        <ThreeDotsLoader size="md" />
+      </div>
+    );
+  }
+  if (!pageData) return null;
+
+  const product = pageData.product;
+  const sellersGroup = pageData.shopProducts || {};
+
+  const getSellersForCondition = () => {
+    if (selectedCondition === 'Stock') {
+      return { nominated: sellersGroup.stockNominated || null, online: sellersGroup.stockOnline || [], local: sellersGroup.stockLocal || [] };
+    }
+    if (selectedCondition === 'TakeOff') {
+      return { nominated: sellersGroup.takeOffNominated || null, online: sellersGroup.takeOffOnline || [], local: sellersGroup.takeOffLocal || [] };
+    }
+    return { nominated: sellersGroup.newNominated || null, online: sellersGroup.newOnline || [], local: sellersGroup.newLocal || [] };
+  };
+
+  const activeSellers = getSellersForCondition();
+  const allAvailableSellersList = [...(activeSellers.online || []), ...(activeSellers.local || [])];
+
+  const currentSelectedSeller =
+    allAvailableSellersList.find((s) => s.id === activeSellerId) ||
+    activeSellers.nominated ||
+    allAvailableSellersList[0] ||
+    null;
+
+  const basketItems: any[] = React.useMemo(() => {
+    if (!basketData) return [];
+    if (Array.isArray(basketData.items)) return basketData.items;
+    if (Array.isArray((basketData as any).subBaskets)) {
+      return (basketData as any).subBaskets.flatMap((sb: any) => sb.items || sb.subBasketItems || []);
+    }
+    return [];
+  }, [basketData]);
+
+  const currentBasketItem = React.useMemo(() => {
+    if (!currentSelectedSeller || basketItems.length === 0) return null;
+    return basketItems.find((it: any) => (it.shopProductId || it.shopProduct?.id) === currentSelectedSeller.id) || null;
+  }, [currentSelectedSeller, basketItems]);
+
+  const isInBasket = !!currentBasketItem && currentBasketItem.quantity > 0;
+  const basketQuantity = currentBasketItem?.quantity || 0;
+
+  const maxAllowedQuantity = React.useMemo(() => {
+    const stockQuantity = Number(currentSelectedSeller?.quantity);
+    if (!isNaN(stockQuantity) && stockQuantity > 0) return stockQuantity;
+    return Number(
+      currentBasketItem?.inventory?.maxQuantity ||
+      currentBasketItem?.maxQuantity ||
+      currentSelectedSeller?.maxQuantityPerOrder ||
+      10
+    );
+  }, [currentSelectedSeller, currentBasketItem]);
+
+  const galleryImages = React.useMemo(() => {
+    const all = [product.image, ...(product.gallery || [])].filter(Boolean) as string[];
+    return Array.from(new Set(all));
+  }, [product.image, product.gallery]);
+
+  const handleScrollToSection = (sectionId: string) => {
+    const isDesktop = window.innerWidth >= 1024;
+    const refMap = isDesktop
+      ? { intro: dIntroRef, specs: dSpecsRef, comments: dCommentsRef, inquiries: dInquiriesRef }
+      : { intro: mIntroRef, specs: mSpecsRef, comments: mCommentsRef, inquiries: mInquiriesRef };
+
+    const el = refMap[sectionId as keyof typeof refMap]?.current;
+    if (!el) return;
+
+    lock(900);
+    setActiveSection(sectionId);
+
+    if (isDesktop) {
+      const y = el.getBoundingClientRect().top + window.scrollY - 88;
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    } else {
+      const c = mobileViewportRef.current;
+      if (!c) return;
+      const containerRect = c.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const y = c.scrollTop + (elRect.top - containerRect.top) - 56;
+      c.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    }
+  };
+
+  const handleMobileAddToBasket = async () => {
+    if (!currentSelectedSeller) return;
+    setIsMobileSubmitting(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      showToast.success('قطعه با موفقیت به سبد خرید شما افزوده شد');
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در افزودن به سبد خرید');
+    } finally {
+      setIsMobileSubmitting(false);
+    }
+  };
+
+  const handleIncreaseBasket = async () => {
+    if (!currentSelectedSeller || isBasketUpdating) return;
+    if (basketQuantity >= maxAllowedQuantity) {
+      showToast.error(`حداکثر موجودی قابل سفارش ${toPersianDigits(maxAllowedQuantity)} عدد است`);
+      return;
+    }
+    setIsBasketUpdating(true);
+    try {
+      await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      showToast.success('تعداد کالا افزایش یافت');
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در افزایش تعداد');
+    } finally {
+      setIsBasketUpdating(false);
+    }
+  };
+
+  const handleDecreaseBasket = async () => {
+    if (!currentSelectedSeller || isBasketUpdating || basketQuantity <= 0) return;
+    setIsBasketUpdating(true);
+    try {
+      await deleteFromBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
+      showToast.success(basketQuantity === 1 ? 'کالا از سبد خرید حذف شد' : 'تعداد کالا کاهش یافت');
+    } catch (err: any) {
+      showToast.error(err?.userMessage || 'خطا در کاهش تعداد');
+    } finally {
+      setIsBasketUpdating(false);
+    }
+  };
+
+  const handleNotifyMe = async () => {
+    if (isNotifying) return;
+    setIsNotifying(true);
+    try {
+      await new Promise((r) => setTimeout(r, 600));
+      setIsNotifySuccessOpen(true);
+    } finally {
+      setIsNotifying(false);
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!selectedSubjectId) {
+      showToast.error('لطفاً دلیل گزارش کالا را انتخاب کنید');
+      return;
+    }
+    try {
+      await submitProductReport.mutateAsync({
+        productId: product.id,
+        reportSubjectId: selectedSubjectId,
+        description: reportDescription,
+      });
+      showToast.success('گزارش خطای کالا با موفقیت ثبت شد');
+      setIsReportModalOpen(false);
+      setSelectedSubjectId('');
+      setReportDescription('');
+    } catch (error: any) {
+      showToast.error(error?.userMessage || 'خطا در ثبت گزارش');
+    }
+  };
+
+  // ⭐⭐⭐ این تابع جدید: وقتی از SellersList خبر می‌رسد که فروشنده‌ای به سبد اضافه شد ⭐⭐⭐
+  const handleSellerAddedToBasket = (sellerId: string) => {
+    // اگر فروشگاه در لیست شرط انتخاب فعلی نیست، شرط را عوض کن
+    const inCurrentList = allAvailableSellersList.some((s) => s.id === sellerId);
+
+    if (!inCurrentList) {
+      const inNew =
+        (sellersGroup.newOnline || []).some((s: any) => s.id === sellerId) ||
+        (sellersGroup.newLocal || []).some((s: any) => s.id === sellerId);
+      const inStock =
+        (sellersGroup.stockOnline || []).some((s: any) => s.id === sellerId) ||
+        (sellersGroup.stockLocal || []).some((s: any) => s.id === sellerId);
+      const inTakeOff =
+        (sellersGroup.takeOffOnline || []).some((s: any) => s.id === sellerId) ||
+        (sellersGroup.takeOffLocal || []).some((s: any) => s.id === sellerId);
+
+      if (inNew) setSelectedCondition('New');
+      else if (inStock) setSelectedCondition('Stock');
+      else if (inTakeOff) setSelectedCondition('TakeOff');
+    }
+
+    // فروشگاه را فعال کن
+    setActiveSellerId(sellerId);
+  };
+
+  const originalPriceRaw = currentSelectedSeller?.retailPriceRaw || 0;
+  const finalPriceRaw = currentSelectedSeller?.finalPriceRaw || 0;
+  const calculatedPercent = originalPriceRaw > finalPriceRaw
+    ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100) : 0;
+
+  const discountPercentage = currentSelectedSeller?.discountPercentage || calculatedPercent || 0;
+  const hasDiscount = !!(currentSelectedSeller?.hasDiscount && discountPercentage > 0);
+  const discountExpiration = (currentSelectedSeller as any)?.discountUntil || null;
+  const hasTimedDiscount = hasDiscount && !!discountExpiration;
+
+  const metaItems = [
+    `فروشگاه: ${currentSelectedSeller?.shop?.title || 'یدکچی'}`,
+    `${toPersianDigits(product.views || 0)} بازدید اخیر`,
+    `${toPersianDigits(product.salesCount || 0)} خرید موفق`,
+  ];
+
+  const leftPriceContent = currentSelectedSeller ? (
+    <div className="flex h-10 w-36 max-w-[150px] select-none flex-col justify-between">
+      <div className="relative h-4 w-full overflow-hidden">
+        <span className="absolute block w-full truncate text-2xs font-bold leading-none text-muted-foreground">
+          {metaItems[metaIndex]}
+        </span>
+      </div>
+
+      <div className="flex flex-col">
+        {currentSelectedSeller.hasDiscount ? (
+          <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
+            {currentSelectedSeller.retailPrice}
+          </span>
+        ) : null}
+        <span className="text-xs font-bold leading-none text-foreground md:text-sm">
+          {currentSelectedSeller.finalPrice}
+        </span>
+      </div>
+    </div>
+  ) : null;
+
+  const renderBreadcrumb = () => (
+    <div className="flex w-full select-none items-center gap-2 overflow-x-auto py-2 text-2xs text-muted-foreground scrollbar-none md:text-xs">
+      <Link href="/" className="transition-colors hover:text-primary whitespace-nowrap shrink-0">
+        خانه
+      </Link>
+      {product.breadCrumbs?.map((crumb: any, idx: number) => {
+        const isLast = idx === product.breadCrumbs.length - 1;
+        const url = isLast ? getProductUrl(product.code, product.title) : `/part-category/${crumb.englishTitle}`;
+        return (
+          <div key={crumb.id || idx} className="flex items-center gap-2 shrink-0">
+            <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+            {isLast ? (
+              <span className="max-w-[170px] truncate font-bold text-foreground sm:max-w-none">{crumb.title}</span>
+            ) : (
+              <Link href={url} className="whitespace-nowrap transition-colors hover:text-primary">{crumb.title}</Link>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const tabs = ['intro', 'specs', 'comments', 'inquiries'] as const;
+
+  return (
+    <>
+      {/* ==================== دسکتاپ ==================== */}
+      <div className="hidden lg:flex w-full flex-col gap-1 mt-3" dir="rtl">
+        {renderBreadcrumb()}
+
+        <div className="flex w-full items-start gap-8">
+          <div className="flex w-full min-w-0 flex-1 flex-col gap-6">
+            <div className="flex w-full gap-8">
+              <div className="w-[45%] shrink-0">
+                <ProductGallery
+                  images={galleryImages}
+                  title={product.title}
+                  hasDiscount={hasDiscount}
+                  discountPercent={discountPercentage}
+                  hasTimedDiscount={hasTimedDiscount}
+                  discountExpiration={discountExpiration}
+                />
+              </div>
+
+              <div className="flex min-w-0 flex-1 flex-col gap-5">
+                <ProductHeader
+                  product={product}
+                  onScrollToComments={() => handleScrollToSection('comments')}
+                  onScrollToInquiries={() => handleScrollToSection('inquiries')}
+                />
+                <ConditionSelector
+                  selectedCondition={selectedCondition}
+                  onChangeCondition={(cond) => {
+                    setSelectedCondition(cond);
+                    setActiveSellerId(null);
+                  }}
+                  sellersGroup={sellersGroup}
+                />
+                <SpecHighlights
+                  specGroups={product.specGroups}
+                  productDescription={product.description}
+                  onSeeAll={() => handleScrollToSection('specs')}
+                />
+              </div>
+            </div>
+
+            <SellersList
+              activeSellers={activeSellers}
+              selectedSellerId={currentSelectedSeller?.id || null}
+              onSelectSeller={(id) => setActiveSellerId(id)}
+              onSellerAddedToBasket={handleSellerAddedToBasket}
+              productTitle={product.title}
+            />
+
+            <div className="sticky top-[68px] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
+              {tabs.map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => handleScrollToSection(id)}
+                  className={cn(
+                    'h-full shrink-0 border-b-2 px-1 text-xs font-bold transition-colors flex items-center md:text-sm',
+                    activeSection === id
+                      ? 'border-primary text-primary font-black'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {TAB_LABELS[id]}
+                </button>
+              ))}
+            </div>
+
+            <div ref={dIntroRef} className="border-b border-border pb-6 pt-6">
+              <h3 className="mb-3 text-sm font-bold text-foreground md:text-base">معرفی کالا</h3>
+              <div className="relative">
+                <div
+                  style={{ maxHeight: isIntroExpanded ? 'none' : '110px' }}
+                  className="overflow-hidden text-justify text-xs leading-reading text-muted-foreground md:text-sm"
+                  dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
+                />
+                {!isIntroExpanded && (
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-card to-transparent" />
+                )}
+              </div>
+              <div className="mt-3 flex justify-start">
+                <button
+                  type="button"
+                  onClick={() => setIsIntroExpanded(!isIntroExpanded)}
+                  className="flex items-center gap-1 text-xs font-bold text-shop hover:underline"
+                >
+                  <span>{isIntroExpanded ? 'مشاهده کمتر' : 'مشاهده بیشتر'}</span>
+                  {isIntroExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div ref={dSpecsRef} className="border-b border-border pb-6 pt-8">
+              <ProductSpecsTable specGroups={product.specGroups} />
+            </div>
+
+            <div ref={dCommentsRef} className="border-b border-border pb-6 pt-8">
+              <ProductCommentsSection productId={product.id} productTitle={product.title} productImage={product.image} />
+            </div>
+
+            <div ref={dInquiriesRef} className="pt-8">
+              <ProductInquiriesSection productId={product.id} productTitle={product.title} productImage={product.image} />
+            </div>
+          </div>
+
+          <div className="w-[320px] shrink-0 sticky top-[132px] flex flex-col gap-6 xl:w-[340px]">
+            <ProductSideInvoice product={product} seller={currentSelectedSeller} sellersCount={allAvailableSellersList.length} />
+          </div>
+        </div>
+      </div>
+
+      {/* ==================== موبایل ==================== */}
+      <div className="lg:hidden relative h-[100dvh] w-full overflow-hidden bg-background" dir="rtl">
+        <ProductMinimalHeader
+          productTitle={product.title}
+          isAttached={isSheetAttached}
+          onOpenReportModal={() => setIsReportModalOpen(true)}
+          onOpenPriceChart={() => setIsPriceChartOpen(true)}
+        />
+
+        <div className="fixed top-14 inset-x-0 z-30 flex flex-col items-center bg-card select-none pointer-events-none">
+          <div className="w-full px-4 border-b border-border/40 bg-card/60 pointer-events-auto">
+            {renderBreadcrumb()}
+          </div>
+          <div className="w-full max-w-2xl px-2 pointer-events-auto">
+            <ProductGallery
+              images={galleryImages}
+              title={product.title}
+              hasDiscount={hasDiscount}
+              discountPercent={discountPercentage}
+              hasTimedDiscount={hasTimedDiscount}
+              discountExpiration={discountExpiration}
+              onDragVertical={(deltaY) => {
+                if (mobileViewportRef.current) mobileViewportRef.current.scrollTop -= deltaY;
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          ref={mobileViewportRef}
+          onScroll={handleMobileViewportScroll}
+          className="relative h-full w-full overflow-y-auto overflow-x-hidden scrollbar-none overscroll-y-contain pt-[420px] sm:pt-[470px]"
+          style={{ touchAction: 'pan-y' }}
+        >
+          <div
+            ref={sheetRef}
+            className={cn(
+              'relative z-40 w-full min-h-screen bg-card border-t',
+              isSheetAttached
+                ? 'rounded-t-none border-border shadow-none'
+                : 'rounded-t-[32px] border-border/80 shadow-[0_-16px_40px_rgba(0,0,0,0.16)] dark:shadow-[0_-16px_40px_rgba(0,0,0,0.5)]'
+            )}
+          >
+            <div
+              onClick={() => {
+                if (mobileViewportRef.current) {
+                  mobileViewportRef.current.scrollTo({ top: isSheetAttached ? 0 : 400, behavior: 'smooth' });
+                }
+              }}
+              className="flex h-7 w-full cursor-pointer items-center justify-center pt-2 select-none"
+            >
+              <div
+                className={cn(
+                  'h-1.5 w-12 rounded-full transition-opacity duration-300',
+                  isSheetAttached ? 'opacity-0' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                )}
+              />
+            </div>
+
+            <div className="flex w-full flex-col gap-6 px-4 pb-32 pt-1">
+              <ProductHeader
+                product={product}
+                onScrollToComments={() => handleScrollToSection('comments')}
+                onScrollToInquiries={() => handleScrollToSection('inquiries')}
+              />
+              <ConditionSelector
+                selectedCondition={selectedCondition}
+                onChangeCondition={(cond) => {
+                  setSelectedCondition(cond);
+                  setActiveSellerId(null);
+                }}
+                sellersGroup={sellersGroup}
+              />
+              <SpecHighlights
+                specGroups={product.specGroups}
+                productDescription={product.description}
+                onSeeAll={() => handleScrollToSection('specs')}
+              />
+              <SellersList
+                activeSellers={activeSellers}
+                selectedSellerId={currentSelectedSeller?.id || null}
+                onSelectSeller={(id) => setActiveSellerId(id)}
+                onSellerAddedToBasket={handleSellerAddedToBasket}
+                productTitle={product.title}
+              />
+
+              <div className="sticky top-[-372px] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
+                {tabs.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => handleScrollToSection(id)}
+                    className={cn(
+                      'h-full shrink-0 border-b-2 px-1 text-xs font-bold transition-colors flex items-center',
+                      activeSection === id
+                        ? 'border-primary text-primary font-black'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {TAB_LABELS[id]}
+                  </button>
+                ))}
+              </div>
+
+              <div ref={mIntroRef} className="border-b border-border pb-6 pt-4">
+                <h3 className="mb-3 text-xs font-bold text-foreground sm:text-sm">معرفی کالا</h3>
+                <div className="relative">
+                  <div
+                    style={{ maxHeight: isIntroExpanded ? 'none' : '90px' }}
+                    className="overflow-hidden text-justify text-xs leading-reading text-muted-foreground"
+                    dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
+                  />
+                  {!isIntroExpanded && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-card to-transparent" />
+                  )}
+                </div>
+                <div className="mt-2 flex justify-start">
+                  <button
+                    type="button"
+                    onClick={() => setIsIntroExpanded(!isIntroExpanded)}
+                    className="flex items-center gap-1 text-2xs font-bold text-shop hover:underline"
+                  >
+                    <span>{isIntroExpanded ? 'مشاهده کمتر' : 'مشاهده بیشتر'}</span>
+                    {isIntroExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div ref={mSpecsRef} className="border-b border-border pb-6 pt-4">
+                <ProductSpecsTable specGroups={product.specGroups} />
+              </div>
+
+              <div ref={mCommentsRef} className="border-b border-border pb-6 pt-4">
+                <ProductCommentsSection productId={product.id} productTitle={product.title} productImage={product.image} />
+              </div>
+
+              <div ref={mInquiriesRef} className="pt-4">
+                <ProductInquiriesSection productId={product.id} productTitle={product.title} productImage={product.image} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <MobileBottomAction
+          variant={currentSelectedSeller ? 'default' : 'notify'}
+          label={currentSelectedSeller ? 'افزودن به سبد خرید' : 'موجود شد خبرم کن'}
+          leftContent={leftPriceContent}
+          onClick={() => {
+            if (currentSelectedSeller) handleMobileAddToBasket();
+            else handleNotifyMe();
+          }}
+          disabled={false}
+          isLoading={currentSelectedSeller ? isMobileSubmitting : isNotifying}
+          icon={
+            currentSelectedSeller ? (
+              <ShoppingBag aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <Bell aria-hidden="true" className="h-5 w-5" />
+            )
+          }
+          forceShowKey={selectedCondition}
+          isInBasket={isInBasket}
+          basketQuantity={basketQuantity}
+          maxStock={maxAllowedQuantity}
+          onIncrease={handleIncreaseBasket}
+          onDecrease={handleDecreaseBasket}
+          isUpdatingQuantity={isBasketUpdating}
+          className="!fixed !bottom-0 !z-50"
+        />
+      </div>
+
+      {/* ==================== مودال‌ها ==================== */}
+      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsReportModalOpen(false)}>
+          <ModalTitle className="text-sm font-bold text-foreground">گزارش خطای کالا</ModalTitle>
+        </ModalHeader>
+        <ModalBody className="flex flex-col gap-4 p-5 pt-4">
+          <Select
+            label="دلیل گزارش *"
+            placeholder="انتخاب دلیل..."
+            value={selectedSubjectId}
+            onChange={(e) => setSelectedSubjectId(e.target.value)}
+            options={reportSubjects.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+          />
+          <TextArea
+            label="توضیحات تکمیلی"
+            placeholder="توضیح دهید..."
+            value={reportDescription}
+            onChange={(e) => setReportDescription(e.target.value)}
+            className="h-24 text-xs"
+          />
+        </ModalBody>
+        <ModalFooter className="gap-3 p-5 pt-4">
+          <Button variant="outline" onClick={() => setIsReportModalOpen(false)} className="h-10 flex-1 text-xs font-bold">
+            انصراف
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleReportSubmit}
+            isLoading={submitProductReport.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            ثبت گزارش
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      <PriceChartModal
+        isOpen={isPriceChartOpen}
+        onClose={() => setIsPriceChartOpen(false)}
+        productId={product.id}
+        conditionType={currentSelectedSeller ? currentSelectedSeller.type : 'New'}
+      />
+
+      <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md">
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center">
+          <h4 className="text-base font-bold text-foreground">درخواست شما با موفقیت ثبت شد</h4>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            به‌محض موجود شدن این کالا در انبار فروشندگان، به شما اطلاع‌رسانی خواهد شد.
+          </p>
+          <Button variant="primary" onClick={() => setIsNotifySuccessOpen(false)} className="mt-3 h-10 w-full text-xs font-bold">
+            متوجه شدم
+          </Button>
+           </ModalBody>
+      </Modal>
+    </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                            کامپوننت مودال نمودار قیمت                      */
+/* -------------------------------------------------------------------------- */
+
+function PriceChartModal({
+  isOpen,
+  onClose,
+  productId,
+  conditionType,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  productId: string;
+  conditionType: string;
+}) {
+  const { data: chartData, isLoading } = useGetProductPriceChart(productId, conditionType);
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-md overflow-hidden rounded-2xl">
+      <ModalHeader onClose={onClose}>
+        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <LineChart className="h-4 w-4 text-shop" />
+          <span>نمودار تغییرات قیمت فروش</span>
+        </ModalTitle>
+      </ModalHeader>
+      <ModalBody className="p-5 pt-3 text-center" dir="rtl">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <ThreeDotsLoader size="sm" />
+          </div>
+        ) : chartData?.prices?.length > 0 ? (
+          <div className="w-full py-4 text-xs font-bold text-foreground">
+            میانگین قیمت: {toPersianDigits(chartData.averagePrice || 0)} تومان
+          </div>
+        ) : (
+          <div className="py-12 text-center text-xs text-muted-foreground">
+            اطلاعات تغییرات قیمتی برای این کالا ثبت نشده است.
+          </div>
+        )}
+        <Button variant="outline" fullWidth onClick={onClose} className="mt-4 h-10 text-xs font-bold">
+          متوجه شدم
+        </Button>
+      </ModalBody>
+    </Modal>
+  );
+}
+
+================================================================================
+FILE: src\components\features\Product\components\ProductMinimalHeader.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { createPortal } from 'react-dom';
+import {
+  X,
+  MoreVertical,
+  ShoppingCart,
+  Scale,
+  AlertTriangle,
+  LineChart,
+  Share2,
+} from 'lucide-react';
+import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { toPersianDigits } from '@/core/utils/formatters';
+import { showToast } from '@/core/utils/toast';
+
+export interface ProductMinimalHeaderProps {
+  productTitle: string;
+  isAttached?: boolean;
+  onOpenReportModal: () => void;
+  onOpenPriceChart: () => void;
+}
+
+export function ProductMinimalHeader({
+  productTitle,
+  isAttached = false,
+  onOpenReportModal,
+  onOpenPriceChart,
+}: ProductMinimalHeaderProps) {
+  const router = useRouter();
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [menuCoords, setMenuCoords] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [mounted, setMounted] = React.useState(false);
+
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  const { data: basketData } = useGetBasket();
+  const totalBasketCount = basketData?.summary?.itemCount || 0;
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuCoords({
+        top: rect.bottom + 6,
+        left: rect.left,
+      });
+    }
+    setIsMenuOpen((prev) => !prev);
+  };
+
+  React.useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+    window.addEventListener('click', handleClickOutside);
+    window.addEventListener('resize', () => setIsMenuOpen(false));
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('resize', () => setIsMenuOpen(false));
+    };
+  }, [isMenuOpen]);
+
+  const handleShare = () => {
+    setIsMenuOpen(false);
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: productTitle, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast.success('لینک کالا کپی شد');
+    }
+  };
+
+  return (
+    <header
+      className={`lg:hidden fixed top-0 inset-x-0 z-50 flex h-14 w-full items-center justify-between px-4 transition-all duration-300 select-none ${
+        isAttached
+          ? 'bg-card/95 border-b border-border shadow-xs backdrop-blur-xl'
+          : 'bg-background/40 backdrop-blur-md border-b border-transparent'
+      }`}
+      dir="rtl"
+    >
+      <button
+        type="button"
+        onClick={() => router.back()}
+        aria-label="بستن صفحه"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card/85 text-foreground backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-muted"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
+      <div
+        className={`flex-1 min-w-0 px-3 text-center transition-opacity duration-300 ${
+          isAttached ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <span className="block truncate text-xs font-bold text-foreground sm:text-sm">
+          {productTitle}
+        </span>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2" dir="ltr">
+        <button
+          ref={buttonRef}
+          type="button"
+          onClick={toggleMenu}
+          aria-label="گزینه‌های بیشتر"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/85 text-foreground backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-muted"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </button>
+
+        {mounted &&
+          isMenuOpen &&
+          createPortal(
+            <div
+              ref={menuRef}
+              dir="rtl"
+              style={{
+                position: 'fixed',
+                top: `${menuCoords.top}px`,
+                left: `${menuCoords.left}px`,
+              }}
+              className="z-[99999] w-48 rounded-2xl border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onOpenPriceChart();
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors text-right"
+              >
+                <LineChart className="h-4 w-4 text-shop shrink-0" />
+                <span>نمودار تغییرات قیمت</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  showToast.info('کالا به لیست مقایسه افزوده شد');
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors text-right"
+              >
+                <Scale className="h-4 w-4 text-primary shrink-0" />
+                <span>مقایسه کالا</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors text-right"
+              >
+                <Share2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span>اشتراک‌گذاری</span>
+              </button>
+
+              <div className="my-1 border-t border-border/60" />
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onOpenReportModal();
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors text-right"
+              >
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>گزارش خطای کالا</span>
+              </button>
+            </div>,
+            document.body
+          )}
+
+        <Link
+          href="/basket"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/85 text-foreground backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-muted"
+          aria-label="سبد خرید"
+        >
+          <ShoppingCart className="h-4 w-4" />
+          {totalBasketCount > 0 && (
+            <span className="absolute -top-1 -end-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground shadow-xs">
+              {toPersianDigits(totalBasketCount)}
+            </span>
+          )}
+        </Link>
+      </div>
+    </header>
+  );
+}
+
+================================================================================
+FILE: src\components\features\Product\components\ProductHeader.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import { Share2, Scale, Star, Heart, Loader2, AlertTriangle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Typography } from '@/components/primitives/Typography';
+import { ProductDetailsViewModel } from '@/domains/front/product/types/view.types';
+import {
+  useIsUserFavoriteProduct,
+  useAddFavorite,
+  useDeleteFavorite,
+  useSubmitProductReport,
+} from '@/domains/front/product/hooks/product.hooks';
+import { useGetReportSubjects } from '@/domains/front/shop/hooks/shop.hooks';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@/components/composites/Modal/Modal';
+import { Select } from '@/components/primitives/Select/Select';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Button } from '@/components/primitives/Button/Button';
+import { toPersianDigits } from '@/core/utils/formatters';
+import { showToast } from '@/core/utils/toast';
+import { cn } from '@/design-system/utils/cn';
+
+export interface ProductHeaderProps {
+  product: ProductDetailsViewModel;
+  onScrollToComments: () => void;
+  onScrollToInquiries: () => void;
+}
+
+export function ProductHeader({ product, onScrollToComments, onScrollToInquiries }: ProductHeaderProps) {
+  const [mounted, setMounted] = React.useState(false);
+  const queryClient = useQueryClient();
+  const { data: rawIsFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
+  const addFavorite = useAddFavorite(product.code);
+  const deleteFavorite = useDeleteFavorite(product.code);
+  const submitProductReport = useSubmitProductReport();
+  const { data: reportSubjects } = useGetReportSubjects('ProductReport');
+
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
+  const [localIsFavorite, setLocalIsFavorite] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // همگام‌سازی کامل استیت محلی با پاسخ واقعی سرور به محض لود
+  React.useEffect(() => {
+    if (rawIsFavorite !== undefined && rawIsFavorite !== null) {
+      setLocalIsFavorite(Boolean(rawIsFavorite));
+    }
+  }, [rawIsFavorite]);
+
+  const handleFavoriteToggle = async () => {
+    const previousState = localIsFavorite;
+    const nextState = !previousState;
+    setLocalIsFavorite(nextState); // آپدیت آنی و بدون تأخیر در UI (Optimistic Update)
+
+    try {
+      if (previousState) {
+        await deleteFavorite.mutateAsync(product.id);
+        showToast.success('از علاقه‌مندی‌ها حذف شد');
+      } else {
+        await addFavorite.mutateAsync(product.id);
+        showToast.success('به علاقه‌مندی‌ها اضافه شد');
+      }
+    } catch (err: any) {
+      setLocalIsFavorite(previousState); // ریست کردن در صورت خطا
+      
+      // اگر از قبل در سرور لایک شده بود ولی فرانت‌ند آفلاین یا ناپدید بود، وضعیت را روی true ست کن
+      if (
+        err?.message?.includes('قبلا ثبت شده است') ||
+        err?.userMessage?.includes('قبلا ثبت شده است') ||
+        err?.response?.status === 400
+      ) {
+        setLocalIsFavorite(true);
+        queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], true);
+        return;
+      }
+      showToast.error(err?.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
+    }
+  };
+
+  const handleShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({ title: product.title, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast.success('لینک صفحه کپی شد');
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!selectedSubjectId) {
+      showToast.error('لطفاً دلیل گزارش کالا را انتخاب کنید');
+      return;
+    }
+    try {
+      await submitProductReport.mutateAsync({
+        productId: product.id,
+        reportSubjectId: selectedSubjectId,
+        description: reportDescription,
+      });
+      showToast.success('گزارش خطای کالا با موفقیت ثبت شد و توسط تیم پشتیبانی بررسی خواهد گردید');
+      setIsReportModalOpen(false);
+      setSelectedSubjectId('');
+      setReportDescription('');
+    } catch (error: any) {
+      showToast.error(error?.userMessage || 'خطا در ثبت گزارش خطا');
+    }
+  };
+
+  const subjectsList = reportSubjects || [];
+
+  if (!mounted) {
+    return (
+      <div className="flex w-full select-none flex-col gap-4 animate-pulse">
+        <div className="h-6 w-1/4 rounded-md bg-border" />
+        <div className="mt-2 h-8 w-3/4 rounded-md bg-border" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full select-none flex-col gap-4">
+      <div className="flex w-full items-center justify-between border-b border-border pb-3">
+        <div className="flex items-center gap-3">
+          <span className="text-2xs font-bold text-muted-foreground">
+            کد کالا: {toPersianDigits(product.code)}
+          </span>
+          <span className="text-2xs text-muted-foreground">|</span>
+          <button
+            type="button"
+            onClick={() => setIsReportModalOpen(true)}
+            className="flex items-center gap-1 text-2xs font-bold text-muted-foreground outline-none hover:text-destructive transition-colors"
+          >
+            <AlertTriangle aria-hidden="true" className="h-4 w-4" />
+            <span>گزارش کالا</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleShare}
+            aria-label="اشتراک‌گذاری"
+            className="rounded-xl border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+          >
+            <Share2 aria-hidden="true" className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="مقایسه"
+            className="rounded-xl border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+          >
+            <Scale aria-hidden="true" className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleFavoriteToggle}
+            disabled={isFavLoading || addFavorite.isPending || deleteFavorite.isPending}
+            aria-label={localIsFavorite ? 'حذف از علاقه‌مندی' : 'افزودن به علاقه‌مندی'}
+            aria-pressed={localIsFavorite}
+            className="select-none rounded-xl border border-border p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-destructive disabled:opacity-40"
+          >
+            {addFavorite.isPending || deleteFavorite.isPending ? (
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Heart
+                aria-hidden="true"
+                className={cn(
+                  'h-4 w-4 transition-colors duration-fast',
+                  localIsFavorite ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'
+                )}
+              />
+            )}
+          </button>
+        </div>
+      </div>
+
+      <Typography variant="h4" className="font-bold leading-relaxed text-foreground">
+        {toPersianDigits(product.title)}
+      </Typography>
+
+      <div className="mt-1 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+        <button
+          type="button"
+          onClick={onScrollToComments}
+          className="flex cursor-pointer items-center gap-1.5 outline-none"
+        >
+          <Star aria-hidden="true" className="h-4 w-4 shrink-0 fill-warning text-warning" />
+          <span className="font-bold text-foreground">{toPersianDigits(product.averageRate)}</span>
+          <span>از {toPersianDigits(product.rateCount)} نظر</span>
+        </button>
+        <span className="text-muted-foreground">|</span>
+        <button
+          type="button"
+          onClick={onScrollToInquiries}
+          className="hover:text-primary hover:underline"
+        >
+          تبادل پرسش و پاسخ
+        </button>
+      </div>
+
+      <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsReportModalOpen(false)}>
+          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+            <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
+            گزارش خطای کالا
+          </ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="flex flex-col gap-4 p-5 pt-4">
+          <Select
+            label="دلیل گزارش *"
+            placeholder="دلیل گزارش را انتخاب کنید..."
+            value={selectedSubjectId}
+            onChange={(e) => setSelectedSubjectId(e.target.value)}
+            options={subjectsList.map((sub: any) => ({ value: sub.id, label: sub.title }))}
+          />
+
+          <TextArea
+            label="توضیحات (اختیاری)"
+            placeholder="جزییات مشکل را بنویسید..."
+            value={reportDescription}
+            onChange={(e) => setReportDescription(e.target.value)}
+            className="h-24 text-xs"
+          />
+        </ModalBody>
+
+        <ModalFooter className="gap-3 p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setIsReportModalOpen(false);
+              setSelectedSubjectId('');
+              setReportDescription('');
+            }}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="submit"
+            variant="destructive"
+            onClick={handleReportSubmit}
+            isLoading={submitProductReport.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            ثبت گزارش خطا
+          </Button>
+        </ModalFooter>
+      </Modal>
+    </div>
+  );
+}
+
+
+================================================================================
+FILE: src\components\sections\Header\Header.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+import { Logo } from './components/Logo/Logo';
+import { SearchBar } from './components/SearchBar/SearchBar';
+import { SellerButton } from './components/SellerButton/SellerButton';
+import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
+import { AuthButton } from './components/AuthButton/AuthButton';
+import { CartButton } from './components/CartButton/CartButton';
+import { DesktopNavigation } from './components/DesktopNavigation/DesktopNavigation';
+import { MobileHeader } from './components/MobileHeader/MobileHeader';
+import { MyCarButton } from './components/MyCarButton/MyCarButton';
+import { CitySelector } from './components/CitySelector/CitySelector';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { useAppStore } from '@/shared/store/useAppStore';
+
+export interface HeaderProps {
+  className?: string;
+}
+
+export function Header({ className }: HeaderProps) {
+  
+  const router = useRouter();
+  const pathname = usePathname();
+  useAuth();
+  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
+  const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
+  const { scrollY } = useScroll();
+
+  React.useEffect(() => {
+    setIsHeaderMinimized(false);
+  }, [pathname, setIsHeaderMinimized]);
+
+  // باز شدن فوری با کمترین اسکرول به سمت بالا در هر کجای صفحه
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const prev = scrollY.getPrevious() ?? 0;
+    const diff = latest - prev;
+
+    if (latest < 40) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+      return;
+    }
+
+    // با کوچکترین حرکت به بالا (بیش از ۸ پیکسل) سریعاً هدر باز می‌شود
+    if (diff < -8) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+    } 
+    // با اسکرول به پایین جمع می‌شود
+    else if (diff > 10 && latest > 80) {
+      if (!isHeaderMinimized) setIsHeaderMinimized(true);
+    }
+  });
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    }
+  };
+React.useEffect(() => {
+  document.documentElement.style.setProperty(
+    '--header-height',
+    isHeaderMinimized ? '68px' : '112px'
+  );
+}, [isHeaderMinimized]);
+  return (
+    <header className={cn('z-40 w-full select-none', className)}>
+      {/* هدر نسخه دسکتاپ */}
+      <div className="pointer-events-none relative hidden h-28 w-full lg:block">
+        <motion.div
+          className="pointer-events-auto fixed inset-x-0 top-0 z-40 flex w-full flex-col border-b border-border/60 bg-card/95 shadow-xs backdrop-blur-md"
+          initial={false}
+          animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+          variants={{
+            expanded: { height: '112px', transition: { duration: 0.2, ease: 'easeInOut' } },
+            collapsed: { height: '68px', transition: { duration: 0.2, ease: 'easeInOut' } },
+          }}
+        >
+          {/* ردیف اول دسکتاپ: لوگو، جستجو و اکشن‌ها */}
+          <div className="flex h-[68px] w-full items-center px-4 py-3 lg:px-8">
+            <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-4">
+              <Logo className="shrink-0 pt-0" />
+
+              <div className="mx-2 max-w-3xl flex-1 xl:max-w-4xl">
+                <SearchBar
+                  placeholder="جستجوی هوشمند قطعات..."
+                  onSearch={handleSearch}
+                  isMobile={false}
+                />
+              </div>
+
+              <div className="flex shrink-0 items-center gap-3">
+                <SellerButton />
+                <AuthButton />
+                <CartButton />
+                <div className="ms-1 border-s border-border/70 pe-1">
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ردیف دوم دسکتاپ: منوی ناوبری و اطلاعات خودرو */}
+          <motion.div
+            initial={false}
+            animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+            variants={{
+              expanded: { height: '44px', opacity: 1, transition: { duration: 0.2, ease: 'easeInOut' } },
+              collapsed: { height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeInOut' } },
+            }}
+            className={cn(
+              'w-full border-t border-border/50 bg-secondary/30',
+              isHeaderMinimized ? 'pointer-events-none overflow-hidden' : 'overflow-visible'
+            )}
+          >
+            <div className="mx-auto max-w-screen-2xl px-4 lg:px-8">
+              <div className="flex h-11 items-center justify-between">
+                <DesktopNavigation />
+                <div className="flex items-center gap-4">
+                  <MyCarButton />
+                  <CitySelector />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* هدر نسخه موبایل */}
+      <div className="h-36 w-full lg:hidden" />
+      <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
+        <div className="mx-auto max-w-screen-2xl">
+          <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
+        </div>
+      </div>
+    </header>
+  );
+}
+
+================================================================================
+FILE: src\components\sections\Header\components\MobileHeader\MobileHeader.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import { cn } from '@/design-system/utils/cn';
+import { Logo } from '../Logo/Logo';
+import { SellerButton } from '../SellerButton/SellerButton';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { SearchBar } from '../SearchBar/SearchBar';
+import { CitySelector } from '../CitySelector/CitySelector';
+
+export interface MobileHeaderProps {
+  className?: string;
+  onSearch?: (query: string) => void;
+  isScrolled?: boolean;
+}
+
+export function MobileHeader({ className, onSearch, isScrolled = false }: MobileHeaderProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  return (
+    <div className={cn('flex w-full flex-col transition-transform duration-normal will-change-transform', className)}>
+      {/* ردیف بالای موبایل: لوگو و اکشن‌ها کاملاً هماهنگ با پس‌زمینه سفید کارت */}
+      <div className="relative z-20 flex h-10 w-full items-center justify-between">
+        <Logo className="shrink-0" />
+        <div className="flex shrink-0 items-center gap-2">
+          <SellerButton size="sm" />
+          <ThemeToggle />
+        </div>
+      </div>
+
+      {/* ردیف پایین: سرچ و انتخاب شهر */}
+      <div
+        className={cn(
+          'w-full origin-top transform transition-all duration-slow ease-out',
+          'will-change-[transform,opacity,max-height]',
+          isScrolled
+            ? 'pointer-events-none max-h-0 -translate-y-3 scale-y-90 overflow-hidden opacity-0'
+            : 'max-h-36 translate-y-0 scale-y-100 opacity-100'
+        )}
+      >
+        <div className="flex w-full flex-col pb-1 pt-2">
+          {isMounted ? (
+            <>
+              <SearchBar
+                placeholder="جستجو در یدکچی..."
+                onSearch={onSearch}
+                className="w-full"
+                isMobile
+              />
+
+              <div className="mt-2.5 border-t border-border/60 pt-2">
+                <CitySelector variant="mobile" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="h-9 w-full animate-pulse rounded-md bg-secondary" />
+              <div className="mt-2.5 h-6 w-full animate-pulse rounded-md bg-secondary/70" />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+================================================================================
+FILE: src\components\sections\Footer\Footer.tsx
+================================================================================
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import {
+  Phone,
+  Mail,
+  ChevronUp,
+  Send,
+  MessageSquare,
+  Headphones,
+  BadgeCheck,
+  CreditCard,
+  MessageCircle,
+} from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { Typography } from '@/components/primitives/Typography';
+import { Input } from '@/components/primitives/Input';
+import { Button } from '@/components/primitives/Button';
+import { Logo } from '@/components/sections/Header/components/Logo/Logo';
+import { Accordion } from '@/components/composites/Accordion/Accordion';
+import { useGetFrontFooter } from '@/domains/front/banner/hooks/banner.hooks';
+import { useGetStaticPageCategories, useSubscribeNewsletter } from '@/domains/front/static/hooks/static.hooks';
+import { showToast } from '@/core/utils/toast';
+
+export interface FooterProps {
+  className?: string;
+}
+
+const WHY_US_ITEMS = [
+  {
+    id: 1,
+    title: 'پرداخت امن',
+    description: 'ضمانت تراکنش های شما',
+    icon: (
+      <div className="relative flex items-center justify-center">
+        <CreditCard className="h-5 w-5 text-warning sm:h-6 sm:w-6" />
+        <span
+          aria-hidden="true"
+          className="absolute -bottom-1 -end-1 h-2.5 w-2.5 rounded-full border-2 border-card bg-success"
+        />
+      </div>
+    ),
+  },
+  {
+    id: 2,
+    title: 'ضمانت اصل بودن',
+    description: 'مرجوع کالا در صورت عدم تناسب',
+    icon: <BadgeCheck className="h-5 w-5 text-muted-foreground sm:h-6 sm:w-6" />,
+  },
+  {
+    id: 3,
+    title: '۲۴x۷ پشتیبانی',
+    description: 'پشتیبانی تخصصی در تمام مراحل',
+    icon: <Headphones className="h-5 w-5 text-primary sm:h-6 sm:w-6" />,
+  },
+  {
+    id: 4,
+    title: 'ارتباط امن با فروشندگان',
+    description: 'در تماس باش، مطمئن خرید کن!',
+    icon: <MessageCircle className="h-5 w-5 text-primary sm:h-6 sm:w-6" />,
+  },
+];
+
+function WhyYadakchi() {
+  return (
+    <section className="w-full border-b border-border bg-card py-10">
+      <div className="container mx-auto max-w-6xl px-4">
+        <div className="relative mb-8 flex items-center justify-center">
+          <div aria-hidden="true" className="absolute inset-x-0 top-1/2 -z-0 h-px bg-border" />
+          <h3 className="relative z-10 bg-card px-5 text-sm font-bold text-foreground sm:text-base">
+            چرا یدکچی؟
+          </h3>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          {WHY_US_ITEMS.map((item) => (
+            <div
+              key={item.id}
+              className={cn(
+                'group relative flex select-none items-center gap-3 rounded-lg border border-border bg-card p-3.5 sm:p-4',
+                'transition-colors duration-normal ease-in-out',
+                'hover:border-primary/40'
+              )}
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted sm:h-12 sm:w-12">
+                {item.icon}
+              </div>
+
+              <div className="flex min-w-0 flex-col">
+                <span className="mb-0.5 truncate text-xs font-bold leading-snug text-foreground sm:text-sm">
+                  {item.title}
+                </span>
+                <span className="truncate text-2xs leading-relaxed text-muted-foreground sm:text-xs">
+                  {item.description}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const InstagramIcon = () => (
+  <svg
+    aria-hidden="true"
+    className="h-5 w-5"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+);
+
+const SOCIAL_LINKS = [
+  { id: 'instagram', label: 'صفحه اینستاگرام یدکچی', icon: <InstagramIcon /> },
+  { id: 'telegram', label: 'کانال تلگرام یدکچی', icon: <Send className="h-5 w-5" /> },
+  { id: 'support', label: 'پشتیبانی آنلاین یدکچی', icon: <MessageSquare className="h-5 w-5" /> },
+];
+
+export function Footer({ className }: FooterProps) {
+  const [email, setEmail] = React.useState('');
+  const [mounted, setMounted] = React.useState(false);
+  const { data: footerData } = useGetFrontFooter();
+  const { data: categories = [] } = useGetStaticPageCategories();
+  const subscribeNewsletter = useSubscribeNewsletter();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleScrollToTop = () => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !email.includes('@')) {
+      showToast.error('لطفاً یک آدرس ایمیل معتبر وارد کنید');
+      return;
+    }
+    try {
+      await subscribeNewsletter.mutateAsync({ email });
+      showToast.success('عضویت در خبرنامه با موفقیت انجام شد');
+      setEmail('');
+    } catch (err: any) {
+      showToast.error(err.userMessage || 'خطا در ثبت ایمیل');
+    }
+  };
+
+  const activeCategories = categories.filter(
+    (cat) => cat && cat.staticPages && cat.staticPages.length > 0
+  );
+
+  const colCount = activeCategories.length + 1;
+  const gridColsClass =
+    colCount === 2 ? 'md:grid-cols-2'
+    : colCount === 3 ? 'md:grid-cols-3'
+    : colCount === 4 ? 'md:grid-cols-4'
+    : 'md:grid-cols-5';
+
+  return (
+    <footer className={cn('border-t border-border bg-muted/30 pb-6', className)}>
+      <WhyYadakchi />
+
+      <div className="container mx-auto max-w-[1840px] px-4 pt-10 md:px-6">
+        <div className="mb-8 flex flex-col items-center justify-between gap-4 border-b border-border pb-6 md:flex-row">
+          <div className="flex flex-col items-center text-center md:items-start md:gap-2">
+            <Logo hideTitle className="origin-right scale-110" />
+            <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+              {footerData?.description || 'یدکچی؛ مارکت‌پلیس تخصصی خرید قطعات یدکی خودرو'}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleScrollToTop}
+            className="flex h-10 items-center gap-1.5 px-4"
+          >
+            <span>بازگشت به بالا</span>
+            <ChevronUp aria-hidden="true" className="h-4 w-4 text-primary" />
+          </Button>
+        </div>
+
+        <div className="w-full space-y-1 pb-6 md:hidden">
+          {mounted && activeCategories.map((cat: any, idx: number) => (
+            <Accordion key={idx} title={cat.title}>
+              <ul className="space-y-1 pb-2 pe-2">
+                {cat.staticPages.map((page: any) => (
+                  <li key={page.id}>
+                    <Link
+                      href={page.url}
+                      className="block py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+                    >
+                      {page.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Accordion>
+          ))}
+        </div>
+
+        <div className={cn('hidden border-b border-border pb-10 md:grid gap-8', gridColsClass)}>
+          {activeCategories.map((cat: any, idx: number) => (
+            <div key={idx} className="flex flex-col items-start space-y-4">
+              <Typography variant="h5" className="font-bold text-foreground">
+                {cat.title}
+              </Typography>
+              <ul className="w-full space-y-1">
+                {cat.staticPages.map((page: any) => (
+                  <li key={page.id}>
+                    <Link
+                      href={page.url}
+                      className="block py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+                    >
+                      {page.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+
+          <div className="flex flex-col items-start space-y-4 md:col-span-1">
+            <Typography variant="h5" className="font-bold text-foreground">
+              ارتباط با یدکچی
+            </Typography>
+            <div className="w-full space-y-3.5">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Phone aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+                <span dir="ltr" className="font-medium">تماس: ۰۲۱-۱۲۳۴۵۶۷۸</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Mail aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+                <span className="font-medium">ایمیل: yadakchi@info.com</span>
+              </div>
+            </div>
+
+            <div className="flex w-full flex-col items-start pt-2">
+              <Typography variant="h6" className="mb-2.5 font-bold text-foreground">
+                همراه ما باشید!
+              </Typography>
+              <div className="flex items-center gap-3">
+                {SOCIAL_LINKS.map((link) => (
+                  <Link
+                    key={link.id}
+                    href="#"
+                    aria-label={link.label}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-xs transition-colors hover:border-primary/40 hover:text-primary"
+                  >
+                    {link.icon}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col space-y-4 border-b border-border py-6 md:hidden">
+          <Typography variant="h5" className="font-bold text-foreground">
+            ارتباط با یدکچی
+          </Typography>
+          <div className="w-full space-y-3.5">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Phone aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+              <span dir="ltr" className="font-medium">تماس: ۰۲۱-۱۲۳۴۵۶۷۸</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Mail aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+              <span className="font-medium">ایمیل: yadakchi@info.com</span>
+            </div>
+          </div>
+
+          <div className="flex w-full flex-col items-start pt-2">
+            <Typography variant="h6" className="mb-2.5 font-bold text-foreground">
+              همراه ما باشید!
+            </Typography>
+            <div className="flex items-center gap-3">
+              {SOCIAL_LINKS.map((link) => (
+                <Link
+                  key={link.id}
+                  href="#"
+                  aria-label={link.label}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-xs transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  {link.icon}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-between gap-8 pt-8 lg:flex-row">
+          <div className="w-full lg:max-w-md">
+            <Typography variant="h6" className="mb-2 font-bold text-foreground">
+              با ثبت ایمیل، از جدیدترین تخفیف‌ها و رویدادها باخبر شوید
+            </Typography>
+            <form onSubmit={handleSubscribe} className="mt-3 flex w-full gap-2">
+              <Input
+                type="email"
+                placeholder="آدرس ایمیل شما"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 bg-card"
+                required
+              />
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                className="shrink-0 px-5"
+                isLoading={subscribeNewsletter.isPending}
+              >
+                ثبت ایمیل
+              </Button>
+            </form>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-xs">
+            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-2xs font-bold text-muted-foreground">
+              رسانه
+            </div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-2xs font-bold text-muted-foreground">
+              نماد
+            </div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-2xs font-bold text-muted-foreground">
+              اتحادیه
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 border-t border-border pt-6 text-center">
+          <p className="mx-auto max-w-5xl text-center text-2xs leading-relaxed text-muted-foreground">
+            استفاده از مطالب یدکچی برای «استفاده غیرتجاری» و با «ذکر منبع» بلامانع است، تمامی حقوق مادی و معنوی این وب سایت متعلق به شرکت تامین اندیشان نوین خودرو می‌باشد.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+
+================================================================================
+FILE: src\domains\front\basket\hooks\basket.hooks.ts
+================================================================================
+
+// src/domains/front/basket/hooks/basket.hooks.ts
+
+import { useQueryClient } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { getBasketService, UserDiscountCodeItem, BasketShipmentMethodItem } from '../services/basket.service';
+import { AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
+
+const basketService = getBasketService();
+
+export function useGetBasket() {
+  return useTypedQuery(
+    queryKeys.front.basket.current,
+    () => basketService.getBasket(),
+    {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+    }
+  );
+}
+
+export function useAddToBasket() {
+  const queryClient = useQueryClient();
+
+  return useTypedMutation(
+    (request: AddToBasketRequest) => basketService.addToBasket(request),
+    {
+      onSuccess: (data) => {
+        queryClient.setQueryData(queryKeys.front.basket.current, data);
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useDeleteFromBasket() {
+  const queryClient = useQueryClient();
+
+  return useTypedMutation(
+    (request: DeleteFromBasketRequest) => basketService.deleteFromBasket(request),
+    {
+      onSuccess: (data) => {
+        queryClient.setQueryData(queryKeys.front.basket.current, data);
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useGetUserLocations() {
+  return useTypedQuery(
+    ['user', 'locations'],
+    () => basketService.getUserLocations(),
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+export function useCreateUserLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (formData: FormData) => basketService.createUserLocation(formData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
+      },
+    }
+  );
+}
+
+export function useUpdateUserLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (formData: FormData) => basketService.updateUserLocation(formData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
+      },
+    }
+  );
+}
+
+export function useDeleteUserLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (id: string) => basketService.deleteUserLocation(id),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'locations'] });
+      },
+    }
+  );
+}
+
+export function useGetCheckoutBasket() {
+  return useTypedQuery(
+    ['front', 'basket', 'checkout'],
+    () => basketService.getCheckoutBasket(),
+    {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    }
+  );
+}
+
+export function useSetBasketLocationAndPrice() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
+    {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useChangeBasketLocation() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
+    {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useSetBasketShipment() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (methods: BasketShipmentMethodItem[]) => basketService.setBasketShipment(methods),
+    {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}
+
+export function useInitiatePayment() {
+  return useTypedMutation(
+    (isLegalReceipt: boolean) => basketService.initiatePayment(isLegalReceipt)
+  );
+}
+
+export function useApplyDiscountCode() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (code: string) => basketService.applyDiscountCode(code),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
+      },
+    }
+  );
+}
+
+export function useApplyReferralCode() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (code: string) => basketService.applyReferralCode(code),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
+      },
+    }
+  );
+}
+
+export function useGetUserDiscountCodes() {
+  return useTypedQuery<UserDiscountCodeItem[]>(
+    ['user', 'discount-codes'],
+    () => basketService.getUserDiscountCodes(),
+    {
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+export function useCheckoutBasket() {
+  const queryClient = useQueryClient();
+  return useTypedMutation<any, void>(
+    () => basketService.checkoutBasket(),
+    {
+      onSuccess: (data) => {
+        const updated = data?.basket || data;
+        if (updated) {
+          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+      },
+    }
+  );
+}

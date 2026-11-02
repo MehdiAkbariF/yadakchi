@@ -352,6 +352,31 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
+  // ⭐⭐⭐ این تابع جدید: وقتی از SellersList خبر می‌رسد که فروشنده‌ای به سبد اضافه شد ⭐⭐⭐
+  const handleSellerAddedToBasket = (sellerId: string) => {
+    // اگر فروشگاه در لیست شرط انتخاب فعلی نیست، شرط را عوض کن
+    const inCurrentList = allAvailableSellersList.some((s) => s.id === sellerId);
+
+    if (!inCurrentList) {
+      const inNew =
+        (sellersGroup.newOnline || []).some((s: any) => s.id === sellerId) ||
+        (sellersGroup.newLocal || []).some((s: any) => s.id === sellerId);
+      const inStock =
+        (sellersGroup.stockOnline || []).some((s: any) => s.id === sellerId) ||
+        (sellersGroup.stockLocal || []).some((s: any) => s.id === sellerId);
+      const inTakeOff =
+        (sellersGroup.takeOffOnline || []).some((s: any) => s.id === sellerId) ||
+        (sellersGroup.takeOffLocal || []).some((s: any) => s.id === sellerId);
+
+      if (inNew) setSelectedCondition('New');
+      else if (inStock) setSelectedCondition('Stock');
+      else if (inTakeOff) setSelectedCondition('TakeOff');
+    }
+
+    // فروشگاه را فعال کن
+    setActiveSellerId(sellerId);
+  };
+
   const originalPriceRaw = currentSelectedSeller?.retailPriceRaw || 0;
   const finalPriceRaw = currentSelectedSeller?.finalPriceRaw || 0;
   const calculatedPercent = originalPriceRaw > finalPriceRaw
@@ -368,7 +393,6 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     `${toPersianDigits(product.salesCount || 0)} خرید موفق`,
   ];
 
-  // ✅ بدون AnimatePresence و motion — فقط span ساده
   const leftPriceContent = currentSelectedSeller ? (
     <div className="flex h-10 w-36 max-w-[150px] select-none flex-col justify-between">
       <div className="relative h-4 w-full overflow-hidden">
@@ -460,6 +484,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
               activeSellers={activeSellers}
               selectedSellerId={currentSelectedSeller?.id || null}
               onSelectSeller={(id) => setActiveSellerId(id)}
+              onSellerAddedToBasket={handleSellerAddedToBasket}
               productTitle={product.title}
             />
 
@@ -606,6 +631,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
                 activeSellers={activeSellers}
                 selectedSellerId={currentSelectedSeller?.id || null}
                 onSelectSeller={(id) => setActiveSellerId(id)}
+                onSellerAddedToBasket={handleSellerAddedToBasket}
                 productTitle={product.title}
               />
 
@@ -746,11 +772,15 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           <Button variant="primary" onClick={() => setIsNotifySuccessOpen(false)} className="mt-3 h-10 w-full text-xs font-bold">
             متوجه شدم
           </Button>
-        </ModalBody>
+           </ModalBody>
       </Modal>
     </>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/*                            کامپوننت مودال نمودار قیمت                      */
+/* -------------------------------------------------------------------------- */
 
 function PriceChartModal({
   isOpen,
@@ -783,7 +813,7 @@ function PriceChartModal({
             میانگین قیمت: {toPersianDigits(chartData.averagePrice || 0)} تومان
           </div>
         ) : (
-                    <div className="py-12 text-center text-xs text-muted-foreground">
+          <div className="py-12 text-center text-xs text-muted-foreground">
             اطلاعات تغییرات قیمتی برای این کالا ثبت نشده است.
           </div>
         )}

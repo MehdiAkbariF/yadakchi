@@ -9,6 +9,8 @@ export interface StaticPageViewModel {
   englishTitle: string;
   url: string;
   content: string;
+  css?: string;              // ← اضافه شد
+  noIndex: boolean;          // ← اضافه شد
   seo: {
     metaTitle: string | null;
     metaDescription: string | null;
@@ -42,10 +44,7 @@ export interface FAQViewModel {
   id: string;
   question: string;
   answer: string;
-  category: {
-    id: string;
-    name: string;
-  };
+  category: { id: string; name: string };
   order: number;
 }
 
