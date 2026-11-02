@@ -1,3 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @font-face {
   font-family: 'IRANYekan';
   src: url('/Font/IranYekan/woff2/IRANYekanXFaNum-Regular.woff2') format('woff2');
@@ -22,13 +25,7 @@
   font-display: swap;
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @layer base {
   :root {

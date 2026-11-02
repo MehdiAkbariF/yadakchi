@@ -29,6 +29,8 @@ import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { toPersianDigits, getProductUrl } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
+import { getHttpClient } from '@/core/http/client';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
 
 const TAB_LABELS: Record<string, string> = {
   intro: 'معرفی کالا',
@@ -74,6 +76,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
   const [isPriceChartOpen, setIsPriceChartOpen] = React.useState(false);
   const [metaIndex, setMetaIndex] = React.useState(0);
   const [isSheetAttached, setIsSheetAttached] = React.useState(false);
+  const [lottieKey, setLottieKey] = React.useState(0);
 
   const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
   const [reportDescription, setReportDescription] = React.useState('');
@@ -321,12 +324,20 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
+  // ✅ متصل‌شده به API واقعی مشابه ساید اینوویس دسکتاپ
   const handleNotifyMe = async () => {
-    if (isNotifying) return;
+    if (isNotifying || !product?.id) return;
     setIsNotifying(true);
     try {
-      await new Promise((r) => setTimeout(r, 600));
+      const client = getHttpClient();
+      await client.post('/api/Front/ProductInStockNotificationRequest', null, {
+        params: { ProductId: product.id },
+      });
+      setLottieKey((k) => k + 1);
       setIsNotifySuccessOpen(true);
+      showToast.success('درخواست اطلاع‌رسانی با موفقیت ثبت شد');
+    } catch (error: any) {
+      showToast.error(error?.userMessage || 'خطا در ثبت درخواست اطلاع‌رسانی موجودی');
     } finally {
       setIsNotifying(false);
     }
@@ -352,9 +363,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
-  // ⭐⭐⭐ این تابع جدید: وقتی از SellersList خبر می‌رسد که فروشنده‌ای به سبد اضافه شد ⭐⭐⭐
   const handleSellerAddedToBasket = (sellerId: string) => {
-    // اگر فروشگاه در لیست شرط انتخاب فعلی نیست، شرط را عوض کن
     const inCurrentList = allAvailableSellersList.some((s) => s.id === sellerId);
 
     if (!inCurrentList) {
@@ -373,7 +382,6 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
       else if (inTakeOff) setSelectedCondition('TakeOff');
     }
 
-    // فروشگاه را فعال کن
     setActiveSellerId(sellerId);
   };
 
@@ -692,6 +700,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           </div>
         </div>
 
+        {/* دکمه چسبان پایین موبایل */}
         <MobileBottomAction
           variant={currentSelectedSeller ? 'default' : 'notify'}
           label={currentSelectedSeller ? 'افزودن به سبد خرید' : 'موجود شد خبرم کن'}
@@ -763,24 +772,47 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
         conditionType={currentSelectedSeller ? currentSelectedSeller.type : 'New'}
       />
 
-      <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md">
-        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center">
-          <h4 className="text-base font-bold text-foreground">درخواست شما با موفقیت ثبت شد</h4>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            به‌محض موجود شدن این کالا در انبار فروشندگان، به شما اطلاع‌رسانی خواهد شد.
+      {/* ✅ مودال اطلاع‌رسانی موجودی ارتقایافته و متصل به انیمیشن */}
+      <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md overflow-hidden rounded-2xl">
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center" dir="rtl">
+          <div className="mx-auto -mt-2 mb-1 h-52 w-52 max-w-full">
+            <LottiePlayer key={lottieKey} path="/anumations/notif-success.json" className="h-full w-full" loop={false} />
+          </div>
+
+          <h4 className="text-base font-bold leading-relaxed text-foreground">
+            درخواست شما با موفقیت ثبت شد!
+          </h4>
+
+          <p className="text-center text-sm leading-reading text-foreground">
+            به‌محض موجود شدن این کالا، به شما اطلاع می‌دیم.
           </p>
-          <Button variant="primary" onClick={() => setIsNotifySuccessOpen(false)} className="mt-3 h-10 w-full text-xs font-bold">
-            متوجه شدم
-          </Button>
-           </ModalBody>
+
+          <p className="mx-auto max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
+            تا اون موقع، می‌تونید قطعات موردنیاز خودروتون رو در یدکچی جستجو و قیمت‌ها رو مقایسه کنید.
+          </p>
+
+          <div className="mt-3 flex w-full flex-col gap-2">
+            <Button
+              variant="primary"
+              onClick={() => setIsNotifySuccessOpen(false)}
+              className="h-10 w-full rounded-xl text-xs font-bold"
+            >
+              متوجه شدم
+            </Button>
+
+            <Link
+              href="/search"
+              className="py-1 text-center text-xs font-bold text-shop hover:underline"
+              onClick={() => setIsNotifySuccessOpen(false)}
+            >
+              جستجوی قطعات در یدکچی
+            </Link>
+          </div>
+        </ModalBody>
       </Modal>
     </>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*                            کامپوننت مودال نمودار قیمت                      */
-/* -------------------------------------------------------------------------- */
 
 function PriceChartModal({
   isOpen,

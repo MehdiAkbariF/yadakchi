@@ -23,6 +23,12 @@ export interface BasketShipmentMethodItem {
   shipmentMethod: 'Local' | 'Tipax' | 'DirectShipment' | 'SnappBox' | string;
 }
 
+export interface SamanPaymentCallbackParams {
+  refNum?: string | null;
+  status: string | number;
+  token: string;
+}
+
 export class BasketService {
   private readonly httpClient = getHttpClient();
 
@@ -178,7 +184,10 @@ export class BasketService {
   async getCheckoutBasket(): Promise<any> {
     try {
       const response = await this.httpClient.post(BASKET_ENDPOINTS.CHECKOUT_BASKET);
-      return response.data?.basket || response.data;
+      const raw = response.data?.basket || response.data;
+      if (!raw) return null;
+      const domain = BasketMapper.toDomain(raw);
+      return BasketMapper.toView(domain);
     } catch (error: any) {
       const responseData = error?.response?.data || error?.data;
       if (
@@ -186,7 +195,10 @@ export class BasketService {
         (responseData?.basket || responseData?.code === 'basket_already_checked_out')
       ) {
         logger.debug('[BasketService] Basket already checked out, using active basket data');
-        return responseData.basket || responseData;
+        const raw = responseData.basket || responseData;
+        if (!raw) return null;
+        const domain = BasketMapper.toDomain(raw);
+        return BasketMapper.toView(domain);
       }
       throw errorManager.normalize(error);
     }
@@ -198,7 +210,10 @@ export class BasketService {
         BASKET_ENDPOINTS.BASKET_SHIPMENT_PRICE,
         { locationId }
       );
-      return response.data?.basket || response.data;
+      const raw = response.data?.basket || response.data;
+      if (!raw) return null;
+      const domain = BasketMapper.toDomain(raw);
+      return BasketMapper.toView(domain);
     } catch (error) {
       throw errorManager.normalize(error);
     }
@@ -207,10 +222,13 @@ export class BasketService {
   async setBasketShipment(methods: BasketShipmentMethodItem[]): Promise<any> {
     try {
       const response = await this.httpClient.post(
-        BASKET_ENDPOINTS.BASKET_SHIPMENT, 
+        BASKET_ENDPOINTS.BASKET_SHIPMENT,
         { methods }
       );
-      return response.data?.basket || response.data;
+      const raw = response.data?.basket || response.data;
+      if (!raw) return null;
+      const domain = BasketMapper.toDomain(raw);
+      return BasketMapper.toView(domain);
     } catch (error) {
       throw errorManager.normalize(error);
     }
@@ -280,6 +298,25 @@ export class BasketService {
   async checkoutBasket(): Promise<any> {
     return this.getCheckoutBasket();
   }
+
+async verifySamanPayment(
+  params: SamanPaymentCallbackParams
+): Promise<any> {
+  // ⚠️ MOCK — برای تست UI
+  console.log('[MOCK] verifySamanPayment called:', params);
+  await new Promise((r) => setTimeout(r, 1200));
+
+  // شبیه‌سازی: اگر Status=2 → موفق
+  if (Number(params.status) === 2) {
+    return { success: true, orderId: 'MOCK-ORDER-123' };
+  }
+
+  // در غیر این صورت → ناموفق
+  throw errorManager.normalize({
+    status: 400,
+    userMessage: 'پرداخت ناموفق بود',
+  });
+}
 }
 
 let basketServiceInstance: BasketService | null = null;

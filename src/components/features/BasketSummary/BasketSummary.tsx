@@ -73,10 +73,6 @@ export function BasketSummary() {
   const checkoutBasket = useCheckoutBasket();
   const basket = basketData as any;
 
-  /**
-   * ✅ اصلاح ۱: انتقال `shipmentMethod` از sub به item
-   * تا BasketItemRow بتواند روش ارسال واقعی را نمایش دهد.
-   */
   const allItems = React.useMemo(() => {
     if (!basket?.subBaskets || !Array.isArray(basket.subBaskets)) return [];
     return basket.subBaskets.flatMap((sub: any) => {
@@ -84,7 +80,7 @@ export function BasketSummary() {
       return items.map((item: any) => ({
         ...item,
         shop: item.shop || sub.shop,
-        shipmentMethod: sub.shipmentMethod, // ✅ اضافه شد
+        shipmentMethod: sub.shipmentMethod,
       }));
     });
   }, [basket]);
@@ -95,7 +91,7 @@ export function BasketSummary() {
 
   if (!basket || basket.isEmpty || allItems.length === 0) {
     return (
-      <div className="flex w-full select-none flex-col items-center justify-center rounded-3xl border border-dashed border-border/80 bg-card px-4 py-16 text-center shadow-xs mt-3">
+      <div className="flex w-full select-none flex-col items-center justify-center rounded-3xl border border-dashed border-border/80 bg-card px-4 py-16 text-center shadow-xs">
         <div className="-mt-2 mb-2 flex h-52 w-52 max-w-full items-center justify-center">
           <LottiePlayer path="/anumations/shopping-cart.json" className="h-full w-full" />
         </div>
@@ -137,10 +133,6 @@ export function BasketSummary() {
     }
   };
 
-  /**
-   * ✅ اصلاح ۲: مبلغ نهایی = totalFinalPrice + totalShipmentPrice
-   * در ریسپانس بک‌اند، totalFinalPrice شامل هزینه ارسال نیست.
-   */
   const finalPriceValue =
     (basket.totalFinalPrice ?? basket.total?.finalPrice ?? 0) +
     (basket.totalShipmentPrice ?? 0);
@@ -160,7 +152,7 @@ export function BasketSummary() {
   );
 
   return (
-    <div className="flex w-full select-none flex-col gap-8 mt-5 md:mt-0" dir="rtl">
+    <div className="flex w-full select-none flex-col gap-8" dir="rtl">
       <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
         <div className="flex w-full flex-1 flex-col">
           <div className="mb-2 flex w-fit items-center justify-between border-b-2 border-primary pb-3">
@@ -182,17 +174,14 @@ export function BasketSummary() {
         <BasketInvoice basket={basket} />
       </div>
 
-      {/* ✅ اصلاح ۳: حذف داده‌های هاردکد «پیشنهادها» */}
-      {/* این بخش باید از API بیاید. تا آن زمان، حذف شد. */}
-      {/* <div className="mt-4 flex w-full flex-col gap-6"> ... </div> */}
-
       <MobileBottomAction
-        label="ادامه فرآیند خرید"
-        leftContent={leftPriceContent}
-        onClick={handleContinue}
-        isLoading={checkoutBasket.isPending}
-        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
-      />
+  label="ادامه فرآیند خرید"
+  leftContent={leftPriceContent}
+  onClick={handleContinue}
+  isLoading={checkoutBasket.isPending}
+  icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+  hasBottomNav
+/>
     </div>
   );
 }

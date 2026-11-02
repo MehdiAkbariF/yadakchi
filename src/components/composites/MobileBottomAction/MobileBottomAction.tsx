@@ -24,13 +24,19 @@ export interface MobileBottomActionProps {
   onIncrease?: () => void;
   onDecrease?: () => void;
   isUpdatingQuantity?: boolean;
+
+  /** آیا BottomNav در صفحه هست؟ */
+  hasBottomNav?: boolean;
+
+  /** کلاس اضافه برای ردیوس */
+  buttonRadius?: string;
 }
 
 export function MobileBottomAction({
   label,
   onClick,
-  isLoading,
-  disabled,
+  isLoading = false,
+  disabled = false,
   leftContent,
   icon,
   className,
@@ -41,6 +47,8 @@ export function MobileBottomAction({
   onIncrease,
   onDecrease,
   isUpdatingQuantity = false,
+  hasBottomNav = false,
+  buttonRadius = '',
 }: MobileBottomActionProps) {
   const [mounted, setMounted] = React.useState(false);
 
@@ -58,28 +66,44 @@ export function MobileBottomAction({
     <div
       dir="rtl"
       className={cn(
-        'lg:hidden fixed bottom-0 inset-x-0 z-50 w-full',
-        'bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
-        'shadow-[0_-8px_25px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_25px_rgba(0,0,0,0.35)]',
+        'lg:hidden fixed inset-x-0 z-50 w-full',
+        'bg-card border-t border-border px-4 py-3 transform-gpu',
+        'shadow-[0_-8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_25px_rgba(0,0,0,0.35)]',
         'flex items-center justify-between gap-3',
         className
       )}
+      style={{
+        bottom: hasBottomNav
+          ? 'calc(64px + env(safe-area-inset-bottom, 0px))'
+          : '0px',
+        paddingBottom: hasBottomNav
+          ? '0.75rem'
+          : 'max(0.75rem, env(safe-area-inset-bottom))',
+      }}
     >
       {leftContent ? (
-        <div className="flex min-w-0 flex-col items-start text-start shrink-0">{leftContent}</div>
+        <div className="flex min-w-0 flex-col items-start text-start shrink-0">
+          {leftContent}
+        </div>
       ) : null}
 
       <div className={cn('flex-1 min-w-0', leftContent ? 'max-w-[65%]' : 'w-full')}>
         {isInBasket && basketQuantity > 0 ? (
-          <div className="flex items-center justify-between h-11 w-full rounded-xl border border-primary/40 bg-primary/10 px-2 shadow-xs select-none">
+          <div
+            className={cn(
+              'flex items-center justify-between h-11 w-full rounded-lg border border-primary/40 bg-primary/10 px-2 shadow-xs select-none',
+              buttonRadius
+            )}
+          >
             <button
               type="button"
               onClick={onIncrease}
               disabled={isUpdatingQuantity || isMaxStockReached}
               aria-label="افزایش تعداد"
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs transition-all active:scale-95',
-                (isUpdatingQuantity || isMaxStockReached) && 'opacity-40 cursor-not-allowed active:scale-100'
+                'flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs transition-all active:scale-95',
+                (isUpdatingQuantity || isMaxStockReached) &&
+                  'opacity-40 cursor-not-allowed active:scale-100'
               )}
             >
               <Plus className="h-4 w-4 stroke-[2.5]" />
@@ -108,7 +132,7 @@ export function MobileBottomAction({
               disabled={isUpdatingQuantity}
               aria-label={basketQuantity === 1 ? 'حذف از سبد' : 'کاهش تعداد'}
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-95',
+                'flex h-8 w-8 items-center justify-center rounded-md transition-all active:scale-95',
                 basketQuantity === 1
                   ? 'bg-destructive/15 text-destructive hover:bg-destructive/25'
                   : 'bg-primary/20 text-primary hover:bg-primary/30',
@@ -131,7 +155,10 @@ export function MobileBottomAction({
             isLoading={isLoading}
             disabled={variant === 'notify' ? false : disabled}
             leftIcon={icon}
-            className="h-11 rounded-xl text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap"
+            className={cn(
+              'flex h-11 items-center justify-center gap-2 text-xs font-bold shadow-xs whitespace-nowrap',
+              buttonRadius
+            )}
           >
             {label}
           </Button>

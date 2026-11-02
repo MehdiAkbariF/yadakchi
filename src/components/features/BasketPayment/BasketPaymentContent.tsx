@@ -1,16 +1,16 @@
-'use client';
+﻿'use client';
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  Clock, 
-  CheckCircle2, 
-  CreditCard, 
-  AlertCircle, 
-  ShoppingBag, 
+import {
+  ArrowLeft,
+  Clock,
+  CheckCircle2,
+  CreditCard,
+  AlertCircle,
+  ShoppingBag,
   ExternalLink,
-  RotateCcw
+  RotateCcw,
 } from 'lucide-react';
 import { useGetBasket, useInitiatePayment } from '@/domains/front/basket/hooks/basket.hooks';
 import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
@@ -43,23 +43,19 @@ export default function BasketPaymentContent() {
   const [isTrackingModalOpen, setIsTrackingModalOpen] = React.useState(false);
   const [pendingPayment, setPendingPayment] = React.useState<PendingPaymentInfo | null>(null);
 
-  // بررسی وضعیت سفارش معلق در سشن استوریج (در صورت بک زدن از درگاه)
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         const cached = sessionStorage.getItem('yadakchi_pending_payment');
         if (cached) {
           const parsed: PendingPaymentInfo = JSON.parse(cached);
-          // اگر کمتر از ۲۰ دقیقه از ایجاد سفارش گذشته باشد هنوز معتبر است
           if (Date.now() - parsed.timestamp < 20 * 60 * 1000) {
             setPendingPayment(parsed);
           } else {
             sessionStorage.removeItem('yadakchi_pending_payment');
           }
         }
-      } catch {
-        // نادیده گرفتن خطا در پارس JSON
-      }
+      } catch {}
     }
   }, []);
 
@@ -84,19 +80,19 @@ export default function BasketPaymentContent() {
   const shippingPriceRaw = typeof basket?.totalShipmentPrice === 'number' ? basket.totalShipmentPrice : 0;
   const grandTotalRaw = finalPriceRaw + shippingPriceRaw;
 
-  // بررسی خالی بودن سبد خرید
   const isBasketEmpty =
     !basket ||
     ((!basket.items || basket.items.length === 0) &&
       (!basket.sellerBaskets || basket.sellerBaskets.length === 0) &&
       finalPriceRaw === 0);
 
-  // -------------------------------------------------------------
-  // ۱. حالت UX عالی هنگام بک زدن از درگاه (سفارش در انتظار پرداخت)
-  // -------------------------------------------------------------
+  // ۱. حالت بازگشت از درگاه
   if (isBasketEmpty && pendingPayment) {
     return (
-      <div className="mx-auto flex w-full max-w-xl flex-col items-center justify-center py-12 px-4 text-center select-none" dir="rtl">
+      <div
+        className="mx-auto flex w-full max-w-xl flex-col items-center justify-center py-12 px-4 text-center select-none"
+        dir="rtl"
+      >
         <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-warning/15 text-warning ring-8 ring-warning/5">
           <Clock className="h-10 w-10 animate-pulse" />
         </div>
@@ -104,7 +100,7 @@ export default function BasketPaymentContent() {
         <h2 className="text-lg font-black text-foreground sm:text-xl">
           سفارش شما ثبت شده و در انتظار پرداخت است
         </h2>
-        
+
         <p className="mt-2.5 max-w-md text-xs leading-relaxed text-muted-foreground sm:text-sm">
           سبد خرید شما به سفارش تبدیل شده و قطعات تا چند دقیقه دیگر برای شما رزرو خواهند ماند. چنانچه پرداخت را انجام نداده‌اید، می‌توانید مجدداً وارد درگاه شوید.
         </p>
@@ -156,12 +152,13 @@ export default function BasketPaymentContent() {
     );
   }
 
-  // -------------------------------------------------------------
-  // ۲. حالت سبد خرید کاملاً خالی (بدون سفارش معلق)
-  // -------------------------------------------------------------
+  // ۲. حالت سبد خالی
   if (isBasketEmpty) {
     return (
-      <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center py-20 px-4 text-center select-none" dir="rtl">
+      <div
+        className="mx-auto flex w-full max-w-md flex-col items-center justify-center py-20 px-4 text-center select-none"
+        dir="rtl"
+      >
         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-muted text-muted-foreground/60">
           <ShoppingBag className="h-10 w-10" />
         </div>
@@ -181,9 +178,7 @@ export default function BasketPaymentContent() {
     );
   }
 
-  // -------------------------------------------------------------
-  // ۳. فرایند عادی پرداخت
-  // -------------------------------------------------------------
+  // ۳. فرایند عادی
   const isLegalUser = !!user?.isOrganizationInfoConfirmed;
 
   const handlePayment = async () => {
@@ -191,9 +186,8 @@ export default function BasketPaymentContent() {
     try {
       const paymentResponse = await initiatePayment.mutateAsync(isLegalInvoice);
       const targetUrl = paymentResponse?.link || paymentResponse?.paymentUrl;
-      
+
       if (targetUrl) {
-        // ✅ ذخیره در سشن برای مدیریت بازگشت (Back) کاربر از درگاه
         if (typeof window !== 'undefined') {
           sessionStorage.setItem(
             'yadakchi_pending_payment',
@@ -207,8 +201,6 @@ export default function BasketPaymentContent() {
         }
 
         showToast.success('در حال انتقال امن به درگاه شاپرک...');
-        
-        // ✅ استفاده از replace به جای href تا صفحه پرداخت از History حذف شود
         window.location.replace(targetUrl);
       } else {
         showToast.error('خطا در دریافت آدرس درگاه پرداخت');
@@ -237,9 +229,9 @@ export default function BasketPaymentContent() {
   );
 
   return (
-    <div className="flex w-full select-none flex-col gap-6 py-2" dir="rtl">
-      {/* مرحله‌بندی پیشرفت خرید */}
-      <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-2 pb-4 sm:px-4 sm:pb-2">
+    <div className="flex w-full select-none flex-col gap-6" dir="rtl">
+      {/* مرحله‌بندی */}
+      <div className="hidden lg:flex mx-auto w-full max-w-2xl items-center justify-between px-2 pb-4 sm:px-4 sm:pb-2">
         <div className="flex shrink-0 items-center gap-1.5 font-semibold text-success sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -247,7 +239,7 @@ export default function BasketPaymentContent() {
           <span className="text-[10px] sm:text-xs">سبد خرید</span>
         </div>
 
-        <div className="mx-1.5 h-[2px] flex-1 bg-success/50 sm:mx-3" />
+                <div className="mx-1.5 h-[2px] flex-1 bg-success/50 sm:mx-3" />
 
         <div className="flex shrink-0 items-center gap-1.5 font-semibold text-success sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
@@ -296,12 +288,13 @@ export default function BasketPaymentContent() {
       </div>
 
       <MobileBottomAction
-        label="پرداخت و تکمیل سفارش"
-        leftContent={leftPriceContent}
-        onClick={handlePayment}
-        isLoading={isSubmitting}
-        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
-      />
+  label="پرداخت و تکمیل سفارش"
+  leftContent={leftPriceContent}
+  onClick={handlePayment}
+  isLoading={isSubmitting}
+  icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+  hasBottomNav
+/>
 
       <TrackingDetailsModal
         isOpen={isTrackingModalOpen}

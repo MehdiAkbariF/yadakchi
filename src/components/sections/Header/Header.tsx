@@ -14,21 +14,28 @@ import { DesktopNavigation } from './components/DesktopNavigation/DesktopNavigat
 import { MobileHeader } from './components/MobileHeader/MobileHeader';
 import { MyCarButton } from './components/MyCarButton/MyCarButton';
 import { CitySelector } from './components/CitySelector/CitySelector';
+import { FlowHeader, FlowStep } from '@/components/features/CheckoutFlow/FlowHeader';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useAppStore } from '@/shared/store/useAppStore';
+import { FlowProgressBar } from '@/components/features/CheckoutFlow';
 
 export interface HeaderProps {
   className?: string;
 }
 
-// مسیرهایی که در موبایل هدر سراسری نباید نمایش داده شود
-const FLOW_PAGES = ['/basket', '/checkout', '/basket-payment'];
+// مسیرهای flow: در موبایل هدر اختصاصی می‌گیرند
+const FLOW_PAGES_MAP: Record<string, FlowStep> = {
+  '/basket': 'basket',
+  '/checkout': 'checkout',
+  '/basket-payment': 'payment',
+};
 
-function isFlowPage(pathname: string | null): boolean {
-  if (!pathname) return false;
-  return FLOW_PAGES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
-  );
+function getFlowStep(pathname: string | null): FlowStep | null {
+  if (!pathname) return null;
+  for (const [path, step] of Object.entries(FLOW_PAGES_MAP)) {
+    if (pathname === path || pathname.startsWith(`${path}/`)) return step;
+  }
+  return null;
 }
 
 export function Header({ className }: HeaderProps) {
@@ -39,7 +46,8 @@ export function Header({ className }: HeaderProps) {
   const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
   const { scrollY } = useScroll();
 
-  const hideMobileHeader = isFlowPage(pathname);
+  const flowStep = getFlowStep(pathname);
+  const isFlowPage = !!flowStep;
 
   React.useEffect(() => {
     setIsHeaderMinimized(false);
@@ -67,20 +75,20 @@ export function Header({ className }: HeaderProps) {
     }
   };
 
+  // ⚠️ فقط در دسکتاپ مقدار --header-height را ست کن
+  // در موبایل دست نمی‌زنیم تا لایوت کوچک نشود
   React.useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--header-height',
-      hideMobileHeader
-        ? '0px'
-        : isHeaderMinimized
-        ? '68px'
-        : '112px'
-    );
-  }, [isHeaderMinimized, hideMobileHeader]);
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      document.documentElement.style.setProperty(
+        '--header-height',
+        isHeaderMinimized ? '68px' : '112px'
+      );
+    }
+  }, [isHeaderMinimized]);
 
   return (
     <header className={cn('z-40 w-full select-none', className)}>
-      {/* ============ هدر دسکتاپ (همیشه نمایش) ============ */}
+      {/* ============ هدر دسکتاپ (همیشه) ============ */}
       <div className="pointer-events-none relative hidden h-28 w-full lg:block">
         <motion.div
           className="pointer-events-auto fixed inset-x-0 top-0 z-40 flex w-full flex-col border-b border-border/60 bg-card/95 shadow-xs backdrop-blur-md"
@@ -139,17 +147,24 @@ export function Header({ className }: HeaderProps) {
         </motion.div>
       </div>
 
-      {/* ============ هدر موبایل (فقط اگر flow page نباشد) ============ */}
-      {!hideMobileHeader && (
-        <>
-          <div className="h-36 w-full lg:hidden" />
-          <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
-            <div className="mx-auto max-w-screen-2xl">
-              <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
-            </div>
-          </div>
-        </>
-      )}
+      {/* ============ هدر موبایل (فقط یکی) ============ */}
+   {isFlowPage && flowStep ? (
+  <>
+    {/* placeholder برای FlowHeader (h-14) + FlowProgressBar (h-9) */}
+    <div className="h-[92px] w-full lg:hidden" />
+    <FlowHeader step={flowStep} />
+    <FlowProgressBar currentStep={flowStep} />
+  </>
+) : (
+  <>
+    <div className="h-36 w-full lg:hidden" />
+    <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
+      <div className="mx-auto max-w-screen-2xl">
+        <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
+      </div>
+    </div>
+  </>
+)}
     </header>
   );
 }

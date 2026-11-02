@@ -7,7 +7,7 @@ export default function BasketLayout({
   children: React.ReactNode;
 }) {
   return (
-    <FlowLayout step="basket" contentClassName="max-w-6xl">
+    <FlowLayout  contentClassName="max-w-8xl">
       {children}
     </FlowLayout>
   );

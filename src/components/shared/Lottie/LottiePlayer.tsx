@@ -14,10 +14,10 @@ export function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: Lot
   React.useEffect(() => {
     let anim: any = null;
     let isMounted = true;
+    let observer: IntersectionObserver | null = null;
 
     const loadLottie = async () => {
       try {
-        // هندل کردن غلط املایی احتمالی در نام پوشه animations
         const altPath = path.includes('/anumations/')
           ? path.replace('/anumations/', '/animations/')
           : path.replace('/animations/', '/anumations/');
@@ -46,6 +46,17 @@ export function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: Lot
             autoplay: true,
             animationData,
           });
+
+          // ✅ اگر لاتی در دید کاربر نبود، انیمیشن متوقف شود تا باتری و پردازنده هدر نرود
+          observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+              anim?.play();
+            } else {
+              anim?.pause();
+            }
+          });
+
+          observer.observe(containerRef.current);
         }
       } catch {}
     };
@@ -54,6 +65,7 @@ export function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: Lot
 
     return () => {
       isMounted = false;
+      observer?.disconnect();
       anim?.destroy();
     };
   }, [path, loop]);

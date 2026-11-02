@@ -9,6 +9,11 @@ import {
 } from '../types/view.types';
 
 export class BasketMapper {
+  /**
+   * ⭐ FIX: فیلدهای shipment (shipmentMethod, directShipmentPrice,
+   * snappBoxShipmentPrice, tipaxShipmentPrice, isLocalShipmentAvailable)
+   * به domain منتقل می‌شوند تا در CheckoutContent قابل استفاده باشند.
+   */
   static toDomain(dto: any): any {
     const subBaskets = (dto.subBaskets || []).map((sb: any) => ({
       id: sb.id,
@@ -16,6 +21,20 @@ export class BasketMapper {
         title: sb.shop?.shopTitle || '',
         logo: sb.shop?.logo || '',
       },
+
+      // ⭐ فیلدهای shipment
+      shipmentMethod: sb.shipmentMethod ?? null,
+      directShipmentPrice:
+        sb.directShipmentPrice ?? sb.sellerShipmentPrice ?? 0,
+      snappBoxShipmentPrice:
+        sb.snappBoxShipmentPrice ?? sb.snappShipmentPrice ?? 0,
+      tipaxShipmentPrice: sb.tipaxShipmentPrice ?? 0,
+      isLocalShipmentAvailable: !!sb.isLocalShipmentAvailable,
+
+      // ⭐ اطلاعات پست/زمان (اختیاری برای آینده)
+      deliveryTime: sb.deliveryTime ?? null,
+      deliveryDate: sb.deliveryDate ?? null,
+
       items: (sb.subBasketItems || []).map((item: any) => {
         const sp = item.shopProduct || {};
         const prod = sp.product || {};
@@ -38,9 +57,9 @@ export class BasketMapper {
             code: prod.productCode,
             title: prod.title,
             image: prod.image,
-          }
+          },
         };
-      })
+      }),
     }));
 
     let totalPrice = 0;
@@ -65,12 +84,21 @@ export class BasketMapper {
         finalPrice,
       },
       summary: {
-        itemCount: subBaskets.reduce((acc: number, sb: any) => acc + sb.items.reduce((sum: number, item: any) => sum + item.quantity, 0), 0),
+        itemCount: subBaskets.reduce(
+          (acc: number, sb: any) =>
+            acc + sb.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+          0
+        ),
       },
-      isEmpty: subBaskets.length === 0 || subBaskets.every((sb: any) => sb.items.length === 0),
+      isEmpty:
+        subBaskets.length === 0 ||
+        subBaskets.every((sb: any) => sb.items.length === 0),
     };
   }
 
+  /**
+   * ⭐ FIX: فیلدهای shipment در ViewModel هم منتقل می‌شوند.
+   */
   static toView(domain: any): any {
     const subBaskets = domain.subBaskets.map((sb: any) => ({
       id: sb.id,
@@ -78,6 +106,18 @@ export class BasketMapper {
         title: sb.shop.title,
         logo: sb.shop.logo,
       },
+
+      // ⭐ فیلدهای shipment
+      shipmentMethod: sb.shipmentMethod ?? null,
+      directShipmentPrice: sb.directShipmentPrice ?? 0,
+      snappBoxShipmentPrice: sb.snappBoxShipmentPrice ?? 0,
+      tipaxShipmentPrice: sb.tipaxShipmentPrice ?? 0,
+      isLocalShipmentAvailable: !!sb.isLocalShipmentAvailable,
+
+      // ⭐ اطلاعات پست/زمان
+      deliveryTime: sb.deliveryTime ?? null,
+      deliveryDate: sb.deliveryDate ?? null,
+
       items: sb.items.map((item: any) => ({
         id: item.id,
         shopProductId: item.shopProductId,
@@ -85,7 +125,12 @@ export class BasketMapper {
         warranty: item.warranty,
         maxQuantity: item.maxQuantity,
         partNumber: item.partNumber || '',
-        type: item.type === 'New' ? 'نو' : item.type === 'Stock' ? 'استوک' : 'زیرصفری',
+        type:
+          item.type === 'New'
+            ? 'نو'
+            : item.type === 'Stock'
+            ? 'استوک'
+            : 'زیرصفری',
         dayOfDelivery: item.dayOfDelivery || 1,
         isTipaxShipping: !!item.isTipaxShipping,
         isDirectShipping: !!item.isDirectShipping,
@@ -98,14 +143,15 @@ export class BasketMapper {
         },
         price: {
           unitPrice: this.formatPrice(item.originalPrice),
-          discountPrice: item.discountAmount > 0 ? this.formatPrice(item.finalUnitPrice) : null,
+          discountPrice:
+            item.discountAmount > 0 ? this.formatPrice(item.finalUnitPrice) : null,
           hasDiscount: item.discountAmount > 0,
           totalPrice: this.formatPrice(item.originalPrice * item.quantity),
           finalTotalPrice: this.formatPrice(item.finalTotalPrice),
           originalPriceRaw: item.originalPrice,
           finalTotalPriceRaw: item.finalTotalPrice,
-        }
-      }))
+        },
+      })),
     }));
 
     return {

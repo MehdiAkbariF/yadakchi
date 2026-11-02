@@ -14,6 +14,12 @@ export interface MainLayoutProps {
   hideBottomNav?: boolean;
 }
 
+const FLOW_PAGES = ['/basket', '/checkout', '/basket-payment'];
+function isFlowPage(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return FLOW_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export function MainLayout({
   children,
   className,
@@ -25,11 +31,17 @@ export function MainLayout({
 
   const isProfileSection = pathname.startsWith('/profile');
   const isProductPage = pathname.startsWith('/product/');
+  const isFlow = isFlowPage(pathname);
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-background">
       {!hideHeader && (
-        <div className={cn(isProfileSection && 'hidden lg:block', isProductPage && 'hidden lg:block')}>
+        <div
+          className={cn(
+            isProfileSection && 'hidden lg:block',
+            isProductPage && 'hidden lg:block'
+          )}
+        >
           <Header />
         </div>
       )}
@@ -41,6 +53,9 @@ export function MainLayout({
             ? 'px-0 py-0 pb-16 lg:pb-8 lg:px-6 lg:py-6'
             : isProductPage
             ? 'px-0 py-0 pb-0 lg:px-6 lg:py-6'
+            : isFlow
+            ? // flow: BottomNav (64px) + MobileBottomAction (~68px) + فاصله = ~140px
+              'px-4 md:px-6 py-6 pb-44 lg:pb-6'
             : 'px-4 md:px-6 py-6 pb-20 lg:pb-6',
           className
         )}
@@ -49,11 +64,17 @@ export function MainLayout({
       </main>
 
       {!hideFooter && (
-        <div className={cn(isProfileSection && 'hidden lg:block', isProductPage && 'hidden lg:block')}>
+        <div
+          className={cn(
+            isProfileSection && 'hidden lg:block',
+            isProductPage && 'hidden lg:block'
+          )}
+        >
           <Footer />
         </div>
       )}
 
+      {/* BottomNav در همه صفحات موبایل (به‌جز product) */}
       {!hideBottomNav && !isProductPage && <BottomNav />}
     </div>
   );

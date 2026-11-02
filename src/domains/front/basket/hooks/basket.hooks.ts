@@ -3,7 +3,12 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
 import { queryKeys } from '@/lib/react-query/query-keys';
-import { getBasketService, UserDiscountCodeItem, BasketShipmentMethodItem } from '../services/basket.service';
+import {
+  getBasketService,
+  UserDiscountCodeItem,
+  BasketShipmentMethodItem,
+  SamanPaymentCallbackParams,
+} from '../services/basket.service';
 import { AddToBasketRequest, DeleteFromBasketRequest } from '../types/view.types';
 
 const basketService = getBasketService();
@@ -115,6 +120,7 @@ export function useSetBasketLocationAndPrice() {
         if (updated) {
           queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
         }
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
@@ -131,6 +137,7 @@ export function useChangeBasketLocation() {
         if (updated) {
           queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
         }
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
@@ -147,6 +154,7 @@ export function useSetBasketShipment() {
         if (updated) {
           queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
         }
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
@@ -206,6 +214,20 @@ export function useCheckoutBasket() {
           queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
         }
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
+      },
+    }
+  );
+}
+
+export function useVerifySamanPayment() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (params: SamanPaymentCallbackParams) => basketService.verifySamanPayment(params),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
+        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
       },
     }
   );

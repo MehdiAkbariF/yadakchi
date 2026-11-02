@@ -38,10 +38,10 @@ export function BottomNav() {
   ];
 
   return (
-    <nav
-      aria-label="ناوبری پایین"
-      className="lg:hidden fixed inset-x-0 bottom-0 z-30 flex h-16 items-center justify-between border-t border-border/80 bg-card/95 backdrop-blur-md px-3 pb-safe select-none shadow-[0_-2px_10px_rgba(0,0,0,0.04)]"
-    >
+   <nav
+  aria-label="ناوبری پایین"
+  className="lg:hidden fixed inset-x-0 bottom-0 z-30 flex h-16 items-center justify-between border-t border-border/80 bg-card px-3 pb-safe select-none shadow-[0_-2px_10px_rgba(0,0,0,0.05)] transform-gpu"
+>
       <div className="mx-auto flex h-full w-full max-w-md items-center justify-between">
         {navItems.map((item) => {
           // بررسی فعال بودن تب (شامل تمام زیرمسیرهای پروفایل)

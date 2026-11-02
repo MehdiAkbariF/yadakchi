@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Phone,
   Mail,
@@ -25,6 +26,13 @@ import { showToast } from '@/core/utils/toast';
 
 export interface FooterProps {
   className?: string;
+}
+
+// مسیرهایی که در موبایل فوتر نباید نمایش داده شود
+const FLOW_PAGES = ['/basket', '/checkout', '/basket-payment'];
+function isFlowPage(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return FLOW_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 const WHY_US_ITEMS = [
@@ -127,11 +135,14 @@ const SOCIAL_LINKS = [
 ];
 
 export function Footer({ className }: FooterProps) {
+  const pathname = usePathname();
   const [email, setEmail] = React.useState('');
   const [mounted, setMounted] = React.useState(false);
   const { data: footerData } = useGetFrontFooter();
   const { data: categories = [] } = useGetStaticPageCategories();
   const subscribeNewsletter = useSubscribeNewsletter();
+
+  const hideOnMobile = isFlowPage(pathname);
 
   React.useEffect(() => {
     setMounted(true);
@@ -170,7 +181,13 @@ export function Footer({ className }: FooterProps) {
     : 'md:grid-cols-5';
 
   return (
-    <footer className={cn('border-t border-border bg-muted/30 pb-6', className)}>
+    <footer
+      className={cn(
+        'border-t border-border bg-muted/30 pb-6',
+        hideOnMobile && 'hidden lg:block',
+        className
+      )}
+    >
       <WhyYadakchi />
 
       <div className="container mx-auto max-w-[1840px] px-4 pt-10 md:px-6">
