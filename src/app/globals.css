@@ -178,3 +178,13 @@
   
   }
 }
+
+
+@keyframes dotFade {
+  0%, 100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}

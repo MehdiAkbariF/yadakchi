@@ -1,21 +1,39 @@
 // src/shared/Transitions/PageTransition.tsx
 'use client';
 
-import { motion } from 'framer-motion';
+import * as React from 'react';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
 
-export function PageTransition({ children }: { children: React.ReactNode }) {
+interface PageTransitionProps {
+  children: React.ReactNode;
+  routeKey?: string;
+  duration?: number;
+  className?: string;
+}
+
+export function PageTransition({
+  children,
+  routeKey,
+  duration = 250,
+  className,
+}: PageTransitionProps) {
+  const pathname = usePathname();
+  const key = routeKey ?? pathname;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ 
-        duration: 0.18, 
-        ease: [0.22, 1, 0.36, 1] // کیوبیک بیزیر استاندارد اپ‌های نیتیو iOS/Android
-      }}
-      className="w-full transform-gpu will-change-[opacity,transform]"
-    >
-      {children}
-    </motion.div>
+    <AnimatePresence mode="popLayout" initial={false}>
+      <motion.div
+        key={key}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: duration / 1000, ease: 'easeInOut' }}
+        className={cn('w-full', className)}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }

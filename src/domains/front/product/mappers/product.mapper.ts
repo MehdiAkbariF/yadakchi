@@ -8,7 +8,8 @@ import {
   ShopProductViewModel,
   CommentsAverageViewModel,
   CommentItemViewModel,
-  InquiryItemViewModel
+  InquiryItemViewModel,
+  ShopProductsGroupViewModel
 } from '@/domains/front/product/types/view.types';
 import { 
   ProductPageResponseDto, 
@@ -18,7 +19,8 @@ import {
   InquiryItemDto,
   ProductDto,
   ShopProductDto,
-  OpenSearchProductsRequestDto
+  OpenSearchProductsRequestDto,
+  SearchProductHitDto
 } from '../types/dto.types';
 import { getProductUrl } from '@/core/utils/formatters';
 
@@ -435,6 +437,100 @@ export class ProductMapper {
       bestReply: dto.bestReply ? this.toViewInquiryItem(dto.bestReply) : null
     };
   }
+// ✅ Mapper: یک hit از Search/Products به ShopProductViewModel
+static toViewSearchHit(dto: SearchProductHitDto): ShopProductViewModel {
+  const isDiscountActive =
+    dto.isDiscountApplied || dto.rialRetailPrice > dto.rialFinalPrice;
+
+  const typeLabel =
+    dto.type === 'New'
+      ? 'قطعه نو'
+      : dto.type === 'Stock'
+      ? 'قطعه استوک'
+      : 'قطعه زیرصفری';
+
+  return {
+    id: dto.shopProductId,
+    quantity: dto.quantity,
+    retailPrice: this.formatPrice(dto.rialRetailPrice / 10) + ' تومان',
+    finalPrice: this.formatPrice(dto.rialFinalPrice / 10) + ' تومان',
+    retailPriceRaw: dto.rialRetailPrice,
+    finalPriceRaw: dto.rialFinalPrice,
+    discountPercentage: dto.discountPercentage,
+    hasDiscount: isDiscountActive,
+    type: dto.type as 'New' | 'Stock' | 'TakeOff',
+    typeLabel,
+    isAdvertised: dto.hasSpecialAttention,
+    isLocalSale: dto.isLocalShop ?? false,
+    isTipaxShipping: dto.isTipaxShipping ?? false,
+    isDirectShipping: dto.hasDirectShipment ?? dto.isDirectShipping ?? false,
+    dayOfDelivery: dto.dayOfDelivery ?? 0,
+    dayOfDeliveryLabel: dto.dayOfDelivery
+      ? `ارسال ${this.formatNumber(dto.dayOfDelivery)} روزه فروشنده`
+      : 'ارسال نامشخص',
+    shop: {
+      id: dto.shopId || '',
+      title: dto.shopTitle || '',
+      latitude: dto.shopLatitude || 0,
+      longitude: dto.shopLongitude || 0,
+      address: dto.shopAddress || '',
+      phone: dto.shopTell || null,
+      averageRate: dto.averageRate || 0,
+      logo: dto.shopLogo || null,
+    },
+    warrantyTitle: dto.warrantyTitle || 'بدون گارانتی',
+  };
+}
+
+// ✅ Mapper: گروه‌بندی hits بر اساس type برای سازگاری با ProductPageViewModel
+static groupSearchHitsByType(hits: SearchProductHitDto[]): ShopProductsGroupViewModel {
+  const views = hits.map((h) => this.toViewSearchHit(h));
+
+  const byType = (t: string) => views.filter((v) => v.type === t);
+
+  const newList = byType('New');
+  const stockList = byType('Stock');
+  const takeOffList = byType('TakeOff');
+
+  // جدا کردن nominated (isAdvertised) از online/local:
+  // - اگر isAdvertised → nominated
+  // - اگر isLocalSale → local
+  // - وگرنه → online
+  const pickNominated = (list: ShopProductViewModel[]) => {
+    const nominated = list.find((s) => s.isAdvertised);
+    if (!nominated) return { nominated: null, remaining: list };
+    return {
+      nominated,
+      remaining: list.filter((s) => s.id !== nominated.id),
+    };
+  };
+
+  const splitOnlineLocal = (list: ShopProductViewModel[]) => ({
+    online: list.filter((s) => !s.isLocalSale),
+    local: list.filter((s) => s.isLocalSale),
+  });
+
+  const newSplit = pickNominated(newList);
+  const newOnlineLocal = splitOnlineLocal(newSplit.remaining);
+
+  const stockSplit = pickNominated(stockList);
+  const stockOnlineLocal = splitOnlineLocal(stockSplit.remaining);
+
+  const takeOffSplit = pickNominated(takeOffList);
+  const takeOffOnlineLocal = splitOnlineLocal(takeOffSplit.remaining);
+
+  return {
+    newNominated: newSplit.nominated,
+    newOnline: newOnlineLocal.online,
+    newLocal: newOnlineLocal.local,
+    stockNominated: stockSplit.nominated,
+    stockOnline: stockOnlineLocal.online,
+    stockLocal: stockOnlineLocal.local,
+    takeOffNominated: takeOffSplit.nominated,
+    takeOffOnline: takeOffOnlineLocal.online,
+    takeOffLocal: takeOffOnlineLocal.local,
+  };
+}
 
   private static formatNumber(value: number): string {
     return new Intl.NumberFormat('fa-IR').format(value);

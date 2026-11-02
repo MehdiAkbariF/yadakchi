@@ -16,13 +16,7 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
     <div
       ref={ref}
       aria-hidden="true"
-      className={cn(
-        // انیمیشن شیمر طبیعی با کنتراست مشخص در تمام تم‌ها
-        'relative overflow-hidden bg-muted/70',
-        'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.8s_infinite] before:bg-gradient-to-r before:from-transparent before:via-foreground/5 before:to-transparent',
-        variantClasses[variant],
-        className
-      )}
+      className={cn('bg-muted/70', variantClasses[variant], className)}
       {...props}
     />
   )

@@ -4,26 +4,24 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Settings, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
-import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
+import { useGetPartCategories } from '@/domains/front/part/hooks/part.hooks';
 import { Typography } from '@/components/primitives/Typography';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl } from '@/core/utils/formatters';
+import { PartCategoryViewModel } from '@/domains/front/part/types/view.types';
 
-interface PartCategoryItem {
-  id: string;
-  name: string;
-  englishTitle: string;
-  thumbnail: string | null;
-  thumbnailAlt: string | null;
-  icon: string | null;
-  iconAlt: string | null;
-  hasDiscount: boolean;
-  isInMain: boolean;
+interface PartCategoryItem extends PartCategoryViewModel {
+  thumbnailAlt?: string | null;
+  icon?: string | null;
+  iconAlt?: string | null;
+  hasDiscount?: boolean;
+  isInMain?: boolean;
 }
 
 export function HomeCategories() {
-  const { data: rawCategories = [], isLoading, isError } = useGetPartCategoriesFlat();
+  // ✅ استفاده از useGetPartCategories با فیلتر IsInMain = true
+  const { data: rawCategories = [], isLoading, isError } = useGetPartCategories(undefined, true);
 
   const carouselRef = React.useRef<HTMLDivElement>(null);
   const [dragWidth, setDragWidth] = React.useState(0);

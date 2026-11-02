@@ -1,4 +1,4 @@
-// src/domains/front/product/services/product.service.ts
+
 
 import { getHttpClient } from '@/core/http/client';
 import { errorManager } from '@/core/errors/error-manager';
@@ -23,19 +23,21 @@ import {
   CommentsResponseDto, 
   InquiriesResponseDto, 
   OpenSearchProductsResponseDto, 
-  OpenSearchProductsRequestDto
+  OpenSearchProductsRequestDto,
+  SearchProductsResponseDto,
+  SearchProductHitDto
 } from '../types/dto.types';
 
-// ============================================
-// ماژول مبدل خودکار اسلاگ دسته‌بندی به GUID
-// ============================================
+
+
+
 let categorySlugToGuidMap: Map<string, string> | null = null;
 let categoryLookupPromise: Promise<Map<string, string>> | null = null;
 
 async function resolveCategoryGuid(httpClient: any, identifier: string): Promise<string> {
   if (!identifier) return '';
 
-  // اگر شناسه وارد شده از قبل یک GUID معتبر است
+  
   const isGuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(identifier);
   if (isGuid) {
     return identifier;
@@ -43,12 +45,12 @@ async function resolveCategoryGuid(httpClient: any, identifier: string): Promise
 
   const cleanSlug = identifier.trim().toLowerCase();
 
-  // اگر نقشه قبلاً در حافظه ایجاد شده بود
+  
   if (categorySlugToGuidMap && categorySlugToGuidMap.has(cleanSlug)) {
     return categorySlugToGuidMap.get(cleanSlug) || identifier;
   }
 
-  // واکشی لیست دسته‌بندی‌ها و کش کردن در حافظه (فقط یک‌بار)
+  
   if (!categoryLookupPromise) {
     categoryLookupPromise = (async () => {
       try {
@@ -120,7 +122,7 @@ export class ProductService {
     }
   }
 
-  // ✅ متد ارتقایافته: حل خودکار اسلاگ (مثلاً audio-video-multimedia-system) به GUID معتبر
+  
   async getNominatedProductsByCategory(categoryIdOrSlug: string, cityId?: string): Promise<any> {
     try {
       const resolvedId = await resolveCategoryGuid(this.httpClient, categoryIdOrSlug);
@@ -174,10 +176,10 @@ export class ProductService {
     }
   }
 
-  // ✅ جستجوی پیشرفته با حل خودکار دسته‌بندی‌ها به GUID
+  
   async searchProducts(request: SearchProductsRequest): Promise<PaginatedResult<ProductViewModel>> {
     try {
-      // اگر در درخواست partCategoryEnglishTitle وجود داشت ولی partCategoryIds خالی بود، خودکار به GUID تبدیل شود
+      
       if (request.partCategoryEnglishTitle && (!request.partCategoryIds || request.partCategoryIds.length === 0)) {
         const resolved = await resolveCategoryGuid(this.httpClient, request.partCategoryEnglishTitle);
         if (resolved) {
@@ -364,21 +366,55 @@ export class ProductService {
     }
   }
 
-  async getProductPageData(productCode: number): Promise<ProductPageViewModel | null> {
-    try {
-      const response = await this.httpClient.get<ProductPageResponseDto>(
-        PRODUCT_ENDPOINTS.GET_PRODUCT,
-        { params: { ProductCode: productCode } }
-      );
-      if (!response.data || typeof response.data === 'string' || !response.data.product) {
-        return null;
-      }
-      return ProductMapper.toViewProductPage(response.data);
-    } catch (error) {
-      logger.error('[ProductService] Get product page data failed:', error);
-      throw errorManager.normalize(error);
+ async getProductPageData(productCode: number): Promise<ProductPageViewModel | null> {
+  try {
+    
+    const productResponse = await this.httpClient.get<ProductPageResponseDto>(
+      PRODUCT_ENDPOINTS.GET_PRODUCT,
+      { params: { ProductCode: productCode } }
+    );
+
+    if (
+      !productResponse.data ||
+      typeof productResponse.data === 'string' ||
+      !productResponse.data.product
+    ) {
+      return null;
     }
+
+    
+    const hits = await this.getShopProductsFromSearch(productCode);
+
+    
+    const viewProduct = ProductMapper.toViewProductPage(productResponse.data);
+    if (!viewProduct) return null;
+
+    if (hits.length > 0) {
+      
+      viewProduct.shopProducts = ProductMapper.groupSearchHitsByType(hits);
+    }
+    
+
+    return viewProduct;
+  } catch (error) {
+    logger.error('[ProductService] Get product page data failed:', error);
+    throw errorManager.normalize(error);
   }
+}
+  
+async getShopProductsFromSearch(productCode: number): Promise<SearchProductHitDto[]> {
+  try {
+    const response = await this.httpClient.post<SearchProductsResponseDto>(
+      PRODUCT_ENDPOINTS.SEARCH_PRODUCTS,
+      { productCode, pageSize: 100 }  
+    );
+    return response.data?.hits || [];
+  } catch (error) {
+    logger.error('[ProductService] Get shop products from search failed:', error);
+    
+    return [];
+  }
+}
 
   async getProductCommentsAverage(productId: string): Promise<CommentsAverageViewModel> {
     try {

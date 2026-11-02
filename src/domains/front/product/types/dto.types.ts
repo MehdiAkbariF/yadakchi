@@ -251,3 +251,62 @@ export interface OpenSearchProductsResponseDto {
   hits: any[];
   aggregations?: any;
 }
+
+// ============================================
+// DTO جدید: خروجی OpenSearch Search/Products
+// ============================================
+
+export interface SearchProductHitDto {
+  shopProductId: string;
+  productId: string;
+  productCode: number;
+  productTitle: string;
+  shopTitle: string;
+  rialFinalPrice: number;
+  rialRetailPrice: number;
+  discountPercentage: number;
+  discountUntil: string | null;
+  isDiscountApplied: boolean;
+  type: 'New' | 'Stock' | 'TakeOff' | string;
+  quantity: number;
+  order: number;
+  score: number;
+  image: string;
+  imageAlt: string;
+  warrantySupportId: string | null;
+  originalityType: string | null;
+  averageRate: number;
+  likes: number;
+  viewsAndClicks: number;
+  totalSalesCount: number;
+  hasSpecialAttention: boolean;
+  isLocalShop: boolean | null;
+  hasDirectShipment: boolean | null;
+  // فیلدهای اختیاری که ممکن است بک‌اند در آینده اضافه کند:
+  shopId?: string;
+  shopLogo?: string | null;
+  shopAddress?: string;
+  shopTell?: string | null;
+  shopLatitude?: number;
+  shopLongitude?: number;
+  dayOfDelivery?: number;
+  warrantyTitle?: string;
+  isTipaxShipping?: boolean;
+  isDirectShipping?: boolean;
+}
+
+export interface SearchProductsResponseDto {
+  total: number;
+  pageNumber: number;
+  pageSize: number;
+  took: number;
+  hits: SearchProductHitDto[];
+  aggregations?: {
+    brands?: Array<{ key: string; count: number }>;
+    partCategories?: Array<{ key: string; count: number }>;
+    parts?: Array<{ key: string; count: number }>;
+    types?: Array<{ key: string; count: number }>;
+    priceRanges?: Array<{ key: string; count: number }>;
+    priceStats?: { min: number; max: number; avg: number; sum: number };
+  };
+}

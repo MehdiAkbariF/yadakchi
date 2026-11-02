@@ -58,10 +58,9 @@ export function MobileBottomAction({
     <div
       dir="rtl"
       className={cn(
-        'lg:hidden fixed bottom-16 inset-x-0 z-40 w-full',
-        'bg-card/95 backdrop-blur-md border-t border-border px-4 py-3',
-        // ارتقای سایه برای تفکیک عالی در هر دو تم لایت و دارک
-        'shadow-[0_-4px_20px_rgba(0,0,0,0.12)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)]',
+        'lg:hidden fixed bottom-0 inset-x-0 z-50 w-full',
+        'bg-card/95 backdrop-blur-xl border-t border-border px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]',
+        'shadow-[0_-8px_25px_rgba(0,0,0,0.12)] dark:shadow-[0_-8px_25px_rgba(0,0,0,0.35)]',
         'flex items-center justify-between gap-3',
         className
       )}

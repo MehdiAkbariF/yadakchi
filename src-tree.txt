@@ -9,6 +9,7 @@ src\app\(profile)\profile\notifications\page.tsx
 src\app\(profile)\profile\orders\[id]\page.tsx
 src\app\(profile)\profile\orders\page.tsx
 src\app\(profile)\profile\page.tsx
+src\app\(profile)\profile\returns\[id]\page.tsx
 src\app\(profile)\profile\returns\page.tsx
 src\app\(profile)\profile\settings\page.tsx
 src\app\(profile)\profile\support\[id]\page.tsx
@@ -127,6 +128,7 @@ src\components\features\Product\components\ProductCommentsSection.tsx
 src\components\features\Product\components\ProductGallery.tsx
 src\components\features\Product\components\ProductHeader.tsx
 src\components\features\Product\components\ProductInquiriesSection.tsx
+src\components\features\Product\components\ProductMinimalHeader.tsx
 src\components\features\Product\components\ProductPageSkeleton.tsx
 src\components\features\Product\components\ProductSideInvoice.tsx
 src\components\features\Product\components\ProductSpecsTable.tsx
@@ -162,6 +164,7 @@ src\components\features\Profile\components\navigation\ProfileDesktopNav.tsx
 src\components\features\Profile\components\navigation\ProfileHeader.tsx
 src\components\features\Profile\components\navigation\ProfileNavDrawer.tsx
 src\components\features\Profile\components\OrderDetails.tsx
+src\components\features\Profile\components\OrderReceiptModal.tsx
 src\components\features\Profile\components\PersonalInfoModal.tsx
 src\components\features\Profile\components\ProfileLayoutWrapper.tsx
 src\components\features\Profile\components\ProfileSidebar.tsx
@@ -176,6 +179,7 @@ src\components\features\Profile\OrdersList.tsx
 src\components\features\Profile\ProfileDashboard.backup.tsx
 src\components\features\Profile\ProfileDashboard.tsx
 src\components\features\Profile\RecentlyViewedList.tsx
+src\components\features\Profile\ReturnDetails.tsx
 src\components\features\Profile\ReturnsList.tsx
 src\components\features\Profile\SettingsForm.backup.tsx
 src\components\features\Profile\SettingsForm.tsx

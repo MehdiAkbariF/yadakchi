@@ -155,25 +155,29 @@ export class PartService {
     }
   }
 
-  async getPartCategories(carId?: string): Promise<PartCategoryViewModel[]> {
-    try {
-      const params: Record<string, string> = {};
-      if (carId && carId.trim() !== '') {
-        params.CarId = carId.trim();
-      }
-
-      const response = await this.httpClient.get<PartCategoryApiDto[]>(
-        PART_ENDPOINTS.GET_PART_CATEGORIES,
-        { params }
-      );
-
-      const viewCategories = (response.data || []).map((dto) => PartMapper.toViewCategory(dto));
-      return PartMapper.formatCategoryTree(viewCategories);
-    } catch (error) {
-      logger.error('[PartService] Get part categories failed:', error);
-      return [];
+async getPartCategories(carId?: string, isInMain?: boolean): Promise<PartCategoryViewModel[]> {
+  try {
+    const params: Record<string, string | boolean> = {};
+    if (carId && carId.trim() !== '') {
+      params.CarId = carId.trim();
     }
+    // ✅ اضافه شد: فیلتر IsInMain
+    if (isInMain !== undefined) {
+      params.IsInMain = isInMain;
+    }
+
+    const response = await this.httpClient.get<PartCategoryApiDto[]>(
+      PART_ENDPOINTS.GET_PART_CATEGORIES,
+      { params }
+    );
+
+    const viewCategories = (response.data || []).map((dto) => PartMapper.toViewCategory(dto));
+    return PartMapper.formatCategoryTree(viewCategories);
+  } catch (error) {
+    logger.error('[PartService] Get part categories failed:', error);
+    return [];
   }
+}
 
   async getPartCategoryPage(englishTitle: string): Promise<PartCategoryPageViewModel> {
     try {

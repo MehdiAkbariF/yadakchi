@@ -2,15 +2,19 @@
 
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronLeft } from 'lucide-react';
 import { toPersianDigits } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
+import { BottomSheet } from '@/components/composites/BottomSheet/BottomSheet';
 
 export interface SpecHighlightsProps {
   specGroups: any[];
   onSeeAll?: () => void;
+  /** HTML توضیحات محصول برای تب «معرفی کالا» در مودال */
+  productDescription?: string;
 }
 
+/** Tooltip برای ویژگی‌های truncate شده در دسکتاپ */
 function TruncatedSpec({ name, value }: { name: string; value: string }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isTruncated, setIsTruncated] = React.useState(false);
@@ -121,28 +125,103 @@ function TruncatedSpec({ name, value }: { name: string; value: string }) {
   );
 }
 
-export function SpecHighlights({ specGroups, onSeeAll }: SpecHighlightsProps) {
+/** چیپ مینیمال مخصوص موبایل — کلیک‌پذیر برای باز کردن مودال */
+function MobileSpecChip({
+  name,
+  value,
+  onClick,
+}: {
+  name: string;
+  value: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex shrink-0 flex-col gap-0.5 rounded-lg border border-border/70 bg-muted/40 px-2.5 py-1.5 text-start outline-none transition-colors active:bg-muted/70"
+    >
+      <span className="whitespace-nowrap text-3xs font-bold text-muted-foreground">
+        {toPersianDigits(name)}
+      </span>
+      <span className="max-w-[130px] truncate whitespace-nowrap text-2xs font-bold text-foreground">
+        {toPersianDigits(value)}
+      </span>
+    </button>
+  );
+}
+
+/** ردیف ویژگی در Bottom Sheet */
+function SheetSpecRow({ name, value }: { name: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-border/60 py-2.5 last:border-b-0">
+      <span className="shrink-0 text-2xs font-bold text-muted-foreground">
+        {toPersianDigits(name)}
+      </span>
+      <span className="text-end text-xs font-medium text-foreground">
+        {toPersianDigits(value)}
+      </span>
+    </div>
+  );
+}
+
+export function SpecHighlights({ specGroups, onSeeAll, productDescription }: SpecHighlightsProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<'specs' | 'intro'>('specs');
 
-  const mainSpecs = (specGroups || []).flatMap((g) => g.specs || []).filter((s: any) => s.isMain === true);
+  // همه ویژگی‌ها (برای مودال)
+  const allSpecs = React.useMemo(
+    () => (specGroups || []).flatMap((g) => g.specs || []),
+    [specGroups]
+  );
 
-  if (mainSpecs.length === 0) return null;
+  // ویژگی‌های مهم (برای نمایش خلاصه)
+  const mainSpecs = React.useMemo(
+    () => allSpecs.filter((s: any) => s.isMain === true),
+    [allSpecs]
+  );
+
+  if (allSpecs.length === 0) return null;
 
   const visibleSpecs = isExpanded ? mainSpecs : mainSpecs.slice(0, 4);
+  const mobileVisibleSpecs = mainSpecs.slice(0, 4);
   const hasMoreThanFour = mainSpecs.length > 4;
+
+  const openSheet = (tab: 'specs' | 'intro' = 'specs') => {
+    setActiveTab(tab);
+    setIsSheetOpen(true);
+  };
 
   return (
     <div className="flex w-full select-none flex-col gap-2.5">
-      <span className="me-1 text-sm font-bold text-foreground md:text-base">ویژگی‌های مهم محصول</span>
+      {/* ============ هدر: تایتل + دکمه ساده «مشاهده همه» ============ */}
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-bold text-foreground md:text-base">
+          ویژگی‌های مهم محصول
+        </span>
+      <button
+  type="button"
+  onClick={() => openSheet('specs')}
+  className="group flex shrink-0 items-center gap-0.5 text-xs font-bold text-blue-600 outline-none transition-opacity hover:opacity-80 dark:text-blue-400"
+>
+  <span>مشاهده همه</span>
+  <ChevronLeft
+    aria-hidden="true"
+    className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"
+  />
+</button>
+      </div>
 
-      <div className="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
+      {/* ============ دسکتاپ: گرید دو ستونه ============ */}
+      <div className="hidden w-full grid-cols-1 gap-2.5 sm:grid sm:grid-cols-2">
         {visibleSpecs.map((spec: any, idx: number) => (
           <TruncatedSpec key={idx} name={spec.name} value={spec.value} />
         ))}
       </div>
 
-      {hasMoreThanFour ? (
-        <div className="mt-1 flex justify-start">
+      {hasMoreThanFour && (
+        <div className="mt-1 hidden justify-start sm:flex">
           <button
             type="button"
             onClick={() => {
@@ -161,7 +240,83 @@ export function SpecHighlights({ specGroups, onSeeAll }: SpecHighlightsProps) {
             )}
           </button>
         </div>
-      ) : null}
+      )}
+
+      {/* ============ موبایل: ردیف افقی چیپ‌ها ============ */}
+      <div className="flex flex-col gap-2 sm:hidden">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-none">
+          {mobileVisibleSpecs.map((spec: any, idx: number) => (
+            <MobileSpecChip
+              key={idx}
+              name={spec.name}
+              value={spec.value}
+              onClick={() => openSheet('specs')}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ============ Bottom Sheet با دو تب ============ */}
+      <BottomSheet
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        title="مشخصات و معرفی کالا"
+        size="auto"
+        maxWidth="max-w-lg"
+      >
+        {/* تب‌ها */}
+        <div className="mb-3 flex w-full items-center gap-1 border-b border-border/60">
+          <button
+            type="button"
+            onClick={() => setActiveTab('specs')}
+            className={cn(
+              'relative flex-1 border-b-2 px-2 pb-2.5 pt-1 text-xs font-bold outline-none transition-colors',
+              activeTab === 'specs'
+                ? 'border-primary text-primary font-black'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            ویژگی‌های محصول
+            <span className="mr-1 text-3xs font-normal text-muted-foreground">
+              ({toPersianDigits(allSpecs.length)})
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('intro')}
+            className={cn(
+              'relative flex-1 border-b-2 px-2 pb-2.5 pt-1 text-xs font-bold outline-none transition-colors',
+              activeTab === 'intro'
+                ? 'border-primary text-primary font-black'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            معرفی کالا
+          </button>
+        </div>
+
+        {/* محتوای تب */}
+        {activeTab === 'specs' ? (
+          <div className="flex flex-col">
+            {allSpecs.map((spec: any, idx: number) => (
+              <SheetSpecRow key={idx} name={spec.name} value={spec.value} />
+            ))}
+          </div>
+        ) : (
+          <div className="pb-2">
+            {productDescription ? (
+              <div
+                className="text-justify text-xs leading-reading text-muted-foreground"
+                dangerouslySetInnerHTML={{ __html: productDescription }}
+              />
+            ) : (
+              <p className="py-8 text-center text-xs text-muted-foreground">
+                توضیحی برای این کالا ثبت نشده است.
+              </p>
+            )}
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }

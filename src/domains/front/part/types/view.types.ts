@@ -33,13 +33,20 @@ export interface PartCategoryViewModel {
   name: string;
   englishTitle: string;
   description: string;
-  thumbnail: string | null;
   parentId: string | null;
   hasSeo: boolean;
   hasDescription: boolean;
   children: PartCategoryViewModel[];
   createdAt: string;
   updatedAt: string;
+  
+  // ✅ فیلدهای جدید
+  thumbnail?: string | null;
+  thumbnailAlt?: string | null;
+  icon?: string | null;
+  iconAlt?: string | null;
+  hasDiscount?: boolean;
+  isInMain?: boolean;
 }
 
 export interface PartCategoryPageViewModel {

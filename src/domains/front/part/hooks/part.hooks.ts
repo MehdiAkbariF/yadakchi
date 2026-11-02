@@ -86,10 +86,10 @@ export function useGetPartsName(filters: PartFilters) {
   );
 }
 
-export function useGetPartCategories(carId?: string) {
+export function useGetPartCategories(carId?: string, isInMain?: boolean) {
   return useTypedQuery(
-    ['front', 'parts', 'categories', carId],
-    () => carService.getPartCategories(carId),
+    ['front', 'parts', 'categories', carId, isInMain],
+    () => carService.getPartCategories(carId, isInMain),
     {
       staleTime: 10 * 60 * 1000,
     }
