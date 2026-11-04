@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Car, Search, Loader2, ArrowRight, X } from 'lucide-react';
 import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
 import { Modal, ModalBody } from '@/components/composites/Modal/Modal';
@@ -19,14 +20,19 @@ interface CarItem {
 }
 
 export function ShopByCar() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedCar, setSelectedCar] = React.useState<CarItem | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const { data: cars = [], isLoading } = useGetCarListFlat(1, 200, { enabled: isOpen });
 
   const handleSearchSubmit = () => {
-    if (selectedCar) window.location.href = getCarUrl(selectedCar.englishTitle);
+    if (!selectedCar || isSubmitting) return;
+    setIsSubmitting(true);
+    // استفاده از router.push باعث می‌شود پروگرس‌بار گلوبال و لودینگ سه‌نقطه فعال شوند
+    router.push(getCarUrl(selectedCar.englishTitle));
   };
 
   const filteredCars = cars.filter(
@@ -65,11 +71,12 @@ export function ShopByCar() {
         <Button
           variant="primary"
           onClick={handleSearchSubmit}
-          disabled={!selectedCar}
+          disabled={!selectedCar || isSubmitting}
+          isLoading={isSubmitting}
           className="h-12 shrink-0 rounded-md px-8 text-sm font-bold shadow-xs"
-          leftIcon={<Search aria-hidden="true" className="h-4 w-4" />}
+          leftIcon={!isSubmitting ? <Search aria-hidden="true" className="h-4 w-4" /> : undefined}
         >
-          جستجوی قطعات
+          {isSubmitting ? 'در حال جستجو...' : 'جستجوی قطعات'}
         </Button>
       </div>
 

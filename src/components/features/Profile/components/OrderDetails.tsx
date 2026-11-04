@@ -13,7 +13,6 @@ import {
   Store,
   MapPin,
   Calendar,
-  AlertCircle,
   Phone,
   User,
   CreditCard,
@@ -32,7 +31,7 @@ import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl, toPersianDigits } from '@/core/utils/formatters';
-import { formatToman } from '@/core/utils/currency';
+import { formatRialToToman } from '@/core/utils/currency';
 import { CancelOrderModal } from '@/components/features/Profile/components/CancelOrderModal';
 import { ReturnRequestModal } from '@/components/features/Profile/components/ReturnRequestModal';
 import { OrderReceiptModal } from '@/components/features/Profile/components/OrderReceiptModal';
@@ -319,7 +318,6 @@ export function OrderDetails({ orderId }: { orderId: string }) {
 
   const isWaitingForPayment = order.status === 'WaitingForPayment';
   const canCancelOrder = order.status === 'WaitingForPayment';
-
   const isCancelled = [
     'Cancelled',
     'SellerCancelled',
@@ -327,12 +325,11 @@ export function OrderDetails({ orderId }: { orderId: string }) {
     'SystemCancelled',
   ].includes(order.status);
 
-  // عدم نمایش دکمه فاکتور در وضعیت در انتظار پرداخت یا لغو شده
   const canShowReceipt = !isWaitingForPayment && !isCancelled;
 
   return (
     <div className="flex w-full flex-col gap-4 pb-16" dir="rtl">
-      {/* ================= بنر ویژه در انتظار پرداخت ================= */}
+      {/* بنر در انتظار پرداخت */}
       {isWaitingForPayment && (
         <div className="flex w-full flex-col gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="flex items-start gap-3">
@@ -371,7 +368,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
         </div>
       )}
 
-      {/* ================= 1. مشخصات و هدر سفارش ================= */}
+      {/* ۱. هدر و اطلاعات تحویل */}
       <Card className="rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
         <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-start">
@@ -469,7 +466,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
         )}
       </Card>
 
-      {/* ================= 2. لیست مرسوله‌ها ================= */}
+      {/* ۲. لیست مرسوله‌ها */}
       <div className="flex flex-col gap-4">
         {order.subOrders?.map((subOrder: any) => {
           const canReturnSubOrder = subOrder.status === 'Delivered';
@@ -513,7 +510,6 @@ export function OrderDetails({ orderId }: { orderId: string }) {
                     </button>
                   )}
 
-                  {/* دکمه درخواست مرجوعی در سطح زیرسفارش */}
                   {canReturnSubOrder && (
                     <Button
                       variant="outline"
@@ -561,11 +557,11 @@ export function OrderDetails({ orderId }: { orderId: string }) {
                         <div className="mt-1 flex items-center gap-2">
                           {item.discountAmount > 0 && (
                             <span className="text-xs text-muted-foreground line-through">
-                              {formatToman(item.originalPrice)}
+                              {formatRialToToman(item.originalPrice)}
                             </span>
                           )}
                           <span className="text-xs font-black text-foreground">
-                            {formatToman(item.finalTotalPrice)}
+                            {formatRialToToman(item.finalTotalPrice)}
                           </span>
                         </div>
                       </div>
@@ -603,7 +599,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
         })}
       </div>
 
-      {/* ================= 3. خلاصه مالی صورت‌حساب ================= */}
+      {/* ۳. خلاصه مالی صورت‌حساب */}
       <Card className="rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
         <h2 className="mb-3 text-right text-xs font-bold text-foreground">
           خلاصه مالی صورت‌حساب
@@ -612,8 +608,8 @@ export function OrderDetails({ orderId }: { orderId: string }) {
         <div className="flex flex-col gap-3 text-xs">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-right">مجموع مبلغ کالاها</span>
-            <span className="text-left font-bold text-foreground" dir="ltr">
-              {formatToman(order.totalOriginalPrice)}
+            <span className="text-left font-bold text-foreground" dir="rtl">
+              {formatRialToToman(order.totalOriginalPrice)}
             </span>
           </div>
 
@@ -621,7 +617,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
             <div className="flex items-center justify-between text-destructive">
               <span className="text-right">تخفیف فروشندگان</span>
               <span className="text-left font-bold" dir="rtl">
-                {formatToman(Math.abs(order.totalDiscountValue))} تخفیف
+                - {formatRialToToman(Math.abs(order.totalDiscountValue))}
               </span>
             </div>
           )}
@@ -630,28 +626,28 @@ export function OrderDetails({ orderId }: { orderId: string }) {
             <div className="flex items-center justify-between text-destructive">
               <span className="text-right">تخفیف ویژه یدکچی</span>
               <span className="text-left font-bold" dir="rtl">
-                {formatToman(Math.abs(order.totalYadakchiDiscountValue))} تخفیف
+                - {formatRialToToman(Math.abs(order.totalYadakchiDiscountValue))}
               </span>
             </div>
           )}
 
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-right">هزینه بسته‌بندی و ارسال</span>
-            <span className="text-left font-bold text-foreground" dir="ltr">
-              {computedShipmentPrice > 0 ? formatToman(computedShipmentPrice) : 'رایگان'}
+            <span className="text-left font-bold text-foreground" dir="rtl">
+              {computedShipmentPrice > 0 ? formatRialToToman(computedShipmentPrice) : 'رایگان'}
             </span>
           </div>
 
           <div className="mt-2 flex items-center justify-between border-t border-border/80 pt-3 text-sm font-black">
             <span className="text-right text-foreground">مبلغ پرداختی نهایی</span>
-            <span className="text-left text-base font-black text-primary" dir="ltr">
-              {formatToman(order.totalFinalPrice)}
+            <span className="text-left text-base font-black text-primary" dir="rtl">
+              {formatRialToToman(order.totalFinalPrice)}
             </span>
           </div>
         </div>
       </Card>
 
-      {/* ================= مودال‌ها ================= */}
+      {/* مودال‌ها */}
       <CancelOrderModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}

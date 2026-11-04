@@ -1,3 +1,4 @@
+// src/components/composites/Modal/Modal.tsx
 'use client';
 
 import * as React from 'react';
@@ -6,20 +7,33 @@ import { X, ArrowRight } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button';
 
+export type ModalSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  size?: ModalSize;
   className?: string;
   overlayClassName?: string;
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
 }
 
+const sizeClasses: Record<ModalSize, string> = {
+  xs: 'md:max-w-sm',
+  sm: 'md:max-w-md',
+  md: 'md:max-w-lg',
+  lg: 'md:max-w-2xl',
+  xl: 'md:max-w-4xl',
+  full: 'md:w-[94vw] md:max-w-7xl md:max-h-[92vh]',
+};
+
 export function Modal({
   isOpen,
   onClose,
   children,
+  size = 'md',
   className,
   overlayClassName,
   closeOnOverlayClick = true,
@@ -55,13 +69,13 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-modal flex items-center justify-center"
+      className="fixed inset-0 z-modal flex items-center justify-center p-0 md:p-4"
       role="dialog"
       aria-modal="true"
     >
       <div
         className={cn(
-          'fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in',
+          'fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in',
           overlayClassName
         )}
         onClick={closeOnOverlayClick ? onClose : undefined}
@@ -70,12 +84,10 @@ export function Modal({
       <div
         ref={modalRef}
         className={cn(
-          // ⭐ موبایل: تمام‌صفحه، بدون ردیوس
-          'relative z-10 flex flex-col bg-background overflow-hidden',
-          'w-full h-full max-h-full max-w-none rounded-none',
-          // ⭐ دسکتاپ: بزرگ ولی نه تمام‌صفحه
-          'md:w-[92vw] md:max-w-4xl md:h-auto md:max-h-[92vh] md:rounded-2xl md:shadow-2xl',
-          'xl:max-w-5xl',
+          'relative z-10 flex flex-col bg-card border-border overflow-hidden outline-none',
+          'w-full h-full max-h-full rounded-none',
+          'md:w-full md:h-auto md:max-h-[88vh] md:rounded-2xl md:border md:shadow-2xl md:animate-in md:fade-in-0 md:zoom-in-95',
+          sizeClasses[size],
           className
         )}
         tabIndex={-1}
@@ -98,8 +110,8 @@ export const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
         ref={ref}
         className={cn(
           'flex items-center justify-between gap-3 shrink-0 w-full',
-          'px-4 py-3 md:px-6 md:py-4',
-          'border-b border-border',
+          'px-4 py-3 md:px-5 md:py-3.5',
+          'border-b border-border/80 bg-card',
           className
         )}
         {...props}
@@ -108,10 +120,10 @@ export const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
           <button
             type="button"
             onClick={onClose}
-            className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:outline-none transition-colors"
             aria-label="بازگشت"
           >
-            <ArrowRight aria-hidden="true" className="h-5 w-5" />
+            <ArrowRight aria-hidden="true" className="h-4 w-4" />
           </button>
         ) : null}
         <div className="flex-1 min-w-0">{children}</div>
@@ -120,7 +132,7 @@ export const ModalHeader = React.forwardRef<HTMLDivElement, ModalHeaderProps>(
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="hidden md:inline-flex shrink-0 rounded-full"
+            className="hidden md:inline-flex shrink-0 rounded-lg text-muted-foreground hover:text-foreground"
             onClick={onClose}
           >
             <X aria-hidden="true" className="h-4 w-4" />
@@ -139,7 +151,7 @@ export const ModalTitle = React.forwardRef<HTMLHeadingElement, ModalTitleProps>(
   ({ className, ...props }, ref) => (
     <h2
       ref={ref}
-      className={cn('text-base font-semibold text-foreground', className)}
+      className={cn('text-sm font-bold text-foreground', className)}
       {...props}
     />
   )
@@ -155,7 +167,7 @@ export const ModalDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn('text-sm text-muted-foreground', className)}
+    className={cn('text-xs text-muted-foreground', className)}
     {...props}
   />
 ));
@@ -167,7 +179,7 @@ export const ModalBody = React.forwardRef<HTMLDivElement, ModalBodyProps>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('flex-1 overflow-y-auto p-4 md:p-6 w-full', className)}
+      className={cn('flex-1 overflow-y-auto p-4 md:p-5 w-full min-h-0', className)}
       {...props}
     />
   )
@@ -181,8 +193,8 @@ export const ModalFooter = React.forwardRef<HTMLDivElement, ModalFooterProps>(
     <div
       ref={ref}
       className={cn(
-        'flex items-center gap-2 shrink-0 w-full',
-        'p-4 md:p-6 md:pt-0 border-t border-border md:border-t-0',
+        'flex items-center justify-end gap-2 shrink-0 w-full',
+        'p-3.5 md:p-4 border-t border-border/80 bg-muted/20',
         className
       )}
       {...props}

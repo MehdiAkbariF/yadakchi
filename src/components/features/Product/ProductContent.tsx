@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag, Bell, LineChart } from 'lucide-react';
+import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag, Bell, LineChart, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGetProductPageData, useGetProductPriceChart, useSubmitProductReport } from '@/domains/front/product/hooks/product.hooks';
 import {
   useGetBasket,
@@ -78,6 +79,11 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
   const [isSheetAttached, setIsSheetAttached] = React.useState(false);
   const [lottieKey, setLottieKey] = React.useState(0);
 
+  // استیت‌های کانتینر ترغیب به پرداخت موبایل و افکت سبد خرید هدر
+  const [showCartBanner, setShowCartBanner] = React.useState(false);
+  const [isCartBouncing, setIsCartBouncing] = React.useState(false);
+  const bannerTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [selectedSubjectId, setSelectedSubjectId] = React.useState('');
   const [reportDescription, setReportDescription] = React.useState('');
   const submitProductReport = useSubmitProductReport();
@@ -110,6 +116,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     return () => {
       if (lockTimer.current) clearTimeout(lockTimer.current);
       if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+      if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
     };
   }, []);
 
@@ -281,12 +288,26 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
+  // فعال‌سازی پاپ‌آپ رفتن به سبد و تریگر افکت هدر
+  const triggerCartSequence = () => {
+    setShowCartBanner(true);
+    if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
+
+    bannerTimerRef.current = setTimeout(() => {
+      setShowCartBanner(false);
+      // انیمیشن سبد خرید در هدر به مدت ۲ ثانیه فعال می‌شود
+      setIsCartBouncing(true);
+      setTimeout(() => setIsCartBouncing(false), 2200);
+    }, 4500);
+  };
+
   const handleMobileAddToBasket = async () => {
     if (!currentSelectedSeller) return;
     setIsMobileSubmitting(true);
     try {
       await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
       showToast.success('قطعه با موفقیت به سبد خرید شما افزوده شد');
+      triggerCartSequence();
     } catch (err: any) {
       showToast.error(err?.userMessage || 'خطا در افزودن به سبد خرید');
     } finally {
@@ -304,6 +325,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     try {
       await addToBasket.mutateAsync({ shopProductId: currentSelectedSeller.id, quantity: 1 });
       showToast.success('تعداد کالا افزایش یافت');
+      triggerCartSequence();
     } catch (err: any) {
       showToast.error(err?.userMessage || 'خطا در افزایش تعداد');
     } finally {
@@ -324,7 +346,6 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
-  // ✅ متصل‌شده به API واقعی مشابه ساید اینوویس دسکتاپ
   const handleNotifyMe = async () => {
     if (isNotifying || !product?.id) return;
     setIsNotifying(true);
@@ -383,6 +404,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
 
     setActiveSellerId(sellerId);
+    triggerCartSequence();
   };
 
   const originalPriceRaw = currentSelectedSeller?.retailPriceRaw || 0;
@@ -562,6 +584,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
         <ProductMinimalHeader
           productTitle={product.title}
           isAttached={isSheetAttached}
+          isCartBouncing={isCartBouncing}
           onOpenReportModal={() => setIsReportModalOpen(true)}
           onOpenPriceChart={() => setIsPriceChartOpen(true)}
         />
@@ -700,6 +723,40 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           </div>
         </div>
 
+        {/* ================= کانتینر ترغیب به رفتن به سبد خرید (روی موبایل) ================= */}
+        <AnimatePresence>
+          {showCartBanner && (
+            <motion.div
+              initial={{ y: 80, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 80, opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              className="fixed bottom-[74px] inset-x-3 z-50 select-none transform-gpu"
+              dir="rtl"
+            >
+              <Link
+                href="/basket"
+                className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-gradient-to-r from-neutral-900 to-neutral-800 border border-neutral-700/80 text-white shadow-2xl backdrop-blur-xl active:scale-[0.98] transition-transform"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-success/20 text-success border border-success/30">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold text-white truncate">کالا به سبد اضافه شد</span>
+                    <span className="text-3xs text-neutral-300">برای نهایی‌سازی سفارش ضربه بزنید</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold shrink-0 shadow-sm">
+                  <span>مشاهده سبد</span>
+                  <ArrowLeft className="h-3.5 w-3.5 stroke-[2.5]" />
+                </div>
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* دکمه چسبان پایین موبایل */}
         <MobileBottomAction
           variant={currentSelectedSeller ? 'default' : 'notify'}
@@ -772,7 +829,6 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
         conditionType={currentSelectedSeller ? currentSelectedSeller.type : 'New'}
       />
 
-      {/* ✅ مودال اطلاع‌رسانی موجودی ارتقایافته و متصل به انیمیشن */}
       <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md overflow-hidden rounded-2xl">
         <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center" dir="rtl">
           <div className="mx-auto -mt-2 mb-1 h-52 w-52 max-w-full">
@@ -856,3 +912,5 @@ function PriceChartModal({
     </Modal>
   );
 }
+
+export default ProductContent;

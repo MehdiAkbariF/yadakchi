@@ -18,7 +18,7 @@ export function useGetBasket() {
     queryKeys.front.basket.current,
     () => basketService.getBasket(),
     {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0, // تغییر حیاتی: دیتا هرگز تاریخ‌گذشته فرض نشود تا همیشه آخرین وضعیت محاسبه شده بیاید
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     }
@@ -58,7 +58,8 @@ export function useGetUserLocations() {
     ['user', 'locations'],
     () => basketService.getUserLocations(),
     {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0, // تغییر حیاتی: آدرس‌ها همیشه بلافاصله واکشی شوند
+      refetchOnWindowFocus: false,
     }
   );
 }
@@ -104,7 +105,7 @@ export function useGetCheckoutBasket() {
     ['front', 'basket', 'checkout'],
     () => basketService.getCheckoutBasket(),
     {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0,
       refetchOnWindowFocus: false,
     }
   );
@@ -115,13 +116,18 @@ export function useSetBasketLocationAndPrice() {
   return useTypedMutation(
     (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
     {
-      onSuccess: (data) => {
-        const updated = data?.basket || data;
-        if (updated) {
-          queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
+      onSuccess: (response: any) => {
+        // استخراج هوشمند آبجکت سبد از هر نوع ساختار پاسخی
+        const basketData =
+          response?.basket ||
+          response?.data?.basket ||
+          response?.data ||
+          response;
+
+        if (basketData && (basketData.subBaskets || basketData.id)) {
+          queryClient.setQueryData(queryKeys.front.basket.current, basketData);
+          queryClient.setQueryData(['front', 'basket', 'checkout'], basketData);
         }
-        queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
-        queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });
       },
     }
   );
@@ -133,8 +139,9 @@ export function useChangeBasketLocation() {
     (locationId: string) => basketService.setBasketLocationAndPrice(locationId),
     {
       onSuccess: (data) => {
-        const updated = data?.basket || data;
+        const updated = data?.basket || data?.data || data;
         if (updated) {
+          queryClient.setQueryData(queryKeys.front.basket.current, updated);
           queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
         }
         queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
@@ -150,8 +157,9 @@ export function useSetBasketShipment() {
     (methods: BasketShipmentMethodItem[]) => basketService.setBasketShipment(methods),
     {
       onSuccess: (data) => {
-        const updated = data?.basket || data;
+        const updated = data?.basket || data?.data || data;
         if (updated) {
+          queryClient.setQueryData(queryKeys.front.basket.current, updated);
           queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
         }
         queryClient.invalidateQueries({ queryKey: ['front', 'basket', 'checkout'] });
@@ -209,8 +217,9 @@ export function useCheckoutBasket() {
     () => basketService.checkoutBasket(),
     {
       onSuccess: (data) => {
-        const updated = data?.basket || data;
+        const updated = data?.basket || data?.data || data;
         if (updated) {
+          queryClient.setQueryData(queryKeys.front.basket.current, updated);
           queryClient.setQueryData(['front', 'basket', 'checkout'], updated);
         }
         queryClient.invalidateQueries({ queryKey: queryKeys.front.basket.current });

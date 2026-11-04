@@ -4,6 +4,7 @@ import { Lock, ArrowLeft, Briefcase, FileCheck, ShieldCheck } from 'lucide-react
 import { Card, CardTitle } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button';
 import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+import { formatRialToToman } from '@/core/utils/currency';
 
 export interface PaymentInvoiceProps {
   productPrice: number;
@@ -30,11 +31,8 @@ export function PaymentInvoice({
   onPayment,
   onCompleteLegalInfo,
 }: PaymentInvoiceProps) {
-  const formatPrice = (value: number) =>
-    new Intl.NumberFormat('fa-IR').format(Math.round(value));
-
   return (
-    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]">
+    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]" dir="rtl">
       <CardTitle className="mb-4 flex items-center gap-2 border-b border-border/60 pb-3.5 font-bold text-foreground">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <FileCheck aria-hidden="true" className="h-4 w-4" />
@@ -45,20 +43,22 @@ export function PaymentInvoice({
       <div className="mb-4 space-y-3.5 border-b border-border/60 pb-4 text-xs">
         <div className="flex items-center justify-between text-muted-foreground">
           <span>مجموع قیمت قطعات</span>
-          <span className="font-semibold text-foreground">{formatPrice(productPrice)} تومان</span>
+          <span className="font-semibold text-foreground">
+            {formatRialToToman(productPrice)}
+          </span>
         </div>
 
         {discountPrice > 0 ? (
           <div className="flex items-center justify-between font-semibold text-destructive">
             <span>تخفیف اعمال‌شده</span>
-            <span>- {formatPrice(discountPrice)} تومان</span>
+            <span>- {formatRialToToman(discountPrice)}</span>
           </div>
         ) : null}
 
         <div className="flex items-center justify-between text-muted-foreground">
           <span>هزینه بسته‌بندی و ارسال</span>
           <span className="font-semibold text-foreground">
-            {shippingPrice > 0 ? `${formatPrice(shippingPrice)} تومان` : 'رایگان'}
+            {shippingPrice > 0 ? formatRialToToman(shippingPrice) : 'رایگان'}
           </span>
         </div>
       </div>
@@ -66,8 +66,9 @@ export function PaymentInvoice({
       <div className="mb-6 flex items-baseline justify-between">
         <span className="text-xs font-bold text-foreground">مبلغ نهایی قابل پرداخت:</span>
         <div className="flex items-baseline gap-1">
-          <span className="text-xl font-bold text-primary">{formatPrice(finalPrice)}</span>
-          <span className="text-2xs font-semibold text-muted-foreground">تومان</span>
+          <span className="text-xl font-black text-primary">
+            {formatRialToToman(finalPrice)}
+          </span>
         </div>
       </div>
 

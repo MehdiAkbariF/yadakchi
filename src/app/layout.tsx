@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
 import { RootProvider } from '@/providers/root.provider';
+import { GlobalNavigationLoader } from '@/shared/Transitions/GlobalNavigationLoader';
 import { env } from '@/core/config/env';
 import './globals.css';
 
-// تنظیم کامل مشخصات تاچ، مقیاس و استاتوس‌بار گوشی‌ها
 export const viewport: Viewport = {
   themeColor: '#F56D3C',
   width: 'device-width',
@@ -16,7 +17,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: {
     default: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
-    template: '%s | یدکچی'
+    template: '%s | یدکچی',
   },
   description: 'بزرگ‌ترین مارکت‌پلیس خودرو و قطعات یدکی در ایران',
   appleWebApp: {
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
     apple: '/icon-192x192.png', // آیکون مخصوص دیوایس‌های اپل (Homescreen)
-  }
+  },
 };
 
 export default function RootLayout({
@@ -47,6 +48,11 @@ export default function RootLayout({
       </head>
       <body>
         <RootProvider>
+          {/* فعال‌ساز لودینگ آنی سه‌نقطه اختصاصی در تمام صفحات */}
+          <Suspense fallback={null}>
+            <GlobalNavigationLoader />
+          </Suspense>
+
           {children}
         </RootProvider>
       </body>

@@ -51,9 +51,10 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
 
   return (
     <div className="flex w-full flex-col gap-6" dir="rtl">
-      {/* هدر چسبان موبایل */}
+      {/* هدر چسبان موبایل (تمام‌عرض لبه‌به‌لبه و هماهنگ با اسکرول هدر اصلی) */}
       <div
-        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
+        style={{ top: isHeaderMinimized ? '56px' : '105px' }}
+        className="sticky z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -197,3 +198,5 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
     </div>
   );
 }
+
+export default PartCategoryContent;

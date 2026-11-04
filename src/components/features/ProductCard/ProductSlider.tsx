@@ -128,18 +128,18 @@ export function ProductSlider({
         ) : null}
 
         <div ref={carouselRef} className="relative z-10 w-full select-none overflow-hidden">
-          <motion.div
-            drag="x"
-            style={{ x, touchAction: 'pan-y' }}
-            dragConstraints={{ left: 0, right: dragWidth }}
-            dragElastic={0.12}
-            dragMomentum
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            dragTransition={{ power: 0.2, bounceStiffness: 200, bounceDamping: 25 }}
-            onClickCapture={handleDragClickCapture}
-            className="flex cursor-grab gap-4 py-1 active:cursor-grabbing"
-          >
+       <motion.div
+  drag="x"
+  style={{ x, touchAction: 'pan-y' }} // اجازه به اسکرول عمودی بدون گیر کردن
+  dragConstraints={{ left: 0, right: dragWidth }}
+  dragElastic={0.1}
+  dragMomentum
+  onDragStart={handleDragStart}
+  onDragEnd={handleDragEnd}
+  dragTransition={{ power: 0.2, bounceStiffness: 220, bounceDamping: 28 }}
+  onClickCapture={handleDragClickCapture}
+  className="flex cursor-grab gap-4 py-1 active:cursor-grabbing transform-gpu will-change-transform"
+>
             {products.map((prod: any) => (
               <div key={prod.id} className="w-[190px] shrink-0 sm:w-[250px]">
                 <ProductStandardCard product={prod} />

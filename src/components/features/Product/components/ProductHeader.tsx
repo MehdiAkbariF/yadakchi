@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Share2, Scale, Star, Heart, Loader2, AlertTriangle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Typography } from '@/components/primitives/Typography';
@@ -27,6 +28,7 @@ export interface ProductHeaderProps {
 }
 
 export function ProductHeader({ product, onScrollToComments, onScrollToInquiries }: ProductHeaderProps) {
+  const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
   const queryClient = useQueryClient();
   const { data: rawIsFavorite, isLoading: isFavLoading } = useIsUserFavoriteProduct(product.code);
@@ -44,7 +46,6 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
     setMounted(true);
   }, []);
 
-  // همگام‌سازی کامل استیت محلی با پاسخ واقعی سرور به محض لود
   React.useEffect(() => {
     if (rawIsFavorite !== undefined && rawIsFavorite !== null) {
       setLocalIsFavorite(Boolean(rawIsFavorite));
@@ -54,7 +55,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
   const handleFavoriteToggle = async () => {
     const previousState = localIsFavorite;
     const nextState = !previousState;
-    setLocalIsFavorite(nextState); // آپدیت آنی و بدون تأخیر در UI (Optimistic Update)
+    setLocalIsFavorite(nextState);
 
     try {
       if (previousState) {
@@ -62,12 +63,10 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         showToast.success('از علاقه‌مندی‌ها حذف شد');
       } else {
         await addFavorite.mutateAsync(product.id);
-        showToast.success('به علاقه‌مندی‌ها اضافه شد');
+        showToast.success('به علاقه‌مندی‌ها افزوده شد');
       }
     } catch (err: any) {
-      setLocalIsFavorite(previousState); // ریست کردن در صورت خطا
-      
-      // اگر از قبل در سرور لایک شده بود ولی فرانت‌ند آفلاین یا ناپدید بود، وضعیت را روی true ست کن
+      setLocalIsFavorite(previousState);
       if (
         err?.message?.includes('قبلا ثبت شده است') ||
         err?.userMessage?.includes('قبلا ثبت شده است') ||
@@ -77,7 +76,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         queryClient.setQueryData(['front', 'products', 'is-favorite', product.code], true);
         return;
       }
-      showToast.error(err?.userMessage || 'خطا در انجام عملیات علاقه‌مندی');
+      showToast.error(err?.userMessage || 'خطا در تغییر وضعیت علاقه‌مندی');
     }
   };
 
@@ -86,8 +85,12 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
       navigator.share({ title: product.title, url: window.location.href }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
-      showToast.success('لینک صفحه کپی شد');
+      showToast.success('لینک کالا کپی شد');
     }
+  };
+
+  const handleGoToCompare = () => {
+    router.push(`/compare?products=${product.code}`);
   };
 
   const handleReportSubmit = async () => {
@@ -101,12 +104,12 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
         reportSubjectId: selectedSubjectId,
         description: reportDescription,
       });
-      showToast.success('گزارش خطای کالا با موفقیت ثبت شد و توسط تیم پشتیبانی بررسی خواهد گردید');
+      showToast.success('گزارش خطای کالا با موفقیت ثبت شد');
       setIsReportModalOpen(false);
       setSelectedSubjectId('');
       setReportDescription('');
     } catch (error: any) {
-      showToast.error(error?.userMessage || 'خطا در ثبت گزارش خطا');
+      showToast.error(error?.userMessage || 'خطا در ثبت گزارش');
     }
   };
 
@@ -150,8 +153,10 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
           </button>
           <button
             type="button"
-            aria-label="مقایسه"
-            className="rounded-xl border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+            onClick={handleGoToCompare}
+            aria-label="مقایسه این کالا"
+            title="مقایسه این کالا"
+            className="rounded-xl border border-border p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-primary active:scale-95"
           >
             <Scale aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -198,7 +203,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
           onClick={onScrollToInquiries}
           className="hover:text-primary hover:underline"
         >
-          تبادل پرسش و پاسخ
+          ارسال پرسش و پاسخ
         </button>
       </div>
 
@@ -221,7 +226,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
 
           <TextArea
             label="توضیحات (اختیاری)"
-            placeholder="جزییات مشکل را بنویسید..."
+            placeholder="توضیح دهید..."
             value={reportDescription}
             onChange={(e) => setReportDescription(e.target.value)}
             className="h-24 text-xs"
@@ -248,10 +253,12 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
             isLoading={submitProductReport.isPending}
             className="h-10 flex-1 text-xs font-bold"
           >
-            ثبت گزارش خطا
+            ثبت گزارش
           </Button>
         </ModalFooter>
       </Modal>
     </div>
   );
 }
+
+export default ProductHeader;

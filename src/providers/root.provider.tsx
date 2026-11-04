@@ -15,18 +15,17 @@ export function RootProvider({ children }: RootProviderProps) {
   return (
     <QueryProvider>
       <ThemeProvider>
-        {/* نوار بارگذاری فوق‌باریک و سریع منطبق با استانداردهای یوتیوب و گیت‌هاب */}
         <NextTopLoader 
-          color="#F56D3C" 
-          initialPosition={0.15}
-          crawlSpeed={150}
-          height={2.5}
+          color="#2563eb"
+          initialPosition={0.08}
+          crawlSpeed={250}
+          height={3}
           crawl={true}
-          showSpinner={false} 
-          easing="cubic-bezier(0.2, 0.8, 0.2, 1)"
-          speed={200}
-          shadow="0 0 12px #F56D3C, 0 0 4px #F56D3C"
-          zIndex={99999}
+          showSpinner={false}
+          easing="cubic-bezier(0.22, 1, 0.36, 1)"
+          speed={550}
+          shadow="0 0 10px rgba(37, 99, 235, 0.7), 0 0 4px rgba(6, 182, 212, 0.4)"
+          zIndex={999999}
         />
         {children}
         <PWAInstallBanner />

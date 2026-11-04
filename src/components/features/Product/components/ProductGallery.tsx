@@ -56,7 +56,7 @@ function useCountdown(expiration?: string | null) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*             کامپوننت پروگرس‌بار / اسکرابر تعاملی و مدرن (Scrubber)          */
+/*             ایده جسورانه: اسکرابر کپسولی مقطعی (Segmented Capsule)          */
 /* -------------------------------------------------------------------------- */
 interface GalleryScrubberProps {
   total: number;
@@ -73,97 +73,72 @@ function GalleryScrubber({
   isDark = false,
   align = 'center',
 }: GalleryScrubberProps) {
-  const trackRef = React.useRef<HTMLDivElement>(null);
-  const [isScrubbing, setIsScrubbing] = React.useState(false);
-
-  const calculateIndexFromPointer = (clientX: number) => {
-    if (!trackRef.current || total <= 1) return;
-    const rect = trackRef.current.getBoundingClientRect();
-    const offsetX = rect.right - clientX;
-    const ratio = Math.max(0, Math.min(1, offsetX / rect.width));
-    const targetIdx = Math.min(Math.floor(ratio * total), total - 1);
-    onChange(targetIdx);
-  };
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setIsScrubbing(true);
-    calculateIndexFromPointer(e.clientX);
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isScrubbing) return;
-    calculateIndexFromPointer(e.clientX);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    setIsScrubbing(false);
-    try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
-  };
-
   if (total <= 1) return null;
-
-  const progressPercent = ((current + 1) / total) * 100;
 
   return (
     <div
       className={cn(
-        'flex flex-col select-none w-full max-w-[180px] sm:max-w-[200px]',
+        'flex flex-col select-none w-full max-w-[220px] sm:max-w-[260px] gap-1.5',
         align === 'start' ? 'items-start' : 'items-center mx-auto'
       )}
     >
+      {/* تراک مقطعی تعاملی */}
       <div
-        ref={trackRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        role="slider"
-        aria-label="پیمایش تصاویر کالا"
-        aria-valuemin={1}
-        aria-valuemax={total}
-        aria-valuenow={current + 1}
         className={cn(
-          'relative h-3 w-full flex items-center cursor-pointer touch-none group',
-          isScrubbing && 'cursor-grabbing'
+          'flex items-center gap-1.5 w-full p-1 rounded-full backdrop-blur-md transition-colors',
+          isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-muted/60 border border-border/60'
         )}
       >
-        <div
-          className={cn(
-            'relative h-1.5 w-full rounded-full transition-all duration-200 overflow-hidden',
-            isDark ? 'bg-neutral-800' : 'bg-muted-foreground/20',
-            isScrubbing && 'h-2'
-          )}
-        >
-          <div
-            className={cn(
-              'h-full rounded-full transition-all duration-150',
-              isDark ? 'bg-white' : 'bg-primary'
-            )}
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+        {Array.from({ length: total }).map((_, idx) => {
+          const isActive = idx === current;
+          const isPassed = idx < current;
 
-        <div
-          className={cn(
-            'absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full transition-transform shadow-sm',
-            isDark ? 'bg-white text-black' : 'bg-primary text-white',
-            isScrubbing ? 'scale-125 h-3.5 w-3.5' : 'h-2.5 w-2.5 opacity-90 group-hover:scale-110'
-          )}
-          style={{ right: `calc(${progressPercent}% - 5px)` }}
-        />
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onChange(idx)}
+              aria-label={`رفتن به تصویر ${idx + 1}`}
+              className="relative flex-1 h-2 rounded-full overflow-hidden transition-all duration-300 focus:outline-none"
+            >
+              {/* پس‌زمینه قطعه */}
+              <div
+                className={cn(
+                  'absolute inset-0 rounded-full transition-colors',
+                  isDark ? 'bg-neutral-800' : 'bg-muted-foreground/20'
+                )}
+              />
+
+              {/* نشانگر وضعیت */}
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all duration-300',
+                  isActive
+                    ? isDark ? 'bg-primary shadow-sm shadow-primary/50' : 'bg-primary shadow-sm'
+                    : isPassed
+                    ? isDark ? 'bg-neutral-600' : 'bg-primary/40'
+                    : 'w-0'
+                )}
+                style={{ width: isActive || isPassed ? '100%' : '0%' }}
+              />
+            </button>
+          );
+        })}
       </div>
 
-      <span
+      {/* بج شمارشگر ارقام فارسی با استایل مینیمال */}
+      <div
         className={cn(
-          'mt-1 text-3xs font-bold tracking-wider tabular-nums',
-          isDark ? 'text-neutral-400' : 'text-muted-foreground'
+          'flex items-center gap-1 text-3xs font-black tracking-wider px-2 py-0.5 rounded-md tabular-nums',
+          isDark ? 'bg-neutral-900 text-neutral-300' : 'bg-card text-muted-foreground border border-border/50'
         )}
       >
-        {toPersianDigits(current + 1)} از {toPersianDigits(total)}
-      </span>
+        <span className={cn('text-xs font-black', isDark ? 'text-primary' : 'text-primary')}>
+          {toPersianDigits(current + 1)}
+        </span>
+        <span className="opacity-40">/</span>
+        <span>{toPersianDigits(total)}</span>
+      </div>
     </div>
   );
 }
@@ -242,14 +217,39 @@ export function ProductGallery({
     }
   };
 
+  const closeFullscreen = React.useCallback(() => {
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+    setIsFullscreenOpen(false);
+  }, []);
+
+  // ✅ بستن تمام‌صفحه با دکمه فیزیکی بازگشت گوشی (Android Back / Browser History Back)
+  React.useEffect(() => {
+    if (!isFullscreenOpen) return;
+
+    window.history.pushState({ modal: 'product-gallery-fullscreen' }, '');
+
+    const handlePopState = () => {
+      closeFullscreen();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.modal === 'product-gallery-fullscreen') {
+        window.history.back();
+      }
+    };
+  }, [isFullscreenOpen, closeFullscreen]);
+
   // کنترل با کلیدهای کیبورد
   React.useEffect(() => {
     if (!isFullscreenOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setIsFullscreenOpen(false);
-        setZoomScale(1);
+        closeFullscreen();
       } else if (e.key === 'ArrowLeft') {
         handleNext();
       } else if (e.key === 'ArrowRight') {
@@ -259,7 +259,7 @@ export function ProductGallery({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreenOpen, handleNext, handlePrev]);
+  }, [isFullscreenOpen, closeFullscreen, handleNext, handlePrev]);
 
   // رویدادهای اسکرول در حالت عادی موبایل
   const handleMobileScroll = () => {
@@ -288,7 +288,6 @@ export function ProductGallery({
     }
   };
 
-  // ✅ اصلاح جهت سوایپ در حالت تمام‌صفحه: کشیدن به چپ عکس بعدی، کشیدن به راست عکس قبلی
   const handleFullscreenDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
@@ -297,10 +296,8 @@ export function ProductGallery({
 
     const swipeThreshold = 40;
     if (info.offset.x < -swipeThreshold) {
-      // دست به سمت چپ کشیده شد -> نمایش عکس بعدی
       handlePrev();
     } else if (info.offset.x > swipeThreshold) {
-      // دست به سمت راست کشیده شد -> نمایش عکس قبلی
       handleNext();
     }
   };
@@ -324,7 +321,7 @@ export function ProductGallery({
   }
 
   /* -------------------------------------------------------------------------- */
-  /*            مودال تمام‌صفحه (کامل مشکی، بدون شفافیت و بدون شیشه)            */
+  /*            مودال تمام‌صفحه (کامل مشکی، با پشتیبانی از دکمه بازگشت)            */
   /* -------------------------------------------------------------------------- */
   const fullscreenModalContent = (
     <AnimatePresence>
@@ -336,7 +333,7 @@ export function ProductGallery({
           role="dialog"
           aria-modal="true"
           aria-label="نمایش تمام‌صفحه تصاویر کالا"
-          className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen flex-col bg-black select-none touch-none"
+          className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen flex-col bg-black select-none touch-none transform-gpu"
           dir="rtl"
         >
           {/* هدر کاملاً مشکی */}
@@ -352,13 +349,9 @@ export function ProductGallery({
 
             <button
               type="button"
-              onClick={() => {
-                setZoomScale(1);
-                setPanOffset({ x: 0, y: 0 });
-                setIsFullscreenOpen(false);
-              }}
-              aria-label="بستن گالری (Escape)"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white hover:bg-destructive transition-colors focus:ring-2 focus:ring-white"
+              onClick={closeFullscreen}
+              aria-label="بستن گالری (Escape یا دکمه بازگشت)"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white hover:bg-destructive transition-colors focus:ring-2 focus:ring-white active:scale-95"
             >
               <X aria-hidden="true" className="h-5 w-5" />
             </button>
@@ -428,7 +421,7 @@ export function ProductGallery({
             )}
           </div>
 
-          {/* فوتر مشکی یکدست */}
+          {/* فوتر مشکی با اسکرابر کپسولی مقطعی */}
           <div className="flex shrink-0 flex-col sm:flex-row items-center justify-between gap-3 border-t border-neutral-800 bg-black p-3 sm:px-8 sm:py-4 z-20">
             <div className="w-full sm:w-auto flex-1 max-w-xs">
               <GalleryScrubber
@@ -490,7 +483,7 @@ export function ProductGallery({
         تصویر {safeIndex + 1} از {validImages.length}
       </div>
 
-      {/* ================= نسخه دسکتاپ (کاملاً راست‌چین) ================= */}
+      {/* ================= نسخه دسکتاپ ================= */}
       <div className="hidden lg:flex w-full flex-col items-start gap-4 text-right pt-1">
         <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
           {hasTimedDiscount ? (
@@ -596,7 +589,7 @@ export function ProductGallery({
         )}
       </div>
 
-      {/* ================= نسخه موبایل (با فاصله بهینه از بالا) ================= */}
+      {/* ================= نسخه موبایل ================= */}
       <div
         className="lg:hidden relative w-full flex flex-col items-center pt-3.5"
         onTouchStart={handleTouchStart}
@@ -660,9 +653,9 @@ export function ProductGallery({
           })}
         </div>
 
-        {/* پروگرس‌بار زیر کاروسل */}
+        {/* اسکرابر کپسولی تعاملی زیر کاروسل موبایل */}
         {validImages.length > 1 && (
-          <div className="w-full pt-2 pb-1 px-6">
+          <div className="w-full pt-2.5 pb-1 px-6">
             <GalleryScrubber
               total={validImages.length}
               current={safeIndex}
@@ -677,3 +670,5 @@ export function ProductGallery({
     </section>
   );
 }
+
+export default ProductGallery;

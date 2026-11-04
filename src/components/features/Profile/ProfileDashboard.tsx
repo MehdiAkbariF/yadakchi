@@ -1,4 +1,5 @@
-﻿'use client';
+﻿// src/components/features/Profile/ProfileDashboard.tsx
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -26,6 +27,7 @@ import {
   Eye,
   Settings,
   RotateCcw,
+  LogOut,
 } from 'lucide-react';
 import { Card } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
@@ -36,7 +38,6 @@ import {
   useGetWalletBalances,
 } from '@/domains/userpanel/hooks/userpanel.hooks';
 import { getFullUrl, toPersianDigits } from '@/core/utils/formatters';
-import { formatToman } from '@/core/utils/currency';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 
@@ -49,7 +50,7 @@ const ORDER_STEPS = [
 
 export function ProfileDashboard() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout, isLoggingOut } = useAuth();
 
   const { data: ordersData } = useGetOrders('', '', '', 1);
   const { data: vehicles = [] } = useGetUserVehicles();
@@ -57,7 +58,6 @@ export function ProfileDashboard() {
 
   const orders = (ordersData as any)?.items || [];
 
-  // بررسی آخرین سفارشی که نیاز به اقدام فوری دارد
   const pendingActionOrder = orders.find(
     (o: any) => o.status === 'WaitingForPayment' || o.status === 'InProgress'
   );
@@ -77,8 +77,6 @@ export function ProfileDashboard() {
 
   return (
     <div className="flex w-full flex-col gap-5">
-      
-      {/* ================= 1. بنر خوش‌آمدگویی و کارت وضعیت کاربر ================= */}
       <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-br from-card via-card to-accent/40 p-5 shadow-xs">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3.5">
@@ -92,13 +90,12 @@ export function ProfileDashboard() {
               <h1 className="mt-0.5 text-base font-black text-foreground sm:text-lg">
                 سلام، {user?.fullName || 'کاربر گرامی'} 👋
               </h1>
-              <span className="mt-0.5 text-xs text-muted-foreground " dir="ltr">
+              <span className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
                 {user?.phoneNumber}
               </span>
             </div>
           </div>
 
-          {/* موجودی سریع و دکمه برداشت */}
           <div className="flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-card/90 p-3 shadow-2xs sm:justify-end">
             <div className="flex flex-col text-right">
               <span className="text-3xs text-muted-foreground">موجودی کیف پول</span>
@@ -118,7 +115,6 @@ export function ProfileDashboard() {
           </div>
         </div>
 
-        {/* نوار پایین خوش‌آمدگویی: کد معرف و دسترسی سریع */}
         {user?.referralCode && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/50 pt-3 text-2xs text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -126,7 +122,7 @@ export function ProfileDashboard() {
               <button
                 type="button"
                 onClick={handleCopyReferral}
-                className="flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5  font-bold text-foreground hover:bg-accent hover:text-primary transition-colors"
+                className="flex items-center gap-1.5 rounded-md bg-muted px-2 py-0.5 font-bold text-foreground hover:bg-accent hover:text-primary transition-colors"
               >
                 <span>{user.referralCode}</span>
                 <Copy className="h-3 w-3 text-muted-foreground" />
@@ -139,7 +135,6 @@ export function ProfileDashboard() {
         )}
       </div>
 
-      {/* ================= 2. هشدار آخرین سفارش در جریان (در صورت وجود) ================= */}
       {pendingActionOrder && (
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 shadow-2xs transition-all">
           <div className="flex items-center gap-3">
@@ -158,7 +153,7 @@ export function ProfileDashboard() {
               </span>
               <span className="text-2xs text-muted-foreground">
                 کد سفارش: {pendingActionOrder.orderNumber} | مبلغ:{' '}
-                {(pendingActionOrder.totalFinalPrice)}
+                {pendingActionOrder.totalFinalPrice}
               </span>
             </div>
           </div>
@@ -175,7 +170,6 @@ export function ProfileDashboard() {
         </div>
       )}
 
-      {/* ================= 3. وضعیت تفکیکی سفارش‌ها ================= */}
       <Card className="rounded-2xl border border-border/80 bg-card p-4.5 shadow-xs">
         <div className="flex items-center justify-between pb-3.5 border-b border-border/50">
           <div className="flex items-center gap-2">
@@ -216,7 +210,6 @@ export function ProfileDashboard() {
         </div>
       </Card>
 
-      {/* ================= 4. وضعیت گاراژ و خودروها ================= */}
       <Card className="rounded-2xl border border-border/80 bg-card p-4.5 shadow-xs">
         <div className="flex items-center justify-between pb-3.5 border-b border-border/50">
           <div className="flex items-center gap-2">
@@ -240,7 +233,6 @@ export function ProfileDashboard() {
                   <img
                     src={getFullUrl(defaultVehicle.carCover)}
                     alt={defaultVehicle.carModel}
-                    
                     className="h-full w-full object-contain"
                   />
                 ) : (
@@ -297,7 +289,6 @@ export function ProfileDashboard() {
         )}
       </Card>
 
-      {/* ================= 5. میانبرهای دسترسی سریع (Quick Actions) ================= */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Link
           href="/profile/addresses"
@@ -352,86 +343,96 @@ export function ProfileDashboard() {
         </Link>
       </div>
 
-      {/* ================= 6. منوی کامل و دسته‌بندی‌شده اپلیکیشنی در موبایل ================= */}
-    <div className="flex flex-col gap-3 lg:hidden mt-2">
-  <span className="text-2xs font-bold text-muted-foreground px-1">سایر بخش‌های حساب کاربری</span>
-  
-  <div className="flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden divide-y divide-border/60 shadow-2xs">
-    <Link href="/profile/orders" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <ShoppingBag className="h-4.5 w-4.5 text-primary" />
-        <span>تمام سفارش‌های من</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+      <div className="flex flex-col gap-3 lg:hidden mt-2">
+        <span className="text-2xs font-bold text-muted-foreground px-1">سایر بخش‌های حساب کاربری</span>
+        
+        <div className="flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden divide-y divide-border/60 shadow-2xs">
+          <Link href="/profile/orders" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="h-4.5 w-4.5 text-primary" />
+              <span>تمام سفارش‌های من</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    {/* ✅ آیتم جدید: درخواست‌های مرجوعی */}
-    <Link href="/profile/returns" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <RotateCcw className="h-4.5 w-4.5 text-rose-500" />
-        <span>درخواست‌های مرجوعی</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+          <Link href="/profile/returns" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <RotateCcw className="h-4.5 w-4.5 text-rose-500" />
+              <span>درخواست‌های مرجوعی</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    <Link href="/profile/wallet" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <Wallet className="h-4.5 w-4.5 text-emerald-500" />
-        <span>کیف پول و حساب‌های تسویه</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+          <Link href="/profile/wallet" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <Wallet className="h-4.5 w-4.5 text-emerald-500" />
+              <span>کیف پول و حساب‌های تسویه</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    <Link href="/profile/addresses" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <MapPin className="h-4.5 w-4.5 text-blue-500" />
-        <span>آدرس‌های تحویل سفارش</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+          <Link href="/profile/addresses" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <MapPin className="h-4.5 w-4.5 text-blue-500" />
+              <span>آدرس‌های تحویل سفارش</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    <Link href="/profile/comments" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <MessageSquare className="h-4.5 w-4.5 text-amber-500" />
-        <span>دیدگاه‌ها و پرسش‌های من</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+          <Link href="/profile/comments" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <MessageSquare className="h-4.5 w-4.5 text-amber-500" />
+              <span>دیدگاه‌ها و پرسش‌های من</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    <Link href="/profile/notifications" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <Bell className="h-4.5 w-4.5 text-purple-500" />
-        <span>پیام‌ها و اعلان‌ها</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+          <Link href="/profile/notifications" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <Bell className="h-4.5 w-4.5 text-purple-500" />
+              <span>پیام‌ها و اعلان‌ها</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    <Link href="/profile/history" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <Eye className="h-4.5 w-4.5 text-teal-500" />
-        <span>کالاهای دیده شده اخیر</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+          <Link href="/profile/history" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <Eye className="h-4.5 w-4.5 text-teal-500" />
+              <span>کالاهای دیده شده اخیر</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    <Link href="/profile/support" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <Headphones className="h-4.5 w-4.5 text-sky-500" />
-        <span>تیکت‌های پشتیبانی</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
+          <Link href="/profile/support" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <Headphones className="h-4.5 w-4.5 text-sky-500" />
+              <span>تیکت‌های پشتیبانی</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
-    <Link href="/profile/settings" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
-      <div className="flex items-center gap-3">
-        <Settings className="h-4.5 w-4.5 text-muted-foreground" />
-        <span>اطلاعات حساب و حقوقی</span>
-      </div>
-      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-    </Link>
-  </div>
-</div>
+          <Link href="/profile/settings" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+            <div className="flex items-center gap-3">
+              <Settings className="h-4.5 w-4.5 text-muted-foreground" />
+              <span>اطلاعات حساب و حقوقی</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </Link>
 
+          <button
+            type="button"
+            onClick={() => logout(undefined)}
+            disabled={isLoggingOut}
+            className="flex w-full items-center justify-between p-3.5 text-xs font-bold text-destructive hover:bg-destructive/5 active:bg-destructive/10 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut className="h-4.5 w-4.5 text-destructive" />
+              <span>خروج از حساب کاربری</span>
+            </div>
+            <ChevronLeft className="h-4 w-4 text-destructive/60" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

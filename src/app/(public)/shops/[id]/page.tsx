@@ -21,17 +21,7 @@ interface ShopPageProps {
     | { [key: string]: string | string[] | undefined };
 }
 
-/**
- * کش کردن ریکوئست فروشگاه.
- *
- * ⚠️ خطاهای زیر به null تبدیل می‌شوند تا notFound() اجرا شود:
- *   - 404 (فروشگاه وجود ندارد)
- *   - 400 (پارامتر اشتباه)
- *   - 500 (خطای سرور یا HTML برگشتی)
- *   - هر خطای شبکه‌ای دیگر
- *
- * فقط خطاهای پیش‌بینی‌نشده دوباره throw می‌شوند.
- */
+
 const getCachedShopData = cache(async (shopId: string) => {
   const shopService = getShopService();
   try {

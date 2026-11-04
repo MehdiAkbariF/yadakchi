@@ -1,4 +1,5 @@
-﻿'use client';
+﻿// src/components/features/Shop/ShopSlider.tsx
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -13,7 +14,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
-import { useGetShopCards, useGetShopPage } from '@/domains/front/shop/hooks/shop.hooks';
+import { useGetShopCards } from '@/domains/front/shop/hooks/shop.hooks';
 import { Typography } from '@/components/primitives/Typography';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 
@@ -23,16 +24,14 @@ const toPersianDigits = (n: number | string | undefined | null) => {
 };
 
 function ShopSliderCard({ shop }: { shop: any }) {
-  const { data: shopPageData, isLoading } = useGetShopPage(shop.id);
-
-  const shopTitle = shopPageData?.shopTitle || shop.shopTitle || shop.name || '';
+  const shopTitle = shop.shopTitle || shop.name || '';
   const description =
-    shopPageData?.seoInformation?.description?.trim() ||
-    (shopTitle ? `فروشگاه رسمی و تخصصی ${shopTitle} در یدکچی` : 'تامین‌کننده قطعات با ضمانت اصالت');
+    shop.description?.trim() ||
+    (shopTitle ? `فروشگاه لوازم و قطعات ${shopTitle} در یدکچی` : 'تامین‌کننده معتبر در بازارگاه یدکچی');
 
-  const productCount = shopPageData?.shopProductCount ?? shop.productCount;
-  const onTimePercentage = shopPageData?.shopPerformanceReport?.sellerSentOnTimePercentage;
-  const averageRate = shopPageData?.averageRate ?? shop.averageRate ?? shop.rating;
+  const productCount = shop.productCount;
+  const onTimePercentage = shop.sellerSentOnTimePercentage;
+  const averageRate = shop.averageRate ?? shop.rating;
 
   let satisfactionRate: number | null = null;
   if (typeof onTimePercentage === 'number' && onTimePercentage > 0) {
@@ -43,39 +42,14 @@ function ShopSliderCard({ shop }: { shop: any }) {
 
   const firstLetter = shopTitle ? shopTitle.trim().charAt(0).toUpperCase() : 'ی';
 
-  if (isLoading) {
-    return (
-      <div className="relative flex h-[216px] w-[310px] shrink-0 flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-12 w-12 rounded-xl" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-28 rounded-md" />
-            <Skeleton className="h-3 w-20 rounded-md" />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Skeleton className="h-3 w-full rounded-md" />
-          <Skeleton className="h-3 w-4/5 rounded-md" />
-        </div>
-        <div className="flex gap-2 pt-2 border-t border-border/50">
-          <Skeleton className="h-7 flex-1 rounded-full" />
-          <Skeleton className="h-7 flex-1 rounded-full" />
-          <Skeleton className="h-7 flex-1 rounded-full" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <Link
       href={`/shops/${shop.id}`}
       draggable={false}
       onDragStart={(e) => e.preventDefault()}
-      className="group relative flex h-[216px] w-[310px] shrink-0 cursor-pointer select-none flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/40 p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md"
+      className="group relative flex h-[216px] w-[310px] shrink-0 cursor-pointer select-none flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/40 p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md transform-gpu"
     >
-      {/* بخش فوقانی: لوگو، مشخصات و بج مینیمال */}
       <div className="flex items-start justify-between gap-3">
-        {/* لوگو و نام فروشگاه */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-1 shadow-2xs">
             {shop.logoUrl ? (
@@ -83,6 +57,8 @@ function ShopSliderCard({ shop }: { shop: any }) {
                 src={shop.logoUrl}
                 alt={shopTitle}
                 className="h-full w-full rounded-lg object-contain"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center rounded-lg bg-muted text-sm font-black text-foreground">
@@ -97,28 +73,24 @@ function ShopSliderCard({ shop }: { shop: any }) {
             </h3>
             <span className="flex items-center gap-1 text-[10px] font-semibold text-muted-foreground mt-0.5">
               <CheckCircle2 className="h-3 w-3 shrink-0 text-foreground/70" />
-              <span>فروشنده رسمی</span>
+              <span>فروشنده برگزیده</span>
             </span>
           </div>
         </div>
 
-        {/* بج خنثی و تمیز */}
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-3xs font-semibold text-foreground">
           <Crown className="h-3 w-3 text-muted-foreground" />
           <span>برگزیده</span>
         </span>
       </div>
 
-      {/* بخش میانی: توضیح آرام */}
       <div className="my-auto py-1">
         <p className="line-clamp-2 text-xs font-normal leading-relaxed text-muted-foreground">
           {description}
         </p>
       </div>
 
-      {/* بخش پایینی: میکروچیپ‌های آمار کاملاً خنثی و مینیمال */}
       <div className="flex items-center gap-2 border-t border-border/70 pt-3">
-        {/* کالاها */}
         <div className="flex flex-1 min-w-0 items-center justify-center gap-1 rounded-full border border-border/70 bg-muted/30 px-2 py-1 text-muted-foreground transition-colors group-hover:bg-muted/60">
           <Package className="h-3 w-3 shrink-0 text-muted-foreground" />
           <span className="text-3xs font-medium">کالا:</span>
@@ -129,22 +101,20 @@ function ShopSliderCard({ shop }: { shop: any }) {
           </span>
         </div>
 
-        {/* رضایت */}
         <div className="flex flex-1 min-w-0 items-center justify-center gap-1 rounded-full border border-border/70 bg-muted/30 px-2 py-1 text-muted-foreground transition-colors group-hover:bg-muted/60">
           <ShieldCheck className="h-3 w-3 shrink-0 text-muted-foreground" />
           <span className="text-3xs font-medium">رضایت:</span>
           <span className="truncate text-2xs font-bold text-foreground">
-            {satisfactionRate !== null ? `${toPersianDigits(satisfactionRate)}٪` : '-'}
+            {satisfactionRate !== null ? `${toPersianDigits(satisfactionRate)}%` : '-'}
           </span>
         </div>
 
-        {/* عملکرد */}
         <div className="flex flex-1 min-w-0 items-center justify-center gap-1 rounded-full border border-border/70 bg-muted/30 px-2 py-1 text-muted-foreground transition-colors group-hover:bg-muted/60">
           <Star className="h-3 w-3 shrink-0 text-muted-foreground" />
           <span className="text-3xs font-medium">عملکرد:</span>
           <span className="truncate text-2xs font-bold text-foreground">
             {onTimePercentage !== undefined && onTimePercentage !== null
-              ? `${toPersianDigits(Math.round(onTimePercentage))}٪`
+              ? `${toPersianDigits(Math.round(onTimePercentage))}%`
               : 'عالی'}
           </span>
         </div>
@@ -177,7 +147,7 @@ export function ShopSlider() {
     let newX = x.get() + (direction === 'left' ? step : -step);
     if (newX < 0) newX = 0;
     if (newX > dragWidth) newX = dragWidth;
-    animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
+    animate(x, newX, { type: 'spring', stiffness: 220, damping: 28 });
   };
 
   const handleDragStart = () => {
@@ -235,7 +205,7 @@ export function ShopSlider() {
         <div className="flex items-center gap-2">
           <Store aria-hidden="true" className="h-5 w-5 shrink-0 text-muted-foreground" />
           <Typography variant="h4" className="text-base font-bold text-foreground sm:text-lg">
-            فروشندگان منتخب یدکچی
+            فروشندگان برگزیده یدکچی
           </Typography>
         </div>
       </div>
@@ -247,7 +217,7 @@ export function ShopSlider() {
               type="button"
               onClick={() => handleScroll('right')}
               className="absolute start-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer rounded-full border border-border bg-card/90 p-2 text-foreground shadow-md backdrop-blur transition-all hover:bg-muted hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
-              aria-label="فروشگاه‌های قبلی"
+              aria-label="فروشندگان بعدی"
             >
               <ChevronRight aria-hidden="true" className="h-4 w-4" />
             </button>
@@ -255,7 +225,7 @@ export function ShopSlider() {
               type="button"
               onClick={() => handleScroll('left')}
               className="absolute end-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer rounded-full border border-border bg-card/90 p-2 text-foreground shadow-md backdrop-blur transition-all hover:bg-muted hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
-              aria-label="فروشگاه‌های بعدی"
+              aria-label="فروشندگان قبلی"
             >
               <ChevronLeft aria-hidden="true" className="h-4 w-4" />
             </button>
@@ -265,15 +235,15 @@ export function ShopSlider() {
         <div ref={carouselRef} className="relative z-10 w-full select-none overflow-hidden">
           <motion.div
             drag="x"
-            style={{ x }}
+            style={{ x, touchAction: 'pan-y' }}
             dragConstraints={{ left: 0, right: dragWidth }}
-            dragElastic={0.15}
+            dragElastic={0.12}
             dragMomentum
-            dragTransition={{ power: 0.2, bounceStiffness: 200, bounceDamping: 25 }}
+            dragTransition={{ power: 0.2, bounceStiffness: 220, bounceDamping: 28 }}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onClickCapture={handleDragClickCapture}
-            className="flex cursor-grab gap-4 py-1 active:cursor-grabbing"
+            className="flex cursor-grab gap-4 py-1 active:cursor-grabbing transform-gpu"
           >
             {shops.map((shop: any) => (
               <ShopSliderCard key={shop.id} shop={shop} />

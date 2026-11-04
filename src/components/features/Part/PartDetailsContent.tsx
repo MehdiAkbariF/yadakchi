@@ -97,10 +97,10 @@ export function PartDetailsContent({
 
   return (
     <div className="flex flex-col gap-6 w-full" dir="rtl">
-      {/* نوار چسبان کنترل‌های موبایل */}
+      {/* نوار چسبان کنترل‌های موبایل (تمام‌عرض و چسبیده به دو طرف صفحه) */}
       <div
         style={{ top: isHeaderMinimized ? '56px' : '122px' }}
-        className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
+        className="sticky z-40 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-0 flex-col">
@@ -217,7 +217,7 @@ export function PartDetailsContent({
         />
       ) : null}
 
-      {/* ✅ ارسال مشخصات واقعی دسته والد تا لیست قطعات خالی نماند */}
+      {/* ارسال مشخصات واقعی دسته والد تا لیست قطعات خالی نماند */}
       <SelectPartModal
         isOpen={isSelectPartOpen}
         onClose={() => setIsSelectPartOpen(false)}
@@ -228,3 +228,5 @@ export function PartDetailsContent({
     </div>
   );
 }
+
+export default PartDetailsContent;

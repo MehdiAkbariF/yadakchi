@@ -234,17 +234,27 @@ export class BasketService {
     }
   }
 
-  async initiatePayment(isLegalReceipt: boolean = false): Promise<{ link?: string; paymentUrl?: string }> {
-    try {
-      const response = await this.httpClient.post<{ link?: string; paymentUrl?: string }>(
-        BASKET_ENDPOINTS.BASKET_PAYMENT,
-        { isLegalReceipt: Boolean(isLegalReceipt) }
-      );
-      return response.data;
-    } catch (error: any) {
-      throw errorManager.normalize(error);
-    }
+// در src/domains/front/basket/services/basket.service.ts
+
+async initiatePayment(isLegalReceipt: boolean = false): Promise<{ link?: string; paymentUrl?: string }> {
+  try {
+    const callbackUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/payment/callback`
+      : `${process.env.NEXT_PUBLIC_SITE_URL || ''}/payment/callback`;
+
+    const response = await this.httpClient.post<{ link?: string; paymentUrl?: string }>(
+      BASKET_ENDPOINTS.BASKET_PAYMENT,
+      {
+        isLegalReceipt: Boolean(isLegalReceipt),
+        callbackUrl,
+        redirectUrl: callbackUrl,
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    throw errorManager.normalize(error);
   }
+}
 
   async applyDiscountCode(code: string): Promise<any> {
     try {

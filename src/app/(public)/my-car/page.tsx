@@ -1,4 +1,5 @@
-﻿'use client';
+﻿// src/app/(public)/my-car/page.tsx
+'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,6 +13,7 @@ import {
   useUpdateUserVehicle, 
   useDeleteUserVehicle 
 } from '@/domains/userpanel/hooks/userpanel.hooks';
+import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
 import { userPanelValidators } from '@/domains/userpanel/validation/userpanel.validation';
 import { Card, CardBody } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button/Button';
@@ -36,7 +38,6 @@ import { cn } from '@/design-system/utils/cn';
 
 const DEFAULT_CAR_IMAGE = '/car-noimage.png';
 
-// کامپوننت رندر مستقیم لاتی با DOM Ref بدون استفاده از dynamic یا React.lazy
 function EmptyGarageLottie() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasError, setHasError] = useState(false);
@@ -116,6 +117,7 @@ export default function MyCarPage() {
   const { isAuthenticated } = useAuth();
   
   const { data: rawVehicles = [], isLoading: isVehiclesLoading } = useGetUserVehicles();
+  const { data: carsReferenceList = [] } = useGetCarListFlat(1, 300);
 
   const updateVehicle = useUpdateUserVehicle();
   const deleteVehicle = useDeleteUserVehicle();
@@ -207,20 +209,20 @@ export default function MyCarPage() {
 
   const handleOpenUpdateModal = (vehicle: any) => {
     setSelectedVehicle(vehicle);
-    const limit = vehicle.oilKmLimitRaw || 7000;
+    const limit = vehicle.oilKmLimitRaw || vehicle.oilKmLimit || 7000;
     setUpdateOilLimit(limit);
     
     resetUpdate({
       id: vehicle.id,
       title: vehicle.title,
-      mileage: vehicle.mileageRaw || 0,
+      mileage: vehicle.mileageRaw || vehicle.mileage || 0,
       oilKmLimit: limit,
       lastServiceDate: vehicle.lastServiceDate ? formatToLocalDateString(vehicle.lastServiceDate) : null,
       isDefault: vehicle.isDefault,
     });
 
     const initValues = {
-      mileage: vehicle.mileageRaw || 0,
+      mileage: vehicle.mileageRaw || vehicle.mileage || 0,
       oilLimit: limit,
       day: 1,
       month: 1,
@@ -275,8 +277,8 @@ export default function MyCarPage() {
       await updateVehicle.mutateAsync({
         id: vehicle.id,
         title: vehicle.title,
-        mileage: vehicle.mileageRaw || 0,
-        oilKmLimit: vehicle.oilKmLimitRaw || 7000,
+        mileage: vehicle.mileageRaw || vehicle.mileage || 0,
+        oilKmLimit: vehicle.oilKmLimitRaw || vehicle.oilKmLimit || 7000,
         lastServiceDate: vehicle.lastServiceDate ? formatToLocalDateString(vehicle.lastServiceDate) : null,
         isDefault: !vehicle.isDefault,
       });
@@ -289,14 +291,45 @@ export default function MyCarPage() {
     } catch (error) {}
   };
 
+  const handleSearchPartsClick = (vehicle: any) => {
+    const directEnglish = vehicle.car?.englishTitle || vehicle.carEnglishTitle || vehicle.englishTitle;
+    
+    if (directEnglish && typeof directEnglish === 'string' && directEnglish.trim()) {
+      const slug = directEnglish.trim().replace(/\s+/g, '-');
+      router.push(`/car/${encodeURIComponent(slug)}`);
+      return;
+    }
+
+    const targetCarId = vehicle.car?.id || vehicle.carId;
+    const targetModel = vehicle.car?.model || vehicle.carModel;
+
+    if (carsReferenceList.length > 0) {
+      const matchedCar = carsReferenceList.find(
+        (c: any) => (targetCarId && c.id === targetCarId) || (targetModel && c.model === targetModel)
+      );
+
+      if (matchedCar?.englishTitle) {
+        const slug = matchedCar.englishTitle.trim().replace(/\s+/g, '-');
+        router.push(`/car/${encodeURIComponent(slug)}`);
+        return;
+      }
+    }
+
+    if (targetModel) {
+      const slug = targetModel.trim().replace(/\s+/g, '-');
+      router.push(`/car/${encodeURIComponent(slug)}`);
+      return;
+    }
+
+    router.push(`/search?carIds=${targetCarId || vehicle.id}`);
+  };
+
   if (isVehiclesLoading) {
     return <PageLoading message="در حال دریافت اطلاعات گاراژ..." />;
   }
 
   return (
     <div className="w-full flex flex-col gap-6 select-none" dir="rtl">
-      
-      {/* هدر صفحه */}
       <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5 mt-5">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -320,19 +353,23 @@ export default function MyCarPage() {
         </Button>
       </div>
 
-      {/* لیست خودروها یا استیت گاراژ خالی */}
       {vehicles.length > 0 ? (
         <div className="flex flex-col gap-4 w-full">
           {vehicles.map((vehicle: any) => {
+            const rawMileage = vehicle.mileageRaw ?? vehicle.mileage;
+            const rawLimit = vehicle.oilKmLimitRaw ?? vehicle.oilKmLimit ?? 7000;
             const totalNextServiceMileage = 
-              vehicle.mileageRaw !== undefined && vehicle.mileageRaw !== null
-                ? Number(vehicle.mileageRaw) + (Number(vehicle.oilKmLimitRaw) || 7000)
+              rawMileage !== undefined && rawMileage !== null
+                ? Number(rawMileage) + Number(rawLimit)
                 : null;
 
             const carAddedDate = vehicle.createDate || vehicle.createdAt || vehicle.registerDate;
             const formattedAddedDate = carAddedDate 
               ? formatToLocalDateString(carAddedDate) 
               : 'ثبت نشده';
+
+            const carCoverImage = vehicle.car?.cover || vehicle.carCover;
+            const carDisplayModel = vehicle.car?.model || vehicle.carModel || vehicle.title;
 
             return (
               <Card 
@@ -343,12 +380,11 @@ export default function MyCarPage() {
                 )}
               >
                 <CardBody className="p-4 md:p-6 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5">
-                  
                   <div className="flex items-start md:items-center gap-4 min-w-0 flex-1">
                     <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0 rounded-2xl border border-border bg-muted/10 flex items-center justify-center overflow-hidden p-2">
                       <img 
-                        src={vehicle.carCover ? getFullUrl(vehicle.carCover) : DEFAULT_CAR_IMAGE} 
-                        alt={vehicle.carModel || vehicle.title} 
+                        src={carCoverImage ? getFullUrl(carCoverImage) : DEFAULT_CAR_IMAGE} 
+                        alt={carDisplayModel} 
                         className="w-full h-full object-contain"
                         onError={(e) => {
                           e.currentTarget.src = DEFAULT_CAR_IMAGE;
@@ -367,7 +403,7 @@ export default function MyCarPage() {
                     <div className="flex-1 min-w-0 flex flex-col gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-base md:text-lg font-black text-foreground truncate">
-                          {vehicle.carModel}
+                          {carDisplayModel}
                         </span>
                         {vehicle.title && (
                           <span className="text-xs font-bold text-muted-foreground bg-muted px-2.5 py-1 rounded-lg">
@@ -386,7 +422,7 @@ export default function MyCarPage() {
                           <Gauge className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span>کیلومتر پیمایش:</span>
                           <span className="font-bold text-foreground">
-                            {vehicle.mileage !== 'ثبت نشده' && vehicle.mileage ? `${vehicle.mileage} km` : '-'}
+                            {rawMileage !== undefined && rawMileage !== null ? `${rawMileage} km` : '-'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -432,7 +468,6 @@ export default function MyCarPage() {
                     </button>
 
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                      {/* دکمه بروزرسانی با توکن shop */}
                       <button
                         onClick={() => handleOpenUpdateModal(vehicle)}
                         className="rounded-xl font-bold text-xs md:text-sm h-11 px-5 flex items-center justify-center gap-1.5 border-2 border-shop text-shop hover:bg-shop/5 transition-all shadow-sm shrink-0"
@@ -444,7 +479,7 @@ export default function MyCarPage() {
                       <Button
                         variant="primary"
                         size="sm"
-                        onClick={() => router.push(`/search?carIds=${vehicle.car?.id || vehicle.carId}`)}
+                        onClick={() => handleSearchPartsClick(vehicle)}
                         className="rounded-xl font-bold text-xs md:text-sm h-11 px-4 flex items-center justify-center gap-1.5 shadow-sm"
                       >
                         <Search className="h-4 w-4" />
@@ -452,14 +487,12 @@ export default function MyCarPage() {
                       </Button>
                     </div>
                   </div>
-
                 </CardBody>
               </Card>
             );
           })}
         </div>
       ) : (
-        /* استیت گاراژ خالی */
         <div className="w-full py-12 px-4 text-center rounded-2xl bg-card border border-border flex flex-col items-center justify-center gap-4">
           <div className="w-64 h-64 max-w-full flex items-center justify-center">
             <EmptyGarageLottie />
@@ -484,10 +517,9 @@ export default function MyCarPage() {
         </div>
       )}
 
-      {/* مودال بروزرسانی کارکرد */}
       <Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
-          <ModalTitle className=" font-bold text-sm text-foreground flex items-center gap-2">
+          <ModalTitle className="font-bold text-sm text-foreground flex items-center gap-2">
             <Gauge className="h-5 w-5 text-primary" />
             بروزرسانی کارکرد خودرو
           </ModalTitle>
@@ -496,13 +528,12 @@ export default function MyCarPage() {
         <ModalBody className="p-5 pt-4">
           {selectedVehicle && (
             <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full">
-              
               <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border">
                 <div className="w-12 h-12 shrink-0 rounded-lg border border-border bg-card flex items-center justify-center overflow-hidden p-0.5">
                   <img 
-                    src={selectedVehicle.carCover ? getFullUrl(selectedVehicle.carCover) : DEFAULT_CAR_IMAGE} 
+                    src={(selectedVehicle.car?.cover || selectedVehicle.carCover) ? getFullUrl(selectedVehicle.car?.cover || selectedVehicle.carCover) : DEFAULT_CAR_IMAGE} 
                     className="w-full h-full object-contain" 
-                    alt={selectedVehicle.carModel || ''} 
+                    alt={selectedVehicle.car?.model || selectedVehicle.carModel || ''} 
                     onError={(e) => {
                       e.currentTarget.src = DEFAULT_CAR_IMAGE;
                     }}
@@ -511,10 +542,14 @@ export default function MyCarPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>برند:</span>
-                    <span className="font-bold text-foreground">{selectedVehicle.carManufacturerName}</span>
+                    <span className="font-bold text-foreground">
+                      {selectedVehicle.car?.carManufacturer?.name || selectedVehicle.carManufacturerName || '-'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm font-bold text-foreground">{selectedVehicle.carModel}</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {selectedVehicle.car?.model || selectedVehicle.carModel}
+                    </span>
                     {selectedVehicle.title && (
                       <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
                         {selectedVehicle.title}
@@ -530,7 +565,7 @@ export default function MyCarPage() {
                   placeholder="کیلومتر کارکرد فعلی را وارد کنید..."
                   type="number"
                   error={errorsUpdate.mileage?.message ? String(errorsUpdate.mileage.message) : undefined}
-                  rightIcon={<span className="text-xs font-bold text-muted-foreground ">km</span>}
+                  rightIcon={<span className="text-xs font-bold text-muted-foreground">km</span>}
                   className="text-xs"
                   dir="ltr"
                   {...registerUpdate('mileage', { valueAsNumber: true })}
@@ -589,7 +624,7 @@ export default function MyCarPage() {
               <div className="w-full bg-muted/70 border border-border rounded-xl p-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-foreground">
                   <Wrench className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="text-xs font-bold ">کیلومتر سرویس بعدی شما:</span>
+                  <span className="text-xs font-bold">کیلومتر سرویس بعدی شما:</span>
                 </div>
                 <div className="flex items-center gap-1 font-black text-foreground text-sm" dir="ltr">
                   <span>
@@ -598,7 +633,6 @@ export default function MyCarPage() {
                   <span className="text-[11px] font-bold">km</span>
                 </div>
               </div>
-
             </form>
           )}
         </ModalBody>
@@ -625,10 +659,9 @@ export default function MyCarPage() {
         </div>
       </Modal>
 
-      {/* مودال تأیید حذف خودرو */}
       <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsDeleteModalOpen(false)}>
-          <ModalTitle className=" font-bold text-sm text-destructive flex items-center gap-2">
+          <ModalTitle className="font-bold text-sm text-destructive flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             حذف خودرو از گاراژ
           </ModalTitle>
@@ -636,7 +669,7 @@ export default function MyCarPage() {
 
         <ModalBody className="p-6 flex flex-col gap-3">
           <p className="text-sm font-bold text-foreground leading-relaxed">
-            از حذف «{vehicleToDelete?.carModel || vehicleToDelete?.title}» از گاراژ مطمئنی؟
+            از حذف «{vehicleToDelete?.car?.model || vehicleToDelete?.carModel || vehicleToDelete?.title}» از گاراژ مطمئنی؟
           </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             با انتخاب بله تمام اطلاعات مرتبط با این خودرو حذف میشه
@@ -663,7 +696,6 @@ export default function MyCarPage() {
           </Button>
         </div>
       </Modal>
-
     </div>
   );
 }

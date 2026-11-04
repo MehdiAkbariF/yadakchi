@@ -11,7 +11,7 @@ import {
   Info,
 } from 'lucide-react';
 import {
-  useGetCheckoutBasket,
+  useGetBasket,
   useGetUserLocations,
   useSetBasketShipment,
   useSetBasketLocationAndPrice,
@@ -25,13 +25,11 @@ import { MobileBottomAction } from '@/components/composites/MobileBottomAction/M
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { showToast } from '@/core/utils/toast';
+import { formatRialToToman, extractPureNumber } from '@/core/utils/currency';
 import { cn } from '@/design-system/utils/cn';
 
 const DIRECT_SHIPMENT_METHOD = 'DirectShipment';
 
-/* -------------------------------------------------------------------------- */
-/*                اسکلتون مینیمال برای بخش شیوه ارسال (در حال لود)             */
-/* -------------------------------------------------------------------------- */
 function ShipmentSkeleton({ count = 2 }: { count?: number }) {
   return (
     <div className="flex flex-col gap-3" aria-busy="true" aria-live="polite">
@@ -74,15 +72,12 @@ function ShipmentSkeleton({ count = 2 }: { count?: number }) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-shop/40" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-shop" />
         </span>
-        در حال محاسبه هزینه ارسال بر اساس موقعیت شما...
+        در حال محاسبه و دریافت شیوه‌های ارسال بر اساس آدرس شما...
       </div>
     </div>
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                         هشدار نیاز به انتخاب آدرس                          */
-/* -------------------------------------------------------------------------- */
 function AddressRequiredPlaceholder({
   onSelectAddress,
 }: {
@@ -110,29 +105,27 @@ function AddressRequiredPlaceholder({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              کامپوننت اصلی                                 */
-/* -------------------------------------------------------------------------- */
 export function CheckoutContent() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
 
-  const { data: rawBasket, isLoading: isBasketLoading } = useGetCheckoutBasket();
+  const { data: rawBasket, isLoading: isBasketLoading } = useGetBasket();
   const { data: locations = [], isLoading: isLocationsLoading } = useGetUserLocations();
 
   const setBasketLocation = useSetBasketLocationAndPrice();
   const setBasketShipment = useSetBasketShipment();
+
+  // استیت مستقیم برای نگهداری سبد به محض دریافت پاسخ سرور
+  const [syncedBasket, setSyncedBasket] = React.useState<any>(null);
 
   const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
   const [isMapModalOpen, setIsMapModalOpen] = React.useState(false);
   const [isNewAddressOpen, setIsNewAddressOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // ⭐ FIX: selectedMethods مشتق‌شده از basket + userSelectedMethods
   const [userSelectedMethods, setUserSelectedMethods] = React.useState<Record<string, string>>({});
-
-  const lastSyncedAddressRef = React.useRef<string | null>(null);
+  const requestedAddressIdRef = React.useRef<string | null>(null);
 
   const [mapAddressData, setMapAddressData] = React.useState<{
     address: string;
@@ -150,8 +143,21 @@ export function CheckoutContent() {
     }
   }, [isAuthenticated, isAuthLoading, router, pathname]);
 
-  const basket = rawBasket as any;
+  // دیتای سبد جاری: اولویت مطلق با پاسخ مستقیم سرور است
+  const basket = React.useMemo(() => {
+    if (syncedBasket?.subBaskets?.length) {
+      return syncedBasket;
+    }
+    const mut = setBasketLocation.data;
+    const fromMut = mut?.subBaskets ? mut : mut?.basket || mut?.data?.basket || mut?.data;
+    if (fromMut?.subBaskets?.length) {
+      return fromMut;
+    }
+    const raw = rawBasket;
+    return (raw?.subBaskets ? raw : raw?.basket || raw?.data?.basket || raw?.data || raw) as any;
+  }, [syncedBasket, setBasketLocation.data, rawBasket]);
 
+  // تعیین آدرس فعال کاربر
   const activeAddress = React.useMemo(() => {
     if (!locations || locations.length === 0) return null;
     return (
@@ -161,41 +167,46 @@ export function CheckoutContent() {
     );
   }, [locations, basket?.userLocationId]);
 
-  // sync location فقط یک بار برای هر آدرس
+  // اجرای استعلام قیمت در بدو ورود با آدرس فعال
   React.useEffect(() => {
     if (!activeAddress?.id) return;
-    if (lastSyncedAddressRef.current === activeAddress.id) return;
 
-    lastSyncedAddressRef.current = activeAddress.id;
-    setBasketLocation.mutate(activeAddress.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeAddress?.id]);
+    if (requestedAddressIdRef.current !== activeAddress.id) {
+      requestedAddressIdRef.current = activeAddress.id;
+      setBasketLocation.mutate(activeAddress.id, {
+        onSuccess: (res: any) => {
+          // استخراج دقیق داده بازگشتی با توجه به ریسپانس ارسال‌شده
+          const parsed = res?.subBaskets ? res : res?.basket || res?.data?.basket || res?.data || res;
+          if (parsed?.subBaskets) {
+            setSyncedBasket(parsed);
+          }
+        },
+      });
+    }
+  }, [activeAddress?.id, setBasketLocation]);
 
-  // ⭐ FIX: selectedMethods از basket مشتق می‌شود، نه با useEffect
+  // متدهای انتخابی مرسوله‌ها
   const selectedMethods = React.useMemo(() => {
     const result: Record<string, string> = {};
     if (!basket?.subBaskets) return result;
 
     basket.subBaskets.forEach((sub: any) => {
-      // ۱. اگر کاربر خودش انتخاب کرده
       if (userSelectedMethods[sub.id]) {
         result[sub.id] = userSelectedMethods[sub.id];
         return;
       }
 
-      // ۲. اگر backend shipmentMethod داده
       if (sub.shipmentMethod) {
         result[sub.id] =
-          sub.shipmentMethod === 'Seller'
+          sub.shipmentMethod === 'Seller' || sub.shipmentMethod === 'DirectShipment'
             ? DIRECT_SHIPMENT_METHOD
             : sub.shipmentMethod;
         return;
       }
 
-      // ۳. انتخاب خودکار بر اساس قیمت
-      const snappPrice = sub.snappBoxShipmentPrice ?? 0;
+      const snappPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
       const tipaxPrice = sub.tipaxShipmentPrice ?? 0;
-      const directPrice = sub.directShipmentPrice ?? 0;
+      const directPrice = sub.sellerShipmentPrice ?? sub.directShipmentPrice ?? 0;
 
       if (snappPrice > 0) result[sub.id] = 'SnappBox';
       else if (tipaxPrice > 0) result[sub.id] = 'Tipax';
@@ -206,12 +217,66 @@ export function CheckoutContent() {
     return result;
   }, [basket?.subBaskets, userSelectedMethods]);
 
+  // مجموع هزینه ارسال
+  const totalShipment = React.useMemo(() => {
+    if (!basket?.subBaskets || !activeAddress) return 0;
+    let total = 0;
+    basket.subBaskets.forEach((sub: any) => {
+      const method = selectedMethods[sub.id];
+      const directPrice = sub.sellerShipmentPrice ?? sub.directShipmentPrice ?? 0;
+      const snappPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+      const tipaxPrice = sub.tipaxShipmentPrice ?? 0;
+
+      if (method === 'SnappBox') total += snappPrice;
+      else if (method === 'Tipax') total += tipaxPrice;
+      else if (method === DIRECT_SHIPMENT_METHOD) total += directPrice;
+    });
+    return total;
+  }, [basket?.subBaskets, selectedMethods, activeAddress]);
+
+  // قیمت نهایی کالاها
+  const productsFinalPrice = React.useMemo(() => {
+    if (!basket) return 0;
+
+    const rootPrice =
+      basket.totalFinalPrice ??
+      basket.total?.finalPriceRaw ??
+      basket.total?.finalPrice ??
+      basket.finalPrice;
+
+    if (rootPrice !== undefined && rootPrice !== null && extractPureNumber(rootPrice) > 0) {
+      return extractPureNumber(rootPrice);
+    }
+
+    if (Array.isArray(basket.subBaskets) && basket.subBaskets.length > 0) {
+      const subTotal = basket.subBaskets.reduce((sum: number, sub: any) => {
+        const sPrice = sub.totalFinalPrice ?? sub.totalOriginalPrice ?? 0;
+        if (extractPureNumber(sPrice) > 0) return sum + extractPureNumber(sPrice);
+
+        const items = sub.subBasketItems || sub.items || [];
+        return (
+          sum +
+          items.reduce((iSum: number, item: any) => {
+            return iSum + extractPureNumber(item.finalTotalPrice ?? item.originalPrice ?? 0);
+          }, 0)
+        );
+      }, 0);
+
+      if (subTotal > 0) return subTotal;
+    }
+
+    return 0;
+  }, [basket]);
+
+  const finalPayablePrice = productsFinalPrice + totalShipment;
+
   if (isAuthLoading || isBasketLoading || isLocationsLoading) {
     return <PageLoading label="در حال بارگذاری اطلاعات تسویه حساب و آدرس‌ها..." />;
   }
 
   if (!isAuthenticated || !basket || !basket.subBaskets?.length) return null;
 
+  // وضعیت لودینگ: فقط تا زمان اتمام درخواست استعلام
   const isLocationSyncing = setBasketLocation.isPending;
   const isShipmentLocked = !activeAddress || isLocationSyncing;
 
@@ -228,7 +293,7 @@ export function CheckoutContent() {
     }
 
     if (isShipmentLocked) {
-      showToast.error('در حال بروزرسانی هزینه‌های ارسال، لطفاً کمی صبر کنید');
+      showToast.error('در حال استعلام و بروزرسانی هزینه‌های ارسال، لطفاً کمی صبر کنید');
       return;
     }
 
@@ -254,7 +319,7 @@ export function CheckoutContent() {
       }));
       await setBasketShipment.mutateAsync(methodsPayload);
 
-      showToast.success('اطلاعات نحوه ارسال تایید شد');
+      showToast.success('اطلاعات شیوه ارسال تایید شد');
       router.push('/basket-payment');
     } catch (err: any) {
       showToast.error(
@@ -265,21 +330,6 @@ export function CheckoutContent() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const calculateShipmentTotals = () => {
-    if (isShipmentLocked) return 0;
-    let total = 0;
-    basket.subBaskets.forEach((sub: any) => {
-      const method = selectedMethods[sub.id];
-      const directPrice = sub.directShipmentPrice ?? 0;
-      const snappPrice = sub.snappBoxShipmentPrice ?? 0;
-
-      if (method === 'SnappBox') total += snappPrice;
-      else if (method === 'Tipax') total += sub.tipaxShipmentPrice || 0;
-      else if (method === DIRECT_SHIPMENT_METHOD) total += directPrice;
-    });
-    return total;
   };
 
   const handleConfirmMapAddress = (data: {
@@ -295,32 +345,26 @@ export function CheckoutContent() {
     setIsAddressModalOpen(true);
   };
 
-  const totalShipment = calculateShipmentTotals();
-  const finalPayablePrice = (basket.totalFinalPrice || 0) + totalShipment;
-
   const leftPriceContent = (
-    <div className="flex flex-col">
+    <div className="flex flex-col text-right">
       <span className="mb-0.5 text-2xs text-muted-foreground">
         {isShipmentLocked ? 'در حال استعلام هزینه ارسال...' : 'مبلغ نهایی سفارش:'}
       </span>
       <span
         className={cn(
-          'text-sm font-bold',
+          'text-sm font-black',
           isShipmentLocked ? 'text-muted-foreground/60' : 'text-foreground'
         )}
+        dir="rtl"
       >
-        {isShipmentLocked
-          ? '---'
-          : `${new Intl.NumberFormat('fa-IR').format(
-              Math.round(finalPayablePrice / 10)
-            )} تومان`}
+        {isShipmentLocked ? '---' : formatRialToToman(finalPayablePrice)}
       </span>
     </div>
   );
 
   return (
-    <div className="flex w-full select-none flex-col gap-6">
-      {/* مرحله‌بندی (دسکتاپ) */}
+    <div className="flex w-full select-none flex-col gap-6" dir="rtl">
+      {/* مرحله‌بندی */}
       <div className="hidden lg:flex mx-auto w-full max-w-2xl items-center justify-between px-2 pb-2 sm:px-4">
         <div className="flex shrink-0 items-center gap-1.5 text-muted-foreground sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
@@ -354,7 +398,7 @@ export function CheckoutContent() {
         </div>
       </div>
 
-      {/* بنر وضعیت */}
+      {/* بنر وضعیت استعلام */}
       {isShipmentLocked && (
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4">
           <Info className="h-5 w-5 shrink-0 text-warning" />
@@ -362,7 +406,7 @@ export function CheckoutContent() {
             <span className="text-sm font-bold text-foreground">
               {!activeAddress
                 ? 'برای مشاهده شیوه‌های ارسال، ابتدا آدرس خود را انتخاب کنید'
-                : 'در حال بروزرسانی هزینه‌های ارسال بر اساس آدرس شما...'}
+                : 'در حال استعلام و محاسبه هزینه‌های ارسال بر اساس آدرس شما...'}
             </span>
             <span className="mt-0.5 text-xs text-muted-foreground">
               {!activeAddress
@@ -409,7 +453,7 @@ export function CheckoutContent() {
                 onSelectAddress={() => setIsAddressModalOpen(true)}
               />
             ) : isLocationSyncing ? (
-              <ShipmentSkeleton count={basket.subBaskets.length || 2} />
+              <ShipmentSkeleton count={basket?.subBaskets?.length || 1} />
             ) : (
               <div className="flex flex-col gap-3">
                 {basket.subBaskets.map((sub: any, index: number) => (
@@ -429,11 +473,13 @@ export function CheckoutContent() {
 
         <CheckoutInvoice
           basket={basket}
+          productsPrice={productsFinalPrice}
           totalShipment={totalShipment}
           finalPayablePrice={finalPayablePrice}
           onSubmit={handlePayment}
           isLoading={isSubmitting || isShipmentLocked}
           isMethodSelected={
+            Boolean(basket?.subBaskets?.length) &&
             Object.keys(selectedMethods).length === basket.subBaskets.length
           }
         />
@@ -458,7 +504,6 @@ export function CheckoutContent() {
           )
         }
         hasBottomNav
-        
       />
 
       <AddressModal
@@ -475,7 +520,7 @@ export function CheckoutContent() {
         setIsNewAddressOpen={setIsNewAddressOpen}
       />
 
-            <AddressMapModal
+      <AddressMapModal
         isOpen={isMapModalOpen}
         onClose={() => setIsMapModalOpen(false)}
         onConfirmAddress={handleConfirmMapAddress}

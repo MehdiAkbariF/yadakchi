@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, ArrowLeft, Sparkles, Flame } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useGetBasket, useCheckoutBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { BasketItemRow } from './components/BasketItemRow';
 import { BasketInvoice } from './components/BasketInvoice';
@@ -13,6 +13,7 @@ import { Button } from '@/components/primitives/Button';
 import { Typography } from '@/components/primitives/Typography';
 import { showToast } from '@/core/utils/toast';
 import { toPersianDigits } from '@/core/utils/formatters';
+import { formatRialToToman, extractPureNumber } from '@/core/utils/currency';
 
 function LottiePlayer({
   path,
@@ -73,6 +74,7 @@ export function BasketSummary() {
   const checkoutBasket = useCheckoutBasket();
   const basket = basketData as any;
 
+  // تجمیع اقلام سبد خرید از تمامی زیرسبدها
   const allItems = React.useMemo(() => {
     if (!basket?.subBaskets || !Array.isArray(basket.subBaskets)) return [];
     return basket.subBaskets.flatMap((sub: any) => {
@@ -84,6 +86,35 @@ export function BasketSummary() {
       }));
     });
   }, [basket]);
+
+  // محاسبه مجموع قیمت اقلام به عنوان فال‌بک تضمینی
+  const fallbackItemsTotal = React.useMemo(() => {
+    return allItems.reduce((sum: number, item: any) => {
+      const rawPrice = item.finalTotalPrice ?? item.price?.finalTotalPriceRaw ?? 0;
+      return sum + extractPureNumber(rawPrice);
+    }, 0);
+  }, [allItems]);
+
+  // محاسبه قطعی و امن مبلغ نهایی قابل پرداخت
+  const finalPriceValue = React.useMemo(() => {
+    if (!basket) return 0;
+
+    const basketProductPrice =
+      basket.totalFinalPrice ??
+      basket.total?.finalPriceRaw ??
+      basket.total?.finalPrice ??
+      basket.finalPrice;
+
+    const numericProductPrice =
+      basketProductPrice !== undefined && basketProductPrice !== null
+        ? extractPureNumber(basketProductPrice)
+        : fallbackItemsTotal;
+
+    const rawShipment = basket.totalShipmentPrice ?? 0;
+    const numericShipmentPrice = extractPureNumber(rawShipment);
+
+    return numericProductPrice + numericShipmentPrice;
+  }, [basket, fallbackItemsTotal]);
 
   if (isLoading || (isFetching && !basket)) {
     return <PageLoading label="در حال بارگذاری سبد خرید..." />;
@@ -133,19 +164,12 @@ export function BasketSummary() {
     }
   };
 
-  const finalPriceValue =
-    (basket.totalFinalPrice ?? basket.total?.finalPrice ?? 0) +
-    (basket.totalShipmentPrice ?? 0);
-
-  const formattedFinalPrice =
-    typeof finalPriceValue === 'number'
-      ? `${new Intl.NumberFormat('fa-IR').format(finalPriceValue)} تومان`
-      : finalPriceValue;
+  const formattedFinalPrice = formatRialToToman(finalPriceValue);
 
   const leftPriceContent = (
     <div className="flex flex-col text-right">
       <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ قابل پرداخت:</span>
-      <span className="text-sm font-black text-foreground" dir="ltr">
+      <span className="text-sm font-black text-foreground" dir="rtl">
         {formattedFinalPrice}
       </span>
     </div>
@@ -171,17 +195,21 @@ export function BasketSummary() {
           </div>
         </div>
 
-        <BasketInvoice basket={basket} />
+        <BasketInvoice
+          basket={basket}
+          onContinue={handleContinue}
+          isLoading={checkoutBasket.isPending}
+        />
       </div>
 
       <MobileBottomAction
-  label="ادامه فرآیند خرید"
-  leftContent={leftPriceContent}
-  onClick={handleContinue}
-  isLoading={checkoutBasket.isPending}
-  icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
-  hasBottomNav
-/>
+        label="ادامه فرآیند خرید"
+        leftContent={leftPriceContent}
+        onClick={handleContinue}
+        isLoading={checkoutBasket.isPending}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+        hasBottomNav
+      />
     </div>
   );
 }

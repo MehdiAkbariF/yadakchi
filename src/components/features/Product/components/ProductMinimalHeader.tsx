@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createPortal } from 'react-dom';
 import {
   X,
   MoreVertical,
@@ -16,65 +15,41 @@ import {
 import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { toPersianDigits } from '@/core/utils/formatters';
 import { showToast } from '@/core/utils/toast';
+import { cn } from '@/design-system/utils/cn';
 
 export interface ProductMinimalHeaderProps {
   productTitle: string;
+  productCode?: number;
   isAttached?: boolean;
+  isCartBouncing?: boolean;
   onOpenReportModal: () => void;
   onOpenPriceChart: () => void;
 }
 
 export function ProductMinimalHeader({
   productTitle,
+  productCode,
   isAttached = false,
+  isCartBouncing = false,
   onOpenReportModal,
   onOpenPriceChart,
 }: ProductMinimalHeaderProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-  const [menuCoords, setMenuCoords] = React.useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const [mounted, setMounted] = React.useState(false);
-
-  const buttonRef = React.useRef<HTMLButtonElement>(null);
-  const menuRef = React.useRef<HTMLDivElement>(null);
+  const menuContainerRef = React.useRef<HTMLDivElement>(null);
 
   const { data: basketData } = useGetBasket();
   const totalBasketCount = basketData?.summary?.itemCount || 0;
 
   React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const toggleMenu = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setMenuCoords({
-        top: rect.bottom + 6,
-        left: rect.left,
-      });
-    }
-    setIsMenuOpen((prev) => !prev);
-  };
-
-  React.useEffect(() => {
     if (!isMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(e.target as Node)
-      ) {
+      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target as Node)) {
         setIsMenuOpen(false);
       }
     };
     window.addEventListener('click', handleClickOutside);
-    window.addEventListener('resize', () => setIsMenuOpen(false));
-    return () => {
-      window.removeEventListener('click', handleClickOutside);
-      window.removeEventListener('resize', () => setIsMenuOpen(false));
-    };
+    return () => window.removeEventListener('click', handleClickOutside);
   }, [isMenuOpen]);
 
   const handleShare = () => {
@@ -87,24 +62,35 @@ export function ProductMinimalHeader({
     }
   };
 
+  const handleGoToCompare = () => {
+    setIsMenuOpen(false);
+    if (productCode) {
+      router.push(`/compare?products=${productCode}`);
+    } else {
+      router.push('/compare');
+    }
+  };
+
   return (
     <header
-      className={`lg:hidden fixed top-0 inset-x-0 z-50 flex h-14 w-full items-center justify-between px-4 transition-all duration-300 select-none ${
+      className={`lg:hidden fixed top-0 inset-x-0 z-50 flex h-14 w-full items-center justify-between px-4 transition-all duration-300 select-none transform-gpu ${
         isAttached
           ? 'bg-card/95 border-b border-border shadow-xs backdrop-blur-xl'
           : 'bg-background/40 backdrop-blur-md border-b border-transparent'
       }`}
       dir="rtl"
     >
+      {/* دکمه بازگشت */}
       <button
         type="button"
         onClick={() => router.back()}
-        aria-label="بستن صفحه"
+        aria-label="بازگشت"
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-card/85 text-foreground backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-muted"
       >
         <X className="h-4 w-4" />
       </button>
 
+      {/* عنوان کالا در مرکز */}
       <div
         className={`flex-1 min-w-0 px-3 text-center transition-opacity duration-300 ${
           isAttached ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -115,29 +101,26 @@ export function ProductMinimalHeader({
         </span>
       </div>
 
+      {/* کلیدهای سمت چپ */}
       <div className="flex shrink-0 items-center gap-2" dir="ltr">
-        <button
-          ref={buttonRef}
-          type="button"
-          onClick={toggleMenu}
-          aria-label="گزینه‌های بیشتر"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/85 text-foreground backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-muted"
-        >
-          <MoreVertical className="h-4 w-4" />
-        </button>
+        <div ref={menuContainerRef} className="relative">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMenuOpen((prev) => !prev);
+            }}
+            aria-label="عملیات بیشتر"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/85 text-foreground backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-muted"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
 
-        {mounted &&
-          isMenuOpen &&
-          createPortal(
+          {/* دراپ‌داون اصلاح‌شده: رو به داخل صفحه باز می‌شود و هرگز بیرون نمی‌زند */}
+          {isMenuOpen && (
             <div
-              ref={menuRef}
               dir="rtl"
-              style={{
-                position: 'fixed',
-                top: `${menuCoords.top}px`,
-                left: `${menuCoords.left}px`,
-              }}
-              className="z-[99999] w-48 rounded-2xl border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95"
+              className="absolute left-0 top-11 z-[99999] w-48 max-w-[calc(100vw-32px)] rounded-2xl border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 origin-top-left"
             >
               <button
                 type="button"
@@ -153,14 +136,11 @@ export function ProductMinimalHeader({
 
               <button
                 type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  showToast.info('کالا به لیست مقایسه افزوده شد');
-                }}
+                onClick={handleGoToCompare}
                 className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors text-right"
               >
                 <Scale className="h-4 w-4 text-primary shrink-0" />
-                <span>مقایسه کالا</span>
+                <span>مقایسه این کالا</span>
               </button>
 
               <button
@@ -185,18 +165,29 @@ export function ProductMinimalHeader({
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>گزارش خطای کالا</span>
               </button>
-            </div>,
-            document.body
+            </div>
           )}
+        </div>
 
+        {/* سبد خرید با افکت ارتعاش و نئون */}
         <Link
           href="/basket"
-          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card/85 text-foreground backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-muted"
+          className={cn(
+            'relative flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 backdrop-blur-md shadow-xs active:scale-90',
+            isCartBouncing
+              ? 'border-primary bg-primary/20 text-primary scale-110 shadow-[0_0_15px_rgba(234,88,12,0.6)] animate-bounce'
+              : 'border-border/80 bg-card/85 text-foreground hover:bg-muted'
+          )}
           aria-label="سبد خرید"
         >
-          <ShoppingCart className="h-4 w-4" />
+          <ShoppingCart className={cn('h-4 w-4 transition-transform', isCartBouncing && 'scale-110')} />
           {totalBasketCount > 0 && (
-            <span className="absolute -top-1 -end-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground shadow-xs">
+            <span
+              className={cn(
+                'absolute -top-1 -end-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground shadow-xs transition-transform',
+                isCartBouncing && 'scale-125 ring-2 ring-card'
+              )}
+            >
               {toPersianDigits(totalBasketCount)}
             </span>
           )}
@@ -205,3 +196,5 @@ export function ProductMinimalHeader({
     </header>
   );
 }
+
+export default ProductMinimalHeader;

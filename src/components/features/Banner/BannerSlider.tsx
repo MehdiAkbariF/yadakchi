@@ -69,23 +69,23 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
       className={cn('relative w-full overflow-hidden rounded-xl shadow-xs', aspectRatio)}
     >
       <AnimatePresence mode="wait">
-        <motion.div
-          key={currentSlide.id}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 20 }}
-          transition={{ duration: 0.35 }}
-          className="absolute inset-0 h-full w-full"
-        >
-          <Image
-            src={getFullUrl(currentSlide.image)}
-            alt={currentSlide.imageAlt || currentSlide.title}
-            fill
-            priority={currentIndex === 0}
-            sizes="100vw"
-            className="rounded-xl object-cover"
-          />
-        </motion.div>
+       <motion.div
+  key={currentSlide.id}
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  exit={{ opacity: 0 }}
+  transition={{ duration: 0.4, ease: 'easeInOut' }}
+  className="absolute inset-0 h-full w-full transform-gpu"
+>
+  <Image
+    src={getFullUrl(currentSlide.image)}
+    alt={currentSlide.imageAlt || currentSlide.title}
+    fill
+    priority={currentIndex === 0}
+    sizes="(max-width: 768px) 100vw, 70vw"
+    className="rounded-xl object-cover"
+  />
+</motion.div>
       </AnimatePresence>
 
       {totalSlides > 1 ? (

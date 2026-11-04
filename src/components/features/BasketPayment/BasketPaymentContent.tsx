@@ -7,10 +7,8 @@ import {
   Clock,
   CheckCircle2,
   CreditCard,
-  AlertCircle,
   ShoppingBag,
   ExternalLink,
-  RotateCcw,
 } from 'lucide-react';
 import { useGetBasket, useInitiatePayment } from '@/domains/front/basket/hooks/basket.hooks';
 import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
@@ -23,6 +21,7 @@ import { ItemsSummaryCard } from './components/ItemsSummaryCard';
 import { PaymentInvoice } from './components/PaymentInvoice';
 import { TrackingDetailsModal } from './components/TrackingDetailsModal';
 import { showToast } from '@/core/utils/toast';
+import { formatRialToToman, extractPureNumber } from '@/core/utils/currency';
 
 interface PendingPaymentInfo {
   paymentUrl: string;
@@ -66,7 +65,71 @@ export default function BasketPaymentContent() {
     }
   }, [isAuthenticated, isAuthLoading, router, pathname]);
 
-  const basket = basketData as any;
+  const basket = (basketData as any)?.basket || (basketData as any)?.data || basketData;
+
+  // تمام اقلام موجود در تمام مرسوله‌ها
+  const allItems = React.useMemo(() => {
+    if (!basket?.subBaskets || !Array.isArray(basket.subBaskets)) return [];
+    return basket.subBaskets.flatMap((sub: any) => sub.subBasketItems || sub.items || []);
+  }, [basket]);
+
+  // محاسبه قیمت پایه محصولات
+  const productPriceRaw = React.useMemo(() => {
+    const rawPrice =
+      basket?.totalOriginalPrice ??
+      basket?.total?.totalPriceRaw ??
+      basket?.totalFinalPrice;
+
+    if (rawPrice && extractPureNumber(rawPrice) > 0) {
+      return extractPureNumber(rawPrice);
+    }
+
+    return allItems.reduce((sum: number, item: any) => {
+      return sum + extractPureNumber(item.originalPrice ?? item.finalTotalPrice ?? 0);
+    }, 0);
+  }, [basket, allItems]);
+
+  // تخفیف کل
+  const discountPriceRaw = extractPureNumber(
+    basket?.totalDiscountValue ?? basket?.total?.totalDiscountRaw ?? 0
+  );
+
+  // قیمت نهایی محصولات (بدون هزینه ارسال)
+  const finalProductsPriceRaw = React.useMemo(() => {
+    const rawFinal =
+      basket?.totalFinalPrice ??
+      basket?.total?.finalPriceRaw;
+
+    if (rawFinal && extractPureNumber(rawFinal) > 0) {
+      return extractPureNumber(rawFinal);
+    }
+
+    return Math.max(0, productPriceRaw - discountPriceRaw);
+  }, [basket, productPriceRaw, discountPriceRaw]);
+
+  // هزینه ارسال کل (با فال‌بک از روی شیوه‌های انتخابی هر مرسوله)
+  const shippingPriceRaw = React.useMemo(() => {
+    if (typeof basket?.totalShipmentPrice === 'number' && basket.totalShipmentPrice > 0) {
+      return basket.totalShipmentPrice;
+    }
+
+    if (!basket?.subBaskets || !Array.isArray(basket.subBaskets)) return 0;
+
+    return basket.subBaskets.reduce((sum: number, sub: any) => {
+      const method = sub.shipmentMethod;
+      const snappPrice = sub.snappBoxShipmentPrice ?? sub.snappShipmentPrice ?? 0;
+      const tipaxPrice = sub.tipaxShipmentPrice ?? 0;
+      const directPrice = sub.sellerShipmentPrice ?? sub.directShipmentPrice ?? 0;
+
+      if (method === 'SnappBox') return sum + extractPureNumber(snappPrice);
+      if (method === 'Tipax') return sum + extractPureNumber(tipaxPrice);
+      if (method === 'DirectShipment' || method === 'Seller') return sum + extractPureNumber(directPrice);
+      return sum;
+    }, 0);
+  }, [basket]);
+
+  // مبلغ کل قابل پرداخت
+  const grandTotalRaw = finalProductsPriceRaw + shippingPriceRaw;
 
   if (isAuthLoading || isBasketLoading) {
     return <PageLoading label="در حال آماده‌سازی امن درگاه پرداخت..." />;
@@ -74,19 +137,9 @@ export default function BasketPaymentContent() {
 
   if (!isAuthenticated) return null;
 
-  const productPriceRaw = basket?.total?.totalPriceRaw || basket?.totalOriginalPrice || 0;
-  const discountPriceRaw = basket?.total?.totalDiscountRaw || basket?.totalDiscountValue || 0;
-  const finalPriceRaw = basket?.total?.finalPriceRaw || basket?.totalFinalPrice || 0;
-  const shippingPriceRaw = typeof basket?.totalShipmentPrice === 'number' ? basket.totalShipmentPrice : 0;
-  const grandTotalRaw = finalPriceRaw + shippingPriceRaw;
+  const isBasketEmpty = !basket || (allItems.length === 0 && grandTotalRaw === 0);
 
-  const isBasketEmpty =
-    !basket ||
-    ((!basket.items || basket.items.length === 0) &&
-      (!basket.sellerBaskets || basket.sellerBaskets.length === 0) &&
-      finalPriceRaw === 0);
-
-  // ۱. حالت بازگشت از درگاه
+  // ۱. حالت بازگشت از درگاه پرداخت
   if (isBasketEmpty && pendingPayment) {
     return (
       <div
@@ -109,7 +162,7 @@ export default function BasketPaymentContent() {
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground">
             <span className="text-muted-foreground">مبلغ قابل پرداخت:</span>
             <span className="text-primary text-sm font-black">
-              {new Intl.NumberFormat('fa-IR').format(Math.round(pendingPayment.totalPrice / 10))} تومان
+              {formatRialToToman(pendingPayment.totalPrice)}
             </span>
           </div>
         ) : null}
@@ -178,7 +231,7 @@ export default function BasketPaymentContent() {
     );
   }
 
-  // ۳. فرایند عادی
+  // ۳. پرداخت سفارش
   const isLegalUser = !!user?.isOrganizationInfoConfirmed;
 
   const handlePayment = async () => {
@@ -212,18 +265,11 @@ export default function BasketPaymentContent() {
     }
   };
 
-  const handleCompleteLegalInfo = () => {
-    router.push('/profile/legal');
-  };
-
-  const formatPrice = (value: number) =>
-    new Intl.NumberFormat('fa-IR').format(Math.round(value / 10));
-
   const leftPriceContent = (
-    <div className="flex flex-col">
+    <div className="flex flex-col text-right">
       <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ نهایی سفارش:</span>
-      <span className="text-sm font-bold text-foreground">
-        {formatPrice(grandTotalRaw)} تومان
+      <span className="text-sm font-black text-foreground" dir="rtl">
+        {formatRialToToman(grandTotalRaw)}
       </span>
     </div>
   );
@@ -239,7 +285,7 @@ export default function BasketPaymentContent() {
           <span className="text-[10px] sm:text-xs">سبد خرید</span>
         </div>
 
-                <div className="mx-1.5 h-[2px] flex-1 bg-success/50 sm:mx-3" />
+        <div className="mx-1.5 h-[2px] flex-1 bg-success/50 sm:mx-3" />
 
         <div className="flex shrink-0 items-center gap-1.5 font-semibold text-success sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
@@ -274,27 +320,27 @@ export default function BasketPaymentContent() {
         </div>
 
         <PaymentInvoice
-          productPrice={productPriceRaw / 10}
-          discountPrice={discountPriceRaw / 10}
-          shippingPrice={shippingPriceRaw / 10}
-          finalPrice={grandTotalRaw / 10}
+          productPrice={productPriceRaw}
+          discountPrice={discountPriceRaw}
+          shippingPrice={shippingPriceRaw}
+          finalPrice={grandTotalRaw}
           isLegalInvoice={isLegalInvoice}
           isLegalUser={isLegalUser}
           isSubmitting={isSubmitting}
           onLegalInvoiceChange={(checked) => setIsLegalInvoice(checked)}
           onPayment={handlePayment}
-          onCompleteLegalInfo={handleCompleteLegalInfo}
+          onCompleteLegalInfo={() => router.push('/profile/legal')}
         />
       </div>
 
       <MobileBottomAction
-  label="پرداخت و تکمیل سفارش"
-  leftContent={leftPriceContent}
-  onClick={handlePayment}
-  isLoading={isSubmitting}
-  icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
-  hasBottomNav
-/>
+        label="پرداخت و تکمیل سفارش"
+        leftContent={leftPriceContent}
+        onClick={handlePayment}
+        isLoading={isSubmitting}
+        icon={<ArrowLeft aria-hidden="true" className="h-4 w-4" />}
+        hasBottomNav
+      />
 
       <TrackingDetailsModal
         isOpen={isTrackingModalOpen}

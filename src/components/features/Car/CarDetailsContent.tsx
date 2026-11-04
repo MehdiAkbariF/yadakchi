@@ -61,9 +61,10 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
   return (
     <div className="flex w-full flex-col gap-6" dir="rtl">
       
-      {/* هدر چسبان موبایل: پرکننده ۱۰۰٪ عرض (Edge-to-Edge) چسبیده به هدر در 56px */}
+ 
       <div
-        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden rounded-none"
+        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 
+        bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden rounded-none"
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-0 items-center gap-2.5">

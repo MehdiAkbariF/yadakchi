@@ -22,8 +22,8 @@ export function MobileHeader({ className, onSearch, isScrolled = false }: Mobile
   }, []);
 
   return (
-    <div className={cn('flex w-full flex-col transition-transform duration-normal will-change-transform', className)}>
-      {/* ردیف بالای موبایل: لوگو و اکشن‌ها کاملاً هماهنگ با پس‌زمینه سفید کارت */}
+    <div className={cn('flex w-full flex-col select-none', className)}>
+      {/* ردیف اول: لوگو و کلیدها */}
       <div className="relative z-20 flex h-10 w-full items-center justify-between">
         <Logo className="shrink-0" />
         <div className="flex shrink-0 items-center gap-2">
@@ -32,17 +32,16 @@ export function MobileHeader({ className, onSearch, isScrolled = false }: Mobile
         </div>
       </div>
 
-      {/* ردیف پایین: سرچ و انتخاب شهر */}
+      {/* ردیف سرچ و شهر با ترنزیشن فید و جمع‌شدن روان */}
       <div
         className={cn(
-          'w-full origin-top transform transition-all duration-slow ease-out',
-          'will-change-[transform,opacity,max-height]',
+          'w-full transition-all duration-300 ease-out transform-gpu overflow-hidden',
           isScrolled
-            ? 'pointer-events-none max-h-0 -translate-y-3 scale-y-90 overflow-hidden opacity-0'
-            : 'max-h-36 translate-y-0 scale-y-100 opacity-100'
+            ? 'h-0 opacity-0 pointer-events-none mt-0'
+            : 'h-24 opacity-100 pointer-events-auto mt-1.5'
         )}
       >
-        <div className="flex w-full flex-col pb-1 pt-2">
+        <div className="flex w-full flex-col pb-1 pt-1">
           {isMounted ? (
             <>
               <SearchBar
@@ -52,14 +51,14 @@ export function MobileHeader({ className, onSearch, isScrolled = false }: Mobile
                 isMobile
               />
 
-              <div className="mt-2.5 border-t border-border/60 pt-2">
+              <div className="mt-2 border-t border-border/60 pt-1.5">
                 <CitySelector variant="mobile" />
               </div>
             </>
           ) : (
             <>
               <div className="h-9 w-full animate-pulse rounded-md bg-secondary" />
-              <div className="mt-2.5 h-6 w-full animate-pulse rounded-md bg-secondary/70" />
+              <div className="mt-2 h-6 w-full animate-pulse rounded-md bg-secondary/70" />
             </>
           )}
         </div>

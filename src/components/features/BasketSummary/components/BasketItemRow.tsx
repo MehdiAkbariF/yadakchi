@@ -1,10 +1,11 @@
 ﻿'use client';
 
 import * as React from 'react';
-import { Store, ShieldCheck, ShieldAlert, Truck, Trash2, Plus, Minus, Loader2 } from 'lucide-react';
+import { Store, ShieldCheck, ShieldAlert, Trash2, Plus, Minus, Loader2 } from 'lucide-react';
 import { useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { formatRialToToman } from '@/core/utils/currency';
 
 export interface BasketItemRowProps {
   item: any;
@@ -40,18 +41,6 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
     hasDiscount && originalUnitPrice > 0
       ? Math.round(((originalUnitPrice - finalUnitPrice) / originalUnitPrice) * 100)
       : 0;
-
-  /**
-   * ✅ اصلاح: نمایش روش ارسال واقعی بر اساس `shipmentMethod`
-   * منطق قبلی `tipaxShipmentPrice > 0` همیشه true می‌شد و همیشه «تیپاکس» نمایش می‌داد.
-   */
-  const shipmentMethod = item.shipmentMethod; // از BasketSummary اضافه شده
-  const isTipaxShipping = shipmentMethod === 'Tipax';
-  const isSnappBoxShipping = shipmentMethod === 'SnappBox';
-  const isDirectShipping =
-    shipmentMethod === 'DirectShipment' ||
-    shipmentMethod === 'Seller' ||
-    (!shipmentMethod && !!shopProduct.isDirectShipping);
 
   const handleIncrease = async () => {
     if (activeLoading || !canIncrease) return;
@@ -92,8 +81,6 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
     }
   };
 
-  const formatPersianNumber = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
-
   return (
     <div className="relative flex select-none flex-col items-start justify-between gap-4 border-b border-border bg-card p-4 last:border-b-0 md:flex-row md:gap-6 md:p-5">
       <div className="flex shrink-0 flex-row items-center gap-3 md:flex-col">
@@ -120,7 +107,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
               {activeLoading ? (
                 <Loader2 aria-hidden="true" className="mx-auto h-3 w-3 animate-spin text-primary" />
               ) : (
-                formatPersianNumber(item.quantity)
+                toPersianDigits(item.quantity)
               )}
             </span>
             <button
@@ -134,7 +121,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             </button>
           </div>
           <span className="text-2xs text-muted-foreground">
-            حداکثر {formatPersianNumber(maxAllowedQuantity)} عدد
+            حداکثر {toPersianDigits(maxAllowedQuantity)} عدد
           </span>
         </div>
       </div>
@@ -166,20 +153,6 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
               </>
             )}
           </div>
-
-          {/* ✅ نمایش روش ارسال واقعی */}
-          {/* <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Truck aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
-            {isTipaxShipping ? (
-              <span>ارسال توسط تیپاکس</span>
-            ) : isDirectShipping ? (
-              <span>ارسال مستقیم توسط فروشنده</span>
-            ) : isSnappBoxShipping ? (
-              <span>ارسال فوری با یدکچی اکسپرس</span>
-            ) : (
-              <span>ارسال با یدکچی</span>
-            )}
-          </div> */}
         </div>
       </div>
 
@@ -198,7 +171,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
           {hasDiscount && discountPercentage > 0 ? (
             <div className="flex items-center gap-1.5">
               <span className="text-2xs text-muted-foreground line-through">
-                {formatPersianNumber(originalUnitPrice)} تومان
+                {formatRialToToman(originalUnitPrice)}
               </span>
               <span className="rounded-full bg-destructive px-1.5 py-0.5 text-2xs font-bold text-destructive-foreground">
                 {toPersianDigits(discountPercentage)}٪
@@ -207,7 +180,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
           ) : null}
           <div className="flex items-baseline gap-1">
             <span className="text-sm font-bold text-foreground md:text-base">
-              {formatPersianNumber(finalTotalPrice)} تومان
+              {formatRialToToman(finalTotalPrice)}
             </span>
           </div>
         </div>

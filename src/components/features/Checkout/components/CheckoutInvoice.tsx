@@ -3,9 +3,11 @@
 import { CreditCard, ChevronLeft, ShieldCheck, Truck, Headphones } from 'lucide-react';
 import { Card, CardTitle } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button';
+import { formatRialToToman, extractPureNumber } from '@/core/utils/currency';
 
 export interface CheckoutInvoiceProps {
   basket: any;
+  productsPrice?: number;
   totalShipment: number;
   finalPayablePrice: number;
   onSubmit: () => void;
@@ -15,23 +17,27 @@ export interface CheckoutInvoiceProps {
 
 export function CheckoutInvoice({
   basket,
+  productsPrice,
   totalShipment,
   finalPayablePrice,
   onSubmit,
   isLoading,
   isMethodSelected = true,
 }: CheckoutInvoiceProps) {
-  const formatNumber = (val: number) =>
-    new Intl.NumberFormat('fa-IR').format(Math.round((val || 0) / 10));
+  // محاسبه قطعی قیمت محصولات
+  const originalProductsPrice =
+    productsPrice ??
+    extractPureNumber(
+      basket?.totalOriginalPrice ??
+      basket?.totalFinalPrice ??
+      basket?.total?.finalPriceRaw ??
+      0
+    );
 
-  /**
-   * ✅ اصلاح: حذف `basket.totalPrice` (فیلد ناموجود در ریسپانس)
-   * استفاده فقط از `totalOriginalPrice` که در ریسپانس بک‌اند موجود است.
-   */
-  const totalOriginalPrice = basket.totalOriginalPrice ?? 0;
+  const discountValue = extractPureNumber(basket?.totalDiscountValue ?? basket?.total?.totalDiscountRaw ?? 0);
 
   return (
-    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]">
+    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]" dir="rtl">
       <CardTitle className="mb-4 flex items-center gap-2 border-b border-border/60 pb-3.5 font-bold text-foreground">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <CreditCard aria-hidden="true" className="h-4 w-4" />
@@ -43,14 +49,14 @@ export function CheckoutInvoice({
         <div className="flex items-center justify-between text-muted-foreground">
           <span>قیمت کل محصولات</span>
           <span className="font-semibold text-foreground">
-            {formatNumber(totalOriginalPrice)} تومان
+            {formatRialToToman(originalProductsPrice)}
           </span>
         </div>
 
-        {basket.totalDiscountValue > 0 ? (
+        {discountValue > 0 ? (
           <div className="flex items-center justify-between font-semibold text-destructive">
             <span>سود شما از خرید</span>
-            <span>- {formatNumber(basket.totalDiscountValue)} تومان</span>
+            <span>- {formatRialToToman(discountValue)}</span>
           </div>
         ) : null}
 
@@ -63,7 +69,7 @@ export function CheckoutInvoice({
             {isMethodSelected
               ? totalShipment === 0
                 ? 'رایگان'
-                : `${formatNumber(totalShipment)} تومان`
+                : formatRialToToman(totalShipment)
               : 'انتخاب نشده'}
           </span>
         </div>
@@ -72,10 +78,9 @@ export function CheckoutInvoice({
       <div className="mb-6 flex items-baseline justify-between">
         <span className="text-xs font-bold text-foreground">مبلغ نهایی قابل پرداخت:</span>
         <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold text-primary">
-            {formatNumber(finalPayablePrice)}
+          <span className="text-lg font-black text-primary">
+            {formatRialToToman(finalPayablePrice)}
           </span>
-          <span className="text-2xs font-semibold text-muted-foreground">تومان</span>
         </div>
       </div>
 

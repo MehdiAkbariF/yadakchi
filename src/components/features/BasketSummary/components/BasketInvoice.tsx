@@ -1,17 +1,19 @@
 'use client';
 
-import Link from 'next/link';
+import * as React from 'react';
 import { ShoppingCart, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Card, CardTitle } from '@/components/composites/Card';
 import { Button } from '@/components/primitives/Button';
+import { toPersianDigits } from '@/core/utils/formatters';
+import { formatRialToToman } from '@/core/utils/currency';
 
 export interface BasketInvoiceProps {
   basket: any;
+  onContinue?: () => void;
+  isLoading?: boolean;
 }
 
-export function BasketInvoice({ basket }: BasketInvoiceProps) {
-  const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val || 0);
-
+export function BasketInvoice({ basket, onContinue, isLoading = false }: BasketInvoiceProps) {
   const totalItemsCount =
     basket?.summary?.itemCount ??
     basket?.subBaskets?.reduce((sum: number, sub: any) => {
@@ -27,10 +29,6 @@ export function BasketInvoice({ basket }: BasketInvoiceProps) {
   const totalFinalPrice =
     basket?.totalFinalPrice ?? basket?.total?.finalPriceRaw ?? basket?.total?.finalPrice ?? 0;
 
-  /**
-   * ✅ اصلاح: اضافه کردن هزینه ارسال به مبلغ نهایی
-   * در ریسپانس بک‌اند، totalFinalPrice شامل totalShipmentPrice نیست.
-   */
   const totalShipmentPrice = basket?.totalShipmentPrice ?? 0;
   const grandTotal = totalFinalPrice + totalShipmentPrice;
 
@@ -43,23 +41,23 @@ export function BasketInvoice({ basket }: BasketInvoiceProps) {
 
       <div className="mb-4 space-y-4 border-b border-border pb-4">
         <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-          <span>قیمت محصولات ({formatNumber(totalItemsCount)} قطعه)</span>
-          <span>{formatNumber(totalOriginalPrice)} تومان</span>
+          <span>قیمت محصولات ({toPersianDigits(totalItemsCount)} قطعه)</span>
+          <span>{formatRialToToman(totalOriginalPrice)}</span>
         </div>
 
         {totalDiscountValue > 0 ? (
           <div className="flex items-center justify-between text-xs font-bold text-destructive">
             <span>تخفیف‌ها</span>
-            <span>- {formatNumber(totalDiscountValue)} تومان</span>
+            <span>- {formatRialToToman(totalDiscountValue)}</span>
           </div>
         ) : null}
 
-        {/* ✅ ردیف هزینه ارسال */}
+        {/* ردیف هزینه ارسال */}
         <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
           <span>هزینه ارسال</span>
           <span>
             {totalShipmentPrice > 0
-              ? `${formatNumber(totalShipmentPrice)} تومان`
+              ? formatRialToToman(totalShipmentPrice)
               : 'رایگان / انتخاب نشده'}
           </span>
         </div>
@@ -68,21 +66,21 @@ export function BasketInvoice({ basket }: BasketInvoiceProps) {
       <div className="mb-5 flex items-center justify-between">
         <span className="text-xs font-bold text-muted-foreground">جمع کل</span>
         <span className="text-lg font-bold text-foreground">
-          {formatNumber(grandTotal)} تومان
+          {formatRialToToman(grandTotal)}
         </span>
       </div>
 
-      <Link href="/checkout" className="block w-full">
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          className="flex h-11 items-center justify-center gap-1 text-xs font-bold shadow-xs"
-        >
-          <span>ادامه فرآیند خرید</span>
-          <ArrowLeft aria-hidden="true" className="me-1 h-4 w-4" />
-        </Button>
-      </Link>
+      <Button
+        variant="primary"
+        size="lg"
+        fullWidth
+        onClick={onContinue}
+        isLoading={isLoading}
+        className="flex h-11 items-center justify-center gap-1 text-xs font-bold shadow-xs"
+      >
+        <span>ادامه فرآیند خرید</span>
+        <ArrowLeft aria-hidden="true" className="me-1 h-4 w-4" />
+      </Button>
 
       <div className="mt-5 flex flex-col gap-3 border-t border-dashed border-border pt-4">
         <div className="flex items-start gap-2 text-2xs leading-relaxed text-muted-foreground sm:text-xs">
