@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Star, ThumbsUp, ThumbsDown, User, MessageSquare, ArrowLeft, Clock, Package } from 'lucide-react';
@@ -199,11 +199,11 @@ export function ProductCommentsSection({
 
   return (
     <div className="mt-6 flex w-full flex-col gap-6">
-      <h3 className="text-sm font-bold text-foreground md:text-base">امتیاز و نظرات کاربران</h3>
+      <h3 className="text-title-sm md:text-base">امتیاز و نظرات کاربران</h3>
 
       <div className="grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-10">
         {/* سایدبار میانگین امتیاز */}
-        <div className="flex w-full flex-col gap-5 rounded-2xl border border-border bg-card p-5 shadow-xs lg:sticky lg:top-[196px] lg:col-span-3">
+        <div className="flex w-full flex-col gap-5 rounded-2xl border border-border bg-card p-5 shadow-xs lg:sticky lg:top-[12.25rem] lg:col-span-3">
           {average ? (
             <div className="flex w-full flex-col items-center gap-5">
               <div className="flex flex-col items-center justify-center gap-2 text-center">
@@ -224,7 +224,7 @@ export function ProductCommentsSection({
                     />
                   ))}
                 </div>
-                <span className="mt-1 text-2xs font-bold text-muted-foreground">
+                <span className="mt-1 text-label-2xs">
                   از {toPersianDigits(average.allRatesCount)} امتیاز ثبت شده
                 </span>
               </div>
@@ -266,7 +266,7 @@ export function ProductCommentsSection({
         {/* لیست نظرات کاربران */}
         <div className="flex w-full flex-col gap-4 lg:col-span-7">
           <div className="flex items-center gap-4 overflow-x-auto border-b border-dashed border-border pb-3 py-1 scrollbar-none">
-            <span className="shrink-0 text-xs font-bold text-muted-foreground">نمایش بر اساس:</span>
+            <span className="shrink-0 text-label-muted">نمایش بر اساس:</span>
             {[
               { value: 'Newest', label: 'جدیدترین‌ها' },
               { value: 'Oldest', label: 'قدیمی‌ترین‌ها' },
@@ -311,7 +311,7 @@ export function ProductCommentsSection({
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-foreground">{authorName}</span>
+                          <span className="text-label">{authorName}</span>
                           {comment.isConfirmed === false && (
                             <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-2xs font-bold text-warning">
                               <Clock aria-hidden="true" className="h-3 w-3" />
@@ -339,7 +339,7 @@ export function ProductCommentsSection({
                         ))}
                       </div>
 
-                      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{commentContent}</p>
+                      <p className="mt-3 text-base leading-relaxed text-muted-foreground">{commentContent}</p>
 
                       {comment.userBoughtFrom && (
                         <span className="mt-3 inline-block rounded-full bg-success/10 px-3 py-1 text-2xs font-bold text-success">
@@ -397,7 +397,7 @@ export function ProductCommentsSection({
       {/* ================= مودال ثبت دیدگاه جدید با تصویر بزرگتر و نام کامل ================= */}
       <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
         <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
-          <ModalTitle className="text-sm font-bold text-foreground">ثبت دیدگاه جدید</ModalTitle>
+          <ModalTitle className="text-title-sm">ثبت دیدگاه جدید</ModalTitle>
         </ModalHeader>
 
         <ModalBody className="p-5 pt-4">
@@ -417,8 +417,8 @@ export function ProductCommentsSection({
               </div>
 
               <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-2xs font-bold text-muted-foreground">نام کالا:</span>
-                <h4 className="text-xs sm:text-sm font-bold text-foreground leading-snug line-clamp-2">
+                <span className="text-label-2xs">نام کالا:</span>
+                <h4 className="text-xs sm:text-title-sm leading-snug line-clamp-2">
                   {productTitle}
                 </h4>
               </div>
@@ -426,7 +426,7 @@ export function ProductCommentsSection({
 
             {/* امتیازدهی ستاره‌ای */}
             <div className="flex w-full flex-col items-center justify-center gap-2 border-b border-dashed border-border py-2 text-center">
-              <span className="text-xs font-bold text-muted-foreground">امتیاز شما به این کالا *</span>
+              <span className="text-label-muted">امتیاز شما به این کالا *</span>
               <div className="mt-1 flex items-center gap-2" dir="ltr">
                 {[1, 2, 3, 4, 5].map((starValue) => {
                   const isHighlighted = (hoverRate || rate) >= starValue;
@@ -467,7 +467,7 @@ export function ProductCommentsSection({
             <div className="mt-1 flex w-full items-start gap-3 border-t border-dashed border-border pt-4 select-none">
               <Checkbox checked={isIncognito} onChange={(checked) => setIsIncognito(checked)} />
               <div>
-                <span className="block text-xs font-bold text-foreground">ارسال به صورت ناشناس</span>
+                <span className="block text-label">ارسال به صورت ناشناس</span>
                 <span className="mt-1 block text-2xs text-muted-foreground">
                   در صورت فعال‌سازی، نام شما به سایر کاربران نمایش داده نخواهد شد.
                 </span>
@@ -506,9 +506,9 @@ export function ProductCommentsSection({
             {userName} عزیز، از ارسال نظر شما ممنونیم
           </h4>
 
-          <p className="text-xs font-bold text-shop">دیدگاه شما به سایر خریداران کمک شایانی خواهد کرد</p>
+          <p className="text-base font-medium text-shop">دیدگاه شما به سایر خریداران کمک شایانی خواهد کرد</p>
 
-          <p className="mx-auto max-w-xs text-xs leading-relaxed text-muted-foreground">
+          <p className="mx-auto max-w-xs text-base leading-relaxed text-muted-foreground">
             دیدگاه شما پس از بررسی توسط تیم پشتیبانی، در صفحه محصول منتشر خواهد شد.
           </p>
 

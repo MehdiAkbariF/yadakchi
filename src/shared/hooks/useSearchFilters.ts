@@ -1,3 +1,4 @@
+// src/shared/hooks/useSearchFilters.ts
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -13,14 +14,10 @@ export function useSearchFilters() {
   const getFilters = useCallback((): SearchProductsRequest => {
     return {
       searchTitle: searchParams.get('q') || undefined,
-      isProductInStock: searchParams.get('inStock') === 'true' ? true : undefined,
-      isSellerInUserCity: searchParams.get('userCity') === 'true' ? true : undefined,
-      partCategoryEnglishTitle: searchParams.get('category') || undefined,
-      partEnglishTitle: searchParams.get('part') || undefined,
-      carModel: searchParams.get('carModel') || undefined,
-      shopId: searchParams.get('shopId') || undefined,
-      cityId: searchParams.get('cityId') || undefined,
-      hasDiscount: searchParams.get('discount') === 'true' ? true : undefined,
+      onlyInStock: searchParams.get('inStock') === 'true' ? true : undefined,
+      onlyDiscounted: searchParams.get('discount') === 'true' ? true : undefined,
+      onlyDirectShipping: searchParams.get('directShipping') === 'true' ? true : undefined, // فیلتر جدید
+      onlyNominated: searchParams.get('nominated') === 'true' ? true : undefined,           // فیلتر جدید
       hasDiscountWithExpiration: searchParams.get('discountExp') === 'true' ? true : undefined,
       fromPrice: searchParams.get('fromPrice') ? Number(searchParams.get('fromPrice')) : undefined,
       toPrice: searchParams.get('toPrice') ? Number(searchParams.get('toPrice')) : undefined,
@@ -32,6 +29,7 @@ export function useSearchFilters() {
       partCategoryIds: searchParams.getAll('partCategoryIds').length ? searchParams.getAll('partCategoryIds') : undefined,
       partIds: searchParams.getAll('partIds').length ? searchParams.getAll('partIds') : undefined,
       types: searchParams.getAll('types').length ? (searchParams.getAll('types') as any) : undefined,
+      includeAggregations: true,
     };
   }, [searchParams]);
 
@@ -52,7 +50,25 @@ export function useSearchFilters() {
     }
 
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [router, pathname, searchParams]);
+
+  const removeFilter = useCallback((name: string, valueToRemove?: any) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (valueToRemove !== undefined && Array.isArray(searchParams.getAll(name))) {
+      const allValues = searchParams.getAll(name).filter((v) => v !== String(valueToRemove));
+      params.delete(name);
+      allValues.forEach((v) => params.append(name, v));
+    } else {
+      params.delete(name);
+    }
+
+    params.delete('page');
+
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
     });
   }, [router, pathname, searchParams]);
 
@@ -63,13 +79,14 @@ export function useSearchFilters() {
       params.set('q', query);
     }
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
     });
   }, [router, pathname, searchParams]);
 
   return {
     filters: getFilters(),
     setFilter,
+    removeFilter,
     clearFilters,
     isPending,
   };

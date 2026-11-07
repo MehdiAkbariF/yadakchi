@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Logo } from './components/Logo/Logo';
 import { SearchBar } from './components/SearchBar/SearchBar';
@@ -15,6 +15,7 @@ import { MobileHeader } from './components/MobileHeader/MobileHeader';
 import { MyCarButton } from './components/MyCarButton/MyCarButton';
 import { CitySelector } from './components/CitySelector/CitySelector';
 import { FlowHeader, FlowStep } from '@/components/features/CheckoutFlow/FlowHeader';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useAppStore } from '@/shared/store/useAppStore';
 import { FlowProgressBar } from '@/components/features/CheckoutFlow';
 
@@ -22,6 +23,7 @@ export interface HeaderProps {
   className?: string;
 }
 
+// مسیرهای flow: در موبایل هدر اختصاصی می‌گیرند
 const FLOW_PAGES_MAP: Record<string, FlowStep> = {
   '/basket': 'basket',
   '/checkout': 'checkout',
@@ -39,6 +41,7 @@ function getFlowStep(pathname: string | null): FlowStep | null {
 export function Header({ className }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  useAuth();
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
   const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
   const { scrollY } = useScroll();
@@ -50,7 +53,6 @@ export function Header({ className }: HeaderProps) {
     setIsHeaderMinimized(false);
   }, [pathname, setIsHeaderMinimized]);
 
-  // کنترل تغییر وضعیت هدر با آستانه (Threshold) دقیق‌تر برای جلوگیری از ری‌رندرهای اسپمی
   useMotionValueEvent(scrollY, 'change', (latest) => {
     const prev = scrollY.getPrevious() ?? 0;
     const diff = latest - prev;
@@ -60,9 +62,9 @@ export function Header({ className }: HeaderProps) {
       return;
     }
 
-    if (diff < -12) {
+    if (diff < -8) {
       if (isHeaderMinimized) setIsHeaderMinimized(false);
-    } else if (diff > 12 && latest > 90) {
+    } else if (diff > 10 && latest > 80) {
       if (!isHeaderMinimized) setIsHeaderMinimized(true);
     }
   });
@@ -77,27 +79,31 @@ export function Header({ className }: HeaderProps) {
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
       document.documentElement.style.setProperty(
         '--header-height',
-        isHeaderMinimized ? '68px' : '112px'
+        isHeaderMinimized ? '4rem' : '6.75rem'
       );
     }
   }, [isHeaderMinimized]);
 
   return (
     <header className={cn('z-40 w-full select-none', className)}>
-      {/* ============ هدر دسکتاپ با شتاب‌دهنده گرافیکی GPU ============ */}
-      <div className="pointer-events-none relative hidden h-28 w-full lg:block">
-        <div
-          className={cn(
-            'pointer-events-auto fixed inset-x-0 top-0 z-40 flex w-full flex-col border-b border-border/60 bg-card/95 shadow-xs backdrop-blur-md transition-all duration-300 ease-out transform-gpu'
-          )}
+      {/* ============ هدر دسکتاپ ============ */}
+      <div className="pointer-events-none relative hidden h-[6.75rem] w-full lg:block">
+        <motion.div
+          className="pointer-events-auto fixed inset-x-0 top-0 z-40 flex w-full flex-col border-b border-border/60 bg-card/95 shadow-xs backdrop-blur-md"
+          initial={false}
+          animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+          variants={{
+            expanded: { height: '6.75rem', transition: { duration: 0.2, ease: 'easeInOut' } },
+            collapsed: { height: '4rem', transition: { duration: 0.2, ease: 'easeInOut' } },
+          }}
         >
-          <div className="flex h-[68px] w-full items-center px-4 py-3 lg:px-8">
-            <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between gap-4">
+          <div className="flex h-16 w-full items-center px-4 lg:px-8">
+            <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4">
               <Logo className="shrink-0 pt-0" />
 
-              <div className="mx-2 max-w-3xl flex-1 xl:max-w-4xl">
+              <div className="mx-2 max-w-2xl flex-1 xl:max-w-3xl">
                 <SearchBar
-                  placeholder="جستجو در قطعات یدکچی..."
+                  placeholder="جستجوی هوشمند قطعات..."
                   onSearch={handleSearch}
                   isMobile={false}
                 />
@@ -114,16 +120,19 @@ export function Header({ className }: HeaderProps) {
             </div>
           </div>
 
-          {/* ردیف دوم نویگیشن با ترنزیشن نرم ارتفاع و فید بدون ری‌لیات سنگین */}
-          <div
+          <motion.div
+            initial={false}
+            animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+            variants={{
+              expanded: { height: '2.75rem', opacity: 1, transition: { duration: 0.2, ease: 'easeInOut' } },
+              collapsed: { height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeInOut' } },
+            }}
             className={cn(
-              'w-full border-t border-border/50 bg-secondary/30 transition-all duration-300 ease-out overflow-hidden transform-gpu',
-              isHeaderMinimized
-                ? 'h-0 opacity-0 pointer-events-none'
-                : 'h-11 opacity-100 pointer-events-auto'
+              'w-full border-t border-border/50 bg-secondary/30',
+              isHeaderMinimized ? 'pointer-events-none overflow-hidden' : 'overflow-visible'
             )}
           >
-            <div className="mx-auto max-w-screen-2xl px-4 lg:px-8">
+            <div className="mx-auto max-w-[1400px] px-4 lg:px-8">
               <div className="flex h-11 items-center justify-between">
                 <DesktopNavigation />
                 <div className="flex items-center gap-4">
@@ -132,22 +141,22 @@ export function Header({ className }: HeaderProps) {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* ============ هدر موبایل ============ */}
       {isFlowPage && flowStep ? (
         <>
-          <div className="h-[92px] w-full lg:hidden" />
+          <div className="h-[5.75rem] w-full lg:hidden" />
           <FlowHeader step={flowStep} />
           <FlowProgressBar currentStep={flowStep} />
         </>
       ) : (
         <>
-          <div className={cn('w-full lg:hidden transition-all duration-300', isHeaderMinimized ? 'h-14' : 'h-36')} />
-          <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden transform-gpu">
-            <div className="mx-auto max-w-screen-2xl">
+          <div className="h-36 w-full lg:hidden" />
+          <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
+            <div className="mx-auto max-w-[1400px]">
               <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
             </div>
           </div>

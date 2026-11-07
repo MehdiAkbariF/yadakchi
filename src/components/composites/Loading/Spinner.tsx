@@ -26,7 +26,7 @@ export function Spinner({
         sizeClasses[size]
       )} />
       <div className={cn(
-        "absolute rounded-full border-zinc-100 dark:border-zinc-800/80 pointer-events-none z-0",
+        "absolute rounded-full border-muted pointer-events-none z-0",
         sizeClasses[size]
       )} />
     </div>
@@ -34,7 +34,7 @@ export function Spinner({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-[100] bg-background/50 backdrop-blur-sm flex items-center justify-center">
+      <div className="fixed inset-0 z-loader bg-background/50 backdrop-blur-sm flex items-center justify-center">
         {spinnerElement}
       </div>
     );

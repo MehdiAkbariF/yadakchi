@@ -50,7 +50,7 @@ export function CancelOrderModal({ isOpen, onClose, orderId }: CancelOrderModalP
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-md">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="text-sm font-bold text-foreground">لغو سفارش</ModalTitle>
+        <ModalTitle className="text-title-sm">لغو سفارش</ModalTitle>
       </ModalHeader>
       <ModalBody className="flex flex-col gap-4 p-5">
         <Select

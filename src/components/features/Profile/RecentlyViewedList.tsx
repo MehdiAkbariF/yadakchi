@@ -27,7 +27,7 @@ export function RecentlyViewedList() {
           >
             <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
           </button>
-          <span className="text-sm font-bold text-foreground">کالاهای دیده شده اخیر</span>
+          <span className="text-title-sm">کالاهای دیده شده اخیر</span>
         </div>
       </div> */}
 
@@ -36,13 +36,13 @@ export function RecentlyViewedList() {
           <Eye aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
           <span className="text-xl font-bold text-foreground">کالاهای دیده شده اخیر</span>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           تاریخچه محصولاتی که اخیراً در فروشگاه یدکچی از آن‌ها بازدید کرده‌اید
         </p>
       </div>
 
       {products.length > 0 ? (
-        <div className="grid w-full grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <div className="grid w-full grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
           {products.map((product: any) => (
             <ProductSearchCard key={product.id} product={product} />
           ))}
@@ -50,7 +50,7 @@ export function RecentlyViewedList() {
       ) : (
         <div className="flex w-full flex-col items-center justify-center gap-3.5 rounded-lg border border-dashed border-border bg-card py-16 text-center">
           <Eye aria-hidden="true" className="h-12 w-12 text-muted-foreground/60" />
-          <span className="text-xs font-bold text-muted-foreground">
+          <span className="text-label-muted">
             هنوز تاریخچه بازدیدی برای حساب شما ثبت نشده است.
           </span>
           <Button

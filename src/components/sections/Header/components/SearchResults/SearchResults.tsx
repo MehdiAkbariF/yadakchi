@@ -1,4 +1,4 @@
-﻿// src/components/sections/Header/components/SearchResults/SearchResults.tsx
+// src/components/sections/Header/components/SearchResults/SearchResults.tsx
 
 'use client';
 
@@ -54,7 +54,7 @@ export function SearchResults({ isOpen, onClose, keywords, isMobile }: SearchRes
         {/* بخش ۱: نمایش دسته‌بندی‌های مرتبط (در بالا) */}
         {uniqueCategories.length > 0 && (
           <div className="space-y-2">
-            <span className="text-[11px] font-bold text-muted-foreground block">دسته‌بندی‌های مرتبط</span>
+            <span className="text-[0.6875rem] font-bold text-muted-foreground block">دسته‌بندی‌های مرتبط</span>
             <div className="flex flex-wrap gap-2">
               {uniqueCategories.map((cat) => (
                 <Link
@@ -74,7 +74,7 @@ export function SearchResults({ isOpen, onClose, keywords, isMobile }: SearchRes
         {/* بخش ۲: نمایش کلمات پیشنهادی کالا (مینیمال) */}
         {keywords.length > 0 ? (
           <div className="space-y-1">
-            <span className="text-[11px] font-bold text-muted-foreground block pb-1">کلمات پیشنهادی</span>
+            <span className="text-[0.6875rem] font-bold text-muted-foreground block pb-1">کلمات پیشنهادی</span>
             {keywords.map((kw, index) => (
               <button
                 key={index}

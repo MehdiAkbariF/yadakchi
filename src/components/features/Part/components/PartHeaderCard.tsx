@@ -22,8 +22,8 @@ export function PartHeaderCard({ partSlug, categorySlug, partName }: PartHeaderC
             <span className="text-xs font-bold text-primary">یدکچی</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-2xs font-bold text-muted-foreground md:text-xs">قطعه انتخاب شده:</span>
-            <h2 className="text-sm font-bold text-foreground md:text-base">{partName}</h2>
+            <span className="text-label-2xs md:text-xs">قطعه انتخاب شده:</span>
+            <h2 className="text-title-sm md:text-base">{partName}</h2>
           </div>
         </div>
 

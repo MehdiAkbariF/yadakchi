@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -120,7 +120,7 @@ export function BlogListContent() {
           دانشنامه جامع قطعات خودرو و مقالات یدکچی
         </h1>
 
-        <p className="max-w-3xl text-sm sm:text-base leading-relaxed text-muted-foreground">
+        <p className="max-w-3xl text-base sm:text-base leading-relaxed text-muted-foreground">
           بررسی‌های تخصصی، راهنمای خرید و تحلیل عیب‌یابی انواع قطعات اتومبیل بر اساس استانداردهای مهندسی روز — نگارش‌شده توسط متخصصین و کارشناسان ارشد خودرو.
         </p>
       </header>
@@ -167,14 +167,14 @@ export function BlogListContent() {
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
             className={cn(
-              'inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card px-3.5 py-1.5 text-xs font-bold text-foreground shadow-2xs transition-all hover:bg-muted',
+              'inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-card px-3.5 py-1.5 text-label shadow-2xs transition-all hover:bg-muted',
               activeFiltersCount > 0 && 'border-primary/50 text-primary'
             )}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span>فیلترها</span>
             {activeFiltersCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-black">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[0.625rem] text-primary-foreground font-black">
                 {activeFiltersCount}
               </span>
             )}
@@ -187,7 +187,7 @@ export function BlogListContent() {
         <section aria-label="مقاله ویژه سردبیر" className="w-full">
           <Link
             href={`/blog/${encodeURIComponent(featuredPost.englishTitle)}`}
-            className="group relative flex w-full flex-col overflow-hidden rounded-[24px] border border-border/80 bg-card shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/40 aspect-[4/3] sm:aspect-[16/7]"
+            className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary/40 aspect-[4/3] sm:aspect-[16/7]"
           >
             {/* تصویر پس‌زمینه با افکت مقیاس */}
             <div className="absolute inset-0">
@@ -205,8 +205,8 @@ export function BlogListContent() {
             {/* محتوای درون کارت ویژه */}
             <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8 md:p-10 text-white">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/60 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 px-3 py-1 text-2xs font-black tracking-wider text-amber-950 shadow-md">
-                  <Sparkles className="h-3 w-3 fill-amber-950 text-amber-950" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/60 bg-gradient-to-r from-warning via-warning to-warning px-3 py-1 text-2xs font-bold tracking-wider text-warning/95 shadow-md">
+                  <Sparkles className="h-3 w-3 fill-warning/95 text-warning/95" />
                   <span>برگزیده سردبیر · تحلیل عمیق</span>
                 </span>
                 <span className="rounded-full bg-black/40 px-3 py-0.5 text-3xs font-bold text-stone-300 backdrop-blur-md">
@@ -215,7 +215,7 @@ export function BlogListContent() {
               </div>
 
               <div className="max-w-3xl space-y-2.5">
-                <h2 className="text-xl sm:text-3xl md:text-4xl font-black leading-tight text-white transition-colors group-hover:text-blue-200">
+                <h2 className="text-xl sm:text-3xl md:text-4xl font-black leading-tight text-white transition-colors group-hover:text-info/60">
                   {featuredPost.title}
                 </h2>
                 
@@ -224,7 +224,7 @@ export function BlogListContent() {
                   <span className="font-bold text-white">{featuredPost.authorName}</span>
                   <span>·</span>
                   <span className="inline-flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5 text-amber-400" />
+                    <Clock className="h-3.5 w-3.5 text-warning/90" />
                     <span>{toPersianDigits(featuredPost.readTime)} دقیقه زمان مطالعه</span>
                   </span>
                   <span>·</span>
@@ -259,7 +259,7 @@ export function BlogListContent() {
             <h2 className="text-base font-bold text-foreground">
               {showFeaturedHero ? 'سایر مقالات تخصصی' : 'فهرست مقالات منتشر شده'}
             </h2>
-            <span className="rounded-full border border-border bg-muted px-3 py-1 text-2xs font-bold text-muted-foreground">
+            <span className="rounded-full border border-border bg-muted px-3 py-1 text-label-2xs">
               {toPersianDigits(totalCount)} مقاله
             </span>
           </div>
@@ -296,7 +296,7 @@ export function BlogListContent() {
               <h3 className="text-base font-bold text-foreground">
                 مقاله‌ای مطابق با فیلترهای انتخابی یافت نشد
               </h3>
-              <p className="max-w-sm text-xs text-muted-foreground leading-relaxed">
+              <p className="max-w-sm text-base text-muted-foreground leading-relaxed">
                 عبارت جستجو یا دسته‌بندی را تغییر داده یا فیلترها را ریست کنید تا آرشیو کامل فنی را مشاهده نمایید.
               </p>
               <button
@@ -315,7 +315,7 @@ export function BlogListContent() {
       {/* مودال فیلترها در موبایل و تبلت (کارت وسط‌چین با ظاهر منسجم) */}
       <Modal isOpen={isMobileFiltersOpen} onClose={() => setIsMobileFiltersOpen(false)} className="max-w-md w-full rounded-2xl">
         <ModalHeader onClose={() => setIsMobileFiltersOpen(false)}>
-          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <ModalTitle className="flex items-center gap-2 text-title-sm">
             <SlidersHorizontal aria-hidden="true" className="h-4 w-4 text-primary" />
             <span>فیلتر و دسته‌بندی مقالات</span>
           </ModalTitle>

@@ -64,10 +64,10 @@ export function PaymentCallbackContent({ payload }: PaymentCallbackContentProps)
         dir="rtl"
       >
         <Loader2 className="h-10 w-10 animate-spin text-shop" />
-        <p className="text-sm font-bold text-foreground">
+        <p className="text-title-sm">
           در حال بررسی وضعیت پرداخت...
         </p>
-        <p className="text-xs text-muted-foreground">لطفاً صفحه را نبندید</p>
+        <p className="text-base text-muted-foreground">لطفاً صفحه را نبندید</p>
       </div>
     );
   }

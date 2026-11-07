@@ -1,0 +1,1259 @@
+﻿================================================
+FILE: src\components\sections\Header\components\SearchBar\SearchBar.tsx
+================================================
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import {
+  Search,
+  X,
+  Clock,
+  Trash2,
+  ArrowRight,
+  Loader2,
+  Sparkles,
+  FolderKanban,
+  Car,
+  ChevronRight,
+  ChevronLeft,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+import { Input } from '@/components/primitives/Input/Input';
+import { Modal } from '@/components/composites/Modal/Modal';
+import {
+  useGetSearchHistory,
+  useGetSearchSuggestions,
+  useGetSearchKeywords,
+  useRemoveSearchHistory,
+} from '@/domains/front/product/hooks/product.hooks';
+import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
+import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
+import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
+import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+import { getFullUrl } from '@/core/utils/formatters';
+
+const DEFAULT_ROTATING_KEYWORDS = [
+  'قطعه موتور خودرو',
+  'قطعه گیربکس خودرو',
+  'روغن و مایعات خودرو',
+  'قطعه بدنه خودرو',
+  'دستگیره درب خودرو',
+  'چراغ جلو خودرو',
+  'فیلتر هوای خودرو',
+  'کمک فنر خودرو',
+];
+
+export interface SearchBarProps {
+  placeholder?: string;
+  className?: string;
+  onSearch?: (query: string) => void;
+  isMobile?: boolean;
+}
+
+export function SearchBar({
+  placeholder = 'جستجو در یدکچی...',
+  className = '',
+  onSearch,
+  isMobile = false,
+}: SearchBarProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [isPending, startTransition] = React.useTransition();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const isGlobalSearching = isPending || isSubmitting;
+
+  const urlQuery = searchParams.get('q') || '';
+  const urlCarId = searchParams.get('carIds') || searchParams.get('carId') || '';
+  const urlBrandId = searchParams.get('brandIds') || searchParams.get('brandId') || '';
+
+  const { data: cars = [] } = useGetCarsName();
+  const { data: brands = [] } = useGetBrandsName();
+  const { data: categories = [] } = useGetPartCategoriesFlat();
+
+  const activeCar = cars.find((c: any) => c.id === urlCarId)?.model || '';
+  const activeBrand = brands.find((b: any) => b.id === urlBrandId)?.name || '';
+
+  const isCategoryPage = pathname.startsWith('/part-category/');
+  const catSlug = isCategoryPage ? pathname.split('/').pop() : '';
+  const activeCategory = categories.find((c: any) => c.englishTitle === catSlug)?.name || '';
+
+  const resolvedText = urlQuery || activeCar || activeBrand || activeCategory || '';
+
+  const [query, setQuery] = React.useState(resolvedText);
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [isMobileModalOpen, setIsMobileModalOpen] = React.useState(false);
+  const [keywordIndex, setKeywordIndex] = React.useState(0);
+
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const desktopInputRef = React.useRef<HTMLInputElement>(null);
+  const mobileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // رفرنس اسلایدرها برای کنترل دکمه‌های چپ و راست
+  const historySliderRef = React.useRef<HTMLDivElement>(null);
+  const carsSliderRef = React.useRef<HTMLDivElement>(null);
+  const catsSliderRef = React.useRef<HTMLDivElement>(null);
+  const suggestionsSliderRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollSlider = (ref: React.RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
+    if (ref.current) {
+      const scrollAmount = direction === 'left' ? -220 : 220;
+      ref.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const debouncedQuery = useDebounce(query, 500);
+
+  const { data: history = [], refetch: refetchHistory } = useGetSearchHistory();
+  const { data: suggestions = [] } = useGetSearchSuggestions();
+  const { data: keywordsData, isLoading: isKeywordsLoading } = useGetSearchKeywords(debouncedQuery);
+  const { data: searchBanners = [] } = useGetBanners('SearchResult');
+  const removeHistoryMutation = useRemoveSearchHistory();
+
+  const searchBannerGroup = searchBanners.find((b: any) => b.name === 'Search-Suggest');
+  const desktopBanner = searchBannerGroup?.banners?.find((b: any) => b.size === 'Desktop') || searchBannerGroup?.banners?.[0];
+  const mobileBanner = searchBannerGroup?.banners?.find((b: any) => b.size === 'Mobile') || searchBannerGroup?.banners?.[0];
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setKeywordIndex((prev) => (prev + 1) % DEFAULT_ROTATING_KEYWORDS.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
+  React.useEffect(() => {
+    setQuery(resolvedText);
+    setIsSubmitting(false);
+  }, [resolvedText, pathname, searchParams]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isMobileModalOpen) return;
+    const handlePopState = () => setIsMobileModalOpen(false);
+    window.history.pushState({ modalOpen: 'search-modal' }, '');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isMobileModalOpen]);
+
+  const handleSearchSubmit = (searchWord: string) => {
+    const trimmed = searchWord.trim();
+    if (!trimmed || isGlobalSearching) return;
+    setIsSubmitting(true);
+    setQuery(trimmed);
+    if (onSearch) onSearch(trimmed);
+    setIsFocused(false);
+    setIsMobileModalOpen(false);
+    startTransition(() => {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    });
+  };
+
+  const handleRemoveHistoryItem = (word: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeHistoryMutation.mutate(word);
+  };
+
+  const handleClearAllHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeHistoryMutation.mutate(undefined);
+  };
+
+  const handleOpenMobileSearch = () => {
+    setIsMobileModalOpen(true);
+    refetchHistory();
+    setTimeout(() => mobileInputRef.current?.focus(), 150);
+  };
+
+  const handleCloseMobileSearch = () => {
+    setIsMobileModalOpen(false);
+    if (window.history.state?.modalOpen === 'search-modal') window.history.back();
+  };
+
+  const renderAnimatedPlaceholder = () => {
+    if (query) return null;
+    const currentWord = DEFAULT_ROTATING_KEYWORDS[keywordIndex];
+    return (
+      <div className="pointer-events-none flex h-5 select-none items-center overflow-hidden text-xs" dir="rtl">
+        <span className="ms-1 shrink-0 text-muted-foreground ml-1">جستجو در</span>
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={currentWord}
+            initial={{ y: 14, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -14, opacity: 0 }}
+            transition={{ duration: 0.32, ease: 'easeOut' }}
+            className="inline-block max-w-[13.125rem] truncate font-bold text-primary"
+          >
+            {currentWord}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  // محتوای ستون متنی همراه با اسلایدرهای افقی روان و دکمه‌های ناوبری گرد
+  const renderTextContent = (showKeywords: boolean) => {
+    const keywordsList = (keywordsData as any)?.keywords || [];
+    const carsList = (keywordsData as any)?.cars || [];
+
+    const uniqueCategories = Array.from(
+      new Map(
+        keywordsList
+          .filter((kw: any) => kw.partCategoryId && kw.partCategoryName)
+          .map((kw: any) => [kw.partCategoryId, kw])
+      ).values()
+    );
+
+    if (showKeywords) {
+      return (
+        <div className="flex flex-col space-y-5">
+          {carsList.length > 0 ? (
+            <div className="shrink-0 space-y-2">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                <span className="text-label-muted">خودروها</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(carsSliderRef, 'right')}
+                    aria-label="اسکرول راست"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(carsSliderRef, 'left')}
+                    aria-label="اسکرول چپ"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <div ref={carsSliderRef} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+                {carsList.map((car: any) => (
+                  <button
+                    key={car.id}
+                    type="button"
+                    disabled={isGlobalSearching}
+                    onClick={() => {
+                      setQuery(car.model);
+                      setIsFocused(false);
+                      setIsMobileModalOpen(false);
+                      setIsSubmitting(true);
+                      startTransition(() => {
+                        router.push(`/search?carId=${car.id}`);
+                      });
+                    }}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xl border border-accent bg-accent px-3.5 py-2 text-xs font-bold text-accent-foreground transition-colors hover:bg-accent/80 active:scale-95 whitespace-nowrap"
+                  >
+                    <Car aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                    <span>قطعات خودرو {car.model}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {uniqueCategories.length > 0 ? (
+            <div className="shrink-0 space-y-2">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                <span className="text-label-muted">دسته‌بندی‌های مرتبط</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(catsSliderRef, 'right')}
+                    aria-label="اسکرول راست"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(catsSliderRef, 'left')}
+                    aria-label="اسکرول چپ"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <div ref={catsSliderRef} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+                {uniqueCategories.map((cat: any) => (
+                  <button
+                    key={cat.partCategoryId}
+                    type="button"
+                    disabled={isGlobalSearching}
+                    onClick={() => {
+                      setQuery(cat.partCategoryName);
+                      setIsFocused(false);
+                      setIsMobileModalOpen(false);
+                      setIsSubmitting(true);
+                      startTransition(() => {
+                        router.push(`/part-category/${cat.partCategoryEnglishTitle}`);
+                      });
+                    }}
+                    className="flex shrink-0 items-center gap-1.5 rounded-xl border border-accent bg-accent px-3.5 py-2 text-xs font-bold text-accent-foreground transition-colors hover:bg-accent/80 active:scale-95 whitespace-nowrap"
+                  >
+                    <FolderKanban aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                    <span>قطعات دسته {cat.partCategoryName}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="shrink-0 space-y-2">
+            <span className="block border-b border-border/60 pb-2 text-label-muted">
+              جستجوهای پیشنهادی
+            </span>
+
+            {isKeywordsLoading ? (
+              <div className="flex items-center justify-center gap-2 py-6 text-muted-foreground">
+                <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-xs">در حال جستجوی پیشنهادات...</span>
+              </div>
+            ) : keywordsList.length > 0 ? (
+              <div className="space-y-1">
+                {keywordsList.map((kw: any, index: number) => (
+                  <button
+                    key={index}
+                    type="button"
+                    disabled={isGlobalSearching}
+                    onClick={() => handleSearchSubmit(kw.suggestion)}
+                    className="flex w-full items-center justify-between rounded-xl p-2.5 transition-colors hover:bg-muted/60 active:scale-[0.99]"
+                  >
+                    <div className="flex min-w-0 flex-col text-right">
+                      <span className="truncate text-label">{kw.suggestion}</span>
+                      {kw.partCategoryName && (
+                        <span className="mt-0.5 truncate text-3xs text-muted-foreground">
+                          در دسته {kw.partCategoryName}
+                        </span>
+                      )}
+                    </div>
+                    <Search aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="py-4 text-center text-xs text-muted-foreground">
+                پیشنهادی یافت نشد.
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col space-y-5">
+        {history.length > 0 ? (
+          <div className="shrink-0 space-y-2">
+            <div className="flex items-center justify-between border-b border-border/60 pb-2">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                <Clock aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
+                جستجوهای اخیر شما
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleClearAllHistory}
+                  className="flex items-center gap-1 text-2xs font-bold text-destructive hover:underline"
+                >
+                  <Trash2 aria-hidden="true" className="h-3 w-3" />
+                  پاک کردن
+                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(historySliderRef, 'right')}
+                    aria-label="اسکرول راست"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollSlider(historySliderRef, 'left')}
+                    aria-label="اسکرول چپ"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* اسلایدر افقی جستجوهای اخیر */}
+            <div ref={historySliderRef} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+              {history.map((item: any, idx: number) => {
+                const isObject = typeof item === 'object' && item !== null;
+                const wordValue = isObject ? (item as any).value : String(item);
+                const itemId = isObject ? (item as any).id : String(idx);
+                return (
+                  <div
+                    key={itemId}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleSearchSubmit(wordValue)}
+                    className={cn(
+                      'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-border/80 bg-muted/40 px-3.5 py-2 text-label transition-all hover:border-primary/50 hover:bg-card active:scale-95 shadow-2xs whitespace-nowrap'
+                    )}
+                  >
+                    <span>{wordValue}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => handleRemoveHistoryItem(wordValue, e)}
+                      aria-label={`حذف ${wordValue}`}
+                      className="flex items-center justify-center rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <X aria-hidden="true" className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {suggestions.length > 0 ? (
+          <div className="shrink-0 space-y-2">
+            <div className="flex items-center justify-between border-b border-border/60 pb-2">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-warning" />
+                جستجوهای پرطرفدار
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(suggestionsSliderRef, 'right')}
+                  aria-label="اسکرول راست"
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollSlider(suggestionsSliderRef, 'left')}
+                  aria-label="اسکرول چپ"
+                  className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div ref={suggestionsSliderRef} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
+              {suggestions.map((suggest: any, idx: number) => (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={isGlobalSearching}
+                  onClick={() => handleSearchSubmit(suggest)}
+                  className="shrink-0 rounded-xl border border-border/80 bg-card px-3.5 py-2 text-label transition-all hover:border-primary/50 hover:bg-accent/40 hover:text-primary active:scale-95 shadow-2xs whitespace-nowrap"
+                >
+                  {suggest}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
+  const renderSuggestionsPanel = () => {
+    const showKeywords = debouncedQuery.trim().length >= 2;
+
+    if (isMobile) {
+      return (
+        <div className="flex flex-1 flex-col overflow-y-auto bg-card p-4 gap-4" dir="rtl">
+          {mobileBanner && (
+            <Link
+              href={mobileBanner.targetURL || '#'}
+              onClick={handleCloseMobileSearch}
+              className="block w-full overflow-hidden rounded-2xl border border-border/80 shadow-2xs shrink-0"
+            >
+              <div className="relative w-full aspect-[3/1]">
+                <img
+                  src={getFullUrl(mobileBanner.image)}
+                  alt={mobileBanner.imageAlt || mobileBanner.title}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </Link>
+          )}
+
+          {renderTextContent(showKeywords)}
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex w-full flex-row items-stretch overflow-hidden bg-card divide-x divide-x-reverse divide-border/60" dir="rtl">
+        <div className="flex-1 min-w-0 overflow-y-auto p-5 max-h-[28.75rem] no-scrollbar">
+          {renderTextContent(showKeywords)}
+        </div>
+
+        {desktopBanner && (
+          <div className="w-[17.5rem] shrink-0 p-4 bg-muted/20 flex flex-col justify-center items-center">
+            <Link
+              href={desktopBanner.targetURL || '#'}
+              onClick={() => setIsFocused(false)}
+              className="block w-full overflow-hidden rounded-2xl border border-border/80 shadow-xs hover:opacity-95 transition-all active:scale-[0.98]"
+            >
+              <div className="relative w-full aspect-[4/5] flex items-center justify-center bg-card">
+                <img
+                  src={getFullUrl(desktopBanner.image)}
+                  alt={desktopBanner.imageAlt || desktopBanner.title}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </Link>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (isMobile) {
+    return (
+      <div className={cn('relative w-full', className)} dir="rtl">
+        <div
+          onClick={handleOpenMobileSearch}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleOpenMobileSearch();
+          }}
+          className="relative flex h-10 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-xl border border-border bg-card px-3 text-muted-foreground transition-colors hover:border-primary/50 shadow-2xs"
+        >
+          {isGlobalSearching ? (
+            <Loader2 aria-hidden="true" className="z-10 h-4 w-4 shrink-0 animate-spin text-primary" />
+          ) : (
+            <Search aria-hidden="true" className="z-10 h-4 w-4 shrink-0 text-muted-foreground" />
+          )}
+
+          {query ? (
+            <span className="ms-2.5 flex-1 truncate text-label">{query}</span>
+          ) : (
+            <div className="ms-2.5 flex flex-1 items-center">{renderAnimatedPlaceholder()}</div>
+          )}
+        </div>
+
+        <Modal
+          isOpen={isMobileModalOpen}
+          onClose={handleCloseMobileSearch}
+          className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0"
+          overlayClassName="bg-black/50 backdrop-blur-xs"
+        >
+          <div className="flex shrink-0 items-center gap-3 border-b border-border/80 bg-muted/30 px-4 py-3" dir="rtl">
+            <button
+              type="button"
+              onClick={handleCloseMobileSearch}
+              aria-label="بازگشت"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 text-foreground transition-transform active:scale-90"
+            >
+              <ArrowRight aria-hidden="true" className="h-5 w-5" />
+            </button>
+            <div className="relative flex-1">
+              <Input
+                ref={mobileInputRef}
+                type="text"
+                placeholder=""
+                value={query}
+                disabled={isGlobalSearching}
+                onChange={(e) => setQuery(e.target.value)}
+                leftIcon={
+                  isGlobalSearching ? (
+                    <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+                  ) : (
+                    <Search aria-hidden="true" className="h-4 w-4" />
+                  )
+                }
+                rightIcon={
+                  query && !isGlobalSearching ? (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      aria-label="پاک کردن"
+                      className="flex items-center justify-center rounded-full p-1 hover:bg-muted transition-colors"
+                    >
+                      <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
+                  ) : undefined
+                }
+                className="w-full border-border bg-card rounded-xl text-xs font-bold"
+                dir="rtl"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearchSubmit(query);
+                  }
+                }}
+              />
+              {!query ? (
+                <div className="pointer-events-none absolute start-10 top-1/2 -translate-y-1/2">
+                  {renderAnimatedPlaceholder()}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {renderSuggestionsPanel()}
+        </Modal>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className={cn('relative w-full', className)} dir="rtl">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSearchSubmit(query);
+        }}
+        className="relative"
+        role="search"
+      >
+        <Input
+          ref={desktopInputRef}
+          type="text"
+          value={query}
+          disabled={isGlobalSearching}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => {
+            setIsFocused(true);
+            refetchHistory();
+          }}
+          placeholder=""
+          aria-label="جستجو"
+          dir="rtl"
+          leftIcon={
+            isGlobalSearching ? (
+              <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Search aria-hidden="true" className="h-4 w-4" />
+            )
+          }
+          rightIcon={
+            query && !isGlobalSearching ? (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                aria-label="پاک کردن"
+                className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
+              >
+                <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            ) : undefined
+          }
+          className="w-full border-border bg-card rounded-xl text-xs font-bold transition-colors focus-visible:border-primary"
+        />
+
+        {!query ? (
+          <div
+            onClick={() => desktopInputRef.current?.focus()}
+            className="pointer-events-none absolute start-10 top-1/2 flex -translate-y-1/2 cursor-text items-center"
+          >
+            {renderAnimatedPlaceholder()}
+          </div>
+        ) : null}
+      </form>
+
+      {/* دراپ‌داون مدرن دو ستونه دسکتاپ */}
+      {isFocused ? (
+        <div className="absolute inset-x-0 top-full z-dropdown mt-2 flex max-h-[30rem] w-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xl backdrop-blur-md">
+          {renderSuggestionsPanel()}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\Header\components\DesktopNavigation\DesktopNavigation.tsx
+================================================
+'use client';
+
+import { useState } from 'react';
+import { NAV_ITEMS } from '../../constants/header.constants';
+import { NavItem } from '../NavItem/NavItem';
+import { CategoryDropdown } from '../CategoryDropdown/CategoryDropdown';
+
+export function DesktopNavigation() {
+  const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
+
+  return (
+    <nav className="flex items-center gap-1 lg:gap-3 xl:gap-5" dir="rtl">
+      {NAV_ITEMS.map((item) => {
+        const hasDropdown = item.hasDropdown;
+        const isOpen = openCategoryId === item.id;
+
+        return (
+          <div
+            key={item.id}
+            className="relative"
+            onMouseEnter={() => hasDropdown && setOpenCategoryId(item.id)}
+            onMouseLeave={() => hasDropdown && setOpenCategoryId(null)}
+          >
+            <NavItem
+              label={item.label}
+              icon={item.icon}
+              href={item.href}
+              hasDropdown={hasDropdown}
+              isOpen={isOpen}
+              className="whitespace-nowrap text-xs font-thin text-foreground/90 transition-colors hover:text-primary lg:text-sm"
+            />
+            {hasDropdown && <CategoryDropdown isOpen={isOpen} />}
+          </div>
+        );
+      })}
+    </nav>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\Header\components\MobileMenu\MobileMenu.tsx
+================================================
+// src/components/sections/Header/components/MobileMenu/MobileMenu.tsx
+
+'use client';
+
+import Link from 'next/link';
+import { Car, MapPin, ShoppingCart, LogOut } from 'lucide-react';
+import { Button } from '@/components/primitives/Button';
+import { Badge } from '@/components/primitives/Badge';
+import { NAV_ITEMS } from '../../constants/header.constants';
+import { useLogout } from '@/domains/auth/hooks/auth.hooks';
+import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
+
+interface MobileMenuProps {
+  isOpen: boolean;
+  isAuthenticated: boolean;
+  onClose?: () => void;
+}
+
+export function MobileMenu({ isOpen, isAuthenticated, onClose }: MobileMenuProps) {
+  const logoutMutation = useLogout();
+  const { data: basket } = useGetBasket();
+
+  if (!isOpen) return null;
+
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined);
+    onClose?.();
+  };
+
+  return (
+    <div className="md:hidden border-t p-4 space-y-4 bg-card">
+      {/* منوی اصلی (بدون جستجو) */}
+      <div className="space-y-2">
+        {NAV_ITEMS.map((item) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors"
+            onClick={onClose}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        ))}
+      </div>
+
+      {/* بخش‌های اضافی */}
+      <div className="border-t pt-3 space-y-2">
+        <Link href="/my-car" className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors" onClick={onClose}>
+          <Car className="h-4 w-4" />
+          ماشین من
+        </Link>
+        <button className="flex items-center gap-2 py-2 text-sm hover:text-primary transition-colors w-full">
+          <MapPin className="h-4 w-4" />
+          شهر خود را انتخاب کنید
+        </button>
+      </div>
+
+      {/* سبد خرید و احراز هویت */}
+      <div className="border-t pt-3 space-y-3">
+        {/* سبد خرید */}
+        <Link href="/basket" className="flex items-center justify-between py-2" onClick={onClose}>
+          <div className="flex items-center gap-2 text-sm">
+            <ShoppingCart className="h-4 w-4" />
+            سبد خرید
+          </div>
+          {basket && basket.summary.itemCount > 0 && (
+            <Badge variant="destructive" size="sm">
+              {basket.summary.itemCount}
+            </Badge>
+          )}
+        </Link>
+
+        {/* ورود/خروج */}
+        {isAuthenticated ? (
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 py-2 text-sm text-destructive hover:text-destructive/80 transition-colors w-full"
+          >
+            <LogOut className="h-4 w-4" />
+            خروج از حساب
+          </button>
+        ) : (
+          <Link href="/login" onClick={onClose}>
+            <Button variant="primary" size="sm" fullWidth>
+              ورود / ثبت‌نام
+            </Button>
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\Header\components\MobileMenuToggle\MobileMenuToggle.tsx
+================================================
+// src/components/sections/Header/components/MobileMenuToggle/MobileMenuToggle.tsx
+
+'use client';
+
+import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/primitives/Button';
+
+interface MobileMenuToggleProps {
+  isOpen: boolean;
+  onClick: () => void;
+}
+
+export function MobileMenuToggle({ isOpen, onClick }: MobileMenuToggleProps) {
+  return (
+    <Button variant="ghost" size="icon" className="md:hidden" onClick={onClick} aria-label={isOpen ? 'بستن منو' : 'باز کردن منو'}>
+      {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+    </Button>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\Header\components\CitySelector\CitySelector.tsx
+================================================
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { MapPin, ChevronDown, ChevronLeft, Search, X, MapPinOff, ArrowRight, Loader2 } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { Modal } from '@/components/composites/Modal/Modal';
+import { Input } from '@/components/primitives/Input/Input';
+import { useGetProvinceCitiesTree } from '@/domains/front/reference/city/hooks/city.hooks';
+import { useAppStore } from '@/shared/store/useAppStore';
+
+export interface CitySelectorProps {
+  variant?: 'default' | 'mobile';
+}
+
+export function CitySelector({ variant = 'default' }: CitySelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const storeCity = useAppStore((state) => state.selectedCity);
+  const setStoreCity = useAppStore((state) => state.setSelectedCity);
+
+  const { data: provincesTree = [], isLoading } = useGetProvinceCitiesTree();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeProvinceId, setActiveProvinceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const selectedCity = mounted ? storeCity : null;
+
+  const handleOpenModal = () => {
+    setIsOpen(true);
+    setSearchQuery('');
+    setActiveProvinceId(null);
+  };
+
+  const handleSelectCity = (id: string, name: string) => {
+    setStoreCity({ id, name });
+    setIsOpen(false);
+  };
+
+  const handleClearCity = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setStoreCity(null);
+  };
+
+  const filteredCities = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+
+    const results: Array<{ id: string; name: string; provinceName: string }> = [];
+    provincesTree.forEach((province) => {
+      province.cities.forEach((city) => {
+        if (city.name.includes(searchQuery.trim())) {
+          results.push({
+            id: city.id,
+            name: city.name,
+            provinceName: province.name,
+          });
+        }
+      });
+    });
+    return results;
+  }, [searchQuery, provincesTree]);
+
+  const activeProvince =
+    provincesTree.find((p) => p.id === (activeProvinceId || provincesTree[0]?.id)) || provincesTree[0];
+  const isMobileVariant = variant === 'mobile';
+
+  const renderModalContent = () => (
+    <Modal
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:overflow-hidden md:rounded-xl md:border md:border-border md:shadow-lg"
+      overlayClassName="bg-black/40 backdrop-blur-sm"
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="rounded-full p-1 text-foreground transition-colors hover:bg-muted md:hidden"
+            aria-label="بازگشت"
+            type="button"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+          <span className="flex items-center gap-1.5 text-title-sm">
+            <MapPin className="h-4 w-4 text-primary" />
+            انتخاب شهر یا استان
+          </span>
+        </div>
+        <button
+          onClick={() => setIsOpen(false)}
+          className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:flex"
+          aria-label="بستن"
+          type="button"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="shrink-0 border-b border-border bg-card p-4" dir="rtl">
+        <Input
+          type="text"
+          placeholder="جستجوی نام شهر..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
+          rightIcon={
+            searchQuery ? (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
+                type="button"
+                aria-label="پاک کردن متن"
+              >
+                <X className="h-3 w-3 text-muted-foreground" />
+              </button>
+            ) : undefined
+          }
+          className="w-full border-border bg-card"
+          dir="rtl"
+        />
+      </div>
+
+      <div className="flex min-h-0 flex-1 overflow-hidden" dir="rtl">
+        {isLoading ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <span className="text-xs text-muted-foreground">در حال دریافت لیست شهرها...</span>
+          </div>
+        ) : searchQuery.trim() ? (
+          <div className="flex-1 space-y-2 overflow-y-auto p-4">
+            {filteredCities.length > 0 ? (
+              filteredCities.map((city) => (
+                <button
+                  key={city.id}
+                  type="button"
+                  onClick={() => handleSelectCity(city.id, city.name)}
+                  className="flex w-full items-center justify-between rounded-md border border-border p-3 transition-colors hover:border-primary/50 hover:bg-accent/40"
+                >
+                  <span className="text-sm font-medium text-foreground">{city.name}</span>
+                  <span className="text-xs text-muted-foreground">استان {city.provinceName}</span>
+                </button>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                <MapPinOff className="h-8 w-8 text-muted-foreground/60" />
+                <span className="text-sm">شهری با این نام یافت نشد.</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-[8.75rem] shrink-0 overflow-y-auto border-l border-border bg-muted/20 py-1 md:w-[12.5rem]">
+              {provincesTree.map((province) => {
+                const isActive = activeProvince?.id === province.id;
+                return (
+                  <button
+                    key={province.id}
+                    type="button"
+                    onClick={() => setActiveProvinceId(province.id)}
+                    className={cn(
+                      'w-full truncate px-4 py-3 text-right text-xs font-medium transition-colors md:text-sm',
+                      isActive
+                        ? 'border-r-2 border-primary bg-card font-bold text-primary'
+                        : 'text-foreground hover:bg-muted/40'
+                    )}
+                  >
+                    {province.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-card p-4">
+              {activeProvince ? (
+                <div className="space-y-3">
+                  <span className="block border-b border-border pb-2 text-label-muted">
+                    شهرهای استان {activeProvince.name} ({activeProvince.cities.length} شهر)
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {activeProvince.cities.map((city) => {
+                      const isSelected = selectedCity?.id === city.id;
+                      return (
+                        <button
+                          key={city.id}
+                          type="button"
+                          onClick={() => handleSelectCity(city.id, city.name)}
+                          className={cn(
+                            'truncate rounded-md border px-3 py-2 text-right text-xs transition-colors md:text-sm',
+                            isSelected
+                              ? 'border-primary bg-primary/10 font-bold text-primary'
+                              : 'border-border text-foreground hover:border-primary/40 hover:bg-muted/40'
+                          )}
+                        >
+                          {city.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-sm text-muted-foreground">
+                  استان مورد نظر را انتخاب کنید.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+
+  if (isMobileVariant) {
+    return (
+      <>
+        <div
+          onClick={handleOpenModal}
+          dir="rtl"
+          className="flex w-full cursor-pointer items-center justify-between px-1 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 shrink-0 text-primary" />
+            <span className="text-title-sm">
+              {selectedCity ? `موقعیت شما: ${selectedCity.name}` : 'انتخاب شهر (تعیین موقعیت)'}
+            </span>
+          </div>
+
+          <div
+            className="flex items-center gap-2"
+            onClick={(e) => selectedCity && e.stopPropagation()}
+          >
+            {selectedCity ? (
+              <button
+                type="button"
+                onClick={handleClearCity}
+                className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+                aria-label="حذف موقعیت"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+            <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+        </div>
+
+        {renderModalContent()}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        dir="rtl"
+        className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-border hover:bg-muted/60 shadow-xs xl:text-sm"
+        onClick={handleOpenModal}
+        aria-label="انتخاب شهر"
+      >
+        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary xl:h-4 xl:w-4" />
+        <span className="font-medium text-foreground">
+          {selectedCity ? selectedCity.name : 'انتخاب شهر'}
+        </span>
+        {selectedCity ? (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={handleClearCity}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleClearCity(e as any);
+            }}
+            className="rounded p-0.5 text-muted-foreground hover:text-destructive"
+          >
+            <X className="h-3 w-3" />
+          </span>
+        ) : (
+          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+        )}
+      </button>
+
+      {renderModalContent()}
+    </>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\Header\components\MyCarButton\MyCarButton.tsx
+================================================
+// src/components/sections/Header/components/MyCarButton/MyCarButton.tsx
+
+import Link from 'next/link';
+import { Car } from 'lucide-react';
+
+export function MyCarButton() {
+  return (
+    <Link href="/my-car" className="flex items-center gap-1 text-xs xl:text-sm hover:text-primary transition-colors whitespace-nowrap">
+      <Car className="h-3 w-3 xl:h-4 xl:w-4" />
+      ماشین من
+    </Link>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\Header\components\SellerButton\SellerButton.tsx
+================================================
+// src/components/sections/Header/components/SellerButton/SellerButton.tsx
+'use client';
+
+import Link from 'next/link';
+import { Store } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+
+interface SellerButtonProps {
+  className?: string;
+  size?: 'sm' | 'md';
+}
+
+export function SellerButton({ className, size = 'md' }: SellerButtonProps) {
+  return (
+    <Link
+      href="/seller/register"
+      className={cn(
+        "relative inline-flex items-center justify-center select-none overflow-hidden rounded-md font-bold text-primary-foreground transition-all active:scale-95 shadow-sm",
+        "bg-primary hover:bg-primary", // دقیقاً رنگ و بدون تغییر در هاور
+        size === 'sm' ? "h-9 px-3 text-xs gap-1.5" : "h-10 px-4 text-xs sm:text-sm gap-2",
+        className
+      )}
+    >
+      {/* اشعه شاینینگ ظریف و روان */}
+      <motion.span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-l from-transparent via-white/25 to-transparent -skew-x-20"
+        initial={{ x: '200%' }}
+        animate={{ x: '-200%' }}
+        transition={{
+          repeat: Infinity,
+          repeatDelay: 3.5,
+          duration: 1.2,
+          ease: "easeInOut",
+        }}
+      />
+
+      {/* آیکون مرتبط فروشگاه مشابه تصویر */}
+      <Store className={cn("shrink-0 text-primary-foreground", size === 'sm' ? "h-4 w-4" : "h-4 w-4")} />
+
+      {/* متن دکمه */}
+      <span className="leading-none pt-0.5 whitespace-nowrap">
+        فروشنده شو
+      </span>
+    </Link>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\Header\components\Logo\Logo.tsx
+================================================
+import Link from 'next/link';
+import Image from 'next/image';
+import { cn } from '@/design-system/utils/cn';
+
+interface LogoProps {
+  hideTitle?: boolean;
+  className?: string;
+}
+
+export function Logo({ hideTitle = false, className }: LogoProps) {
+  return (
+    <Link href="/" className={cn("flex flex-col items-center shrink-0", className)}>
+      <div className="relative w-20 h-10 md:w-24 md:h-12 leading-none">
+        <Image
+          src="/Logo.svg"
+          alt="Yadakchi Logo"
+          width={96}
+          height={48}
+          className="object-contain block"
+          priority
+        />
+      </div>
+      
+      <span className={cn(
+        "text-[0.625rem] sm:text-[0.6875rem] font-bold text-muted-foreground text-center block",
+        "leading-none",
+        "mt-0 pt-0",
+        hideTitle ? "hidden" : ""
+      )}>
+        انتخاب هوشمند قطعات خودرو
+      </span>
+    </Link>
+  );
+}
+
+
+

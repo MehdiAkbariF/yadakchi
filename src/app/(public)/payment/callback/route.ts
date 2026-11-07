@@ -2,30 +2,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * 🔹 استخراج دامنه و پروتکل واقعی سایت حتی اگر پشت Nginx/داکر باشد
- */
-function getBaseUrl(req: NextRequest): string {
-  // ۱. اولویت اول: خواندن از متغیر محیطی دامنه (در صورت تعریف)
+function getSafeBaseUrl(req: NextRequest): string {
+  // ۱. اولویت قطعی و امن: آدرس سایت تعریف شده در متغیر محیطی
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
   }
 
-  // ۲. اولویت دوم: استخراج از هدرهای Reverse Proxy (Nginx / Cloudflare)
-  const forwardedHost = req.headers.get('x-forwarded-host');
-  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`;
+  // ۲. استخراج دامنه امن از رکوئست
+  const origin = req.nextUrl.origin;
+  if (origin && !origin.includes('localhost')) {
+    return origin;
   }
 
-  // ۳. اولویت سوم: هدر Host استاندارد مرورگر
-  const host = req.headers.get('host');
-  if (host && !host.includes('localhost')) {
-    return `https://${host}`;
-  }
-
-  // ۴. در صورت اجرای محلی
-  return req.nextUrl.origin;
+  return 'https://yadakchi.com';
 }
 
 export async function POST(req: NextRequest) {
@@ -34,7 +23,7 @@ export async function POST(req: NextRequest) {
     const params = new URLSearchParams(text);
     const queryString = params.toString();
 
-    const baseUrl = getBaseUrl(req);
+    const baseUrl = getSafeBaseUrl(req);
     const redirectUrl = new URL(
       `/payment/callback/result${queryString ? `?${queryString}` : ''}`,
       baseUrl
@@ -42,9 +31,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.redirect(redirectUrl, { status: 303 });
   } catch (err) {
-    console.error('[PaymentCallback] Failed to parse POST body:', err);
+    console.error('[PaymentCallback] Security Alert - Failed to parse POST body:', err);
 
-    const baseUrl = getBaseUrl(req);
+    const baseUrl = getSafeBaseUrl(req);
     return NextResponse.redirect(
       new URL('/payment/callback/result?Status=failed', baseUrl),
       { status: 303 }
@@ -54,7 +43,7 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   const queryString = req.nextUrl.searchParams.toString();
-  const baseUrl = getBaseUrl(req);
+  const baseUrl = getSafeBaseUrl(req);
 
   const redirectUrl = new URL(
     `/payment/callback/result${queryString ? `?${queryString}` : ''}`,

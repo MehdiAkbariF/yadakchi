@@ -62,11 +62,11 @@ export function WalletDashboard() {
   const getWithdrawStatusMeta = (status: string, statusLabel: string) => {
     switch (status) {
       case 'Paid':
-        return { label: statusLabel || 'تسویه شده', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+        return { label: statusLabel || 'تسویه شده', color: 'text-success bg-success/10 border-success/20' };
       case 'Pending':
-        return { label: statusLabel || 'در حال بررسی', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+        return { label: statusLabel || 'در حال بررسی', color: 'text-warning bg-warning/10 border-warning/20' };
       case 'Cancelled':
-        return { label: statusLabel || 'لغو شده', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
+        return { label: statusLabel || 'لغو شده', color: 'text-destructive bg-destructive/10 border-destructive/20' };
       default:
         return { label: statusLabel || status, color: 'text-muted-foreground bg-muted border-border' };
     }
@@ -100,12 +100,12 @@ export function WalletDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* شبیه‌ساز چیپ طلایی کارت اعتباری */}
-              <div className="flex h-8 w-11 items-center justify-center rounded-lg border border-amber-400/30 bg-gradient-to-br from-amber-200/20 via-amber-400/30 to-amber-600/20 shadow-inner">
-                <div className="h-4 w-7 rounded-xs border border-amber-300/40 opacity-75" />
+              <div className="flex h-8 w-11 items-center justify-center rounded-lg border border-warning/30 bg-gradient-to-br from-amber-200/20 via-warning/30 to-warning/20 shadow-inner">
+                <div className="h-4 w-7 rounded-xs border border-warning/40 opacity-75" />
               </div>
 
               <Wifi className="h-5 w-5 text-white/50 rotate-90" />
-              <span className="text-xs font-black tracking-widest text-white/80">کیف پول</span>
+              <span className="text-xs font-bold tracking-widest text-white/80">کیف پول</span>
             </div>
 
             <button
@@ -132,7 +132,7 @@ export function WalletDashboard() {
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-4">
             <div className="flex flex-col">
               <span className="text-3xs text-white/60">موجودی قابل برداشت:</span>
-              <span className="text-sm font-bold text-emerald-400 mt-0.5">
+              <span className="text-sm font-bold text-success/80 mt-0.5">
                 {wallet?.withdrawableBalance || '۰ تومان'}
               </span>
             </div>
@@ -141,7 +141,7 @@ export function WalletDashboard() {
               variant="primary"
               size="sm"
               onClick={() => setIsWithdrawModalOpen(true)}
-              className="h-10 gap-2 rounded-xl px-5 text-xs font-black shadow-lg shadow-primary/30 transition-transform active:scale-95"
+              className="h-10 gap-2 rounded-xl px-5 text-xs font-bold shadow-lg shadow-primary/30 transition-transform active:scale-95"
             >
               <CreditCard className="h-4 w-4" />
               <span>ثبت درخواست برداشت وجه</span>
@@ -210,7 +210,7 @@ export function WalletDashboard() {
                       <div className="flex items-center justify-between border-b border-border/50 pb-3">
                         <div className="flex flex-col">
                           <span className="text-3xs text-muted-foreground">مبلغ درخواستی تسویه:</span>
-                          <span className="text-base font-black text-foreground mt-0.5">{w.amount}</span>
+                          <span className="text-base font-bold text-foreground mt-0.5">{w.amount}</span>
                         </div>
                         <span className={cn('rounded-lg border px-2.5 py-1 text-2xs font-bold', meta.color)}>
                           {meta.label}
@@ -247,10 +247,10 @@ export function WalletDashboard() {
               <div className="mx-auto flex h-48 w-48 max-w-full items-center justify-center -mb-2">
                 <LottiePlayer path="/anumations/money-with-wings.json" className="h-full w-full" loop={true} />
               </div>
-              <p className="text-sm font-bold text-foreground mt-5">
+              <p className="text-title-sm mt-5">
                 هیچ درخواست برداشتی در این دسته یافت نشد.
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-base text-muted-foreground">
                 شما تاکنون درخواست تسویه حسابی با این وضعیت ثبت نکرده‌اید.
               </p>
               {/* <Button
@@ -285,19 +285,19 @@ export function WalletDashboard() {
                       <div className="flex items-center gap-2.5">
                         <div className={cn(
                           'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-                          t.isSuccess ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+                          t.isSuccess ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
                         )}>
                           {t.isSuccess ? <ArrowDownLeft className="h-4.5 w-4.5" /> : <ArrowUpRight className="h-4.5 w-4.5" />}
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-xs font-black text-foreground">{t.typeLabel}</span>
+                          <span className="text-xs font-bold text-foreground">{t.typeLabel}</span>
                           <span className="text-3xs text-muted-foreground">{t.createDateFormatted}</span>
                         </div>
                       </div>
 
                       <span className={cn(
                         'rounded-lg px-2.5 py-1 text-2xs font-bold',
-                        t.isSuccess ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/10 text-rose-500'
+                        t.isSuccess ? 'bg-success/10 text-success/90 dark:text-success/80' : 'bg-destructive/10 text-destructive'
                       )}>
                         {t.isSuccess ? 'موفق' : 'ناموفق'}
                       </span>
@@ -306,7 +306,7 @@ export function WalletDashboard() {
                     <div className="mt-3 flex flex-col gap-2 text-xs">
                       <div className="flex items-center justify-between text-muted-foreground">
                         <span>مبلغ تراکنش:</span>
-                        <span className="font-black text-foreground text-sm">{t.amount}</span>
+                        <span className="font-bold text-foreground text-sm">{t.amount}</span>
                       </div>
                       {t.traceNo && (
                         <div className="flex items-center justify-between text-muted-foreground border-t border-dashed border-border/50 pt-2">
@@ -324,10 +324,10 @@ export function WalletDashboard() {
               <div className="mx-auto flex h-48 w-48 max-w-full items-center justify-center -mb-2">
                 <LottiePlayer path="/anumations/money-with-wings.json" className="h-full w-full" loop={true} />
               </div>
-              <p className="text-sm font-bold text-foreground mt-5">
+              <p className="text-title-sm mt-5">
                 هیچ تراکنشی در حساب شما ثبت نشده است.
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-base text-muted-foreground">
                 گردش حساب و تراکنش‌های مالی شما در این بخش نمایش داده خواهند شد.
               </p>
             </div>

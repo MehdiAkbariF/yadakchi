@@ -71,28 +71,28 @@ export function FailedReceipt({ amount, traceNo }: FailedReceiptProps) {
       <div className="my-auto flex flex-col items-center justify-center gap-y-1 text-center">
         <div
           ref={containerRef}
-          className="mx-auto h-[110px] w-[110px] -mb-2"
+          className="mx-auto h-[6.875rem] w-[6.875rem] -mb-2"
           aria-label="انیمیشن پرداخت ناموفق"
         />
 
         <p className="text-base font-extrabold text-destructive">پرداخت ناموفق</p>
 
         <div className="mt-2 flex items-center justify-center gap-x-2">
-          <p className="text-center text-sm font-extrabold text-foreground">مبلغ:</p>
-          <p className="text-sm text-foreground">
+          <p className="text-center text-base font-extrabold text-foreground">مبلغ:</p>
+          <p className="text-base text-foreground">
             {toPersianDigits(amount)}{' '}
             <span className="text-xs text-muted-foreground">ریال</span>
           </p>
         </div>
 
         {traceNo && traceNo !== '-' && (
-          <div className="flex items-center justify-center gap-x-2 text-[15px]">
-            <p className="text-center text-sm text-muted-foreground">شماره پیگیری:</p>
-            <p className="text-sm font-bold text-foreground">{traceNo}</p>
+          <div className="flex items-center justify-center gap-x-2 text-[0.9375rem]">
+            <p className="text-center text-base text-muted-foreground">شماره پیگیری:</p>
+            <p className="text-title-sm">{traceNo}</p>
           </div>
         )}
 
-        <p className="max-w-md px-4 text-xs font-bold leading-relaxed text-muted-foreground md:px-8">
+        <p className="max-w-md px-4 text-base font-medium leading-relaxed text-muted-foreground md:px-8">
           در صورت کسر شدن مبلغ، وجه مورد نظر حداکثر تا ۷۲ ساعت به حساب شما بازگشت داده خواهد شد.
         </p>
 

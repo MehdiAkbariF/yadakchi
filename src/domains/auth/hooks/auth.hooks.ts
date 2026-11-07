@@ -1,3 +1,5 @@
+// src/domains/auth/hooks/auth.hooks.ts
+
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
@@ -31,12 +33,26 @@ export function useLogout() {
   return useTypedMutation<void, void>(
     () => authService.logout(),
     {
-      onSuccess: () => {
+      onSettled: () => {
+        // ۱. پاکسازی کامل تمام کش‌های ری‌اکت کوئری
         queryClient.setQueryData(queryKeys.auth.user, null);
         queryClient.removeQueries({
           queryKey: queryKeys.auth.user,
         });
         queryClient.clear();
+
+        // ۲. ریدایرکت سخت کلاینت (تخلیه Router Cache نکس و اجرای مجدد لایوت سرور)
+        if (typeof window !== 'undefined') {
+          const pathname = window.location.pathname;
+          const isProtected = pathname.startsWith('/profile') || pathname.startsWith('/checkout');
+
+          if (isProtected) {
+            window.location.href = `/login?redirect=${encodeURIComponent(pathname)}`;
+          } else {
+            // در صفحات عمومی صفحه مجدداً لود می‌شود تا وضعیت هدر به‌روزرسانی شود
+            window.location.reload();
+          }
+        }
       },
     }
   );

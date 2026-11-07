@@ -1,11 +1,12 @@
-﻿'use client';
+// src/components/features/Part/HomeCategories.tsx
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Settings, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import { useGetPartCategories } from '@/domains/front/part/hooks/part.hooks';
-import { Typography } from '@/components/primitives/Typography';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl } from '@/core/utils/formatters';
@@ -20,7 +21,6 @@ interface PartCategoryItem extends PartCategoryViewModel {
 }
 
 export function HomeCategories() {
-  // ✅ استفاده از useGetPartCategories با فیلتر IsInMain = true
   const { data: rawCategories = [], isLoading, isError } = useGetPartCategories(undefined, true);
 
   const carouselRef = React.useRef<HTMLDivElement>(null);
@@ -42,7 +42,6 @@ export function HomeCategories() {
     }
   }, [categories]);
 
-  // در RTL: اسکرول به راست x را کم می‌کند، اسکرول به چپ x را زیاد می‌کند
   const handleScroll = (direction: 'left' | 'right') => {
     const step = 340;
     let newX = x.get() + (direction === 'left' ? step : -step);
@@ -54,9 +53,9 @@ export function HomeCategories() {
   if (isLoading) {
     return (
       <div className="w-full space-y-6 py-6">
-        <Typography variant="h5" className="text-center font-bold text-foreground">
+        <h2 className="text-center font-bold text-foreground text-base sm:text-xl">
           خرید بر اساس دسته‌بندی قطعات
-        </Typography>
+        </h2>
         <div className="grid grid-cols-4 gap-x-2 gap-y-6 px-3 md:hidden">
           {[...Array(8)].map((_, index) => (
             <div key={index} className="flex flex-col items-center gap-2">
@@ -81,12 +80,9 @@ export function HomeCategories() {
 
   return (
     <div className="w-full select-none space-y-6 py-6">
-      <Typography
-        variant="h5"
-        className="text-center text-base font-bold text-foreground sm:text-xl"
-      >
+      <h2 className="text-center text-base font-bold text-foreground sm:text-xl">
         خرید بر اساس دسته‌بندی قطعات
-      </Typography>
+      </h2>
 
       {/* نمای موبایل */}
       <div className="grid grid-cols-4 gap-x-2 gap-y-6 px-2 sm:px-4 md:hidden">
@@ -100,26 +96,32 @@ export function HomeCategories() {
               href={href}
               className="group/cat flex flex-col items-center text-center"
             >
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border/80 bg-card p-2 shadow-xs transition-colors group-hover/cat:border-primary/50 sm:h-20 sm:w-20">
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border/80 
+              bg-card shadow-xs transition-colors group-hover/cat:border-primary/50 sm:h-20 sm:w-20">
                 {imageSrc ? (
-                  <img
-                    src={getFullUrl(imageSrc)}
-                    alt={cat.thumbnailAlt || cat.name}
-                    className="h-full w-full rounded-full object-contain drop-shadow-sm"
-                    loading="lazy"
-                  />
+                  <div className="relative h-full w-full overflow-hidden rounded-full">
+                    <Image
+                      src={getFullUrl(imageSrc)}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 64px, 80px"
+                      className="pointer-events-none h-full w-full object-cover transition-transform duration-fast group-hover/cat:scale-105"
+                    />
+                  </div>
                 ) : (
-                  <Settings aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
+                  <div className="flex h-full w-full items-center justify-center rounded-full p-2">
+                    <Settings aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
+                  </div>
                 )}
 
                 {cat.hasDiscount ? (
-                  <span className="pointer-events-none absolute -bottom-2 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
+                  <span className="pointer-events-none absolute -bottom-2 start-1/2 -translate-x-1/2 z-10 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
                     تخفیف ویژه
                   </span>
                 ) : null}
               </div>
 
-              <span className="mt-3 flex min-h-[28px] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
+              <span className="mt-3 flex min-h-[1.75rem] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
                 {cat.name}
               </span>
             </Link>
@@ -130,7 +132,7 @@ export function HomeCategories() {
           <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border/80 bg-card shadow-xs transition-colors hover:border-primary/50 sm:h-20 sm:w-20">
             <MoreHorizontal aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
           </div>
-          <span className="mt-3 flex min-h-[28px] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
+          <span className="mt-3 flex min-h-[1.75rem] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
             سایر دسته‌ها
           </span>
         </Link>
@@ -140,21 +142,19 @@ export function HomeCategories() {
       <div className="relative hidden w-full md:block">
         {categories.length > 6 ? (
           <>
-            {/* دکمه سمت راست (شروع در RTL): رفتن به دسته‌های قبلی */}
             <button
               type="button"
               onClick={() => handleScroll('right')}
-              className="absolute start-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="absolute start-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-3 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="دسته‌بندی‌های قبلی"
             >
               <ChevronRight aria-hidden="true" className="h-5 w-5" />
             </button>
 
-            {/* دکمه سمت چپ (پایان در RTL): رفتن به دسته‌های بعدی */}
             <button
               type="button"
               onClick={() => handleScroll('left')}
-              className="absolute end-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="absolute end-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-3 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="دسته‌بندی‌های بعدی"
             >
               <ChevronLeft aria-hidden="true" className="h-5 w-5" />
@@ -193,30 +193,35 @@ export function HomeCategories() {
                   }}
                   className="group/cat flex w-28 shrink-0 cursor-pointer flex-col items-center text-center"
                 >
-                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-border/80 bg-card p-2.5 shadow-xs transition-all duration-fast group-hover/cat:border-primary/50 group-hover/cat:shadow-sm">
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full 
+                  border border-border/80 bg-card shadow-xs transition-all duration-fast group-hover/cat:border-primary/50 group-hover/cat:shadow-sm">
                     {imageSrc ? (
-                      <img
-                        src={getFullUrl(imageSrc)}
-                        alt={cat.thumbnailAlt || cat.name}
-                        draggable={false}
-                        className="pointer-events-none h-full w-full rounded-full object-contain drop-shadow-sm transition-transform duration-fast group-hover/cat:scale-105"
-                        loading="lazy"
-                      />
+                      <div className="relative h-full w-full overflow-hidden rounded-full">
+                        <Image
+                          src={getFullUrl(imageSrc)}
+                          alt=""
+                          fill
+                          sizes="96px"
+                          className="pointer-events-none h-full w-full object-cover transition-transform duration-fast group-hover/cat:scale-110"
+                        />
+                      </div>
                     ) : (
-                      <Settings
-                        aria-hidden="true"
-                        className="h-9 w-9 text-muted-foreground transition-transform duration-fast group-hover/cat:rotate-45"
-                      />
+                      <div className="flex h-full w-full items-center justify-center rounded-full p-2.5">
+                        <Settings
+                          aria-hidden="true"
+                          className="h-9 w-9 text-muted-foreground transition-transform duration-fast group-hover/cat:rotate-45"
+                        />
+                      </div>
                     )}
 
                     {cat.hasDiscount ? (
-                      <span className="pointer-events-none absolute -bottom-2.5 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
+                      <span className="pointer-events-none absolute -bottom-2.5 start-1/2 -translate-x-1/2 z-10 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
                         تخفیف ویژه
                       </span>
                     ) : null}
                   </div>
 
-                  <span className="mt-3.5 flex min-h-[34px] items-center justify-center text-xs font-semibold leading-relaxed text-muted-foreground line-clamp-2 transition-colors group-hover/cat:text-foreground">
+                  <span className="mt-3.5 flex min-h-[2.125rem] items-center justify-center text-xs font-semibold leading-relaxed text-muted-foreground line-clamp-2 transition-colors group-hover/cat:text-foreground">
                     {cat.name}
                   </span>
                 </Link>

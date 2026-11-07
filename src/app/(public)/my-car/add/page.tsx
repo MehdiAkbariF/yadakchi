@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -203,7 +203,7 @@ export default function AddCarPage() {
         <div className="w-full flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <h3 className="text-sm md:text-base font-black text-foreground ">انتخاب شرکت سازنده</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-base text-muted-foreground leading-relaxed">
               برند خودروی خود را از لیست زیر انتخاب کنید یا نام آن را جستجو نمایید.
             </p>
           </div>
@@ -241,13 +241,13 @@ export default function AddCarPage() {
                       <Car className="h-7 w-7 text-muted-foreground" />
                     )}
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-foreground">{brand.name}</span>
+                  <span className="text-xs sm:text-title-sm">{brand.name}</span>
                 </Card>
               ))}
             </div>
           ) : (
             <div className="w-full py-12 text-center border border-dashed rounded-xl bg-card">
-              <span className="text-xs font-bold text-muted-foreground">برندی پیدا نشد.</span>
+              <span className="text-label-muted">برندی پیدا نشد.</span>
             </div>
           )}
         </div>
@@ -259,7 +259,7 @@ export default function AddCarPage() {
           <div className="flex flex-col gap-1.5 border-b pb-4">
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground ">برند انتخاب شده:</span>
-              <span className="text-xs font-bold text-foreground bg-muted px-2.5 py-1 rounded-lg">
+              <span className="text-label bg-muted px-2.5 py-1 rounded-lg">
                 {selectedBrand.name}
               </span>
               <button 
@@ -273,7 +273,7 @@ export default function AddCarPage() {
 
           <div className="flex flex-col gap-1.5">
             <h3 className="text-sm md:text-base font-black text-foreground ">انتخاب مدل خودرو</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-base text-muted-foreground leading-relaxed">
               مدل دقیق خودروی خود را انتخاب کنید یا نام آن را در کادر زیر جستجو نمایید.
             </p>
           </div>
@@ -308,7 +308,7 @@ export default function AddCarPage() {
                     )}
                   >
                     {isDuplicate && (
-                      <span className="absolute top-2 right-2 bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 z-10">
+                      <span className="absolute top-2 right-2 bg-destructive/10 text-destructive text-[0.625rem] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 z-10">
                         <AlertTriangle className="h-3 w-3" />
                         قبلاً اضافه شده
                       </span>
@@ -326,7 +326,7 @@ export default function AddCarPage() {
                       />
                     </div>
                     {/* ابعاد بزرگ‌تر و خواناتر نام خودرو */}
-                    <span className="text-sm sm:text-base font-black text-foreground line-clamp-1">
+                    <span className="text-sm sm:text-base font-bold text-foreground line-clamp-1">
                       {model.model}
                     </span>
                   </Card>
@@ -335,7 +335,7 @@ export default function AddCarPage() {
             </div>
           ) : (
             <div className="w-full py-12 text-center border border-dashed rounded-xl bg-card">
-              <span className="text-xs font-bold text-muted-foreground">مدلی پیدا نشد.</span>
+              <span className="text-label-muted">مدلی پیدا نشد.</span>
             </div>
           )}
         </div>
@@ -346,7 +346,7 @@ export default function AddCarPage() {
         <div className="w-full flex flex-col gap-5">
           <div className="flex flex-col gap-1.5 border-b pb-4">
             <h3 className="text-sm md:text-base font-black text-foreground ">ثبت نهایی خودرو در گاراژ</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-base text-muted-foreground leading-relaxed">
               عنوان دلخواهی برای شناسایی این خودرو وارد کنید تا فرآیند افزودن تکمیل شود.
             </p>
           </div>
@@ -363,7 +363,7 @@ export default function AddCarPage() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm md:text-base font-black text-foreground ">{selectedModel.model}</span>
+              <span className="text-sm md:text-base font-bold text-foreground ">{selectedModel.model}</span>
               <span className="text-xs text-muted-foreground mt-0.5">کمپانی {selectedBrand.name}</span>
             </div>
           </div>
@@ -386,7 +386,7 @@ export default function AddCarPage() {
                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
                 {...register('isDefault')}
               />
-              <label htmlFor="final_default_car" className="text-xs font-bold text-foreground cursor-pointer">
+              <label htmlFor="final_default_car" className="text-label cursor-pointer">
                 به عنوان خودروی پیش‌فرض من در سیستم ثبت شود
               </label>
             </div>

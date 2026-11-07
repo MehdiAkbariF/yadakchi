@@ -1,4 +1,4 @@
-﻿// src/components/features/Profile/ProfileDashboard.tsx
+// src/components/features/Profile/ProfileDashboard.tsx
 'use client';
 
 import * as React from 'react';
@@ -42,10 +42,10 @@ import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
 
 const ORDER_STEPS = [
-  { id: 'WaitingForPayment', label: 'در انتظار پرداخت', icon: CreditCard, color: 'text-amber-500' },
+  { id: 'WaitingForPayment', label: 'در انتظار پرداخت', icon: CreditCard, color: 'text-warning' },
   { id: 'InProgress', label: 'در حال پردازش', icon: Truck, color: 'text-primary' },
-  { id: 'Delivered', label: 'تحویل شده', icon: CheckCircle2, color: 'text-emerald-500' },
-  { id: 'ReturnRequest', label: 'مرجوعی', icon: AlertTriangle, color: 'text-rose-500' },
+  { id: 'Delivered', label: 'تحویل شده', icon: CheckCircle2, color: 'text-success' },
+  { id: 'ReturnRequest', label: 'مرجوعی', icon: AlertTriangle, color: 'text-destructive' },
 ] as const;
 
 export function ProfileDashboard() {
@@ -87,7 +87,7 @@ export function ProfileDashboard() {
               <span className="text-3xs font-bold uppercase tracking-wider text-primary">
                 داشبورد حساب کاربری
               </span>
-              <h1 className="mt-0.5 text-base font-black text-foreground sm:text-lg">
+              <h1 className="mt-0.5 text-xl font-bold text-foreground sm:text-2xl">
                 سلام، {user?.fullName || 'کاربر گرامی'} 👋
               </h1>
               <span className="mt-0.5 text-xs text-muted-foreground" dir="ltr">
@@ -99,7 +99,7 @@ export function ProfileDashboard() {
           <div className="flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-card/90 p-3 shadow-2xs sm:justify-end">
             <div className="flex flex-col text-right">
               <span className="text-3xs text-muted-foreground">موجودی کیف پول</span>
-              <span className="text-sm font-black text-foreground">
+              <span className="text-sm font-bold text-foreground">
                 {wallet?.totalBalance || '۰ تومان'}
               </span>
             </div>
@@ -146,7 +146,7 @@ export function ProfileDashboard() {
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-foreground">
+              <span className="text-label">
                 {pendingActionOrder.status === 'WaitingForPayment'
                   ? 'سفارش در انتظار پرداخت شما'
                   : 'سفارش جاری شما در مرحله پردازش و ارسال است'}
@@ -174,7 +174,7 @@ export function ProfileDashboard() {
         <div className="flex items-center justify-between pb-3.5 border-b border-border/50">
           <div className="flex items-center gap-2">
             <ShoppingBag className="h-4.5 w-4.5 text-primary" />
-            <h2 className="text-xs font-bold text-foreground">وضعیت سفارش‌های من</h2>
+            <h2 className="text-label">وضعیت سفارش‌های من</h2>
           </div>
           <Link
             href="/profile/orders"
@@ -214,7 +214,7 @@ export function ProfileDashboard() {
         <div className="flex items-center justify-between pb-3.5 border-b border-border/50">
           <div className="flex items-center gap-2">
             <Car className="h-4.5 w-4.5 text-primary" />
-            <h2 className="text-xs font-bold text-foreground">گاراژ من (خودروهای ثبت شده)</h2>
+            <h2 className="text-label">گاراژ من (خودروهای ثبت شده)</h2>
           </div>
           <Link
             href="/my-car"
@@ -241,7 +241,7 @@ export function ProfileDashboard() {
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-bold text-foreground">
+                  <span className="truncate text-title-sm">
                     {defaultVehicle.carModel}
                   </span>
                   <span className="rounded-md bg-primary/10 px-2 py-0.5 text-3xs font-bold text-primary">
@@ -298,7 +298,7 @@ export function ProfileDashboard() {
             <MapPin className="h-5 w-5" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-foreground">آدرس‌های من</span>
+            <span className="text-label">آدرس‌های من</span>
             <span className="text-3xs text-muted-foreground mt-0.5">ثبت و تحویل</span>
           </div>
         </Link>
@@ -307,11 +307,11 @@ export function ProfileDashboard() {
           href="/profile/favorites"
           className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 shadow-2xs transition-all hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98]"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
             <Heart className="h-5 w-5" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-foreground">کالاهای محبوب</span>
+            <span className="text-label">کالاهای محبوب</span>
             <span className="text-3xs text-muted-foreground mt-0.5">علاقه‌مندی‌ها</span>
           </div>
         </Link>
@@ -320,11 +320,11 @@ export function ProfileDashboard() {
           href="/profile/support"
           className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 shadow-2xs transition-all hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98]"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info">
             <Headphones className="h-5 w-5" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-foreground">پشتیبانی آنلاین</span>
+            <span className="text-label">پشتیبانی آنلاین</span>
             <span className="text-3xs text-muted-foreground mt-0.5">تیکت‌ها</span>
           </div>
         </Link>
@@ -333,21 +333,21 @@ export function ProfileDashboard() {
           href="/profile/wallet"
           className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card p-3.5 shadow-2xs transition-all hover:border-primary/40 hover:bg-accent/40 active:scale-[0.98]"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
             <Wallet className="h-5 w-5" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-foreground">تسویه و برداشت</span>
+            <span className="text-label">تسویه و برداشت</span>
             <span className="text-3xs text-muted-foreground mt-0.5">شماره شبا و کارت</span>
           </div>
         </Link>
       </div>
 
       <div className="flex flex-col gap-3 lg:hidden mt-2">
-        <span className="text-2xs font-bold text-muted-foreground px-1">سایر بخش‌های حساب کاربری</span>
+        <span className="text-label-2xs px-1">سایر بخش‌های حساب کاربری</span>
         
         <div className="flex flex-col rounded-2xl border border-border/80 bg-card overflow-hidden divide-y divide-border/60 shadow-2xs">
-          <Link href="/profile/orders" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/orders" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
               <ShoppingBag className="h-4.5 w-4.5 text-primary" />
               <span>تمام سفارش‌های من</span>
@@ -355,47 +355,47 @@ export function ProfileDashboard() {
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/returns" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/returns" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
-              <RotateCcw className="h-4.5 w-4.5 text-rose-500" />
+              <RotateCcw className="h-4.5 w-4.5 text-destructive" />
               <span>درخواست‌های مرجوعی</span>
             </div>
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/wallet" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/wallet" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
-              <Wallet className="h-4.5 w-4.5 text-emerald-500" />
+              <Wallet className="h-4.5 w-4.5 text-success" />
               <span>کیف پول و حساب‌های تسویه</span>
             </div>
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/addresses" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/addresses" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
-              <MapPin className="h-4.5 w-4.5 text-blue-500" />
+              <MapPin className="h-4.5 w-4.5 text-info" />
               <span>آدرس‌های تحویل سفارش</span>
             </div>
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/comments" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/comments" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
-              <MessageSquare className="h-4.5 w-4.5 text-amber-500" />
+              <MessageSquare className="h-4.5 w-4.5 text-warning" />
               <span>دیدگاه‌ها و پرسش‌های من</span>
             </div>
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/notifications" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/notifications" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
-              <Bell className="h-4.5 w-4.5 text-purple-500" />
+              <Bell className="h-4.5 w-4.5 text-primary" />
               <span>پیام‌ها و اعلان‌ها</span>
             </div>
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/history" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/history" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
               <Eye className="h-4.5 w-4.5 text-teal-500" />
               <span>کالاهای دیده شده اخیر</span>
@@ -403,15 +403,15 @@ export function ProfileDashboard() {
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/support" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/support" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
-              <Headphones className="h-4.5 w-4.5 text-sky-500" />
+              <Headphones className="h-4.5 w-4.5 text-info" />
               <span>تیکت‌های پشتیبانی</span>
             </div>
             <ChevronLeft className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          <Link href="/profile/settings" className="flex items-center justify-between p-3.5 text-xs font-bold text-foreground hover:bg-muted/40">
+          <Link href="/profile/settings" className="flex items-center justify-between p-3.5 text-label hover:bg-muted/40">
             <div className="flex items-center gap-3">
               <Settings className="h-4.5 w-4.5 text-muted-foreground" />
               <span>اطلاعات حساب و حقوقی</span>

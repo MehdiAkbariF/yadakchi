@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { ShoppingBag } from 'lucide-react';
@@ -53,7 +53,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
     <div className="flex w-full flex-col gap-6" dir="rtl">
       {/* هدر چسبان موبایل (تمام‌عرض لبه‌به‌لبه و هماهنگ با اسکرول هدر اصلی) */}
       <div
-        style={{ top: isHeaderMinimized ? '56px' : '105px' }}
+        style={{ top: isHeaderMinimized ? '3.5rem' : '6.5625rem' }}
         className="sticky z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
       >
         <div className="flex w-full items-center justify-between">
@@ -67,7 +67,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             </div>
             <div className="flex min-w-0 flex-col">
               <span className="text-3xs font-bold text-muted-foreground">گروه قطعات</span>
-              <span className="mt-0.5 truncate text-xs font-black text-foreground">
+              <span className="mt-0.5 truncate text-xs font-bold text-foreground">
                 {categoryData?.category?.name || 'قطعات یدکی'}
               </span>
             </div>
@@ -95,7 +95,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-xs font-bold text-foreground shadow-2xs active:scale-95 transition-transform"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-label shadow-2xs active:scale-95 transition-transform"
           >
             <span>فیلترها</span>
           </button>
@@ -146,14 +146,14 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -171,7 +171,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
               </Typography>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 لطفاً فیلترهای خود را تغییر داده یا مجدداً امتحان کنید.
               </p>
             </div>

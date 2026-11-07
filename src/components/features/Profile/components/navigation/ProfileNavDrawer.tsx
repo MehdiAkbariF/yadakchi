@@ -93,11 +93,11 @@ export function ProfileNavDrawer({ isOpen, onClose }: ProfileNavDrawerProps) {
 
             <div className="flex items-center justify-between pb-3 border-b border-border/70">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-sm">
                   {user?.fullName ? user.fullName[0] : 'U'}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-foreground">
+                  <span className="text-label">
                     {user?.fullName || 'کاربر یدکچی'}
                   </span>
                   <span className="text-3xs text-muted-foreground " dir="ltr">

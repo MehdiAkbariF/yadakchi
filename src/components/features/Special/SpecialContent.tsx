@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Flame, ShoppingBag } from 'lucide-react';
@@ -34,7 +34,7 @@ export function SpecialContent() {
     <div className="flex w-full flex-col gap-6">
       {/* هدر موبایل */}
       <div
-        style={{ top: isHeaderMinimized ? '56px' : '122px' }}
+        style={{ top: isHeaderMinimized ? '3.5rem' : '122px' }}
         className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
       >
         <div className="flex w-full items-center justify-between">
@@ -43,8 +43,8 @@ export function SpecialContent() {
               <Flame aria-hidden="true" className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xs font-bold text-muted-foreground">فرصت طلایی خرید</span>
-              <span className="mt-0.5 text-xs font-bold text-foreground">فروش ویژه یدکچی</span>
+              <span className="text-label-2xs">فرصت طلایی خرید</span>
+              <span className="mt-0.5 text-label">فروش ویژه یدکچی</span>
             </div>
           </div>
         </div>
@@ -53,7 +53,7 @@ export function SpecialContent() {
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-xs font-bold text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-label shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="truncate">فیلترها</span>
           </button>
@@ -64,7 +64,7 @@ export function SpecialContent() {
             variant="trigger"
           />
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
+          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-label-2xs">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -78,10 +78,10 @@ export function SpecialContent() {
             <Flame aria-hidden="true" className="h-5 w-5 shrink-0" />
             <span className="text-sm font-bold tracking-wide">آفر‌های شگفت‌انگیز ثانیه‌شمار</span>
           </div>
-          <h2 className="mt-1 text-2xl font-bold text-foreground">
+          <h2 className="mt-1 text-xl font-bold text-foreground">
             جشنواره فروش ویژه (فرصت بسیار محدود)
           </h2>
-          <p className="mt-0.5 max-w-md text-xs leading-relaxed text-muted-foreground">
+          <p className="mt-0.5 max-w-md text-base leading-relaxed text-muted-foreground">
             قطعات یدکی خودرو با تخفیف‌های ویژه داغ و زمان‌دار. پس از به پایان رسیدن تایمر، قیمت‌ها به حالت عادی بازمی‌گردند!
           </p>
         </div>
@@ -105,7 +105,7 @@ export function SpecialContent() {
               <Typography variant="h3" className="font-bold text-foreground">
                 فروش ویژه
               </Typography>
-              <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">
+              <span className="rounded-md bg-muted px-2.5 py-1 text-label-muted">
                 {new Intl.NumberFormat('fa-IR').format(totalCount)} آفر شگفت‌انگیز فعال
               </span>
             </div>
@@ -117,14 +117,14 @@ export function SpecialContent() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductDealCard
                     key={prod.id}
@@ -147,7 +147,7 @@ export function SpecialContent() {
               <Typography variant="h4" className="font-bold text-foreground">
                 آفر فعالی یافت نشد
               </Typography>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 در حال حاضر هیچ آفر شگفت‌انگیز زمان‌داری یافت نشد.
               </p>
             </div>

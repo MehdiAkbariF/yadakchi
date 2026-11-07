@@ -46,7 +46,7 @@ export function ItemsSummaryCard({ onOpenTracking }: ItemsSummaryCardProps) {
         {/* هدر بالای کارت */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
           <div className="flex flex-col items-start text-right gap-1.5">
-            <span className="text-sm font-bold text-foreground flex items-center gap-2">
+            <span className="text-title-sm flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary"></span>
               کالاها و زمان‌بندی ارسال
               <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
@@ -81,7 +81,7 @@ export function ItemsSummaryCard({ onOpenTracking }: ItemsSummaryCardProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Truck className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-bold text-foreground">
+                    <span className="text-label">
                       مرسوله {toPersianDigits(index + 1)}: {deliveryTitle}
                     </span>
                   </div>
@@ -110,7 +110,7 @@ export function ItemsSummaryCard({ onOpenTracking }: ItemsSummaryCardProps) {
                         </div>
 
                         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 text-right">
-                          <h4 className="line-clamp-1 text-xs font-bold text-foreground" title={product?.title}>
+                          <h4 className="line-clamp-1 text-label" title={product?.title}>
                             {product?.title}
                           </h4>
 

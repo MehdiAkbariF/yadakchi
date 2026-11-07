@@ -22,7 +22,7 @@ export function AuthLayout({ children, title, className }: AuthLayoutProps) {
       {/* هدر کنترل‌ها: دکمه بازگشت و تغییر تم */}
       <div className="flex w-full max-w-5xl items-center justify-between shrink-0 mb-8 md:mb-0">
         <Link href="/">
-          <button className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-primary transition-colors">
+          <button className="flex items-center gap-1.5 text-label-muted hover:text-primary transition-colors">
             <ArrowRight className="h-4 w-4" />
             <span>بازگشت به سایت</span>
           </button>
@@ -45,7 +45,7 @@ export function AuthLayout({ children, title, className }: AuthLayoutProps) {
               priority
             />
           </div>
-          <span className="text-[10px] sm:text-xs text-muted-foreground font-medium tracking-wide">
+          <span className="text-[0.625rem] sm:text-xs text-muted-foreground font-medium tracking-wide">
             انتخاب هوشمند قطعات خودرو
           </span>
         </div>

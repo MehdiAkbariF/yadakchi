@@ -42,7 +42,7 @@ export function Breadcrumb({ items = [], className }: BreadcrumbProps) {
             {isLast || !item.href ? (
               <span
                 aria-current={isLast ? 'page' : undefined}
-                className="max-w-[120px] truncate font-semibold text-foreground sm:max-w-none"
+                className="max-w-[7.5rem] truncate font-semibold text-foreground sm:max-w-none"
               >
                 {item.title}
               </span>

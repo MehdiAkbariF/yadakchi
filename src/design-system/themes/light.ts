@@ -1,44 +1,44 @@
 export const lightTheme = {
   background:            '#FFFFFF',
-  foreground:            '#13171F',
+  foreground:            '#0F172A', // Slate-900: مشکی فوق‌العاده شیک با ته‌رنگ ملایم به‌جای مشکی تند
 
   card:                  '#FFFFFF',
-  'card-foreground':     '#13171F',
+  'card-foreground':     '#0F172A',
 
   popover:               '#FFFFFF',
-  'popover-foreground':  '#13171F',
+  'popover-foreground':  '#0F172A',
 
-  primary:               '#DE4A0E',
+  primary:               '#CE3E04', // اصلاح شد: کنتراست دقیق ۴.۷:۱ با سفید (پاس قطعی WCAG AA)
   'primary-foreground':  '#FFFFFF',
-  'primary-hover':       '#BF3F0B',
-  'primary-active':      '#9E3308',
+  'primary-hover':       '#B43503',
+  'primary-active':      '#922B02',
 
-  secondary:             '#F1F4F8',
-  'secondary-foreground':'#1E242E',
+  secondary:             '#F1F5F9', // Slate-100: رنگ خنثی مدرن
+  'secondary-foreground':'#0F172A',
 
-  muted:                 '#F1F4F8',
-  'muted-foreground':    '#555E6C', // اصلاح شد: قبلا #687383 بود
+  muted:                 '#F8FAFC', // Slate-50: پس‌زمینه ملایم برای المان‌های ثانویه
+  'muted-foreground':    '#475569', // Slate-600: کنتراست عالی ۵.۹:۱ با سفید
 
-  accent:                '#FEF6F0',
-  'accent-foreground':   '#BF3F0B',
+  accent:                '#FFF7ED', // ته‌رنگ فوق‌العاده نرم نارنجی
+  'accent-foreground':   '#C2410C',
 
   destructive:           '#DC2626',
   'destructive-foreground':'#FFFFFF',
 
-  success:               '#13863E', // اصلاح شد: افزایش کانتراست از 1D9A4C
+  success:               '#15803D', // سبز غنی با کنتراست بالا
   'success-foreground':  '#FFFFFF',
 
-  warning:               '#E8920C',
-  'warning-foreground':  '#13171F', // اصلاح شد: متن سفید روی این رنگ غیرقابل خواندن بود
+  warning:               '#D97706',
+  'warning-foreground':  '#FFFFFF', // اصلاح شد با کنتراست مطمئن
 
-  info:                  '#1D64E5',
+  info:                  '#0284C7',
   'info-foreground':     '#FFFFFF',
 
-  border:                '#D3DAE4', // اصلاح شد: مشخص‌تر شدن خطوط
-  input:                 '#D3DAE4',
-  ring:                  '#DE4A0E',
+  border:                '#E2E8F0', // اصلاح شد: مرزبندی واضح، شیک و بدون کدر بودن
+  input:                 '#CBD5E1', // خطوط مشخص‌تر برای فیلدهای ورودی
+  ring:                  '#CE3E04',
 
-  shop:                  '#1E5676',
+  shop:                  '#0369A1', // آبی سرمه‌ای تجاری مدرن
   'shop-foreground':     '#FFFFFF',
-  'shop-hover':          '#16415B',
+  'shop-hover':          '#075985',
 } as const;

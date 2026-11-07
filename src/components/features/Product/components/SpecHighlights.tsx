@@ -83,7 +83,7 @@ function TruncatedSpec({ name, value }: { name: string; value: string }) {
 
   return (
     <div className="flex min-w-0 flex-col gap-1 rounded-md border border-border bg-muted/60 p-3">
-      <span className="block truncate text-2xs font-bold text-muted-foreground md:text-xs">
+      <span className="block truncate text-label-2xs md:text-xs">
         {toPersianDigits(name)}
       </span>
 
@@ -144,7 +144,7 @@ function MobileSpecChip({
       <span className="whitespace-nowrap text-3xs font-bold text-muted-foreground">
         {toPersianDigits(name)}
       </span>
-      <span className="max-w-[130px] truncate whitespace-nowrap text-2xs font-bold text-foreground">
+      <span className="max-w-[8.125rem] truncate whitespace-nowrap text-2xs font-bold text-foreground">
         {toPersianDigits(value)}
       </span>
     </button>
@@ -155,7 +155,7 @@ function MobileSpecChip({
 function SheetSpecRow({ name, value }: { name: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-border/60 py-2.5 last:border-b-0">
-      <span className="shrink-0 text-2xs font-bold text-muted-foreground">
+      <span className="shrink-0 text-label-2xs">
         {toPersianDigits(name)}
       </span>
       <span className="text-end text-xs font-medium text-foreground">
@@ -197,13 +197,13 @@ export function SpecHighlights({ specGroups, onSeeAll, productDescription }: Spe
     <div className="flex w-full select-none flex-col gap-2.5">
       {/* ============ هدر: تایتل + دکمه ساده «مشاهده همه» ============ */}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-bold text-foreground md:text-base">
+        <span className="text-title-sm md:text-base">
           ویژگی‌های مهم محصول
         </span>
       <button
   type="button"
   onClick={() => openSheet('specs')}
-  className="group flex shrink-0 items-center gap-0.5 text-xs font-bold text-blue-600 outline-none transition-opacity hover:opacity-80 dark:text-blue-400"
+  className="group flex shrink-0 items-center gap-0.5 text-xs font-bold text-info/90 outline-none transition-opacity hover:opacity-80 dark:text-info/90"
 >
   <span>مشاهده همه</span>
   <ChevronLeft
@@ -230,7 +230,7 @@ export function SpecHighlights({ specGroups, onSeeAll, productDescription }: Spe
                 setTimeout(() => onSeeAll(), 50);
               }
             }}
-            className="flex items-center gap-0.5 text-xs font-bold text-foreground outline-none hover:underline"
+            className="flex items-center gap-0.5 text-label outline-none hover:underline"
           >
             <span>{isExpanded ? 'بستن ویژگی‌ها' : 'مشاهده همه ویژگی‌ها'}</span>
             {isExpanded ? (
@@ -310,7 +310,7 @@ export function SpecHighlights({ specGroups, onSeeAll, productDescription }: Spe
                 dangerouslySetInnerHTML={{ __html: productDescription }}
               />
             ) : (
-              <p className="py-8 text-center text-xs text-muted-foreground">
+              <p className="py-8 text-center text-base text-muted-foreground">
                 توضیحی برای این کالا ثبت نشده است.
               </p>
             )}

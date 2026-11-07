@@ -21,7 +21,7 @@ export function PaymentMethodCard() {
             </div>
             
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-bold text-foreground">
+              <span className="text-title-sm">
                 درگاه بانکی (پرداخت اینترنتی)
               </span>
               <span className="text-xs text-muted-foreground">
@@ -64,7 +64,7 @@ export function PaymentMethodCard() {
           ))}
           
           {/* دکمه ... برای نمایش بقیه بانک‌ها */}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-card text-xs font-bold text-muted-foreground shadow-xs">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-card text-label-muted shadow-xs">
             ...
           </div>
         </div>

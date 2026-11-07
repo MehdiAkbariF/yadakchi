@@ -33,7 +33,7 @@ export function BasketInvoice({ basket, onContinue, isLoading = false }: BasketI
   const grandTotal = totalFinalPrice + totalShipmentPrice;
 
   return (
-    <Card className="h-fit w-full shrink-0 p-5 shadow-xs lg:w-[360px]">
+    <Card className="h-fit w-full shrink-0 p-5 shadow-xs lg:w-[22.5rem]">
       <CardTitle className="mb-4 flex items-center gap-2 border-b border-border pb-3 font-bold text-foreground">
         <ShoppingCart aria-hidden="true" className="h-5 w-5 text-primary" />
         <span>صورتحساب</span>
@@ -64,7 +64,7 @@ export function BasketInvoice({ basket, onContinue, isLoading = false }: BasketI
       </div>
 
       <div className="mb-5 flex items-center justify-between">
-        <span className="text-xs font-bold text-muted-foreground">جمع کل</span>
+        <span className="text-label-muted">جمع کل</span>
         <span className="text-lg font-bold text-foreground">
           {formatRialToToman(grandTotal)}
         </span>

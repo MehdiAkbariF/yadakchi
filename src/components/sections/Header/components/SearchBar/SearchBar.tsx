@@ -1,7 +1,8 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import {
   Search,
@@ -52,7 +53,6 @@ export interface SearchBarProps {
 }
 
 export function SearchBar({
-  placeholder = 'جستجو در یدکچی...',
   className = '',
   onSearch,
   isMobile = false,
@@ -91,7 +91,6 @@ export function SearchBar({
   const desktopInputRef = React.useRef<HTMLInputElement>(null);
   const mobileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // رفرنس اسلایدرها برای کنترل دکمه‌های چپ و راست
   const historySliderRef = React.useRef<HTMLDivElement>(null);
   const carsSliderRef = React.useRef<HTMLDivElement>(null);
   const catsSliderRef = React.useRef<HTMLDivElement>(null);
@@ -193,7 +192,7 @@ export function SearchBar({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -14, opacity: 0 }}
             transition={{ duration: 0.32, ease: 'easeOut' }}
-            className="inline-block max-w-[210px] truncate font-bold text-primary"
+            className="inline-block max-w-[13rem] truncate font-bold text-primary"
           >
             {currentWord}
           </motion.span>
@@ -202,7 +201,6 @@ export function SearchBar({
     );
   };
 
-  // محتوای ستون متنی همراه با اسلایدرهای افقی روان و دکمه‌های ناوبری گرد
   const renderTextContent = (showKeywords: boolean) => {
     const keywordsList = (keywordsData as any)?.keywords || [];
     const carsList = (keywordsData as any)?.cars || [];
@@ -217,27 +215,27 @@ export function SearchBar({
 
     if (showKeywords) {
       return (
-        <div className="flex flex-col space-y-5">
+        <div className="flex flex-col space-y-4">
           {carsList.length > 0 ? (
             <div className="shrink-0 space-y-2">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                <span className="text-xs font-bold text-muted-foreground">خودروها</span>
+              <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+                <span className="text-2xs font-bold text-muted-foreground">خودروها</span>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => scrollSlider(carsSliderRef, 'right')}
-                    aria-label="اسکرول راست"
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                    aria-label="اسکرول به راست"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => scrollSlider(carsSliderRef, 'left')}
-                    aria-label="اسکرول چپ"
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                    aria-label="اسکرول به چپ"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -256,7 +254,7 @@ export function SearchBar({
                         router.push(`/search?carId=${car.id}`);
                       });
                     }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xl border border-accent bg-accent px-3.5 py-2 text-xs font-bold text-accent-foreground transition-colors hover:bg-accent/80 active:scale-95 whitespace-nowrap"
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-accent bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/80 active:scale-95"
                   >
                     <Car aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                     <span>قطعات خودرو {car.model}</span>
@@ -268,24 +266,24 @@ export function SearchBar({
 
           {uniqueCategories.length > 0 ? (
             <div className="shrink-0 space-y-2">
-              <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                <span className="text-xs font-bold text-muted-foreground">دسته‌بندی‌های مرتبط</span>
+              <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+                <span className="text-2xs font-bold text-muted-foreground">دسته‌بندی‌های مرتبط</span>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => scrollSlider(catsSliderRef, 'right')}
-                    aria-label="اسکرول راست"
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                    aria-label="اسکرول به راست"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => scrollSlider(catsSliderRef, 'left')}
-                    aria-label="اسکرول چپ"
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                    aria-label="اسکرول به چپ"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -304,7 +302,7 @@ export function SearchBar({
                         router.push(`/part-category/${cat.partCategoryEnglishTitle}`);
                       });
                     }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-xl border border-accent bg-accent px-3.5 py-2 text-xs font-bold text-accent-foreground transition-colors hover:bg-accent/80 active:scale-95 whitespace-nowrap"
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-accent bg-accent px-3 py-1.5 text-xs font-bold text-accent-foreground hover:bg-accent/80 active:scale-95"
                   >
                     <FolderKanban aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                     <span>قطعات دسته {cat.partCategoryName}</span>
@@ -314,8 +312,8 @@ export function SearchBar({
             </div>
           ) : null}
 
-          <div className="shrink-0 space-y-2">
-            <span className="block border-b border-border/60 pb-2 text-xs font-bold text-muted-foreground">
+          <div className="shrink-0 space-y-1.5">
+            <span className="block border-b border-border/60 pb-1.5 text-2xs font-bold text-muted-foreground">
               جستجوهای پیشنهادی
             </span>
 
@@ -325,17 +323,17 @@ export function SearchBar({
                 <span className="text-xs">در حال جستجوی پیشنهادات...</span>
               </div>
             ) : keywordsList.length > 0 ? (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {keywordsList.map((kw: any, index: number) => (
                   <button
                     key={index}
                     type="button"
                     disabled={isGlobalSearching}
                     onClick={() => handleSearchSubmit(kw.suggestion)}
-                    className="flex w-full items-center justify-between rounded-xl p-2.5 transition-colors hover:bg-muted/60 active:scale-[0.99]"
+                    className="flex w-full items-center justify-between rounded-lg p-2 transition-colors hover:bg-muted/60"
                   >
                     <div className="flex min-w-0 flex-col text-right">
-                      <span className="truncate text-xs font-bold text-foreground">{kw.suggestion}</span>
+                      <span className="truncate text-xs font-medium text-foreground">{kw.suggestion}</span>
                       {kw.partCategoryName && (
                         <span className="mt-0.5 truncate text-3xs text-muted-foreground">
                           در دسته {kw.partCategoryName}
@@ -357,11 +355,11 @@ export function SearchBar({
     }
 
     return (
-      <div className="flex flex-col space-y-5">
+      <div className="flex flex-col space-y-4">
         {history.length > 0 ? (
           <div className="shrink-0 space-y-2">
-            <div className="flex items-center justify-between border-b border-border/60 pb-2">
-              <span className="flex items-center gap-1.5 text-xs font-black text-muted-foreground">
+            <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
                 <Clock aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
                 جستجوهای اخیر شما
               </span>
@@ -378,23 +376,24 @@ export function SearchBar({
                   <button
                     type="button"
                     onClick={() => scrollSlider(historySliderRef, 'right')}
-                    aria-label="اسکرول راست"
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                    aria-label="اسکرول به راست"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => scrollSlider(historySliderRef, 'left')}
-                    aria-label="اسکرول چپ"
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                    aria-label="اسکرول به چپ"
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
             </div>
-            {/* اسلایدر افقی جستجوهای اخیر */}
+
+            {/* اصلاح ساختاری: حذف تودرتو بودن دکمه‌ها */}
             <div ref={historySliderRef} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
               {history.map((item: any, idx: number) => {
                 const isObject = typeof item === 'object' && item !== null;
@@ -403,19 +402,20 @@ export function SearchBar({
                 return (
                   <div
                     key={itemId}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleSearchSubmit(wordValue)}
-                    className={cn(
-                      'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border border-border/80 bg-muted/40 px-3.5 py-2 text-xs font-bold text-foreground transition-all hover:border-primary/50 hover:bg-card active:scale-95 shadow-2xs whitespace-nowrap'
-                    )}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border/80 bg-muted/40 px-2.5 py-1 text-xs font-medium text-foreground shadow-xs"
                   >
-                    <span>{wordValue}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSearchSubmit(wordValue)}
+                      className="hover:text-primary transition-colors focus-visible:outline-none"
+                    >
+                      {wordValue}
+                    </button>
                     <button
                       type="button"
                       onClick={(e) => handleRemoveHistoryItem(wordValue, e)}
-                      aria-label={`حذف ${wordValue}`}
-                      className="flex items-center justify-center rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={`حذف ${wordValue} از تاریخچه`}
+                      className="flex items-center justify-center rounded-full p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                     >
                       <X aria-hidden="true" className="h-3 w-3" />
                     </button>
@@ -428,27 +428,27 @@ export function SearchBar({
 
         {suggestions.length > 0 ? (
           <div className="shrink-0 space-y-2">
-            <div className="flex items-center justify-between border-b border-border/60 pb-2">
-              <span className="flex items-center gap-1.5 text-xs font-black text-muted-foreground">
-                <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-amber-500" />
+            <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                <Sparkles aria-hidden="true" className="h-3.5 w-3.5 text-warning" />
                 جستجوهای پرطرفدار
               </span>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => scrollSlider(suggestionsSliderRef, 'right')}
-                  aria-label="اسکرول راست"
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  aria-label="اسکرول به راست"
+                  className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => scrollSlider(suggestionsSliderRef, 'left')}
-                  aria-label="اسکرول چپ"
-                  className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted transition-colors"
+                  aria-label="اسکرول به چپ"
+                  className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-muted"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
@@ -459,7 +459,7 @@ export function SearchBar({
                   type="button"
                   disabled={isGlobalSearching}
                   onClick={() => handleSearchSubmit(suggest)}
-                  className="shrink-0 rounded-xl border border-border/80 bg-card px-3.5 py-2 text-xs font-bold text-foreground transition-all hover:border-primary/50 hover:bg-accent/40 hover:text-primary active:scale-95 shadow-2xs whitespace-nowrap"
+                  className="shrink-0 rounded-lg border border-border/80 bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:border-primary/50 hover:bg-accent/40 hover:text-primary active:scale-95 shadow-xs"
                 >
                   {suggest}
                 </button>
@@ -481,13 +481,16 @@ export function SearchBar({
             <Link
               href={mobileBanner.targetURL || '#'}
               onClick={handleCloseMobileSearch}
-              className="block w-full overflow-hidden rounded-2xl border border-border/80 shadow-2xs shrink-0"
+              className="block w-full overflow-hidden rounded-xl border border-border/80 shadow-xs shrink-0"
+              aria-label={mobileBanner.title || 'بنر جستجو'}
             >
               <div className="relative w-full aspect-[3/1]">
-                <img
+                <Image
                   src={getFullUrl(mobileBanner.image)}
-                  alt={mobileBanner.imageAlt || mobileBanner.title}
-                  className="h-full w-full object-cover"
+                  alt={mobileBanner.imageAlt || mobileBanner.title || 'بنر پیشنهادی'}
+                  fill
+                  sizes="100vw"
+                  className="object-cover"
                 />
               </div>
             </Link>
@@ -500,22 +503,25 @@ export function SearchBar({
 
     return (
       <div className="flex w-full flex-row items-stretch overflow-hidden bg-card divide-x divide-x-reverse divide-border/60" dir="rtl">
-        <div className="flex-1 min-w-0 overflow-y-auto p-5 max-h-[460px] no-scrollbar">
+        <div className="flex-1 min-w-0 overflow-y-auto p-4 max-h-[28rem] scrollbar-thin">
           {renderTextContent(showKeywords)}
         </div>
 
         {desktopBanner && (
-          <div className="w-[280px] shrink-0 p-4 bg-muted/20 flex flex-col justify-center items-center">
+          <div className="w-[17.5rem] shrink-0 p-4 bg-muted/20 flex flex-col justify-center items-center">
             <Link
               href={desktopBanner.targetURL || '#'}
               onClick={() => setIsFocused(false)}
-              className="block w-full overflow-hidden rounded-2xl border border-border/80 shadow-xs hover:opacity-95 transition-all active:scale-[0.98]"
+              className="block w-full overflow-hidden rounded-xl border border-border/80 shadow-xs hover:opacity-95 transition-all"
+              aria-label={desktopBanner.title || 'بنر پیشنهادی'}
             >
               <div className="relative w-full aspect-[4/5] flex items-center justify-center bg-card">
-                <img
+                <Image
                   src={getFullUrl(desktopBanner.image)}
-                  alt={desktopBanner.imageAlt || desktopBanner.title}
-                  className="h-full w-full object-cover"
+                  alt={desktopBanner.imageAlt || desktopBanner.title || 'بنر پیشنهادی'}
+                  fill
+                  sizes="280px"
+                  className="object-cover"
                 />
               </div>
             </Link>
@@ -528,14 +534,11 @@ export function SearchBar({
   if (isMobile) {
     return (
       <div className={cn('relative w-full', className)} dir="rtl">
-        <div
+        <button
+          type="button"
           onClick={handleOpenMobileSearch}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') handleOpenMobileSearch();
-          }}
-          className="relative flex h-10 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-xl border border-border bg-card px-3 text-muted-foreground transition-colors hover:border-primary/50 shadow-2xs"
+          aria-label="باز کردن پنجره جستجو در یدکچی"
+          className="relative flex h-10 w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-lg border border-border bg-card px-3 text-muted-foreground transition-colors hover:border-primary/50 shadow-xs text-right"
         >
           {isGlobalSearching ? (
             <Loader2 aria-hidden="true" className="z-10 h-4 w-4 shrink-0 animate-spin text-primary" />
@@ -544,11 +547,11 @@ export function SearchBar({
           )}
 
           {query ? (
-            <span className="ms-2.5 flex-1 truncate text-xs font-bold text-foreground">{query}</span>
+            <span className="ms-2.5 flex-1 truncate text-xs font-semibold text-foreground">{query}</span>
           ) : (
             <div className="ms-2.5 flex flex-1 items-center">{renderAnimatedPlaceholder()}</div>
           )}
-        </div>
+        </button>
 
         <Modal
           isOpen={isMobileModalOpen}
@@ -561,12 +564,14 @@ export function SearchBar({
               type="button"
               onClick={handleCloseMobileSearch}
               aria-label="بازگشت"
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted/60 text-foreground transition-transform active:scale-90"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/60 text-foreground transition-transform active:scale-90"
             >
               <ArrowRight aria-hidden="true" className="h-5 w-5" />
             </button>
             <div className="relative flex-1">
+              <label htmlFor="mobile-search-input" className="sr-only">جستجو در یدکچی</label>
               <Input
+                id="mobile-search-input"
                 ref={mobileInputRef}
                 type="text"
                 placeholder=""
@@ -585,14 +590,14 @@ export function SearchBar({
                     <button
                       type="button"
                       onClick={() => setQuery('')}
-                      aria-label="پاک کردن"
-                      className="flex items-center justify-center rounded-full p-1 hover:bg-muted transition-colors"
+                      aria-label="پاک کردن متن جستجو"
+                      className="flex items-center justify-center rounded-full p-1 hover:bg-muted"
                     >
                       <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
                   ) : undefined
                 }
-                className="w-full border-border bg-card rounded-xl text-xs font-bold"
+                className="w-full border-border bg-card rounded-lg text-xs font-bold"
                 dir="rtl"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -625,7 +630,9 @@ export function SearchBar({
         className="relative"
         role="search"
       >
+        <label htmlFor="desktop-search-input" className="sr-only">جستجو در یدکچی</label>
         <Input
+          id="desktop-search-input"
           ref={desktopInputRef}
           type="text"
           value={query}
@@ -636,7 +643,7 @@ export function SearchBar({
             refetchHistory();
           }}
           placeholder=""
-          aria-label="جستجو"
+          aria-label="جستجو در یدکچی"
           dir="rtl"
           leftIcon={
             isGlobalSearching ? (
@@ -650,14 +657,14 @@ export function SearchBar({
               <button
                 type="button"
                 onClick={() => setQuery('')}
-                aria-label="پاک کردن"
+                aria-label="پاک کردن متن جستجو"
                 className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
               >
                 <X aria-hidden="true" className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             ) : undefined
           }
-          className="w-full border-border bg-card rounded-xl text-xs font-bold transition-colors focus-visible:border-primary"
+          className="w-full border-border bg-card rounded-lg text-xs font-bold transition-colors focus-visible:border-primary"
         />
 
         {!query ? (
@@ -670,9 +677,8 @@ export function SearchBar({
         ) : null}
       </form>
 
-      {/* دراپ‌داون مدرن دو ستونه دسکتاپ */}
       {isFocused ? (
-        <div className="absolute inset-x-0 top-full z-dropdown mt-2 flex max-h-[480px] w-full flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xl backdrop-blur-md">
+        <div className="absolute inset-x-0 top-full z-dropdown mt-2 flex max-h-[30rem] w-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card shadow-lg backdrop-blur-md">
           {renderSuggestionsPanel()}
         </div>
       ) : null}

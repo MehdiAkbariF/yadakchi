@@ -1,4 +1,4 @@
-﻿import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 import { ProductCardSkeleton } from './ProductCardSkeleton';
 
 export interface SliderSkeletonProps {
@@ -16,16 +16,16 @@ export function SliderSkeleton({ title }: SliderSkeletonProps) {
         <Skeleton className="h-4 w-16" />
       </div>
       <div className="flex w-full gap-4 overflow-hidden rounded-lg border border-border bg-card p-4">
-        <div className="w-[190px] shrink-0 sm:w-[250px]">
+        <div className="w-[11.875rem] shrink-0 sm:w-[15.625rem]">
           <ProductCardSkeleton />
         </div>
-        <div className="w-[190px] shrink-0 sm:w-[250px]">
+        <div className="w-[11.875rem] shrink-0 sm:w-[15.625rem]">
           <ProductCardSkeleton />
         </div>
-        <div className="w-[190px] shrink-0 sm:w-[250px]">
+        <div className="w-[11.875rem] shrink-0 sm:w-[15.625rem]">
           <ProductCardSkeleton />
         </div>
-        <div className="w-[190px] shrink-0 sm:w-[250px]">
+        <div className="w-[11.875rem] shrink-0 sm:w-[15.625rem]">
           <ProductCardSkeleton />
         </div>
       </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -84,14 +84,14 @@ function AddressRequiredPlaceholder({
   onSelectAddress: () => void;
 }) {
   return (
-    <div className="relative flex min-h-[200px] flex-col items-center justify-center gap-3 overflow-hidden rounded-xl border border-dashed border-border bg-gradient-to-b from-card to-muted/20 p-8 text-center">
+    <div className="relative flex min-h-[12.5rem] flex-col items-center justify-center gap-3 overflow-hidden rounded-xl border border-dashed border-border bg-gradient-to-b from-card to-muted/20 p-8 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-shop/10 text-shop">
         <MapPin className="h-7 w-7" />
       </div>
-      <span className="text-sm font-bold text-foreground">
+      <span className="text-title-sm">
         ابتدا آدرس تحویل سفارش را انتخاب کنید
       </span>
-      <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+      <p className="max-w-sm text-base leading-relaxed text-muted-foreground">
         پس از انتخاب آدرس، روش‌های ارسال پستی، تیپاکس و پیک بر اساس موقعیت مکانی شما نمایش داده می‌شود.
       </p>
       <button
@@ -370,29 +370,29 @@ export function CheckoutContent() {
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
-          <span className="whitespace-nowrap text-[10px] font-semibold sm:text-xs">
+          <span className="whitespace-nowrap text-[0.625rem] font-semibold sm:text-xs">
             سبد خرید
           </span>
         </div>
 
-        <div className="mx-1.5 h-[2px] flex-1 bg-primary/40 sm:mx-3" />
+        <div className="mx-1.5 h-[0.125rem] flex-1 bg-primary/40 sm:mx-3" />
 
         <div className="flex shrink-0 items-center gap-1.5 font-bold text-primary sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs sm:h-7 sm:w-7">
             <Truck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <span className="whitespace-nowrap text-[10px] sm:text-xs">
+          <span className="whitespace-nowrap text-[0.625rem] sm:text-xs">
             زمان و شیوه ارسال
           </span>
         </div>
 
-        <div className="mx-1.5 h-[2px] flex-1 bg-border/80 sm:mx-3" />
+        <div className="mx-1.5 h-[0.125rem] flex-1 bg-border/80 sm:mx-3" />
 
         <div className="flex shrink-0 items-center gap-1.5 text-muted-foreground/60 sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full border border-border bg-card sm:h-7 sm:w-7">
             <CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <span className="whitespace-nowrap text-[10px] font-medium sm:text-xs">
+          <span className="whitespace-nowrap text-[0.625rem] font-medium sm:text-xs">
             پرداخت نهایی
           </span>
         </div>
@@ -403,7 +403,7 @@ export function CheckoutContent() {
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4">
           <Info className="h-5 w-5 shrink-0 text-warning" />
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-foreground">
+            <span className="text-title-sm">
               {!activeAddress
                 ? 'برای مشاهده شیوه‌های ارسال، ابتدا آدرس خود را انتخاب کنید'
                 : 'در حال استعلام و محاسبه هزینه‌های ارسال بر اساس آدرس شما...'}

@@ -60,7 +60,7 @@ function LottiePlayer({ animationPath }: { animationPath: string }) {
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
-      <div ref={containerRef} className="w-full h-full max-w-[340px] max-h-[340px]" />
+      <div ref={containerRef} className="w-full h-full max-w-[21.25rem] max-h-[21.25rem]" />
       {!isReady && (
         <span className="sr-only">404 Not Found</span>
       )}
@@ -99,7 +99,7 @@ export default function NotFoundPage() {
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-foreground">
             صفحه‌ای که دنبالش بودید پیدا نشد!
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
+          <p className="text-base sm:text-base text-muted-foreground leading-relaxed max-w-lg mx-auto">
             چیز جدیدی جستجو کن یا به کالاهای زیر نگاهی بنداز یا برو به صفحه اصلی
           </p>
         </div>
@@ -141,7 +141,7 @@ export default function NotFoundPage() {
               <h2 className="text-base sm:text-lg font-black text-foreground">
                 بازدیدهای اخیر شما
               </h2>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[0.6875rem] text-muted-foreground">
                 کالاهایی که اخیراً در یدکچی بررسی کرده‌اید
               </span>
             </div>
@@ -171,11 +171,11 @@ export default function NotFoundPage() {
         ) : (
           <div className="w-full py-12 px-4 rounded-2xl border border-dashed bg-muted/20 flex flex-col items-center justify-center text-center gap-2">
             <ShoppingBag className="h-8 w-8 text-muted-foreground/50 stroke-[1.5]" />
-            <span className="text-xs font-bold text-muted-foreground">
+            <span className="text-label-muted">
               هنوز کالایی را مشاهده نکرده‌اید.
             </span>
             <Link href="/search" className="mt-2">
-              <Button variant="outline" size="sm" className="rounded-xl text-xs font-bold h-9 px-4">
+              <Button variant="outline" size="sm" className="rounded-xl text-sm font-bold h-9 px-4">
                 شروع جستجو و بررسی قطعات
               </Button>
             </Link>

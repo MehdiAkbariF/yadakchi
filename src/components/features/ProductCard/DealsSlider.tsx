@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -68,7 +68,7 @@ export function DealsSlider() {
       </div>
 
       <div className="group relative flex w-full flex-col items-stretch gap-4 overflow-hidden rounded-lg border border-border bg-muted p-4 md:flex-row">
-        <div className="relative hidden w-[210px] shrink-0 select-none flex-col items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary-hover p-6 text-center text-primary-foreground shadow-xs md:flex">
+        <div className="relative hidden w-[13.125rem] shrink-0 select-none flex-col items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary-hover p-6 text-center text-primary-foreground shadow-xs md:flex">
           <Typography variant="h4" className="font-bold leading-tight text-primary-foreground">
             تخفیف‌های شگفت‌انگیز
           </Typography>
@@ -117,7 +117,7 @@ export function DealsSlider() {
             className="flex cursor-grab gap-4 py-1 active:cursor-grabbing"
           >
             {productItems.map((prod: any) => (
-              <div key={prod.id} className="w-[190px] shrink-0 sm:w-[250px]">
+              <div key={prod.id} className="w-[11.875rem] shrink-0 sm:w-[15.625rem]">
                 <ProductDealCard product={prod} serverTime={serverTime} />
               </div>
             ))}

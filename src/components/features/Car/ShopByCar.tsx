@@ -1,7 +1,9 @@
-﻿'use client';
+// src/components/features/Car/ShopByCar.tsx
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Car, Search, Loader2, ArrowRight, X } from 'lucide-react';
 import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
 import { Modal, ModalBody } from '@/components/composites/Modal/Modal';
@@ -31,7 +33,6 @@ export function ShopByCar() {
   const handleSearchSubmit = () => {
     if (!selectedCar || isSubmitting) return;
     setIsSubmitting(true);
-    // استفاده از router.push باعث می‌شود پروگرس‌بار گلوبال و لودینگ سه‌نقطه فعال شوند
     router.push(getCarUrl(selectedCar.englishTitle));
   };
 
@@ -43,24 +44,30 @@ export function ShopByCar() {
 
   return (
     <div className="flex w-full flex-col items-center gap-2.5 py-1 md:py-4">
-      <Typography variant="h4" className="text-center text-sm font-bold text-foreground sm:text-base md:text-lg">
+      {/* تیتر سمانتیک h2 برای حفظ سلسله‌مراتب سئو و دسترسی‌پذیری */}
+      <h2 className="text-center font-bold text-foreground text-title-sm sm:text-base md:text-lg">
         خرید بر اساس خودرو
-      </Typography>
+      </h2>
 
-      <div className="flex w-full max-w-2xl flex-col items-stretch gap-3 px-4 sm:flex-row sm:px-0">
+      <div className="flex w-full max-w-3xl flex-col items-stretch gap-3 px-4 sm:flex-row sm:px-0">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex h-12 flex-1 items-center justify-between rounded-md border border-border bg-card px-4 py-3 shadow-xs outline-none transition-colors hover:border-primary/40"
+          className="flex h-10 flex-1 items-center justify-between rounded-md border border-border bg-card px-4 py-3 shadow-xs 
+          outline-none transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring"
         >
           {selectedCar ? (
             <div className="flex items-center gap-2">
-              <img
-                src={getFullUrl(selectedCar.cover)}
-                alt={selectedCar.model}
-                className="h-7 w-10 rounded-sm object-contain"
-              />
-              <span className="text-sm font-bold text-foreground">{selectedCar.model}</span>
+              <div className="relative h-7 w-10">
+                <Image
+                  src={getFullUrl(selectedCar.cover)}
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="rounded-sm object-contain"
+                />
+              </div>
+              <span className="text-title-sm font-medium">{selectedCar.model}</span>
             </div>
           ) : (
             <span className="text-sm font-medium text-muted-foreground">مدل خودروی خود را انتخاب کنید...</span>
@@ -83,7 +90,7 @@ export function ShopByCar() {
       <Modal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:rounded-lg md:overflow-hidden"
+        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:rounded-lg md:overflow-hidden"
         overlayClassName="bg-foreground/40 backdrop-blur-md"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
@@ -92,11 +99,11 @@ export function ShopByCar() {
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label="بازگشت"
-              className="-me-1 rounded-full p-1 hover:bg-muted md:hidden"
+              className="-me-1 rounded-full p-2 hover:bg-muted md:hidden"
             >
               <ArrowRight aria-hidden="true" className="h-5 w-5" />
             </button>
-            <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <span className="flex items-center gap-1.5 text-title-sm font-bold">
               <Car aria-hidden="true" className="h-4 w-4 text-primary" />
               انتخاب خودرو
             </span>
@@ -105,7 +112,7 @@ export function ShopByCar() {
             type="button"
             onClick={() => setIsOpen(false)}
             aria-label="بستن"
-            className="hidden rounded-full p-1.5 transition-colors hover:bg-muted md:flex"
+            className="hidden rounded-full p-2 transition-colors hover:bg-muted md:flex"
           >
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -144,9 +151,15 @@ export function ShopByCar() {
                   )}
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md">
-                    <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain" />
+                    <Image
+                      src={getFullUrl(car.cover)}
+                      alt=""
+                      fill
+                      sizes="(max-width: 768px) 50vw, 200px"
+                      className="h-full w-full object-contain"
+                    />
                   </div>
-                  <span className="text-xs font-bold text-foreground sm:text-sm">{car.model}</span>
+                  <span className="text-label sm:text-sm font-semibold">{car.model}</span>
                 </div>
               ))}
             </div>

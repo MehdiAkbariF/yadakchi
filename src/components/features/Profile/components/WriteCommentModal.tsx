@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -110,15 +110,15 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
             <img src={getFullUrl(product.productImage)} className="w-full h-full object-contain" alt="" />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-xs font-bold text-foreground truncate block">{product.productTitle}</span>
+            <span className="text-label truncate block">{product.productTitle}</span>
             {product.shopTitle && (
-              <span className="text-[10px] text-muted-foreground block mt-0.5">فروشگاه {product.shopTitle}</span>
+              <span className="text-[0.625rem] text-muted-foreground block mt-0.5">فروشگاه {product.shopTitle}</span>
             )}
           </div>
         </div>
 
         <div className="flex flex-col gap-2 items-center justify-center text-center py-2 border-b border-dashed w-full select-none">
-          <span className="text-xs font-bold text-muted-foreground ">امتیاز شما به کالا *</span>
+          <span className="text-label-muted ">امتیاز شما به کالا *</span>
           <div className="flex items-center gap-1.5 mt-1" dir="ltr">
             {[1, 2, 3, 4, 5].map((starValue) => {
               const isHighlighted = (hoverRate || rate) >= starValue;
@@ -134,7 +134,7 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
                   <Star 
                     className={cn(
                       "h-7 w-7 shrink-0", 
-                      isHighlighted ? "fill-yellow-400 text-yellow-400" : "text-zinc-200 dark:text-foreground"
+                      isHighlighted ? "fill-warning text-warning" : "text-zinc-200 dark:text-foreground"
                     )} 
                   />
                 </button>
@@ -163,7 +163,7 @@ export function WriteCommentModal({ isOpen, onClose, product, editingComment }: 
               checked={isIncognito}
               onChange={(e) => setIsIncognito(e.target.checked)}
             />
-            <label htmlFor="comment_is_incognito" className="text-xs font-bold text-foreground cursor-pointer">
+            <label htmlFor="comment_is_incognito" className="text-label cursor-pointer">
               ارسال به صورت ناشناس (نام شما به بقیه نشان داده نشود)
             </label>
           </div>

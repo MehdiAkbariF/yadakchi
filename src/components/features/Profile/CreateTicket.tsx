@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -80,7 +80,7 @@ export function CreateTicket() {
         >
           <ArrowRight className="h-5 w-5 text-foreground" />
         </button>
-        <span className="text-sm font-bold text-foreground">ثبت تیکت پشتیبانی جدید</span>
+        <span className="text-title-sm">ثبت تیکت پشتیبانی جدید</span>
       </div> */}
 
       <Card className="w-full border rounded-xl bg-card shadow-sm">
@@ -135,7 +135,7 @@ export function CreateTicket() {
             </div>
 
             <div className="flex flex-col gap-2 w-full mt-1 border-t border-dashed pt-4">
-              <span className="text-xs font-bold text-foreground mb-1">فایل‌های ضمیمه (حداکثر ۵ فایل)</span>
+              <span className="text-label mb-1">فایل‌های ضمیمه (حداکثر ۵ فایل)</span>
               <div className="flex flex-wrap gap-2.5 items-center">
                 <label className="h-10 px-5 py-2 rounded-xl border border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all select-none">
                   <Paperclip className="h-4 w-4" />
@@ -152,7 +152,7 @@ export function CreateTicket() {
                 {attachments.map((file, idx) => (
                   <div 
                     key={idx}
-                    className="h-10 px-3 rounded-xl border bg-muted/20 text-[10px] font-bold text-foreground flex items-center gap-2 max-w-[150px] shrink-0"
+                    className="h-10 px-3 rounded-xl border bg-muted/20 text-[0.625rem] font-bold text-foreground flex items-center gap-2 max-w-[9.375rem] shrink-0"
                   >
                     <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span className="truncate flex-1">{file.name}</span>

@@ -9,11 +9,15 @@ interface LogoProps {
 
 export function Logo({ hideTitle = false, className }: LogoProps) {
   return (
-    <Link href="/" className={cn("flex flex-col items-center shrink-0", className)}>
+    <Link
+      href="/home"
+      aria-label="صفحه اصلی یدکچی - بازارگاه تخصصی قطعات خودرو"
+      className={cn("flex flex-col items-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg", className)}
+    >
       <div className="relative w-20 h-10 md:w-24 md:h-12 leading-none">
         <Image
           src="/Logo.svg"
-          alt="Yadakchi Logo"
+          alt="لوگوی یدکچی | بازارگاه تخصصی قطعات خودرو"
           width={96}
           height={48}
           className="object-contain block"
@@ -21,14 +25,14 @@ export function Logo({ hideTitle = false, className }: LogoProps) {
         />
       </div>
       
-      <span className={cn(
-        "text-[10px] sm:text-[11px] font-bold text-muted-foreground text-center block",
-        "leading-none",
-        "mt-0 pt-0",
-        hideTitle ? "hidden" : ""
-      )}>
-        انتخاب هوشمند قطعات خودرو
-      </span>
+      {!hideTitle && (
+        <span
+          aria-hidden="true"
+          className="text-[0.625rem] sm:text-[0.6875rem] font-bold text-muted-foreground text-center block leading-none select-none"
+        >
+          انتخاب هوشمند قطعات خودرو
+        </span>
+      )}
     </Link>
   );
 }

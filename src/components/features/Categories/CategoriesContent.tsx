@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -138,7 +138,7 @@ export function CategoriesContent() {
         /* نتایج زنده جستجو */
         <div className="h-full min-h-0 flex-1 overflow-y-auto overscroll-contain bg-card p-4 scrollbar-none pb-24">
           <div className="mb-3 flex items-center justify-between border-b border-border/60 pb-2">
-            <span className="text-xs font-bold text-foreground">
+            <span className="text-label">
               نتایج قطعات منطبق با «{searchQuery}»:
             </span>
             <button
@@ -178,7 +178,7 @@ export function CategoriesContent() {
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Package className="mb-2 h-10 w-10 text-muted-foreground/40" />
-              <p className="text-xs font-semibold text-muted-foreground">
+              <p className="text-base font-semibold text-muted-foreground">
                 هیچ قطعه‌ای مطابق با عبارت وارد شده پیدا نشد.
               </p>
               <button
@@ -243,7 +243,7 @@ export function CategoriesContent() {
             {activeCategory ? (
               <div className="flex w-full flex-col gap-4">
                 <div className="flex w-full items-center justify-between border-b border-border/50 pb-2">
-                  <span className="text-xs font-bold text-foreground">
+                  <span className="text-label">
                     همه قطعات {activeCategory.name}
                   </span>
                   <Link

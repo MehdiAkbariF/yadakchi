@@ -3,17 +3,17 @@ import { cva, type VariantProps } from 'class-variance-authority';
 export const buttonVariants = cva(
   [
     'inline-flex items-center justify-center gap-2',
-    'rounded-md font-medium whitespace-nowrap',
-    'transition-colors duration-fast ease-in-out',
+    'rounded-lg font-medium whitespace-nowrap',
+    'transition-all duration-fast ease-in-out',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-    'disabled:opacity-50 disabled:pointer-events-none',
+    'disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
   ],
   {
     variants: {
       variant: {
         primary: [
-          'bg-primary text-primary-foreground',
-          'hover:bg-primary-hover',
+          'bg-primary text-primary-foreground shadow-xs',
+          'hover:bg-primary-hover hover:shadow-sm',
           'active:bg-primary-active',
         ],
         secondary: [
@@ -21,22 +21,20 @@ export const buttonVariants = cva(
           'hover:bg-secondary/80',
         ],
         outline: [
-          'border border-input bg-background text-foreground',
-          'hover:bg-accent hover:text-accent-foreground',
+          'border border-border bg-background text-foreground shadow-xs',
+          'hover:bg-muted hover:border-muted-foreground/30 hover:text-foreground',
         ],
-        // ✅ واریانت جدید: توخالی با خط دور و متن نارنجی
-      // در src/design-system/variants/button.variants.ts
-'outline-primary': [
-  'border border-primary bg-transparent text-primary',
-  'hover:bg-primary/10 hover:border-primary',
-  'active:bg-primary/20',
-],
+        'outline-primary': [
+          'border border-primary/60 bg-transparent text-primary',
+          'hover:bg-primary/10 hover:border-primary',
+          'active:bg-primary/20',
+        ],
         ghost: [
           'text-foreground',
-          'hover:bg-accent hover:text-accent-foreground',
+          'hover:bg-muted hover:text-foreground',
         ],
         destructive: [
-          'bg-destructive text-destructive-foreground',
+          'bg-destructive text-destructive-foreground shadow-xs',
           'hover:bg-destructive/90',
         ],
         link: [
@@ -46,8 +44,8 @@ export const buttonVariants = cva(
       },
       size: {
         sm: 'h-8 px-3 text-xs',
-        md: 'h-10 px-4 text-sm',
-        lg: 'h-12 px-6 text-base',
+        md: 'h-9 px-4 text-xs font-semibold sm:h-10 sm:text-sm',
+        lg: 'h-11 px-6 text-sm font-semibold sm:h-12 sm:text-base',
         icon: 'h-10 w-10',
         'icon-sm': 'h-8 w-8',
         'icon-lg': 'h-12 w-12',

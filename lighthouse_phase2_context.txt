@@ -1,0 +1,698 @@
+﻿================================================
+FILE: src\app\(public)\home\page.tsx
+================================================
+// src/app/(public)/home/page.tsx
+
+import type { Metadata } from 'next';
+import { cache } from 'react';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getBannerService } from '@/domains/front/banner/services/banner.service';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getShopService } from '@/domains/front/shop/services/shop.service';
+import { getHttpClient } from '@/core/http/client';
+import { HomeContent } from '@/components/features/Home/HomeContent';
+
+/* -------------------------------------------------------------------------- */
+/*                                   Types                                    */
+/* -------------------------------------------------------------------------- */
+
+interface HomePageResponse {
+  description?: string;
+  [key: string]: unknown;
+}
+
+interface PartCategory {
+  id?: string | number;
+  name?: string;
+  slug?: string;
+  [key: string]: unknown;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 Constants                                  */
+/* -------------------------------------------------------------------------- */
+
+const NOMINATED_CATEGORIES = [
+  'car-tools',
+  'audio-video-multimedia-system',
+  'Exhaust',
+  'heater',
+  'door-handles-locks-and-safety',
+  'body-and-weatherstrips',
+] as const;
+
+type NominatedCategory = (typeof NOMINATED_CATEGORIES)[number];
+
+// ✅ اصلاح شد: دقیقا منطبق با پارامترهای ارسالی در کامپوننت کلاینتی ShopSlider
+const SHOP_CARDS_PARAMS = {
+  orderBy: 'Rating', // اصلاح از 'Rank' به 'Rating' جهت برقراری کش در کلاینت
+  pageNumber: 1,
+  pageSize: 30,
+} as const;
+
+/* -------------------------------------------------------------------------- */
+/*                              Query Key Factory                             */
+/* -------------------------------------------------------------------------- */
+
+const homeKeys = {
+  all: ['front'] as const,
+  banners: (placement: string) => ['front', 'banners', placement] as const,
+  homePage: () => ['front', 'get-home-page'] as const,
+  nominatedDeals: () => ['front', 'products', 'nominated-deals', null] as const,
+  partsCategories: () => ['front', 'parts', 'categories-flat', 'all'] as const,
+  nominatedCategory: (slug: NominatedCategory) =>
+    ['front', 'products', 'nominated-category', slug, null] as const,
+  mainBrands: () => ['reference', 'brands', 'main'] as const,
+  shopCards: (params: typeof SHOP_CARDS_PARAMS) =>
+    ['front', 'shop', 'cards', params] as const,
+};
+
+/* -------------------------------------------------------------------------- */
+/*                          React Query Client Factory                        */
+/* -------------------------------------------------------------------------- */
+
+// الگوی استاندارد ایزوله‌سازی QueryClient برای هر رکوئست سروری
+const getQueryClient = cache(
+  () =>
+    new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 60 * 1000,
+          gcTime: 5 * 60 * 1000,
+        },
+      },
+    })
+);
+
+/* -------------------------------------------------------------------------- */
+/*                                  Metadata                                  */
+/* -------------------------------------------------------------------------- */
+
+export const metadata: Metadata = {
+  title: 'یدکچی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
+  description:
+    'خرید مستقیم و آنلاین انواع قطعات یدکی، لوازم بدنه، ابزارآلات و تجهیزات خودرو از معتبرترین فروشگاه‌های سراسر کشور با ضمانت اصالت کالا در یدکچی.',
+  alternates: {
+    canonical: 'https://www.yadakchi.com/home',
+  },
+  openGraph: {
+    title: 'یدکچی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
+    description:
+      'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران. خرید مستقیم قطعات خودرو از فروشگاه‌های سراسر کشور.',
+    url: 'https://www.yadakchi.com/home',
+    siteName: 'یدکچی',
+    locale: 'fa_IR',
+    type: 'website',
+    images: [
+      {
+        url: 'https://api.yadakchi.com/Logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+      },
+    ],
+  },
+};
+
+// بازتولید صفحه در پس‌زمینه سرور هر ۶۰ ثانیه (ISR)
+export const revalidate = 60;
+
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+const schemaJson = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'AutoPartsStore',
+      '@id': 'https://www.yadakchi.com/#organization',
+      name: 'یدکچی',
+      url: 'https://www.yadakchi.com',
+      logo: {
+        '@type': 'ImageObject',
+        '@id': 'https://www.yadakchi.com/#logo',
+        url: 'https://api.yadakchi.com/Logo.svg',
+        caption: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+      },
+      image: 'https://api.yadakchi.com/Logo.svg',
+      description:
+        'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران. خرید مستقیم قطعات خودرو از فروشگاه‌های سراسر کشور.',
+      priceRange: 'IRR',
+      inLanguage: 'fa-IR',
+      sameAs: [
+        'https://www.instagram.com/yadakchi',
+        'https://t.me/yadakchi',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://www.yadakchi.com/#website',
+      url: 'https://www.yadakchi.com',
+      name: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+      description: 'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران',
+      publisher: {
+        '@id': 'https://www.yadakchi.com/#organization',
+      },
+      potentialAction: [
+        {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate:
+              'https://www.yadakchi.com/search?q={search_term_string}',
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      ],
+      inLanguage: 'fa-IR',
+    },
+  ],
+};
+
+/* -------------------------------------------------------------------------- */
+/*                                  Page                                      */
+/* -------------------------------------------------------------------------- */
+
+export default async function HomePage() {
+  const queryClient = getQueryClient();
+
+  const bannerService = getBannerService();
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const shopService = getShopService();
+  const httpClient = getHttpClient();
+
+  // اجرای موازی تمام Prefetchها بدون مسدود کردن یکدیگر
+  const prefetches: Array<Promise<void>> = [
+    queryClient.prefetchQuery({
+      queryKey: homeKeys.banners('Home'),
+      queryFn: () => bannerService.getBanners('Home'),
+      retry: 2,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: homeKeys.homePage(),
+      queryFn: async () => {
+        const response =
+          await httpClient.get<HomePageResponse>('/api/Front/GetHomePage');
+        return response.data;
+      },
+      retry: 1,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: homeKeys.nominatedDeals(),
+      queryFn: () => productService.getNominatedProducts(),
+      retry: 1,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: homeKeys.partsCategories(),
+      queryFn: async () => {
+        const response = await httpClient.get<PartCategory[]>(
+          '/api/Front/PartCategories',
+          { params: { CarId: '' } },
+        );
+        return Array.isArray(response.data) ? response.data : [];
+      },
+      retry: 1,
+    }),
+
+    ...NOMINATED_CATEGORIES.map((slug) =>
+      queryClient.prefetchQuery({
+        queryKey: homeKeys.nominatedCategory(slug),
+        queryFn: () => productService.getNominatedProductsByCategory(slug),
+        retry: 1,
+      }),
+    ),
+
+    queryClient.prefetchQuery({
+      queryKey: homeKeys.mainBrands(),
+      queryFn: () => brandService.getMainBrands(),
+      retry: 1,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: homeKeys.shopCards(SHOP_CARDS_PARAMS),
+      queryFn: () => shopService.getShopCards(SHOP_CARDS_PARAMS),
+      retry: 1,
+    }),
+  ];
+
+  // استفاده از allSettled برای اطمینان از اینکه قطعی یک سرویس مانع لود بقیه صفحه نمی‌شود
+  const results = await Promise.allSettled(prefetches);
+
+  if (process.env.NODE_ENV === 'development') {
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.error(
+          `❌ [HomePage Prefetch Error] Index ${index}:`,
+          result.reason,
+        );
+      }
+    });
+  }
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {/* اسکیما و سئوی ساختاریافته گوگل */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <HomeContent />
+    </HydrationBoundary>
+  );
+}
+
+
+
+================================================
+FILE: src\components\sections\HeroSection\HeroSection.tsx
+================================================
+import Link from 'next/link';
+import { cn } from '@/design-system/utils/cn';
+import { Typography } from '@/components/primitives/Typography';
+import { Button } from '@/components/primitives/Button';
+
+export interface HeroSectionProps {
+  className?: string;
+}
+
+export function HeroSection({ className }: HeroSectionProps) {
+  return (
+    <section
+      className={cn(
+        'relative overflow-hidden rounded-xl bg-gradient-to-l from-primary to-primary-hover p-8 text-primary-foreground',
+        className
+      )}
+    >
+      <div className="relative z-10 flex flex-col items-start gap-4 md:max-w-2xl">
+        <Typography variant="h1" className="text-primary-foreground">
+          به یدکچی خوش آمدید
+        </Typography>
+        <Typography variant="lead" className="text-primary-foreground/90">
+          بزرگترین مارکت‌پلیس خودرو و قطعات یدکی در ایران
+        </Typography>
+        <div className="mt-4 flex flex-wrap gap-4">
+          <Link href="/product">
+            <Button variant="secondary" size="lg">
+              مشاهده محصولات
+            </Button>
+          </Link>
+          <Link href="/shops">
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-primary-foreground bg-transparent text-primary-foreground hover:bg-primary-foreground/10"
+            >
+              فروشگاه‌ها
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div
+        aria-hidden="true"
+        className="absolute -end-20 -top-20 h-64 w-64 rounded-full bg-primary-foreground/10 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute -bottom-20 -start-20 h-48 w-48 rounded-full bg-primary-foreground/10 blur-2xl"
+      />
+    </section>
+  );
+}
+
+
+
+================================================
+FILE: src\components\features\Banner\Banner.tsx
+================================================
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
+import { useBannerImpression } from '@/shared/hooks/useBannerImpression';
+import { bannerTracker } from '@/core/utils/banner-tracker';
+
+export interface BannerItem {
+  id: string;
+  title: string;
+  targetURL: string | null;
+  image: string;
+  imageAlt: string | null;
+  size: 'Desktop' | 'Mobile';
+}
+
+export interface BannerGroup {
+  id: string;
+  name: string;
+  type: string;
+  banners: BannerItem[];
+}
+
+export interface BannerProps {
+  group?: BannerGroup;
+  className?: string;
+  /**
+   * نسبت ابعاد پیش‌فرض متناسب با استانداردهای وب:
+   * موبایل: 2.3 به 1 | تبلت: 3 به 1 | دسکتاپ: 3.8 به 1
+   */
+  aspectRatio?: string;
+  priority?: boolean;
+}
+
+export function Banner({
+  group,
+  className,
+  aspectRatio = 'aspect-[2.3/1] sm:aspect-[3/1] md:aspect-[3.5/1] lg:aspect-[3.8/1]',
+  priority = false,
+}: BannerProps) {
+  if (!group || !group.banners || group.banners.length === 0) return null;
+
+  // تفکیک بنر نسخه دسکتاپ و موبایل با پشتیبانی از فال‌بک امن
+  const desktopBanner = group.banners.find((b) => b.size === 'Desktop') || group.banners[0];
+  const mobileBanner = group.banners.find((b) => b.size === 'Mobile') || desktopBanner;
+
+  // ترکینگ مستقل مشاهده بنرها
+  const desktopImpressionRef = useBannerImpression(desktopBanner.id);
+  const mobileImpressionRef = useBannerImpression(mobileBanner.id);
+
+  // رندر بنر منفرد بر اساس استانداردهای مرورگر و ریسپانسیو
+// رندر بنر منفرد بر اساس استانداردهای مرورگر و ریسپانسیو
+  const renderBannerImage = (
+    banner: BannerItem,
+    sizeVisibilityClass: string,
+    ref: React.Ref<HTMLDivElement> // ✅ اصلاح تایپ جهت سازگاری کامل با React
+  ) => {
+    const fullSrc = getFullUrl(banner.image);
+    const alt = banner.imageAlt || banner.title || 'بنر فروشگاه یدکچی';
+
+    const rawUrl = banner.targetURL?.trim() || '';
+    const isInternal = rawUrl.startsWith('/') || rawUrl.startsWith('#');
+    const href = !rawUrl
+      ? null
+      : isInternal
+      ? rawUrl
+      : rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+      ? rawUrl
+      : `https://${rawUrl}`;
+
+    const imageElement = (
+      <div
+        ref={ref}
+        className={cn(
+          'group relative h-full w-full overflow-hidden rounded-2xl bg-muted/40 shadow-2xs transition-all duration-300',
+          'hover:shadow-md hover:border-primary/20',
+          aspectRatio === 'h-full' ? 'h-full min-h-full' : aspectRatio
+        )}
+      >
+        <img
+          src={fullSrc}
+          alt={alt}
+          className="h-full w-full rounded-2xl object-cover object-center transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.015]"
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          // @ts-expect-error - صفت استاندارد مرورگرها
+          fetchpriority={priority ? 'high' : 'auto'}
+        />
+      </div>
+    );
+
+    if (href) {
+      return (
+        <Link
+          href={href}
+          target={isInternal ? '_self' : '_blank'}
+          rel={isInternal ? undefined : 'noopener noreferrer'}
+          aria-label={banner.title || alt}
+          className={cn(
+            'block h-full w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            sizeVisibilityClass
+          )}
+          onClick={() => bannerTracker.trackClick(banner.id)}
+        >
+          {imageElement}
+        </Link>
+      );
+    }
+
+    return <div className={cn('h-full w-full', sizeVisibilityClass)}>{imageElement}</div>;
+  };
+
+ return (
+  <div className={cn('relative h-full w-full overflow-hidden', className)}>
+    {renderBannerImage(desktopBanner, 'hidden md:block', desktopImpressionRef)}
+    {renderBannerImage(mobileBanner, 'block md:hidden', mobileImpressionRef)}
+  </div>
+);
+}
+
+
+
+================================================
+FILE: src\components\features\Banner\BannerSlider.tsx
+================================================
+'use client';
+
+import * as React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
+import { useBannerImpression } from '@/shared/hooks/useBannerImpression';
+import { bannerTracker } from '@/core/utils/banner-tracker';
+
+interface BannerSliderProps {
+  group?: any;
+  className?: string;
+  autoPlayInterval?: number;
+  aspectRatio?: string;
+}
+
+interface BaseSliderProps {
+  slides: any[];
+  autoPlayInterval: number;
+  aspectRatio: string;
+  className?: string;
+}
+
+function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSliderProps) {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const totalSlides = slides.length;
+
+  React.useEffect(() => {
+    if (!isMounted || totalSlides <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % totalSlides);
+    }, autoPlayInterval);
+    return () => clearInterval(interval);
+  }, [totalSlides, autoPlayInterval, isMounted]);
+
+  const currentSlide = slides[currentIndex];
+  const slideImpressionRef = useBannerImpression(currentSlide?.id || null);
+
+  if (totalSlides === 0) return null;
+
+  if (!isMounted) {
+    const initialSlide = slides[0];
+    return (
+      <div className={cn('relative w-full overflow-hidden rounded-xl shadow-xs', aspectRatio, className)}>
+        <Image
+          src={getFullUrl(initialSlide.image)}
+          alt={initialSlide.imageAlt || initialSlide.title}
+          fill
+          priority
+          sizes="100vw"
+          className="rounded-xl object-cover"
+        />
+      </div>
+    );
+  }
+
+  const slideElement = (
+    <div
+      ref={slideImpressionRef}
+      className={cn('relative w-full overflow-hidden rounded-xl shadow-xs', aspectRatio)}
+    >
+      <AnimatePresence mode="wait">
+       <motion.div
+  key={currentSlide.id}
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  exit={{ opacity: 0 }}
+  transition={{ duration: 0.4, ease: 'easeInOut' }}
+  className="absolute inset-0 h-full w-full transform-gpu"
+>
+  <Image
+    src={getFullUrl(currentSlide.image)}
+    alt={currentSlide.imageAlt || currentSlide.title}
+    fill
+    priority={currentIndex === 0}
+    sizes="(max-width: 768px) 100vw, 70vw"
+    className="rounded-xl object-cover"
+  />
+</motion.div>
+      </AnimatePresence>
+
+      {totalSlides > 1 ? (
+        <>
+          {/* دکمه سمت راست (شروع در RTL): رفتن به اسلاید قبلی */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+            }}
+            className="absolute start-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white backdrop-blur-md transition-all duration-fast hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="اسلاید قبلی بنر"
+          >
+            <ChevronRight aria-hidden="true" className="h-5 w-5" />
+          </button>
+
+          {/* دکمه سمت چپ (پایان در RTL): رفتن به اسلاید بعدی */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setCurrentIndex((prev) => (prev + 1) % totalSlides);
+            }}
+            className="absolute end-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white backdrop-blur-md transition-all duration-fast hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="اسلاید بعدی بنر"
+          >
+            <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+          </button>
+
+          {/* نشانگرهای نقطه‌ای پایین اسلایدر */}
+          <div className="absolute bottom-4 start-1/2 z-10 flex -translate-x-1/2 gap-1.5 rtl:translate-x-1/2">
+            {slides.map((_: any, index: number) => (
+              <button
+                key={index}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCurrentIndex(index);
+                }}
+                className={cn(
+                  'h-2 rounded-full transition-all duration-normal',
+                  index === currentIndex ? 'w-6 bg-primary' : 'w-2 bg-white/50 hover:bg-white/80'
+                )}
+                aria-label={`نمایش اسلاید شماره ${index + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+
+  if (currentSlide.targetURL) {
+    const href = currentSlide.targetURL.startsWith('http')
+      ? currentSlide.targetURL
+      : `https://${currentSlide.targetURL}`;
+    return (
+      <Link
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={currentSlide.title || currentSlide.imageAlt || 'اسلاید بنر تبلیغاتی'}
+        className={cn('block h-full w-full', className)}
+        onClick={() => bannerTracker.trackClick(currentSlide.id)}
+      >
+        {slideElement}
+      </Link>
+    );
+  }
+
+  return <div className={cn('h-full w-full', className)}>{slideElement}</div>;
+}
+
+export function BannerSlider({
+  group,
+  className,
+  autoPlayInterval = 5000,
+  aspectRatio = 'aspect-[16/9] md:aspect-[16/7.5] lg:aspect-[16/7]',
+}: BannerSliderProps) {
+  if (!group || !group.banners || group.banners.length === 0) return null;
+
+  const desktopSlides = group.banners.filter((b: any) => b.size === 'Desktop');
+  const mobileSlides = group.banners.filter((b: any) => b.size === 'Mobile');
+
+  const finalDesktopSlides = desktopSlides.length > 0 ? desktopSlides : group.banners;
+  const finalMobileSlides = mobileSlides.length > 0 ? mobileSlides : group.banners;
+
+  return (
+    <div className="h-full w-full">
+      <div className="hidden h-full w-full md:block">
+        <BaseSlider
+          slides={finalDesktopSlides}
+          autoPlayInterval={autoPlayInterval}
+          aspectRatio={aspectRatio}
+          className={className}
+        />
+      </div>
+
+      <div className="block h-full w-full md:hidden">
+        <BaseSlider
+          slides={finalMobileSlides}
+          autoPlayInterval={autoPlayInterval}
+          aspectRatio={aspectRatio}
+          className={className}
+        />
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================
+FILE: src\app\manifest.ts
+================================================
+import { MetadataRoute } from 'next';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'یدک‌چی | بازارگاه تخصصی قطعات خودرو',
+    short_name: 'یدک‌چی',
+    description: 'بزرگ‌ترین مارکت‌پلیس خودرو و قطعات یدکی در ایران',
+    start_url: '/home',
+    display: 'standalone', // اجرای اپلیکیشن بدون نوار ابزار مرورگر و به صورت بومی
+    background_color: '#FFFFFF',
+    theme_color: '#F56D3C', // رنگ برند یدک‌چی
+    orientation: 'portrait', // اجرای اپلیکیشن فقط در حالت عمودی موبایل
+    icons: [
+      {
+        src: '/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable', // برای سازگاری کامل با آیکون‌های گرد و لبه‌دار اندروید
+      },
+      {
+        src: '/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+    ],
+  };
+}
+
+
+

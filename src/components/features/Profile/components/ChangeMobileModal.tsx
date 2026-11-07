@@ -119,7 +119,7 @@ export function ChangeMobileModal({ isOpen, onClose }: ChangeMobileModalProps) {
               {...register('phoneNumber')}
             />
 
-            <span className="text-[10px] text-muted-foreground leading-relaxed me-1 block">
+            <span className="text-[0.625rem] text-muted-foreground leading-relaxed me-1 block">
               برای ثبت شماره موبایل جدید، ابتدا شماره فعلی شما تایید می‌شود.
             </span>
 

@@ -219,9 +219,11 @@ export interface SearchProductKeywordsResponseApiDto {
 }
 
 // ============================================
-// DTOهای جدید موتور جستجوی OpenSearch
+// DTO دقیق و رسمی منطبق با Swagger سرور OpenSearch
 // ============================================
 export interface OpenSearchProductsRequestDto {
+  onlyNominated?: boolean;
+  excludeDuplicateProducts?: boolean;
   searchTitle?: string;
   brandIds?: string[];
   partIds?: string[];
@@ -232,15 +234,16 @@ export interface OpenSearchProductsRequestDto {
   types?: number[];
   fromPrice?: number;
   toPrice?: number;
+  hasDiscountWithExpiration?: boolean;
   onlyInStock?: boolean;
   onlyDiscounted?: boolean;
   onlyDirectShipping?: boolean;
   sortBy?: string;
-  sortDesc?: boolean;
+  sortDescending?: boolean; // اصلاح شد: منطبق با Swagger سرور (قبلاً sortDesc بود)
   pageNumber?: number;
   pageSize?: number;
   includeAggregations?: boolean;
-  hasDiscountWithExpiration?: boolean;
+  cityId?: string;
 }
 
 export interface OpenSearchProductsResponseDto {
@@ -251,10 +254,6 @@ export interface OpenSearchProductsResponseDto {
   hits: any[];
   aggregations?: any;
 }
-
-// ============================================
-// DTO جدید: خروجی OpenSearch Search/Products
-// ============================================
 
 export interface SearchProductHitDto {
   shopProductId: string;
@@ -282,7 +281,6 @@ export interface SearchProductHitDto {
   hasSpecialAttention: boolean;
   isLocalShop: boolean | null;
   hasDirectShipment: boolean | null;
-  // فیلدهای اختیاری که ممکن است بک‌اند در آینده اضافه کند:
   shopId?: string;
   shopLogo?: string | null;
   shopAddress?: string;

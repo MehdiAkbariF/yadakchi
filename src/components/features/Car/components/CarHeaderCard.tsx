@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -38,8 +38,8 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
             <img src={getFullUrl(carCover)} className="h-full w-full object-contain" alt="" />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-2xs font-bold text-muted-foreground md:text-xs">خودرو انتخاب شده:</span>
-            <h2 className="text-sm font-bold text-foreground md:text-base">{carName}</h2>
+            <span className="text-label-2xs md:text-xs">خودرو انتخاب شده:</span>
+            <h2 className="text-title-sm md:text-base">{carName}</h2>
           </div>
         </div>
 
@@ -69,11 +69,11 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
       <Modal
         isOpen={isChangeCarOpen}
         onClose={() => setIsChangeCarOpen(false)}
-        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:rounded-2xl md:overflow-hidden"
+        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:rounded-2xl md:overflow-hidden"
         overlayClassName="bg-foreground/40 backdrop-blur-md"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
-          <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+          <span className="flex items-center gap-1.5 text-title-sm">
             <CarIcon aria-hidden="true" className="h-4 w-4 text-primary" />
             تغییر خودرو فعال
           </span>
@@ -117,13 +117,13 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted/20">
                     <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain p-1" />
                   </div>
-                  <span className="text-xs font-bold text-foreground truncate w-full">{car.model}</span>
+                  <span className="text-label truncate w-full">{car.model}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="w-full rounded-2xl border border-dashed border-border bg-card py-12 text-center">
-              <span className="text-xs font-bold text-muted-foreground">خودرویی یافت نشد.</span>
+              <span className="text-label-muted">خودرویی یافت نشد.</span>
             </div>
           )}
         </ModalBody>

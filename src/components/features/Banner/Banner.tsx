@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/design-system/utils/cn';
 import { getFullUrl } from '@/core/utils/formatters';
 import { useBannerImpression } from '@/shared/hooks/useBannerImpression';
@@ -26,10 +27,6 @@ export interface BannerGroup {
 export interface BannerProps {
   group?: BannerGroup;
   className?: string;
-  /**
-   * نسبت ابعاد پیش‌فرض متناسب با استانداردهای وب:
-   * موبایل: 2.3 به 1 | تبلت: 3 به 1 | دسکتاپ: 3.8 به 1
-   */
   aspectRatio?: string;
   priority?: boolean;
 }
@@ -42,20 +39,17 @@ export function Banner({
 }: BannerProps) {
   if (!group || !group.banners || group.banners.length === 0) return null;
 
-  // تفکیک بنر نسخه دسکتاپ و موبایل با پشتیبانی از فال‌بک امن
   const desktopBanner = group.banners.find((b) => b.size === 'Desktop') || group.banners[0];
   const mobileBanner = group.banners.find((b) => b.size === 'Mobile') || desktopBanner;
 
-  // ترکینگ مستقل مشاهده بنرها
   const desktopImpressionRef = useBannerImpression(desktopBanner.id);
   const mobileImpressionRef = useBannerImpression(mobileBanner.id);
 
-  // رندر بنر منفرد بر اساس استانداردهای مرورگر و ریسپانسیو
-// رندر بنر منفرد بر اساس استانداردهای مرورگر و ریسپانسیو
   const renderBannerImage = (
     banner: BannerItem,
     sizeVisibilityClass: string,
-    ref: React.Ref<HTMLDivElement> // ✅ اصلاح تایپ جهت سازگاری کامل با React
+    ref: React.Ref<HTMLDivElement>,
+    sizes: string
   ) => {
     const fullSrc = getFullUrl(banner.image);
     const alt = banner.imageAlt || banner.title || 'بنر فروشگاه یدکچی';
@@ -74,19 +68,18 @@ export function Banner({
       <div
         ref={ref}
         className={cn(
-          'group relative h-full w-full overflow-hidden rounded-2xl bg-muted/40 shadow-2xs transition-all duration-300',
+          'group relative h-full w-full overflow-hidden rounded-2xl bg-muted/40 shadow-xs transition-all duration-300',
           'hover:shadow-md hover:border-primary/20',
           aspectRatio === 'h-full' ? 'h-full min-h-full' : aspectRatio
         )}
       >
-        <img
+        <Image
           src={fullSrc}
           alt={alt}
-          className="h-full w-full rounded-2xl object-cover object-center transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.015]"
-          loading={priority ? 'eager' : 'lazy'}
-          decoding="async"
-          // @ts-expect-error - صفت استاندارد مرورگرها
-          fetchpriority={priority ? 'high' : 'auto'}
+          fill
+          priority={priority}
+          sizes={sizes}
+          className="rounded-2xl object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.015]"
         />
       </div>
     );
@@ -112,10 +105,10 @@ export function Banner({
     return <div className={cn('h-full w-full', sizeVisibilityClass)}>{imageElement}</div>;
   };
 
- return (
-  <div className={cn('relative h-full w-full overflow-hidden', className)}>
-    {renderBannerImage(desktopBanner, 'hidden md:block', desktopImpressionRef)}
-    {renderBannerImage(mobileBanner, 'block md:hidden', mobileImpressionRef)}
-  </div>
-);
+  return (
+    <div className={cn('relative h-full w-full overflow-hidden', className)}>
+      {renderBannerImage(desktopBanner, 'hidden md:block', desktopImpressionRef, '(max-width: 1400px) 100vw, 1400px')}
+      {renderBannerImage(mobileBanner, 'block md:hidden', mobileImpressionRef, '100vw')}
+    </div>
+  );
 }

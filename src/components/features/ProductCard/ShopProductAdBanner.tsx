@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -124,7 +124,7 @@ export function ShopProductAdBanner({
             منتخب
           </div>
 
-          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-card p-1">
+          <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-card p-1">
             <Image
               src={getFullUrl(ad.imageUrl)}
               alt={ad.title}
@@ -135,7 +135,7 @@ export function ShopProductAdBanner({
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 pe-1.5 pt-2">
-            <h4 className="line-clamp-2 ps-4 text-2xs font-bold leading-relaxed text-foreground">
+            <h4 className="line-clamp-2 ps-4 text-sm font-bold leading-relaxed text-foreground">
               {ad.product.name}
             </h4>
             <div className="flex items-center gap-1 text-2xs text-muted-foreground">

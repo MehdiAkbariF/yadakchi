@@ -1,8 +1,9 @@
-﻿// src/components/features/Shop/ShopSlider.tsx
+// src/components/features/Shop/ShopSlider.tsx
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,8 +16,8 @@ import {
 } from 'lucide-react';
 import { motion, useMotionValue, animate } from 'framer-motion';
 import { useGetShopCards } from '@/domains/front/shop/hooks/shop.hooks';
-import { Typography } from '@/components/primitives/Typography';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { getFullUrl } from '@/core/utils/formatters';
 
 const toPersianDigits = (n: number | string | undefined | null) => {
   if (n === undefined || n === null || n === '') return '-';
@@ -24,7 +25,10 @@ const toPersianDigits = (n: number | string | undefined | null) => {
 };
 
 function ShopSliderCard({ shop }: { shop: any }) {
+  const [imgError, setImgError] = React.useState(false);
   const shopTitle = shop.shopTitle || shop.name || '';
+  const rawLogo = shop.logo || shop.logoUrl;
+
   const description =
     shop.description?.trim() ||
     (shopTitle ? `فروشگاه لوازم و قطعات ${shopTitle} در یدکچی` : 'تامین‌کننده معتبر در بازارگاه یدکچی');
@@ -40,38 +44,38 @@ function ShopSliderCard({ shop }: { shop: any }) {
     satisfactionRate = Math.min(100, Math.round(averageRate * 20));
   }
 
-  const firstLetter = shopTitle ? shopTitle.trim().charAt(0).toUpperCase() : 'ی';
-
   return (
     <Link
       href={`/shops/${shop.id}`}
       draggable={false}
       onDragStart={(e) => e.preventDefault()}
-      className="group relative flex h-[216px] w-[310px] shrink-0 cursor-pointer select-none flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/40 p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md transform-gpu"
+      className="group relative flex h-[13.5rem] w-[19.375rem] shrink-0 cursor-pointer select-none flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-b from-card via-card to-muted/40 p-5 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:border-foreground/20 hover:shadow-md transform-gpu"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-1 shadow-2xs">
-            {shop.logoUrl ? (
-              <img
-                src={shop.logoUrl}
-                alt={shopTitle}
-                className="h-full w-full rounded-lg object-contain"
-                loading="lazy"
-                decoding="async"
+          {/* کانتینر تصویر / لوگوی فروشگاه با آیکون پیش‌فرض در صورت نبود عکس */}
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-muted/40 shadow-2xs">
+            {rawLogo && !imgError ? (
+              <Image
+                src={getFullUrl(rawLogo)}
+                alt={shopTitle || 'لوگوی فروشگاه'}
+                fill
+                sizes="48px"
+                className="rounded-xl object-contain p-1"
+                onError={() => setImgError(true)}
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center rounded-lg bg-muted text-sm font-black text-foreground">
-                {firstLetter}
+              <div className="flex h-full w-full items-center justify-center bg-muted/60 text-muted-foreground transition-colors group-hover:text-primary">
+                <Store aria-hidden="true" className="h-6 w-6 stroke-[1.75]" />
               </div>
             )}
           </div>
 
           <div className="flex flex-col min-w-0">
-            <h3 className="line-clamp-1 text-sm font-bold text-foreground transition-colors group-hover:text-foreground/80">
+            <h3 className="line-clamp-1 text-title-sm font-bold transition-colors group-hover:text-primary">
               {shopTitle}
             </h3>
-            <span className="flex items-center gap-1 text-[10px] font-semibold text-muted-foreground mt-0.5">
+            <span className="flex items-center gap-1 text-[0.625rem] font-semibold text-muted-foreground mt-0.5">
               <CheckCircle2 className="h-3 w-3 shrink-0 text-foreground/70" />
               <span>فروشنده برگزیده</span>
             </span>
@@ -176,7 +180,7 @@ export function ShopSlider() {
         </div>
         <div className="flex w-full gap-4 overflow-hidden rounded-2xl border border-border bg-card p-4">
           {[...Array(4)].map((_, index) => (
-            <div key={index} className="h-[216px] w-[310px] shrink-0 rounded-2xl overflow-hidden border border-border p-5 space-y-4">
+            <div key={index} className="h-[13.5rem] w-[19.375rem] shrink-0 rounded-2xl overflow-hidden border border-border p-5 space-y-4">
               <div className="flex items-center gap-3">
                 <Skeleton className="h-12 w-12 rounded-xl" />
                 <div className="space-y-2">
@@ -204,9 +208,9 @@ export function ShopSlider() {
       <div className="flex w-full items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <Store aria-hidden="true" className="h-5 w-5 shrink-0 text-muted-foreground" />
-          <Typography variant="h4" className="text-base font-bold text-foreground sm:text-lg">
+          <h2 className="text-base font-bold text-foreground sm:text-lg">
             فروشندگان برگزیده یدکچی
-          </Typography>
+          </h2>
         </div>
       </div>
 
@@ -216,7 +220,7 @@ export function ShopSlider() {
             <button
               type="button"
               onClick={() => handleScroll('right')}
-              className="absolute start-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer rounded-full border border-border bg-card/90 p-2 text-foreground shadow-md backdrop-blur transition-all hover:bg-muted hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              className="absolute start-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-card/90 p-3 text-foreground shadow-md backdrop-blur transition-all hover:bg-muted hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
               aria-label="فروشندگان بعدی"
             >
               <ChevronRight aria-hidden="true" className="h-4 w-4" />
@@ -224,7 +228,7 @@ export function ShopSlider() {
             <button
               type="button"
               onClick={() => handleScroll('left')}
-              className="absolute end-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer rounded-full border border-border bg-card/90 p-2 text-foreground shadow-md backdrop-blur transition-all hover:bg-muted hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              className="absolute end-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-card/90 p-3 text-foreground shadow-md backdrop-blur transition-all hover:bg-muted hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
               aria-label="فروشندگان قبلی"
             >
               <ChevronLeft aria-hidden="true" className="h-4 w-4" />

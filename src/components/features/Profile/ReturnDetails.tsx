@@ -32,22 +32,22 @@ interface ReturnDetailsProps {
 const getStatusMeta = (status: string) => {
   switch (status) {
     case 'Pending':
-      return { label: 'در انتظار بررسی', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+      return { label: 'در انتظار بررسی', color: 'text-warning bg-warning/10 border-warning/20' };
     case 'NeedsMoreDocumentation':
-      return { label: 'نیاز به مدارک بیشتر', color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' };
+      return { label: 'نیاز به مدارک بیشتر', color: 'text-status-needs-action bg-status-needs-action/10 border-status-needs-action/20' };
     case 'WaitingForSellerResponse':
-      return { label: 'در انتظار پاسخ فروشنده', color: 'text-purple-500 bg-purple-500/10 border-purple-500/20' };
+      return { label: 'در انتظار پاسخ فروشنده', color: 'text-status-waiting-response bg-status-waiting-response/10 border-status-waiting-response/20' };
     case 'Confirmed':
       return { label: 'تأیید شده (آماده ارسال)', color: 'text-primary bg-primary/10 border-primary/20' };
     case 'TraceNumberAdded':
     case 'SentBack':
-      return { label: 'ارسال شده به فروشنده', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
+      return { label: 'ارسال شده به فروشنده', color: 'text-info bg-info/10 border-info/20' };
     case 'Received':
-      return { label: 'دریافت شده توسط فروشنده', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+      return { label: 'دریافت شده توسط فروشنده', color: 'text-success bg-success/10 border-success/20' };
     case 'Refunded':
-      return { label: 'بازگشت وجه انجام شد', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+      return { label: 'بازگشت وجه انجام شد', color: 'text-success bg-success/10 border-success/20' };
     case 'Denied':
-      return { label: 'درخواست رد شده', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
+      return { label: 'درخواست رد شده', color: 'text-destructive bg-destructive/10 border-destructive/20' };
     default:
       return { label: status, color: 'text-muted-foreground bg-muted border-border' };
   }
@@ -66,7 +66,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
     return (
       <div className="flex w-full flex-col items-center justify-center gap-3 py-16 text-center" dir="rtl">
         <AlertCircle className="h-10 w-10 text-destructive" />
-        <h2 className="text-sm font-bold text-foreground">درخواست مرجوعی یافت نشد</h2>
+        <h2 className="text-title-sm">درخواست مرجوعی یافت نشد</h2>
         <Button variant="outline" size="sm" onClick={() => router.push('/profile/returns')}>
           بازگشت به لیست مرجوعی‌ها
         </Button>
@@ -95,7 +95,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             <ArrowRight className="h-4 w-4" />
           </button>
           <div className="flex flex-col">
-            <h1 className="text-base font-black text-foreground">
+            <h1 className="text-xl font-bold text-foreground">
               جزئیات درخواست مرجوعی #{toPersianDigits(request.returnRequestNumber)}
             </h1>
             <span className="text-xs text-muted-foreground">
@@ -159,8 +159,8 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
 
         {/* دکمه ثبت بارنامه اگر درخواست تایید شده است */}
         {canSubmitShipment && (
-          <div className="mt-4 flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-            <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+          <div className="mt-4 flex items-center justify-between rounded-xl border border-warning/30 bg-warning/10 p-3">
+            <span className="text-xs font-semibold text-warning/90 dark:text-warning/90">
               درخواست شما تأیید شد. لطفاً پس از تحویل کالا به پست، شماره بارنامه و فیش پستی را ثبت فرمایید.
             </span>
             <Button
@@ -178,7 +178,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
 
       {/* اقلام مرجوعی */}
       <Card className="rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
-        <h2 className="mb-4 text-xs font-bold text-foreground">کالاهای مرجوعی این درخواست</h2>
+        <h2 className="mb-4 text-label">کالاهای مرجوعی این درخواست</h2>
 
         <div className="flex flex-col gap-4">
           {request.items?.map((it: any) => {
@@ -205,9 +205,9 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
                       تعداد مرجوعی: {toPersianDigits(it.quantity)} عدد
                     </span>
                     {reason?.name && (
-                      <span className="text-2xs text-rose-500 font-semibold">علت: {reason.name}</span>
+                      <span className="text-2xs text-destructive font-semibold">علت: {reason.name}</span>
                     )}
-                    <p className="mt-1 text-2xs text-foreground/80 leading-relaxed bg-card p-2 rounded-lg border border-border/50">
+                    <p className="mt-1 text-xs text-foreground/80 leading-relaxed bg-card p-2 rounded-lg border border-border/50">
                       شرح شما: {it.description}
                     </p>
                   </div>
@@ -215,7 +215,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
 
                 <div className="flex flex-col items-end gap-1 text-xs font-bold">
                   <span className="text-muted-foreground text-2xs">مبلغ استرداد این قلم:</span>
-                  <span className="text-primary text-sm font-black">{formatToman(it.itemReturnAmount || it.originalPrice)}</span>
+                  <span className="text-primary text-sm font-bold">{formatToman(it.itemReturnAmount || it.originalPrice)}</span>
                 </div>
               </div>
             );
@@ -225,7 +225,7 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
 
       {/* خلاصه مبالغ بازگشتی */}
       <Card className="rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
-        <h2 className="mb-3 text-xs font-bold text-foreground">خلاصه مبالغ بازگشت وجه</h2>
+        <h2 className="mb-3 text-label">خلاصه مبالغ بازگشت وجه</h2>
 
         <div className="flex flex-col gap-3 text-xs">
           <div className="flex items-center justify-between text-muted-foreground">
@@ -240,9 +240,9 @@ export function ReturnDetails({ returnId }: ReturnDetailsProps) {
             </div>
           )}
 
-          <div className="flex items-center justify-between border-t border-border/80 pt-3 text-sm font-black">
+          <div className="flex items-center justify-between border-t border-border/80 pt-3 text-sm font-bold">
             <span className="text-foreground">مجموع کل قابل عودت به کیف پول / حساب:</span>
-            <span className="text-base font-black text-primary">{formatToman(request.totlaPayBackAmount)}</span>
+            <span className="text-base font-bold text-primary">{formatToman(request.totlaPayBackAmount)}</span>
           </div>
         </div>
       </Card>

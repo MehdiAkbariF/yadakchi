@@ -96,7 +96,7 @@ export function ProductMinimalHeader({
           isAttached ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <span className="block truncate text-xs font-bold text-foreground sm:text-sm">
+        <span className="block truncate text-label sm:text-sm">
           {productTitle}
         </span>
       </div>
@@ -120,7 +120,7 @@ export function ProductMinimalHeader({
           {isMenuOpen && (
             <div
               dir="rtl"
-              className="absolute left-0 top-11 z-[99999] w-48 max-w-[calc(100vw-32px)] rounded-2xl border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 origin-top-left"
+              className="absolute left-0 top-11 z-popover w-48 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card/95 p-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 origin-top-left"
             >
               <button
                 type="button"
@@ -128,7 +128,7 @@ export function ProductMinimalHeader({
                   setIsMenuOpen(false);
                   onOpenPriceChart();
                 }}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors text-right"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-muted transition-colors text-right"
               >
                 <LineChart className="h-4 w-4 text-shop shrink-0" />
                 <span>نمودار تغییرات قیمت</span>
@@ -137,7 +137,7 @@ export function ProductMinimalHeader({
               <button
                 type="button"
                 onClick={handleGoToCompare}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors text-right"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-muted transition-colors text-right"
               >
                 <Scale className="h-4 w-4 text-primary shrink-0" />
                 <span>مقایسه این کالا</span>
@@ -146,7 +146,7 @@ export function ProductMinimalHeader({
               <button
                 type="button"
                 onClick={handleShare}
-                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-foreground hover:bg-muted transition-colors text-right"
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-label hover:bg-muted transition-colors text-right"
               >
                 <Share2 className="h-4 w-4 text-muted-foreground shrink-0" />
                 <span>اشتراک‌گذاری</span>
@@ -175,7 +175,7 @@ export function ProductMinimalHeader({
           className={cn(
             'relative flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 backdrop-blur-md shadow-xs active:scale-90',
             isCartBouncing
-              ? 'border-primary bg-primary/20 text-primary scale-110 shadow-[0_0_15px_rgba(234,88,12,0.6)] animate-bounce'
+              ? 'border-primary bg-primary/20 text-primary scale-110 shadow-focus-primary animate-bounce'
               : 'border-border/80 bg-card/85 text-foreground hover:bg-muted'
           )}
           aria-label="سبد خرید"
@@ -184,7 +184,7 @@ export function ProductMinimalHeader({
           {totalBasketCount > 0 && (
             <span
               className={cn(
-                'absolute -top-1 -end-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground shadow-xs transition-transform',
+                'absolute -top-1 -end-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary px-1 text-[0.625rem] font-black text-primary-foreground shadow-xs transition-transform',
                 isCartBouncing && 'scale-125 ring-2 ring-card'
               )}
             >

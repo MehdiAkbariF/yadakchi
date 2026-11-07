@@ -21,14 +21,14 @@ export function CheckoutAddress({ activeAddress, onOpenModal, isLocked }: Checko
     )}>
       {/* هدر */}
       <div className="flex items-center justify-between border-b border-shop/20 pb-3">
-        <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <span className="flex items-center gap-2 text-title-sm">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-shop text-shop-foreground text-2xs font-bold">
             ۱
           </div>
           <MapPin className="h-4 w-4 text-shop" />
           آدرس تحویل
           {isLocked && (
-            <span className="mr-1 animate-pulse rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive">
+            <span className="mr-1 animate-pulse rounded-full bg-destructive/10 px-2 py-0.5 text-[0.625rem] font-bold text-destructive">
               الزامی
             </span>
           )}
@@ -47,8 +47,8 @@ export function CheckoutAddress({ activeAddress, onOpenModal, isLocked }: Checko
       <div className="text-sm">
         {activeAddress ? (
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-bold text-foreground">{activeAddress.receiverFullName}</span>
-            <p className="text-xs font-medium leading-relaxed text-muted-foreground">
+            <span className="text-title-sm">{activeAddress.receiverFullName}</span>
+            <p className="text-base font-medium leading-relaxed text-muted-foreground">
               {activeAddress.province}، شهر {activeAddress.city}، {activeAddress.address}
               {activeAddress.plaque && `، پلاک ${formatPersian(activeAddress.plaque)}`}
               {activeAddress.unit && `، طبقه/واحد ${formatPersian(activeAddress.unit)}`}

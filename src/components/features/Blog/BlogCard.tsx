@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -38,7 +38,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
 
         {/* بج دسته‌بندی روی تصویر */}
         {post.category ? (
-          <span className="pointer-events-none absolute start-3 top-3 z-10 rounded-full border border-border/60 bg-card/90 px-3 py-1 text-3xs font-black tracking-wide text-primary shadow-xs backdrop-blur-md">
+          <span className="pointer-events-none absolute start-3 top-3 z-10 rounded-full border border-border/60 bg-card/90 px-3 py-1 text-3xs font-bold tracking-wide text-primary shadow-xs backdrop-blur-md">
             {post.category.title}
           </span>
         ) : null}
@@ -71,7 +71,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                 className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-3xs font-semibold text-muted-foreground transition-colors group-hover:border-primary/20"
               >
                 <Layers aria-hidden="true" className="h-2.5 w-2.5 shrink-0 text-primary" />
-                <span className="max-w-[100px] truncate">{c.name}</span>
+                <span className="max-w-[6.25rem] truncate">{c.name}</span>
               </span>
             ))}
             {post.parts.slice(0, 1).map((p) => (
@@ -80,7 +80,7 @@ export function BlogCard({ post, featured = false }: BlogCardProps) {
                 className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-3xs font-semibold text-muted-foreground"
               >
                 <Wrench aria-hidden="true" className="h-2.5 w-2.5 shrink-0" />
-                <span className="max-w-[100px] truncate">{p.name}</span>
+                <span className="max-w-[6.25rem] truncate">{p.name}</span>
               </span>
             ))}
           </div>

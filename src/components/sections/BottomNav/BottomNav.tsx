@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -40,7 +40,7 @@ export function BottomNav() {
   return (
    <nav
   aria-label="ناوبری پایین"
-  className="lg:hidden fixed inset-x-0 bottom-0 z-30 flex h-16 items-center justify-between border-t border-border/80 bg-card px-3 pb-safe select-none shadow-[0_-2px_10px_rgba(0,0,0,0.05)] transform-gpu"
+  className="lg:hidden fixed inset-x-0 bottom-0 z-fixed flex h-16 items-center justify-between border-t border-border/80 bg-card px-3 pb-safe select-none shadow-nav-top-sm transform-gpu"
 >
       <div className="mx-auto flex h-full w-full max-w-md items-center justify-between">
         {navItems.map((item) => {
@@ -79,7 +79,7 @@ export function BottomNav() {
 
               <span
                 className={cn(
-                  'mt-1 max-w-[70px] truncate text-2xs  transition-colors duration-fast',
+                  'mt-1 max-w-[4.375rem] truncate text-2xs  transition-colors duration-fast',
                   isActive ? 'font-bold text-primary' : 'font-medium text-muted-foreground'
                 )}
               >

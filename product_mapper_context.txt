@@ -1,0 +1,876 @@
+﻿================================================
+FILE: src\domains\front\product\mappers\product.mapper.ts
+================================================
+import { Product, Money, Discount, Image } from '@/domains/front/product/types/domain.types';
+import { 
+  ProductViewModel, 
+  SearchProductsRequest, 
+  ProductPriceChartViewModel,
+  ProductPageViewModel,
+  ProductDetailsViewModel,
+  ShopProductViewModel,
+  CommentsAverageViewModel,
+  CommentItemViewModel,
+  InquiryItemViewModel,
+  ShopProductsGroupViewModel
+} from '@/domains/front/product/types/view.types';
+import { 
+  ProductPageResponseDto, 
+  PriceChartDto, 
+  CommentsAverageDto, 
+  CommentItemDto, 
+  InquiryItemDto,
+  ProductDto,
+  ShopProductDto,
+  OpenSearchProductsRequestDto,
+  SearchProductHitDto
+} from '../types/dto.types';
+import { getProductUrl } from '@/core/utils/formatters';
+
+export class ProductMapper {
+ static toDomain(rawDto: any): Product {
+    if (!rawDto) {
+      return {} as Product;
+    }
+
+    const dto = rawDto._source ? { ...rawDto._source, id: rawDto._id || rawDto._source.id } : rawDto;
+
+    // استخراج قیمت‌ها (سازگار با OpenSearch جدید و ساختار قدیم)
+    const nominated = dto.nominatedShopProduct || {};
+    const rawPrice = dto.rialRetailPrice ?? dto.price ?? nominated.rialRetailPrice ?? nominated.price ?? 0;
+    const rawFinalPrice = dto.rialFinalPrice ?? dto.discountPrice ?? nominated.rialFinalPrice ?? nominated.price ?? rawPrice;
+
+    const price: Money = {
+      amount: rawPrice,
+      currency: 'IRR',
+    };
+
+    // درصد تخفیف
+    const hasDiscount = dto.isDiscountApplied !== undefined 
+      ? dto.isDiscountApplied 
+      : (rawPrice > rawFinalPrice);
+
+    let discount: Discount | null = null;
+    if (hasDiscount && rawPrice > 0) {
+      const calculatedPercent = Math.round(((rawPrice - rawFinalPrice) / rawPrice) * 100);
+      discount = {
+        percent: dto.discountPercentage !== undefined && dto.discountPercentage > 0 
+          ? dto.discountPercentage 
+          : calculatedPercent,
+        expirationDate: nominated.discountUntil || dto.discountExpiration ? new Date(nominated.discountUntil || dto.discountExpiration) : null,
+        originalPrice: price,
+      };
+    }
+
+    // استخراج تصاویر
+    const images: Image[] = [];
+    const mainTitle = dto.productTitle || dto.title || dto.name || '';
+    if (dto.image) {
+      images.push({ url: dto.image, alt: mainTitle, order: 0 });
+    } else if (dto.images && Array.isArray(dto.images)) {
+      dto.images.forEach((url: string, index: number) => {
+        images.push({ url, alt: mainTitle, order: index });
+      });
+    }
+
+    // تبدیل امن type (عددی یا رشته‌ای به استرینگ استاندارد فرانت)
+    let typeValue: 'NEW' | 'STOCK' | 'TAKEOFF' = 'NEW';
+    const rawType = dto.type ?? nominated.type;
+    if (rawType === 2 || rawType === '2' || rawType === 'Stock' || rawType === 'STOCK') {
+      typeValue = 'STOCK';
+    } else if (rawType === 3 || rawType === '3' || rawType === 'TakeOff' || rawType === 'TAKEOFF') {
+      typeValue = 'TAKEOFF';
+    }
+
+    // موجودی انبار
+    const count = dto.quantity ?? dto.stockCount ?? nominated.quantity ?? 0;
+    const isInStock = dto.isInStock !== undefined ? dto.isInStock : count > 0;
+
+    return {
+      id: dto.productId || dto.id || '',
+      shopProductId: dto.shopProductId || nominated.id || '',
+      code: dto.productCode || dto.code || 0,
+      name: {
+        value: mainTitle,
+        english: dto.englishTitle || '',
+      },
+      description: dto.description || '',
+      price,
+      discount,
+      images,
+      category: {
+        id: dto.categoryId || dto.partCategoryId || '',
+        name: dto.categoryName || dto.partCategoryName || '',
+        englishTitle: dto.categoryEnglishTitle || dto.partCategoryEnglishTitle || '',
+      },
+      brand: {
+        id: dto.brandId || '',
+        name: dto.brandName || '',
+        englishTitle: dto.brandName || '',
+        logo: dto.brandLogo || null,
+      },
+      shop: {
+        id: dto.shopId || nominated.shopId || '',
+        name: dto.shopTitle || nominated.shopTitle || dto.shopName || '',
+        rating: dto.averageRate || nominated.averageRate || dto.shopRating || 0,
+      },
+      inventory: {
+        isInStock,
+        count,
+      },
+      type: typeValue,
+      metadata: {
+        createdAt: new Date(dto.createdAt || Date.now()),
+        updatedAt: new Date(dto.updatedAt || Date.now()),
+      },
+      rating: {
+        average: dto.averageRate || dto.rating || 5,
+        count: dto.commentCount || 0,
+      },
+      statistics: {
+        views: dto.viewsAndClicks || dto.views || 0,
+        commentCount: dto.commentCount || 0,
+        inquiryCount: dto.inquiryCount || 0,
+      },
+      isFavorite: dto.isFavorite || false,
+    };
+  }
+
+  static toView(domain: Product): ProductViewModel {
+    const priceInToman = domain.price.amount / 10;
+    const discountedPrice = domain.discount 
+      ? (domain.price.amount * (1 - domain.discount.percent / 100)) / 10
+      : priceInToman;
+
+    return {
+      id: domain.id,
+      shopProductId: domain.shopProductId || '',
+      code: domain.code,
+      name: domain.name.value,
+      englishTitle: domain.name.english,
+      description: domain.description,
+      price: {
+        raw: domain.price.amount,
+        formatted: this.formatNumber(domain.price.amount),
+        toman: priceInToman,
+        formattedToman: this.formatNumber(priceInToman) + ' تومان',
+      },
+      discount: {
+        hasDiscount: !!domain.discount,
+        percent: domain.discount?.percent || 0,
+        originalPrice: domain.discount ? this.formatNumber(domain.discount.originalPrice.amount / 10) + ' تومان' : '',
+        discountedPrice: domain.discount ? this.formatNumber(discountedPrice) + ' تومان' : '',
+        expirationDate: domain.discount?.expirationDate?.toISOString() || null,
+        isActive: domain.discount?.expirationDate ? domain.discount.expirationDate > new Date() : true,
+      },
+      images: domain.images.map(img => ({
+        thumbnail: img.url,
+        medium: img.url,
+        large: img.url,
+        alt: img.alt,
+      })),
+      category: domain.category,
+      brand: domain.brand,
+      shop: {
+        ...domain.shop,
+        ratingStars: Math.round(domain.shop.rating),
+      },
+      inventory: {
+        isInStock: domain.inventory.isInStock,
+        count: domain.inventory.count,
+        status: domain.inventory.count > 10 ? 'AVAILABLE' : domain.inventory.count > 0 ? 'LIMITED' : 'OUT_OF_STOCK',
+        statusText: domain.inventory.count > 10 ? 'موجود' : domain.inventory.count > 0 ? 'تعداد محدود' : 'ناموجود',
+      },
+      type: {
+        value: domain.type,
+        label: domain.type === 'NEW' ? 'جدید' : domain.type === 'STOCK' ? 'استوک' : 'زیرصفری',
+        badge: domain.type === 'NEW' ? 'success' : domain.type === 'STOCK' ? 'info' : 'warning',
+      },
+      metadata: {
+        createdAt: domain.metadata.createdAt.toISOString(),
+        updatedAt: domain.metadata.updatedAt.toISOString(),
+        isNew: this.isNew(domain.metadata.createdAt),
+        isRecentlyUpdated: this.isRecentlyUpdated(domain.metadata.updatedAt),
+      },
+      rating: {
+        average: domain.rating.average,
+        count: domain.rating.count,
+        stars: Math.round(domain.rating.average),
+        percentage: (domain.rating.average / 5) * 100,
+      },
+      statistics: {
+        views: domain.statistics.views,
+        viewsFormatted: this.formatNumber(domain.statistics.views),
+        commentCount: domain.statistics.commentCount,
+        inquiryCount: domain.statistics.inquiryCount,
+        popularity: domain.statistics.views > 1000 ? 'HIGH' : domain.statistics.views > 100 ? 'MEDIUM' : 'LOW',
+        popularityText: domain.statistics.views > 1000 ? 'پرطرفدار' : domain.statistics.views > 100 ? 'متوسط' : 'کم بازدید',
+      },
+      isFavorite: domain.isFavorite,
+    };
+  }
+
+  // نگاشت درخواست فرانت‌ به بادی JSON استاندارد OpenSearch
+  static toOpenSearchRequest(request: SearchProductsRequest): OpenSearchProductsRequestDto {
+    let types: number[] | undefined = undefined;
+    if (request.types && request.types.length > 0) {
+      types = request.types.map((t: any) => {
+        if (typeof t === 'number') return t;
+        if (t === 'New') return 1;
+        if (t === 'Stock') return 2;
+        if (t === 'TakeOff') return 3;
+        return Number(t) || 0;
+      });
+    }
+
+    const shopIds = request.shopIds || (request.shopId ? [request.shopId] : undefined);
+
+    const payload: OpenSearchProductsRequestDto = {
+      searchTitle: request.searchTitle || undefined,
+      brandIds: request.brandIds && request.brandIds.length > 0 ? request.brandIds : undefined,
+      partIds: request.partIds && request.partIds.length > 0 ? request.partIds : undefined,
+      partCategoryIds: request.partCategoryIds && request.partCategoryIds.length > 0 ? request.partCategoryIds : undefined,
+      carIds: request.carIds && request.carIds.length > 0 ? request.carIds : undefined,
+      shopIds: shopIds && shopIds.length > 0 ? shopIds : undefined,
+      productCode: request.productCode || undefined,
+      types,
+      fromPrice: request.fromPrice || undefined,
+      toPrice: request.toPrice || undefined,
+      onlyInStock: request.onlyInStock ?? request.isProductInStock ?? undefined,
+      onlyDiscounted: request.onlyDiscounted ?? request.hasDiscount ?? undefined,
+      onlyDirectShipping: request.onlyDirectShipping ?? undefined,
+      sortBy: request.sortBy || request.orderType || undefined,
+      sortDesc: request.sortDesc ?? undefined,
+      pageNumber: request.pageNumber || 1,
+      pageSize: request.pageSize || 30,
+      includeAggregations: request.includeAggregations ?? true,
+    };
+
+    // پاکسازی کلیدهای تعریف نشده جهت جلوگیری از ارسال فیلدهای بیهوده
+    Object.keys(payload).forEach((key) => {
+      if ((payload as any)[key] === undefined) {
+        delete (payload as any)[key];
+      }
+    });
+
+    return payload;
+  }
+
+  static toViewPriceChart(dto: any): ProductPriceChartViewModel {
+    return {
+      dates: (dto.dates || []).map((d: string) => new Date(d).toLocaleDateString('fa-IR')),
+      prices: (dto.prices || []).map((p: number) => p / 10),
+      averagePrice: dto.averagePrice / 10,
+      minPrice: dto.minPrice / 10,
+      maxPrice: dto.maxPrice / 10,
+    };
+  }
+
+  static toViewKeyword(dto: any): any {
+    return {
+      suggestion: dto.searchKeywordSuggestion,
+      productTitles: dto.productTitles || [],
+      part: {
+        id: dto.partId,
+        name: dto.partName,
+        englishTitle: dto.partEnglishTitle,
+        href: `/search?partEnglishTitle=${dto.partEnglishTitle}`,
+      },
+      category: {
+        id: dto.partCategoryId,
+        name: dto.partCategoryName,
+        englishTitle: dto.partCategoryEnglishTitle,
+        href: `/part-category/${dto.partCategoryEnglishTitle}`,
+      },
+    };
+  }
+
+  static toViewProductPage(dto: any): ProductPageViewModel | null {
+    if (!dto || !dto.product) {
+      return null;
+    }
+
+    const rawProduct = dto.product?.product || dto.product;
+    return {
+      product: this.toViewProductDetails(rawProduct),
+      shopProducts: {
+        newNominated: dto.shopProducts?.newNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.newNominatedShopProduct) : null,
+        newOnline: (dto.shopProducts?.newOnlineShopProducts || []).map((p: any) => this.toViewShopProduct(p)),
+        newLocal: (dto.shopProducts?.newLocalShopProducts || []).map((p: any) => this.toViewShopProduct(p)),
+        takeOffNominated: dto.shopProducts?.takeOffNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.takeOffNominatedShopProduct) : null,
+        takeOffOnline: (dto.shopProducts?.takeOffOnlineShopProducts || []).map((p: any) => this.toViewShopProduct(p)),
+        takeOffLocal: (dto.shopProducts?.takeOffLocalShopProducts || []).map((p: any) => this.toViewShopProduct(p)),
+        stockNominated: dto.shopProducts?.stockNominatedShopProduct ? this.toViewShopProduct(dto.shopProducts.stockNominatedShopProduct) : null,
+        stockOnline: (dto.shopProducts?.stockOnlineShopProducts || []).map((p: any) => this.toViewShopProduct(p)),
+        stockLocal: (dto.shopProducts?.stockLocalShopProducts || []).map((p: any) => this.toViewShopProduct(p))
+      }
+    };
+  }
+
+  static toViewProductDetails(dto: ProductDto): ProductDetailsViewModel {
+    return {
+      id: dto.id,
+      code: dto.productCode,
+      title: dto.title,
+      image: dto.image,
+      imageAlt: dto.imageAlt,
+      description: dto.description,
+      partNumber: dto.partNumber,
+      averageRate: dto.averageRate,
+      rateCount: dto.rateCount,
+      views: this.formatNumber(dto.views),
+      salesCount: this.formatNumber(dto.totalSalesCount),
+      brand: {
+        id: dto.brand?.id || '',
+        name: dto.brand?.name || '',
+        englishTitle: dto.brand?.englishTitle || '',
+        logo: dto.brand?.image || null
+      },
+      cars: (dto.cars || []).map(c => ({
+        id: c.id,
+        model: c.model,
+        englishTitle: c.englishTitle,
+        cover: c.cover
+      })),
+      gallery: dto.productImageGallery || [],
+      specGroups: (dto.productDetails || []).map(g => ({
+        name: g.name,
+        specs: (g.productDetails || []).map(s => ({
+          name: s.name,
+          value: s.value,
+          isMain: s.isMain
+        }))
+      })),
+      seo: {
+        title: dto.seoInformation?.title || '',
+        description: dto.seoInformation?.description || ''
+      },
+      breadCrumbs: (dto.breadCrumbs || []).map(b => ({
+        id: b.id,
+        title: b.title,
+        englishTitle: b.englishTitle,
+        url: getProductUrl(dto.productCode, dto.title)
+      }))
+    };
+  }
+
+  static toViewShopProduct(dto: ShopProductDto): ShopProductViewModel {
+    const isDiscountActive = dto.rialRetailPrice > dto.finalRialPrice;
+    return {
+      id: dto.id,
+      quantity: dto.quantity,
+      retailPrice: this.formatPrice(dto.rialRetailPrice / 10) + ' تومان',
+      finalPrice: this.formatPrice(dto.finalRialPrice / 10) + ' تومان',
+      retailPriceRaw: dto.rialRetailPrice,
+      finalPriceRaw: dto.finalRialPrice,
+      discountPercentage: dto.discountPercentage,
+      hasDiscount: isDiscountActive,
+      type: dto.type,
+      typeLabel: dto.type === 'New' ? 'قطعه نو' : dto.type === 'Stock' ? 'قطعه استوک' : 'قطعه زیرصفری',
+      isAdvertised: dto.isAdvertised,
+      isLocalSale: dto.isLocalSale,
+      isTipaxShipping: dto.isTipaxShipping,
+      isDirectShipping: dto.isDirectShipping,
+      dayOfDelivery: dto.dayOfDelivery,
+      dayOfDeliveryLabel: `ارسال ${this.formatNumber(dto.dayOfDelivery)} روزه فروشنده`,
+      shop: {
+        id: dto.shop?.id || '',
+        title: dto.shop?.shopTitle || '',
+        latitude: dto.shop?.latitude || 0,
+        longitude: dto.shop?.longitude || 0,
+        address: dto.shop?.address || '',
+        phone: dto.shop?.tell || null,
+        averageRate: dto.shop?.averageRate || 0,
+        logo: dto.shop?.logo || null
+      },
+      warrantyTitle: dto.warrantySupport?.title || 'بدون گارانتی'
+    };
+  }
+
+  static toViewCommentsAverage(dto: CommentsAverageDto): CommentsAverageViewModel {
+    const total = dto.allRatesCount || 1;
+    return {
+      averageRate: dto.averageRate,
+      allRatesCount: dto.allRatesCount,
+      allCommentsCount: dto.allCommentsCount,
+      allInquiriesCount: dto.allInquiriesCount,
+      starPercentages: {
+        five: Math.round((dto.fiveStarRatesCount / total) * 100),
+        four: Math.round((dto.fourStarRatesCount / total) * 100),
+        three: Math.round((dto.threeStarRatesCount / total) * 100),
+        two: Math.round((dto.twoStarRatesCount / total) * 100),
+        one: Math.round((dto.oneStarRatesCount / total) * 100)
+      }
+    };
+  }
+
+  static toViewCommentItem(dto: CommentItemDto): CommentItemViewModel {
+    return {
+      id: dto.id,
+      comment: dto.comment,
+      rate: dto.rate,
+      creator: dto.commentCreator,
+      likes: dto.likes,
+      dislikes: dto.dislikes,
+      repliesCount: dto.repliesCount,
+      createDateFormatted: new Date(dto.createDate).toLocaleDateString('fa-IR'),
+      isSellerComment: dto.isSellerComment,
+      isBuyerUser: dto.isBuyerUser,
+      isYourComment: dto.isYourComment,
+      userBoughtFrom: dto.userBoughtFrom,
+      userLiked: dto.userLiked,
+      userDisLiked: dto.userDisLiked
+    };
+  }
+
+  static toViewInquiryItem(dto: InquiryItemDto): InquiryItemViewModel {
+    return {
+      id: dto.id,
+      comment: dto.comment,
+      creator: dto.inquiryCreator,
+      replyCount: dto.replyCount,
+      likes: dto.likes,
+      dislikes: dto.dislikes,
+      isSellerComment: dto.isSellerComment,
+      isBuyerUser: dto.isBuyerUser,
+      isYourComment: dto.isYourComment,
+      createDateFormatted: new Date(dto.createDate).toLocaleDateString('fa-IR'),
+      userLiked: dto.userLiked,
+      userDisLiked: dto.userDisLiked,
+      bestReply: dto.bestReply ? this.toViewInquiryItem(dto.bestReply) : null
+    };
+  }
+// ✅ Mapper: یک hit از Search/Products به ShopProductViewModel
+static toViewSearchHit(dto: SearchProductHitDto): ShopProductViewModel {
+  const isDiscountActive =
+    dto.isDiscountApplied || dto.rialRetailPrice > dto.rialFinalPrice;
+
+  const typeLabel =
+    dto.type === 'New'
+      ? 'قطعه نو'
+      : dto.type === 'Stock'
+      ? 'قطعه استوک'
+      : 'قطعه زیرصفری';
+
+  return {
+    id: dto.shopProductId,
+    quantity: dto.quantity,
+    retailPrice: this.formatPrice(dto.rialRetailPrice / 10) + ' تومان',
+    finalPrice: this.formatPrice(dto.rialFinalPrice / 10) + ' تومان',
+    retailPriceRaw: dto.rialRetailPrice,
+    finalPriceRaw: dto.rialFinalPrice,
+    discountPercentage: dto.discountPercentage,
+    hasDiscount: isDiscountActive,
+    type: dto.type as 'New' | 'Stock' | 'TakeOff',
+    typeLabel,
+    isAdvertised: dto.hasSpecialAttention,
+    isLocalSale: dto.isLocalShop ?? false,
+    isTipaxShipping: dto.isTipaxShipping ?? false,
+    isDirectShipping: dto.hasDirectShipment ?? dto.isDirectShipping ?? false,
+    dayOfDelivery: dto.dayOfDelivery ?? 0,
+    dayOfDeliveryLabel: dto.dayOfDelivery
+      ? `ارسال ${this.formatNumber(dto.dayOfDelivery)} روزه فروشنده`
+      : 'ارسال نامشخص',
+    shop: {
+      id: dto.shopId || '',
+      title: dto.shopTitle || '',
+      latitude: dto.shopLatitude || 0,
+      longitude: dto.shopLongitude || 0,
+      address: dto.shopAddress || '',
+      phone: dto.shopTell || null,
+      averageRate: dto.averageRate || 0,
+      logo: dto.shopLogo || null,
+    },
+    warrantyTitle: dto.warrantyTitle || 'بدون گارانتی',
+  };
+}
+
+// ✅ Mapper: گروه‌بندی hits بر اساس type برای سازگاری با ProductPageViewModel
+static groupSearchHitsByType(hits: SearchProductHitDto[]): ShopProductsGroupViewModel {
+  const views = hits.map((h) => this.toViewSearchHit(h));
+
+  const byType = (t: string) => views.filter((v) => v.type === t);
+
+  const newList = byType('New');
+  const stockList = byType('Stock');
+  const takeOffList = byType('TakeOff');
+
+  // جدا کردن nominated (isAdvertised) از online/local:
+  // - اگر isAdvertised → nominated
+  // - اگر isLocalSale → local
+  // - وگرنه → online
+  const pickNominated = (list: ShopProductViewModel[]) => {
+    const nominated = list.find((s) => s.isAdvertised);
+    if (!nominated) return { nominated: null, remaining: list };
+    return {
+      nominated,
+      remaining: list.filter((s) => s.id !== nominated.id),
+    };
+  };
+
+  const splitOnlineLocal = (list: ShopProductViewModel[]) => ({
+    online: list.filter((s) => !s.isLocalSale),
+    local: list.filter((s) => s.isLocalSale),
+  });
+
+  const newSplit = pickNominated(newList);
+  const newOnlineLocal = splitOnlineLocal(newSplit.remaining);
+
+  const stockSplit = pickNominated(stockList);
+  const stockOnlineLocal = splitOnlineLocal(stockSplit.remaining);
+
+  const takeOffSplit = pickNominated(takeOffList);
+  const takeOffOnlineLocal = splitOnlineLocal(takeOffSplit.remaining);
+
+  return {
+    newNominated: newSplit.nominated,
+    newOnline: newOnlineLocal.online,
+    newLocal: newOnlineLocal.local,
+    stockNominated: stockSplit.nominated,
+    stockOnline: stockOnlineLocal.online,
+    stockLocal: stockOnlineLocal.local,
+    takeOffNominated: takeOffSplit.nominated,
+    takeOffOnline: takeOffOnlineLocal.online,
+    takeOffLocal: takeOffOnlineLocal.local,
+  };
+}
+
+  private static formatNumber(value: number): string {
+    return new Intl.NumberFormat('fa-IR').format(value);
+  }
+
+  private static formatPrice(value: number): string {
+    return new Intl.NumberFormat('fa-IR').format(Math.round(value));
+  }
+
+  private static isNew(date: Date): boolean {
+    const diff = Date.now() - date.getTime();
+    return diff < 7 * 24 * 60 * 60 * 1000;
+  }
+
+  private static isRecentlyUpdated(date: Date): boolean {
+    const diff = Date.now() - date.getTime();
+    return diff < 24 * 60 * 60 * 1000;
+  }
+}
+
+
+
+================================================
+FILE: src\domains\front\product\types\dto.types.ts
+================================================
+export interface BrandDto {
+  id: string;
+  name: string;
+  englishTitle: string;
+  image: string | null;
+  imageAlt: string | null;
+}
+
+export interface CarDto {
+  id: string;
+  carTypeId: string;
+  carManufacturerId: string;
+  model: string;
+  isAutomatic: boolean | null;
+  seoInformationId: string;
+  englishTitle: string;
+  description: string | null;
+  cover: string | null;
+  coverAlt: string | null;
+}
+
+export interface ProductDetailSpecDto {
+  value: string;
+  priority: number;
+  name: string;
+  isMain: boolean;
+}
+
+export interface ProductDetailGroupDto {
+  priority: number;
+  icon: string | null;
+  iconAlt: string | null;
+  name: string;
+  productDetails: ProductDetailSpecDto[];
+}
+
+export interface SeoInfoDto {
+  id: string;
+  title: string;
+  description: string;
+  canonicalUrl: string;
+}
+
+export interface BreadCrumbDto {
+  id: string;
+  title: string;
+  englishTitle: string;
+}
+
+export interface ProductDto {
+  id: string;
+  productCode: number;
+  title: string;
+  image: string;
+  imageAlt: string;
+  description: string;
+  partNumber: string | null;
+  averageRate: number;
+  rateCount: number;
+  likes: number;
+  views: number;
+  totalSalesCount: number;
+  height: number;
+  width: number;
+  length: number;
+  weight: number;
+  brand: BrandDto;
+  cars: CarDto[];
+  productImageGallery: string[];
+  productVideoGallery: string[];
+  productDetails: ProductDetailGroupDto[];
+  seoInformation: SeoInfoDto;
+  tags: string[];
+  breadCrumbs: BreadCrumbDto[];
+}
+
+export interface ShopDetailsDto {
+  id: string;
+  shopTitle: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  plaque: string;
+  unit: string;
+  tell: string | null;
+  averageRate: number;
+  logo: string | null;
+}
+
+export interface WarrantySupportDto {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface ShopProductDto {
+  id: string;
+  quantity: number;
+  rialRetailPrice: number;
+  finalRialPrice: number;
+  discountPercentage: number;
+  discountUntil: string | null;
+  status: string;
+  type: 'New' | 'Stock' | 'TakeOff';
+  isAdvertised: boolean;
+  isLocalSale: boolean;
+  isTipaxShipping: boolean;
+  isDirectShipping: boolean;
+  dayOfDelivery: number;
+  shop: ShopDetailsDto;
+  warrantySupport: WarrantySupportDto;
+}
+
+export interface ShopProductsGroupDto {
+  newNominatedShopProduct: ShopProductDto | null;
+  newOnlineShopProducts: ShopProductDto[];
+  newLocalShopProducts: ShopProductDto[];
+  takeOffNominatedShopProduct: ShopProductDto | null;
+  takeOffOnlineShopProducts: ShopProductDto[];
+  takeOffLocalShopProducts: ShopProductDto[];
+  stockNominatedShopProduct: ShopProductDto | null;
+  stockOnlineShopProducts: ShopProductDto[];
+  stockLocalShopProducts: ShopProductDto[];
+}
+
+export interface ProductPageResponseDto {
+  product: ProductDto;
+  shopProducts: ShopProductsGroupDto;
+}
+
+export interface PriceChartDto {
+  dates: string[];
+  prices: number[];
+  averagePrice: number;
+  minPrice: number;
+  maxPrice: number;
+}
+
+export interface CommentsAverageDto {
+  averageRate: number;
+  allRatesCount: number;
+  allCommentsCount: number;
+  allInquiriesCount: number;
+  fiveStarRatesCount: number;
+  fourStarRatesCount: number;
+  threeStarRatesCount: number;
+  twoStarRatesCount: number;
+  oneStarRatesCount: number;
+}
+
+export interface CommentItemDto {
+  id: string;
+  productId: string;
+  comment: string;
+  rate: number;
+  commentCreator: string;
+  likes: number;
+  dislikes: number;
+  parentId: string | null;
+  isConfirmed: boolean;
+  repliesCount: number;
+  createDate: string;
+  isSellerComment: boolean;
+  isBuyerUser: boolean;
+  isYourComment: boolean;
+  userBoughtFrom: string | null;
+  userLiked: boolean;
+  userDisLiked: boolean;
+}
+
+export interface CommentsResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: CommentItemDto[];
+}
+
+export interface InquiryItemDto {
+  id: string;
+  productId: string;
+  comment: string;
+  inquiryCreator: string;
+  parentId: string | null;
+  isConfirmed: boolean;
+  replyCount: number;
+  likes: number;
+  dislikes: number;
+  isSellerComment: boolean;
+  isBuyerUser: boolean;
+  isYourComment: boolean;
+  createDate: string;
+  userLiked: boolean;
+  userDisLiked: boolean;
+  bestReply: InquiryItemDto | null;
+}
+
+export interface InquiriesResponseDto {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  items: InquiryItemDto[];
+}
+
+export interface SearchProductKeywordItemApiDto {
+  searchKeywordSuggestion: string;
+  productTitles: string[];
+  partId: string;
+  partName: string;
+  partEnglishTitle: string;
+  partCategoryId: string;
+  partCategoryName: string;
+  partCategoryEnglishTitle: string;
+}
+
+export interface SearchProductKeywordsResponseApiDto {
+  searchProductKeywords: SearchProductKeywordItemApiDto[];
+}
+
+// ============================================
+// DTOهای جدید موتور جستجوی OpenSearch
+// ============================================
+export interface OpenSearchProductsRequestDto {
+  searchTitle?: string;
+  brandIds?: string[];
+  partIds?: string[];
+  partCategoryIds?: string[];
+  carIds?: string[];
+  shopIds?: string[];
+  productCode?: number;
+  types?: number[];
+  fromPrice?: number;
+  toPrice?: number;
+  onlyInStock?: boolean;
+  onlyDiscounted?: boolean;
+  onlyDirectShipping?: boolean;
+  sortBy?: string;
+  sortDesc?: boolean;
+  pageNumber?: number;
+  pageSize?: number;
+  includeAggregations?: boolean;
+  hasDiscountWithExpiration?: boolean;
+}
+
+export interface OpenSearchProductsResponseDto {
+  total: number;
+  pageNumber: number;
+  pageSize: number;
+  took: number;
+  hits: any[];
+  aggregations?: any;
+}
+
+// ============================================
+// DTO جدید: خروجی OpenSearch Search/Products
+// ============================================
+
+export interface SearchProductHitDto {
+  shopProductId: string;
+  productId: string;
+  productCode: number;
+  productTitle: string;
+  shopTitle: string;
+  rialFinalPrice: number;
+  rialRetailPrice: number;
+  discountPercentage: number;
+  discountUntil: string | null;
+  isDiscountApplied: boolean;
+  type: 'New' | 'Stock' | 'TakeOff' | string;
+  quantity: number;
+  order: number;
+  score: number;
+  image: string;
+  imageAlt: string;
+  warrantySupportId: string | null;
+  originalityType: string | null;
+  averageRate: number;
+  likes: number;
+  viewsAndClicks: number;
+  totalSalesCount: number;
+  hasSpecialAttention: boolean;
+  isLocalShop: boolean | null;
+  hasDirectShipment: boolean | null;
+  // فیلدهای اختیاری که ممکن است بک‌اند در آینده اضافه کند:
+  shopId?: string;
+  shopLogo?: string | null;
+  shopAddress?: string;
+  shopTell?: string | null;
+  shopLatitude?: number;
+  shopLongitude?: number;
+  dayOfDelivery?: number;
+  warrantyTitle?: string;
+  isTipaxShipping?: boolean;
+  isDirectShipping?: boolean;
+}
+
+export interface SearchProductsResponseDto {
+  total: number;
+  pageNumber: number;
+  pageSize: number;
+  took: number;
+  hits: SearchProductHitDto[];
+  aggregations?: {
+    brands?: Array<{ key: string; count: number }>;
+    partCategories?: Array<{ key: string; count: number }>;
+    parts?: Array<{ key: string; count: number }>;
+    types?: Array<{ key: string; count: number }>;
+    priceRanges?: Array<{ key: string; count: number }>;
+    priceStats?: { min: number; max: number; avg: number; sum: number };
+  };
+}
+
+
+

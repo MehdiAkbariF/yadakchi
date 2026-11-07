@@ -24,7 +24,7 @@ export function PageLoading({
   return (
     <div
       className={cn(
-        'flex w-full min-h-[300px] items-center justify-center transition-all duration-300',
+        'flex w-full min-h-[18.75rem] items-center justify-center transition-all duration-300',
         !show && 'min-h-0 h-0 overflow-hidden opacity-0',
         className
       )}

@@ -377,7 +377,7 @@ export function OrderReceiptModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-4xl">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <ModalTitle className="flex items-center gap-2 text-title-sm">
           <FileText className="h-5 w-5 text-primary" />
           <span>صورتحساب سفارش {receipt ? `#${toPersianDigits(receipt.orderNumber)}` : ''}</span>
         </ModalTitle>
@@ -394,10 +394,10 @@ export function OrderReceiptModal({
         ) : isError || !receipt ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
             <AlertCircle className="h-10 w-10 text-destructive" />
-            <p className="text-sm font-bold text-foreground">
+            <p className="text-title-sm">
               خطا در بارگذاری فاکتور سفارش
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               امکان دریافت اطلاعات صورتحساب در حال حاضر وجود ندارد.
             </p>
             <Button variant="outline" size="sm" onClick={onClose} className="mt-2">
@@ -541,7 +541,7 @@ export function OrderReceiptModal({
                 <span className="font-bold text-zinc-900">
                   مبلغ نهایی پرداختی فاکتور (ریال):
                 </span>
-                <span className="text-base font-black text-amber-600">
+                <span className="text-base font-bold text-amber-600">
                   {formatRial(receipt.totalFinalPrice)} ریال
                 </span>
               </div>
@@ -567,7 +567,7 @@ export function OrderReceiptModal({
 
             {/* دکمه‌های کنترل مودال */}
             <div className="flex items-center justify-end gap-3 border-t border-border/60 pt-3">
-              <Button variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-xs">
+              <Button variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-sm">
                 بستن
               </Button>
               <Button

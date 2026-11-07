@@ -17,6 +17,27 @@ const keepAliveHttpsAgent = typeof window === 'undefined'
   ? new https.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 10, timeout: 60000 })
   : null;
 
+// جلوگیری از حملات Open Redirect: مسیر فقط باید نسبی و داخلی باشد
+function getSafeRedirectUrl(targetPath: string): string {
+  if (!targetPath || !targetPath.startsWith('/') || targetPath.startsWith('//') || targetPath.includes('\\')) {
+    return '/profile';
+  }
+  return targetPath;
+}
+
+// سانسور دیتای حساس قبل از ثبت در لاگ‌ها (جلوگیری از لو رفتن OTP و شماره کاربر)
+function sanitizeLogData(data: any): any {
+  if (!data || typeof data !== 'object') return data;
+  const sanitized = { ...data };
+  const sensitiveKeys = ['code', 'password', 'token', 'refreshToken', 'nationalCode'];
+  for (const key of Object.keys(sanitized)) {
+    if (sensitiveKeys.includes(key)) {
+      sanitized[key] = '***REDACTED***';
+    }
+  }
+  return sanitized;
+}
+
 export class HttpClient {
   private readonly axiosInstance: AxiosInstance;
   private abortControllers: Map<string, AbortController> = new Map();
@@ -32,7 +53,7 @@ export class HttpClient {
     this.axiosInstance = axios.create({
       baseURL,
       timeout: env.apiTimeout,
-      withCredentials: true,
+      withCredentials: true, // استفاده ایمن از HttpOnly Cookies
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -59,10 +80,10 @@ export class HttpClient {
           };
         }
 
-        if (env.enableLogging) {
+        if (env.enableLogging && env.isDevelopment) {
           logger.debug(`[HTTP] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
             params: config.params,
-            data: config.data,
+            data: sanitizeLogData(config.data),
           });
         }
 
@@ -79,10 +100,9 @@ export class HttpClient {
 
     this.axiosInstance.interceptors.response.use(
       (response) => {
-        if (env.enableLogging) {
+        if (env.enableLogging && env.isDevelopment) {
           logger.debug(`[HTTP] Response ${response.status} ${response.config.url}`, {
             status: response.status,
-            data: response.data,
           });
         }
         return response;
@@ -110,8 +130,10 @@ export class HttpClient {
             return Promise.reject(errorManager.normalize(error));
           }
 
+          const safeRedirect = getSafeRedirectUrl(currentPath);
+
           if (originalRequest._retry) {
-            window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+            window.location.href = `/login?redirect=${encodeURIComponent(safeRedirect)}`;
             return Promise.reject(errorManager.normalize(error));
           }
 
@@ -136,7 +158,7 @@ export class HttpClient {
               .catch((refreshError) => {
                 this.failedQueue.forEach((prom) => prom.reject(refreshError));
                 this.failedQueue = [];
-                window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+                window.location.href = `/login?redirect=${encodeURIComponent(safeRedirect)}`;
                 reject(refreshError);
               })
               .finally(() => {
@@ -146,12 +168,6 @@ export class HttpClient {
         }
 
         const apiError = errorManager.normalize(error);
-        logger.error('[HTTP] Response error', {
-          type: apiError.type,
-          status: apiError.status,
-          message: apiError.message,
-          userMessage: apiError.userMessage,
-        });
         return Promise.reject(apiError);
       }
     );
@@ -180,7 +196,6 @@ export class HttpClient {
     }
 
     try {
-      // ✅ تشخیص اختصاصی آدرس برای اندپوینت‌های OpenSearch در SSR سرور
       let requestBaseURL = this.axiosInstance.defaults.baseURL;
       if (url.startsWith('/api/Search') && typeof window === 'undefined') {
         requestBaseURL = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104';

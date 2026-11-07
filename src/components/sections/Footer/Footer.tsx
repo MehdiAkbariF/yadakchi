@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -76,7 +76,7 @@ function WhyYadakchi() {
       <div className="container mx-auto max-w-6xl px-4">
         <div className="relative mb-8 flex items-center justify-center">
           <div aria-hidden="true" className="absolute inset-x-0 top-1/2 -z-0 h-px bg-border" />
-          <h3 className="relative z-10 bg-card px-5 text-sm font-bold text-foreground sm:text-base">
+          <h3 className="relative z-10 bg-card px-5 text-title-sm sm:text-base">
             چرا یدکچی؟
           </h3>
         </div>
@@ -190,11 +190,11 @@ export function Footer({ className }: FooterProps) {
     >
       <WhyYadakchi />
 
-      <div className="container mx-auto max-w-[1840px] px-4 pt-10 md:px-6">
+      <div className="container mx-auto max-w-[115rem] px-4 pt-10 md:px-6">
         <div className="mb-8 flex flex-col items-center justify-between gap-4 border-b border-border pb-6 md:flex-row">
           <div className="flex flex-col items-center text-center md:items-start md:gap-2">
             <Logo hideTitle className="origin-right scale-110" />
-            <p className="mt-2 max-w-xl text-xs text-muted-foreground">
+            <p className="mt-2 max-w-xl text-base text-muted-foreground">
               {footerData?.description || 'یدکچی؛ مارکت‌پلیس تخصصی خرید قطعات یدکی خودرو'}
             </p>
           </div>
@@ -345,20 +345,20 @@ export function Footer({ className }: FooterProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-4 rounded-lg border border-border bg-card p-4 shadow-xs">
-            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-2xs font-bold text-muted-foreground">
+            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-label-2xs">
               رسانه
             </div>
-            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-2xs font-bold text-muted-foreground">
+            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-label-2xs">
               نماد
             </div>
-            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-2xs font-bold text-muted-foreground">
+            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-muted text-label-2xs">
               اتحادیه
             </div>
           </div>
         </div>
 
         <div className="mt-8 border-t border-border pt-6 text-center">
-          <p className="mx-auto max-w-5xl text-center text-2xs leading-relaxed text-muted-foreground">
+          <p className="mx-auto max-w-5xl text-center text-xs leading-relaxed text-muted-foreground">
             استفاده از مطالب یدکچی برای «استفاده غیرتجاری» و با «ذکر منبع» بلامانع است، تمامی حقوق مادی و معنوی این وب سایت متعلق به شرکت تامین اندیشان نوین خودرو می‌باشد.
           </p>
         </div>

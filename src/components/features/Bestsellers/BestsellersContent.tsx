@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Award, ShoppingBag, Trophy } from 'lucide-react';
@@ -31,17 +31,17 @@ export function BestsellersContent() {
     <div className="flex w-full flex-col gap-6">
       {/* هدر موبایل */}
       <div
-        style={{ top: isHeaderMinimized ? '56px' : '122px' }}
+        style={{ top: isHeaderMinimized ? '3.5rem' : '122px' }}
         className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-amber-500/20 bg-amber-500/10 text-amber-500">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-warning/20 bg-warning/10 text-warning">
               <Trophy aria-hidden="true" className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xs font-bold text-muted-foreground">محبوب‌ترین‌های بازار</span>
-              <span className="mt-0.5 text-xs font-bold text-foreground">پرفروش‌ترین‌های یدکچی</span>
+              <span className="text-label-2xs">محبوب‌ترین‌های بازار</span>
+              <span className="mt-0.5 text-label">پرفروش‌ترین‌های یدکچی</span>
             </div>
           </div>
         </div>
@@ -50,12 +50,12 @@ export function BestsellersContent() {
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-xs font-bold text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-label shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="truncate">فیلترها</span>
           </button>
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
+          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-label-2xs">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -63,21 +63,21 @@ export function BestsellersContent() {
 
       <Breadcrumb items={breadcrumbItems} className="hidden px-4 md:flex md:px-0" />
 
-      <div className="relative flex w-full select-none items-center justify-between overflow-hidden rounded-lg border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 px-4 md:px-8 sm:p-8">
+      <div className="relative flex w-full select-none items-center justify-between overflow-hidden rounded-lg border border-warning/20 bg-gradient-to-r from-warning/10 via-warning/5 to-transparent p-6 px-4 md:px-8 sm:p-8">
         <div className="relative z-10 flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 font-bold text-amber-500">
+          <div className="flex items-center gap-2 font-bold text-warning">
             <Trophy aria-hidden="true" className="h-5 w-5 shrink-0" />
             <span className="text-sm font-bold tracking-wide">برترین و پرفروش‌ترین قطعات بازار</span>
           </div>
-          <h2 className="mt-1 text-2xl font-bold text-foreground">
+          <h2 className="mt-1 text-xl font-bold text-foreground">
             لیست پرفروش‌ترین قطعات یدکی خودرو
           </h2>
-          <p className="mt-0.5 max-w-md text-xs leading-relaxed text-muted-foreground">
+          <p className="mt-0.5 max-w-md text-base leading-relaxed text-muted-foreground">
             محبوب‌ترین، پرتقاضاترین و باکیفیت‌ترین قطعات خودرو که بیشترین رضایت و فروش را توسط خریداران در سراسر کشور ثبت کرده‌اند.
           </p>
         </div>
         <div className="pointer-events-none absolute start-6 top-1/2 hidden shrink-0 -translate-y-1/2 opacity-10 sm:block">
-          <Trophy aria-hidden="true" className="h-28 w-28 text-amber-500" strokeWidth={1.5} />
+          <Trophy aria-hidden="true" className="h-28 w-28 text-warning" strokeWidth={1.5} />
         </div>
       </div>
 
@@ -96,21 +96,21 @@ export function BestsellersContent() {
               <Typography variant="h3" className="font-bold text-foreground">
                 پرفروش‌ترین قطعات خودرو
               </Typography>
-              <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">
+              <span className="rounded-md bg-muted px-2.5 py-1 text-label-muted">
                 {new Intl.NumberFormat('fa-IR').format(totalCount)} کالای برتر
               </span>
             </div>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -128,7 +128,7 @@ export function BestsellersContent() {
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
               </Typography>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 در حال حاضر کالایی در این لیست موجود نیست.
               </p>
             </div>

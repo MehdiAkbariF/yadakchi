@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Search, FolderKanban, Car, Wrench, X } from 'lucide-react';
@@ -61,7 +61,7 @@ export function BlogSidebar({
       
       {/* باکس جستجوی مدرن */}
       <div className="w-full rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
-        <label className="mb-2 block text-xs font-bold text-foreground">جستجوی تخصصی</label>
+        <label className="mb-2 block text-label">جستجوی تخصصی</label>
         <form onSubmit={handleSearchSubmit} className="relative">
           <input
             type="text"
@@ -79,7 +79,7 @@ export function BlogSidebar({
       {/* دسته‌بندی‌های وبلاگ */}
       <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
         <div className="mb-1 flex items-center justify-between border-b border-border/70 pb-2.5">
-          <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+          <span className="flex items-center gap-1.5 text-label">
             <FolderKanban aria-hidden="true" className="h-4 w-4 text-primary" />
             موضوعات تخصصی
           </span>
@@ -127,7 +127,7 @@ export function BlogSidebar({
       {availableFilters.carTypes.length > 0 && (
         <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
           <div className="mb-1 flex items-center justify-between border-b border-border/70 pb-2.5">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+            <span className="flex items-center gap-1.5 text-label">
               <Car aria-hidden="true" className="h-4 w-4 text-primary" />
               خودروهای مرتبط
             </span>
@@ -159,7 +159,7 @@ export function BlogSidebar({
       {availableFilters.parts.length > 0 && (
         <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
           <div className="mb-1 flex items-center justify-between border-b border-border/70 pb-2.5">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+            <span className="flex items-center gap-1.5 text-label">
               <Wrench aria-hidden="true" className="h-4 w-4 text-primary" />
               مجموعه قطعات
             </span>

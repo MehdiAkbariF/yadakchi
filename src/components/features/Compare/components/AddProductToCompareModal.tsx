@@ -46,7 +46,7 @@ export function AddProductToCompareModal({
       className="w-full max-w-lg h-[85vh] md:h-auto overflow-hidden rounded-2xl flex flex-col"
     >
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="text-sm font-bold text-foreground">
+        <ModalTitle className="text-title-sm">
           افزودن کالا به میز مقایسه
         </ModalTitle>
       </ModalHeader>
@@ -74,7 +74,7 @@ export function AddProductToCompareModal({
           <span className="text-3xs font-bold text-muted-foreground flex items-center gap-1">
             {!isSearching ? (
               <>
-                <Sparkles className="h-3 w-3 text-amber-500" />
+                <Sparkles className="h-3 w-3 text-warning" />
                 کالاهای پیشنهادی جهت مقایسه
               </>
             ) : (
@@ -89,7 +89,7 @@ export function AddProductToCompareModal({
         {/* لیست محصولات */}
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto no-scrollbar pr-0.5">
           {isLoading ? (
-            <div className="flex flex-1 items-center justify-center gap-2 py-16 text-xs font-bold text-muted-foreground">
+            <div className="flex flex-1 items-center justify-center gap-2 py-16 text-label-muted">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <span>در حال بارگذاری کالاها...</span>
             </div>
@@ -123,7 +123,7 @@ export function AddProductToCompareModal({
                       />
                     </div>
                     <div className="flex flex-col min-w-0 text-right">
-                      <span className="truncate text-xs font-bold text-foreground">
+                      <span className="truncate text-label">
                         {prod.name || prod.title}
                       </span>
                       <span className="text-3xs text-muted-foreground mt-0.5">

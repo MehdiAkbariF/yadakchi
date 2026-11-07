@@ -38,9 +38,9 @@ export function RootProvider({ children }: RootProviderProps) {
               color: '#F9FAFB',
               fontFamily: 'IRANYekan, sans-serif',
               direction: 'rtl',
-              borderRadius: '14px',
+              borderRadius: '0.875rem',
               padding: '12px 20px',
-              fontSize: '13px',
+              fontSize: '0.8125rem',
               boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
             },
           }}

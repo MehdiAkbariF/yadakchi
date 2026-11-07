@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -481,7 +481,7 @@ export function ProductSearchCard({
                     <span className="text-xs font-bold text-destructive">ناموجود</span>
                   ) : (
                     <>
-                      <span className="text-sm font-bold text-foreground">
+                      <span className="text-title-sm">
                         {formatPrice(finalPriceToman)}
                       </span>
                       <span className="text-2xs text-muted-foreground">تومان</span>

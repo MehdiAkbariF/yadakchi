@@ -42,11 +42,11 @@ export function AnimatedBackground() {
       {/* بلاب‌های رنگی */}
       <motion.div
         style={{ y: y1 }}
-        className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[100px]"
+        className="absolute -top-40 -right-40 w-[31.25rem] h-[31.25rem] rounded-full bg-primary/10 blur-[6.25rem]"
       />
       <motion.div
         style={{ y: y2 }}
-        className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px]"
+        className="absolute -bottom-40 -left-40 w-[37.5rem] h-[37.5rem] rounded-full bg-primary/10 blur-[7.5rem]"
       />
 
       {/* ذرات شناور */}

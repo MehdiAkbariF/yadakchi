@@ -139,7 +139,7 @@ function LoginContent() {
             </Button>
           </form>
 
-          <Typography variant="small" color="muted" className="text-center text-[10px] leading-relaxed text-muted-foreground/80 px-2 block">
+          <Typography variant="small" color="muted" className="text-center text-[0.625rem] leading-relaxed text-muted-foreground/80 px-2 block">
             ورود | ثبت نام شما به معنای پذیرش{' '}
             <Link href="/terms" className="text-primary hover:underline font-bold">قوانین و مقررات</Link>{' '}
             و{' '}
@@ -194,7 +194,7 @@ function LoginContent() {
           <div className="flex justify-center border-t border-border pt-4">
             <button 
               onClick={() => setStep('phone')}
-              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-primary transition-colors group"
+              className="flex items-center gap-1.5 text-label-muted hover:text-primary transition-colors group"
             >
               <PencilLine className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
               ویرایش شماره &gt;

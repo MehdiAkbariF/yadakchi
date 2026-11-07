@@ -61,7 +61,6 @@ export class PartService {
     }
   }
 
-  // ✅ حل قطعی ارور ۴۰۰: دقیقاً مطابق پارامترهای Swagger
   async getPartPage(partEnglishName: string, carModel?: string): Promise<any> {
     try {
       const cleanSlug = decodeURIComponent(partEnglishName || '').trim();
@@ -70,7 +69,6 @@ export class PartService {
         PartEnglishName: cleanSlug,
       };
 
-      // فقط در صورتی که CarModel واقعاً وجود داشته باشد ارسال شود
       if (carModel && carModel.trim() !== '') {
         params.CarModel = carModel.trim();
       }
@@ -82,7 +80,6 @@ export class PartService {
       const properties = await this.getPartProperties(domain.id);
       const viewData = PartMapper.toView(domain, properties);
 
-      // استخراج اطلاعات والد از Breadcrumbs (طبق ریسپانس Swagger)
       const breadCrumbs = Array.isArray(rawData?.breadCrumbs) ? rawData.breadCrumbs : [];
       const parentCat = breadCrumbs.length > 1 ? breadCrumbs[breadCrumbs.length - 2] : breadCrumbs[0];
 
@@ -155,42 +152,100 @@ export class PartService {
     }
   }
 
-async getPartCategories(carId?: string, isInMain?: boolean): Promise<PartCategoryViewModel[]> {
-  try {
-    const params: Record<string, string | boolean> = {};
-    if (carId && carId.trim() !== '') {
-      params.CarId = carId.trim();
-    }
-    // ✅ اضافه شد: فیلتر IsInMain
-    if (isInMain !== undefined) {
-      params.IsInMain = isInMain;
-    }
-
-    const response = await this.httpClient.get<PartCategoryApiDto[]>(
-      PART_ENDPOINTS.GET_PART_CATEGORIES,
-      { params }
-    );
-
-    const viewCategories = (response.data || []).map((dto) => PartMapper.toViewCategory(dto));
-    return PartMapper.formatCategoryTree(viewCategories);
-  } catch (error) {
-    logger.error('[PartService] Get part categories failed:', error);
-    return [];
-  }
-}
-
-  async getPartCategoryPage(englishTitle: string): Promise<PartCategoryPageViewModel> {
+  async getPartCategories(carId?: string, isInMain?: boolean): Promise<PartCategoryViewModel[]> {
     try {
-      const cleanSlug = decodeURIComponent(englishTitle || '').trim();
+      const params: Record<string, string | boolean> = {};
+      if (carId && carId.trim() !== '') {
+        params.CarId = carId.trim();
+      }
+      if (isInMain !== undefined) {
+        params.IsInMain = isInMain;
+      }
+
+      const response = await this.httpClient.get<PartCategoryApiDto[]>(
+        PART_ENDPOINTS.GET_PART_CATEGORIES,
+        { params }
+      );
+
+      const viewCategories = (response.data || []).map((dto) => PartMapper.toViewCategory(dto));
+      return PartMapper.formatCategoryTree(viewCategories);
+    } catch (error) {
+      logger.error('[PartService] Get part categories failed:', error);
+      return [];
+    }
+  }
+
+  // ✅ متد ارتقایافته و فوق‌العاده مقاوم در برابر خطای ۵۰۰ سرور
+  async getPartCategoryPage(englishTitle: string): Promise<PartCategoryPageViewModel | null> {
+    const cleanSlug = decodeURIComponent(englishTitle || '').trim();
+
+    try {
       const response = await this.httpClient.get(PART_ENDPOINTS.GET_PART_CATEGORY_PAGE, {
         params: { PartCategoryEnglishTitle: cleanSlug },
       });
 
-      return PartMapper.toViewCategoryPage(response.data);
-    } catch (error) {
-      logger.error('[PartService] Get part category page failed:', error);
-      throw errorManager.normalize(error);
+      if (response.data) {
+        return PartMapper.toViewCategoryPage(response.data);
+      }
+    } catch (error: any) {
+      logger.warn(`[PartService] Primary GET_PART_CATEGORY_PAGE failed for "${cleanSlug}", attempting fallback...`);
     }
+
+    // 🛡️ مکانیزم نجات (Fallback): واکشی دسته از لیست جامع دسته‌بندی‌ها
+    try {
+      const allCategoriesResponse = await this.httpClient.get<any[]>('/api/Front/PartCategories', {
+        params: { CarId: '' },
+      });
+
+      const allCategories = Array.isArray(allCategoriesResponse.data) ? allCategoriesResponse.data : [];
+      const lowerSlug = cleanSlug.toLowerCase();
+
+      let matchedCat: any = null;
+      function findCat(items: any[]) {
+        for (const item of items) {
+          if (
+            (item.englishTitle && item.englishTitle.trim().toLowerCase() === lowerSlug) ||
+            (item.name && item.name.trim().toLowerCase() === lowerSlug) ||
+            item.id === cleanSlug
+          ) {
+            matchedCat = item;
+            return;
+          }
+          if (item.children && Array.isArray(item.children)) {
+            findCat(item.children);
+            if (matchedCat) return;
+          }
+        }
+      }
+
+      findCat(allCategories);
+
+      if (matchedCat) {
+        return {
+          category: {
+            id: matchedCat.id,
+            name: matchedCat.name,
+            englishTitle: matchedCat.englishTitle || cleanSlug,
+            description: matchedCat.description || '',
+            thumbnail: matchedCat.thumbnail || matchedCat.icon || null,
+            parentId: matchedCat.parentId || null,
+          },
+          breadCrumbs: [
+            { id: '1', title: 'دسته‌بندی‌ها', englishTitle: 'categories' },
+            { id: matchedCat.id, title: matchedCat.name, englishTitle: matchedCat.englishTitle || cleanSlug },
+          ],
+          seoInformation: {
+            title: `خرید و قیمت قطعات ${matchedCat.name} | یدکچی`,
+            description: `بررسی، مقایسه قیمت و خرید آنلاین قطعات و لوازم یدکی ${matchedCat.name} در بازارگاه یدکچی.`,
+            canonicalUrl: `https://yadakchi.com/part-category/${cleanSlug}`,
+          },
+        } as any;
+      }
+    } catch (fallbackError) {
+      logger.error('[PartService] Fallback category lookup also failed:', fallbackError);
+    }
+
+    return null;
   }
 
   async getPartCategoriesName(filters: PartCategoryFilters): Promise<PartCategoryViewModel[]> {

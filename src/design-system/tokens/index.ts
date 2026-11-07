@@ -1,3 +1,5 @@
+// src/design-system/tokens/index.ts
+
 export * from './breakpoints';
 export * from './colors';
 export * from './motion';

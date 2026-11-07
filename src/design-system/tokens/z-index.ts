@@ -15,7 +15,8 @@ export const zIndex = {
   overlay:  40,   // backdrop (پشت مودال)
   modal:    50,   // dialog, bottom sheet
   popover:  60,   // tooltip, popover روی مودال
-  toast:    70,   // toast notification
+  toast:    70,
+  loader:    80,   // toast notification
   debug:    999,  // فقط dev — در prod استفاده نکن
 } as const;
 

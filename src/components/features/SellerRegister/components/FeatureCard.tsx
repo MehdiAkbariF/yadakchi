@@ -53,7 +53,7 @@ export function FeatureCard({ feat, index }: FeatureCardProps) {
 
         <div className="flex flex-col gap-2">
           <h3 className="text-base font-bold text-foreground">{feat.title}</h3>
-          <p className="text-sm leading-relaxed text-muted-foreground">{feat.desc}</p>
+          <p className="text-base leading-relaxed text-muted-foreground">{feat.desc}</p>
         </div>
 
         <motion.div

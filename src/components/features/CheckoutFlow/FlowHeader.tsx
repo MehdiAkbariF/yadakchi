@@ -63,10 +63,10 @@ export function FlowHeader({ step, title }: FlowHeaderProps) {
 
       {/* عنوان و زیرعنوان */}
       <div className="flex min-w-0 flex-1 flex-col items-center px-2">
-        <span className="block truncate text-xs font-bold text-foreground sm:text-sm">
+        <span className="block truncate text-label sm:text-sm">
           {title || config.title}
         </span>
-        <span className="block truncate text-[10px] text-shop/80 font-bold">
+        <span className="block truncate text-[0.625rem] text-shop/80 font-bold">
           {config.subtitle}
         </span>
       </div>
@@ -94,7 +94,7 @@ export function FlowHeader({ step, title }: FlowHeaderProps) {
           >
             <ShoppingCart className="h-4 w-4" />
             {totalCount > 0 && (
-              <span className="absolute -top-1 -end-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-shop px-1 text-[10px] font-black text-shop-foreground">
+              <span className="absolute -top-1 -end-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-shop px-1 text-[0.625rem] font-black text-shop-foreground">
                 {toPersianDigits(totalCount)}
               </span>
             )}

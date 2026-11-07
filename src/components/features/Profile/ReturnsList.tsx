@@ -65,23 +65,23 @@ export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
   const getReturnStatusMeta = (s: string) => {
     switch (s) {
       case 'Pending':
-        return { label: 'در انتظار بررسی', color: 'text-amber-500 bg-amber-500/10 border-amber-500/20' };
+        return { label: 'در انتظار بررسی', color: 'text-warning bg-warning/10 border-warning/20' };
       case 'NeedsMoreDocumentation':
-        return { label: 'نیاز به مدارک بیشتر', color: 'text-orange-500 bg-orange-500/10 border-orange-500/20' };
+        return { label: 'نیاز به مدارک بیشتر', color: 'text-status-needs-action bg-status-needs-action/10 border-status-needs-action/20' };
       case 'WaitingForSellerResponse':
-        return { label: 'در انتظار پاسخ فروشنده', color: 'text-purple-500 bg-purple-500/10 border-purple-500/20' };
+        return { label: 'در انتظار پاسخ فروشنده', color: 'text-status-waiting-response bg-status-waiting-response/10 border-status-waiting-response/20' };
       case 'Confirmed':
         return { label: 'تأیید شده', color: 'text-primary bg-primary/10 border-primary/20' };
       case 'TraceNumberAdded':
-        return { label: 'کد رهگیری ثبت شد', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
+        return { label: 'کد رهگیری ثبت شد', color: 'text-info bg-info/10 border-info/20' };
       case 'SentBack':
-        return { label: 'ارسال به فروشنده', color: 'text-blue-500 bg-blue-500/10 border-blue-500/20' };
+        return { label: 'ارسال به فروشنده', color: 'text-info bg-info/10 border-info/20' };
       case 'Received':
-        return { label: 'دریافت شده', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+        return { label: 'دریافت شده', color: 'text-success bg-success/10 border-success/20' };
       case 'Refunded':
-        return { label: 'بازگشت وجه انجام شد', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+        return { label: 'بازگشت وجه انجام شد', color: 'text-success bg-success/10 border-success/20' };
       case 'Denied':
-        return { label: 'رد شده', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
+        return { label: 'رد شده', color: 'text-destructive bg-destructive/10 border-destructive/20' };
       default:
         return { label: s, color: 'text-muted-foreground bg-muted border-border' };
     }
@@ -93,11 +93,11 @@ export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
       <div className="hidden lg:flex flex-col gap-1 border-b border-border/70 pb-4">
         <div className="flex items-center gap-2">
           <RotateCcw className="h-5 w-5 text-primary" />
-          <h1 className="text-base font-black text-foreground sm:text-lg">
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">
             درخواست‌های مرجوعی
           </h1>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           پیگیری وضعیت درخواست‌های مرجوعی، ثبت بارنامه ارسال و مشاهده بازگشت وجه
         </p>
       </div>
@@ -184,7 +184,7 @@ export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col gap-1">
-                        <span className="line-clamp-1 text-xs font-bold text-foreground">
+                        <span className="line-clamp-1 text-label">
                           {req.productTitle}
                         </span>
                         <span className="text-xs text-muted-foreground">
@@ -201,7 +201,7 @@ export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
                       <span className="text-xs text-muted-foreground">
                         مبلغ قابل بازگشت:
                       </span>
-                      <span className="text-sm font-black text-primary">
+                      <span className="text-sm font-bold text-primary">
                         {req.totlaPayBackAmount}
                       </span>
                     </div>
@@ -257,10 +257,10 @@ export function ReturnsList({ initialStatus, initialPage }: ReturnsListProps) {
               loop={true}
             />
           </div>
-          <p className="mt-5 text-sm font-bold text-foreground">
+          <p className="mt-5 text-title-sm">
             درخواستی در این دسته وجود ندارد
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-base text-muted-foreground">
             شما هیچ درخواست مرجوعی با وضعیت «
             {STATUS_TABS.find((t) => t.id === status)?.label}» ثبت نکرده‌اید.
           </p>

@@ -52,17 +52,17 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           }
           className={cn(
             inputVariants({ variant: hasError ? 'error' : 'default', size }),
-            'min-h-[80px] resize-y py-2',
+            'min-h-[5rem] resize-y py-2',
             className
           )}
           {...props}
         />
         {hasError ? (
-          <p id={errorId} role="alert" className="text-xs text-destructive">
+          <p id={errorId} role="alert" className="text-base text-destructive">
             {error}
           </p>
         ) : description ? (
-          <p id={descriptionId} className="text-xs text-muted-foreground">
+          <p id={descriptionId} className="text-base text-muted-foreground">
             {description}
           </p>
         ) : null}

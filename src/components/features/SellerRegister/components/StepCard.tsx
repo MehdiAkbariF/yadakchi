@@ -55,8 +55,8 @@ export function StepCard({ step, index, isLast }: StepCardProps) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <h3 className="text-sm font-bold text-foreground">{step.title}</h3>
-          <p className="text-xs leading-relaxed text-muted-foreground">{step.desc}</p>
+          <h3 className="text-title-sm">{step.title}</h3>
+          <p className="text-base leading-relaxed text-muted-foreground">{step.desc}</p>
         </div>
       </div>
     </motion.div>

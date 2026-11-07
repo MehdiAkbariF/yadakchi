@@ -32,7 +32,7 @@ class ProductImpressionTracker {
     
     this.queue.add(shopProductId);
 
-    console.log('%c[ImpressionTracker] 👁️ بازدید محصول اضافه شد:', 'color: #ea580c; font-weight: bold;', {
+    if (process.env.NODE_ENV === 'development') console.log('%c[ImpressionTracker] 👁️ بازدید محصول اضافه شد:', 'color: #ea580c; font-weight: bold;', {
       shopProductId
     });
 
@@ -94,7 +94,7 @@ class ProductImpressionTracker {
       shopProductIds: idsToFlush
     };
 
-    console.log(
+    if (process.env.NODE_ENV === 'development') console.log(
       `%c[ImpressionTracker] 🚀 ارسال بازدید محصولات به سرور (${isExiting ? 'هنگام خروج از صفحه' : 'بسته‌ای'}):`,
       'color: #c2410c; font-weight: bold; background: #ffedd5; padding: 3px 8px; border-radius: 4px;',
       payload
@@ -127,7 +127,7 @@ export function trackShopProductClick(shopProductId?: string | null) {
   const payload = { shopProductIds: [shopProductId] };
   const bodyString = JSON.stringify(payload);
 
-  console.log(
+  if (process.env.NODE_ENV === 'development') console.log(
     '%c[ShopProductClick] 🎯 ارسال کلیک کالا به سرور:',
     'color: #16a34a; font-weight: bold; background: #dcfce7; padding: 2px 6px; border-radius: 4px;',
     payload

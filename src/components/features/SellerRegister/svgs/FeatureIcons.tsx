@@ -162,7 +162,7 @@ export function TruckIcon({ className, size = 24 }: IconProps) {
         strokeWidth="1.8"
         animate={{ rotate: 360 }}
         transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-        style={{ originX: '8px', originY: '17px', transformBox: 'fill-box' }}
+        style={{ originX: '0.5rem', originY: '1.0625rem', transformBox: 'fill-box' }}
       />
       {/* چرخ راست */}
       <motion.circle
@@ -171,7 +171,7 @@ export function TruckIcon({ className, size = 24 }: IconProps) {
         strokeWidth="1.8"
         animate={{ rotate: 360 }}
         transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-        style={{ originX: '17px', originY: '17px', transformBox: 'fill-box' }}
+        style={{ originX: '1.0625rem', originY: '1.0625rem', transformBox: 'fill-box' }}
       />
     </svg>
   );

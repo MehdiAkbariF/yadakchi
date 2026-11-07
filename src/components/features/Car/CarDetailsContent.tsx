@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -63,7 +63,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
       
  
       <div
-        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 
+        className="sticky top-[3.5rem] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 
         bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden rounded-none"
       >
         <div className="flex w-full items-center justify-between">
@@ -73,7 +73,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
             </div>
             <div className="flex min-w-0 flex-col">
               <span className="text-3xs font-bold text-muted-foreground">خودرو انتخابی</span>
-              <span className="mt-0.5 truncate text-xs font-black text-foreground">
+              <span className="mt-0.5 truncate text-xs font-bold text-foreground">
                 {carData?.model || 'خودرو'}
               </span>
             </div>
@@ -104,7 +104,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-xs font-bold text-foreground shadow-2xs active:scale-95 transition-transform"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-label shadow-2xs active:scale-95 transition-transform"
           >
             <span>فیلترها</span>
           </button>
@@ -157,14 +157,14 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
           </div>
 
           {isProductsLoading ? (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -182,7 +182,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
               </Typography>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 هنوز هیچ محصول فعالی برای این خودرو ثبت نشده است.
               </p>
             </div>
@@ -201,11 +201,11 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
       <Modal
         isOpen={isChangeCarOpen}
         onClose={() => setIsChangeCarOpen(false)}
-        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:rounded-2xl md:overflow-hidden"
+        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:rounded-2xl md:overflow-hidden"
         overlayClassName="bg-foreground/40 backdrop-blur-md"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
-          <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+          <span className="flex items-center gap-1.5 text-title-sm">
             <CarIcon aria-hidden="true" className="h-4 w-4 text-primary" />
             تغییر خودرو فعال
           </span>
@@ -249,13 +249,13 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted/20">
                     <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain p-1" />
                   </div>
-                  <span className="text-xs font-bold text-foreground truncate w-full">{car.model}</span>
+                  <span className="text-label truncate w-full">{car.model}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="w-full rounded-2xl border border-dashed border-border bg-card py-12 text-center">
-              <span className="text-xs font-bold text-muted-foreground">خودرویی یافت نشد.</span>
+              <span className="text-label-muted">خودرویی یافت نشد.</span>
             </div>
           )}
         </ModalBody>

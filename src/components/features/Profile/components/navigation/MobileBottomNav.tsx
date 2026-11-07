@@ -23,7 +23,7 @@ export function MobileBottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 w-full items-center justify-around border-t border-border/80 bg-card/95 px-2 backdrop-blur-lg lg:hidden pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-fixed flex h-16 w-full items-center justify-around border-t border-border/80 bg-card/95 px-2 backdrop-blur-lg lg:hidden pb-safe shadow-nav-top">
       {MOBILE_TABS.map((tab) => {
         const isActive = tab.href === '/profile' 
           ? pathname === '/profile' 
@@ -43,7 +43,7 @@ export function MobileBottomNav() {
               <span className="absolute -top-1.5 h-1 w-6 rounded-full bg-primary" />
             )}
             <Icon className={cn('h-5 w-5', isActive && 'stroke-[2.5px]')} />
-            <span className="text-[10px] tracking-tight">{tab.label}</span>
+            <span className="text-[0.625rem] tracking-tight">{tab.label}</span>
           </Link>
         );
       })}

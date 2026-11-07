@@ -17,20 +17,18 @@ interface PartCategoryPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
 }
 
-// ✅ بهینه‌سازی بحرانی ۱: کش کردن درخواست برای جلوگیری از ۲ بار صدا زدن API در هر لود صفحه
+// کش سروری مقاوم: هیچ خطایی (حتی ۵۰۰ سرور) کل صفحه Next.js را متوقف نمی‌کند
 const getCachedCategoryData = cache(async (slug: string) => {
   const partService = getPartService();
   try {
-    return await partService.getPartCategoryPage(slug);
+    const data = await partService.getPartCategoryPage(slug);
+    return data;
   } catch (error: any) {
-    if (error?.status === 404 || error?.response?.status === 404) {
-      return null;
-    }
-    throw error;
+    console.error(`❌ [PartCategory Error] Failed to load slug "${slug}":`, error?.message || error);
+    return null;
   }
 });
 
-// جلوگیری از باگ‌های امنیتی XSS در JSON-LD
 function serializeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
@@ -41,27 +39,26 @@ function serializeJsonLd(data: unknown): string {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> | { slug: string } }): Promise<Metadata> {
   const resolvedParams = await Promise.resolve(params);
-  const slug = resolvedParams.slug;
+  const slug = decodeURIComponent(resolvedParams.slug || '').trim();
 
   try {
-    // استفاده از کش مشترک (هیچ ریکوئست اضافه‌ای ارسال نمی‌شود)
     const categoryData = await getCachedCategoryData(slug);
-    if (!categoryData) return { title: 'دسته‌بندی قطعات | یدکچی' };
+    if (!categoryData) return { title: 'دسته‌بندی قطعات خودرو | یدکچی' };
 
     const category = categoryData.category || categoryData;
     const seo = categoryData.seoInformation || category?.seoInformation || {};
-    const title = seo.title || category.name || 'دسته‌بندی قطعات خودرو';
+    const title = seo.title || category.name ? `${category.name} | یدکچی` : 'دسته‌بندی قطعات خودرو | یدکچی';
     const description = (seo.description || category.description || `خرید و قیمت قطعات ${category.name || ''} با ضمانت اصالت در یدکچی`).trim();
-    const canonicalUrl = `https://www.yadakchi.com/part-category/${slug}`;
+    const canonicalUrl = `https://yadakchi.com/part-category/${slug}`;
 
     return {
-      title: `${title} | یدکچی`,
+      title,
       description: description.slice(0, 160),
       alternates: {
         canonical: canonicalUrl,
       },
       openGraph: {
-        title: `${title} | یدکچی`,
+        title,
         description: description.slice(0, 160),
         url: canonicalUrl,
         siteName: 'یدکچی',
@@ -87,27 +84,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 /* -------------------------------------------------------------------------- */
 
 export default async function PartCategoryPage({ params, searchParams }: PartCategoryPageProps) {
-  // ✅ سازگاری کامل با Next.js 15
   const resolvedParams = await Promise.resolve(params);
   const resolvedSearchParams = await Promise.resolve(searchParams);
-  const slug = resolvedParams.slug;
+  const slug = decodeURIComponent(resolvedParams.slug || '').trim();
 
   if (!slug) {
     notFound();
   }
 
-  // استفاده از دیتای کش‌شده
+  // دریافت دیتای کش‌شده (با قابلیت Fallback در صورت خطای ۵۰۰ بک‌اند)
   const categoryData = await getCachedCategoryData(slug);
 
   if (!categoryData) {
     notFound();
   }
 
-  // ✅ حل باگ Cache Miss با تنظیم staleTime برای جلوگیری از رفرش تکراری در مرورگر
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // ۱ دقیقه کش پایدار در کلاینت
+        staleTime: 60 * 1000,
         gcTime: 5 * 60 * 1000,
       },
     },
@@ -117,10 +112,8 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
   const brandService = getBrandService();
   const carService = getCarService();
 
-  // کش کردن اولیه دیتای دسته‌بندی برای کامپوننت‌های کلاینتی
   queryClient.setQueryData(['front', 'parts', 'category-page', slug], categoryData);
 
-  // پارس ایمن فیلترها و اعداد
   const fromPrice = resolvedSearchParams.fromPrice ? Number(resolvedSearchParams.fromPrice) : undefined;
   const toPrice = resolvedSearchParams.toPrice ? Number(resolvedSearchParams.toPrice) : undefined;
   const pageNumber = resolvedSearchParams.page ? Math.max(1, Number(resolvedSearchParams.page)) : 1;
@@ -140,7 +133,6 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
     types: typeof resolvedSearchParams.types === 'string' ? [resolvedSearchParams.types] as any : Array.isArray(resolvedSearchParams.types) ? resolvedSearchParams.types : undefined,
   };
 
-  // ✅ اجرای موازی و پایدار با Promise.allSettled
   await Promise.allSettled([
     queryClient.prefetchQuery({
       queryKey: ['front', 'products', 'search', filters],
@@ -171,18 +163,17 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
   const schemaJson = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    '@id': `https://www.yadakchi.com/part-category/${slug}/#webpage`,
-    url: `https://www.yadakchi.com/part-category/${slug}`,
+    '@id': `https://yadakchi.com/part-category/${slug}/#webpage`,
+    url: `https://yadakchi.com/part-category/${slug}`,
     name: category?.name || 'دسته‌بندی قطعات خودرو',
     description: category?.description ? category.description.replace(/<[^>]*>/g, '').trim() : '',
     isPartOf: {
-      '@id': 'https://www.yadakchi.com/#website',
+      '@id': 'https://yadakchi.com/#website',
     },
   };
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      {/* اسکیما استاندارد و ایمن در برابر حملات XSS */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}

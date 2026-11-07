@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Store, ShieldCheck, ShieldAlert, Trash2, Plus, Minus, Loader2 } from 'lucide-react';
@@ -179,7 +179,7 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
             </div>
           ) : null}
           <div className="flex items-baseline gap-1">
-            <span className="text-sm font-bold text-foreground md:text-base">
+            <span className="text-title-sm md:text-base">
               {formatRialToToman(finalTotalPrice)}
             </span>
           </div>

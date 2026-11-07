@@ -266,7 +266,7 @@ export function CompareContent() {
     return (
       <div className="flex w-full min-h-[60vh] flex-col items-center justify-center gap-3">
         <ThreeDotsLoader size="md" />
-        <span className="text-xs font-bold text-muted-foreground">در حال بارگذاری اطلاعات مقایسه...</span>
+        <span className="text-label-muted">در حال بارگذاری اطلاعات مقایسه...</span>
       </div>
     );
   }
@@ -281,7 +281,7 @@ export function CompareContent() {
             <Scale className="h-4 w-4 stroke-[2]" />
           </div>
           <div className="flex flex-col text-right">
-            <h1 className="text-xs sm:text-sm font-black text-foreground">
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">
               میز مقایسه تخصصی قطعات
             </h1>
             <span className="text-3xs text-muted-foreground">
@@ -321,8 +321,8 @@ export function CompareContent() {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
             <Scale className="h-6 w-6 stroke-[1.75]" />
           </div>
-          <h2 className="text-xs sm:text-sm font-bold text-foreground">هیچ کالایی برای مقایسه انتخاب نشده است</h2>
-          <p className="max-w-sm text-2xs text-muted-foreground mt-1.5 leading-relaxed">
+          <h2 className="text-xs sm:text-title-sm">هیچ کالایی برای مقایسه انتخاب نشده است</h2>
+          <p className="max-w-sm text-xs text-muted-foreground mt-1.5 leading-relaxed">
             کالاهای مورد نظر خود را اضافه کنید تا مشخصات و قیمت‌های فروشندگان را در کنار هم مقایسه کنید.
           </p>
           <button
@@ -339,14 +339,14 @@ export function CompareContent() {
           <div className="flex flex-col gap-3 md:hidden">
             <div className="flex flex-col gap-2 p-3 rounded-2xl bg-card border border-border shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-3xs font-black text-muted-foreground">
+                <span className="text-3xs font-bold text-muted-foreground">
                   کالاهای فعال جهت مقایسه:
                 </span>
                 {productsData.length > 1 && (
                   <button
                     type="button"
                     onClick={handleSwapMobilePair}
-                    className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg active:scale-95 transition-transform"
+                    className="flex items-center gap-1 text-[0.625rem] font-bold text-primary bg-primary/10 px-2 py-1 rounded-lg active:scale-95 transition-transform"
                   >
                     <ArrowLeftRight className="h-3 w-3" />
                     <span>جابجایی دو طرف</span>
@@ -385,13 +385,13 @@ export function CompareContent() {
                       >
                         <span
                           className={cn(
-                            'flex h-4 w-4 items-center justify-center rounded-full text-white text-[9px] font-black shrink-0',
+                            'flex h-4 w-4 items-center justify-center rounded-full text-white text-[0.5625rem] font-black shrink-0',
                             isA ? 'bg-primary' : isB ? 'bg-shop' : 'bg-muted-foreground/60'
                           )}
                         >
                           {toPersianDigits(idx + 1)}
                         </span>
-                        <span className="max-w-[85px] truncate">{pd.product.title}</span>
+                        <span className="max-w-[5.3125rem] truncate">{pd.product.title}</span>
                       </button>
 
                       <button
@@ -434,13 +434,13 @@ export function CompareContent() {
                       key={colIdx}
                       type="button"
                       onClick={() => setIsAddModalOpen(true)}
-                      className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-border bg-card/60 text-muted-foreground hover:text-primary hover:border-primary/40 min-h-[230px] transition-all group"
+                      className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed border-border bg-card/60 text-muted-foreground hover:text-primary hover:border-primary/40 min-h-[14.375rem] transition-all group"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors mb-2">
                         <Plus className="h-5 w-5 text-primary" />
                       </div>
                       <span className="text-2xs font-bold text-foreground">افزودن کالای مقایسه</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">انتخاب کالا از لیست</span>
+                      <span className="text-[0.625rem] text-muted-foreground mt-0.5">انتخاب کالا از لیست</span>
                     </button>
                   );
                 }
@@ -458,7 +458,7 @@ export function CompareContent() {
                     )}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-black', badgeColor)}>
+                      <span className={cn('px-2 py-0.5 rounded-full text-[0.625rem] font-black', badgeColor)}>
                         کالای {toPersianDigits(activeIndex + 1)}
                       </span>
 
@@ -482,8 +482,8 @@ export function CompareContent() {
 
                     <div className="pt-2 border-t border-dashed border-border/70 flex flex-col gap-1.5 mt-auto">
                       <div className="flex flex-col items-center text-center">
-                        <span className="text-[9px] text-muted-foreground">قیمت</span>
-                        <span className="text-2xs font-black text-foreground">{pricing?.priceRangeLabel}</span>
+                        <span className="text-[0.5625rem] text-muted-foreground">قیمت</span>
+                        <span className="text-2xs font-bold text-foreground">{pricing?.priceRangeLabel}</span>
                       </div>
 
                       {activeSeller ? (
@@ -526,7 +526,7 @@ export function CompareContent() {
 
                   return (
                     <div key={groupName} className="flex flex-col rounded-2xl border border-border bg-card overflow-hidden shadow-2xs">
-                      <div className="bg-muted/40 px-3 py-1.5 text-2xs font-black text-foreground border-b border-border/60">
+                      <div className="bg-muted/40 px-3 py-1.5 text-2xs font-bold text-foreground border-b border-border/60">
                         {groupName}
                       </div>
 
@@ -545,9 +545,9 @@ export function CompareContent() {
                               )}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="text-3xs font-black text-muted-foreground">{specName}</span>
+                                <span className="text-3xs font-bold text-muted-foreground">{specName}</span>
                                 {isDifferent && (
-                                  <span className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                                  <span className="text-[0.5625rem] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                                     تفاوت دارد
                                   </span>
                                 )}
@@ -555,14 +555,14 @@ export function CompareContent() {
 
                               <div className="grid grid-cols-2 gap-2 text-center text-2xs font-semibold">
                                 <div className="flex flex-col items-center gap-1 p-1.5 rounded-lg bg-muted/20 border border-primary/20">
-                                  <span className="text-[9px] font-black text-primary">
+                                  <span className="text-[0.5625rem] font-black text-primary">
                                     کالای {toPersianDigits(pAIndex + 1)}
                                   </span>
                                   <span className="text-foreground font-bold">{toPersianDigits(valA)}</span>
                                 </div>
 
                                 <div className="flex flex-col items-center gap-1 p-1.5 rounded-lg bg-muted/20 border border-shop/20">
-                                  <span className="text-[9px] font-black text-shop">
+                                  <span className="text-[0.5625rem] font-black text-shop">
                                     کالای {toPersianDigits(pBIndex + 1)}
                                   </span>
                                   <span className="text-foreground font-bold">{toPersianDigits(valB)}</span>
@@ -583,7 +583,7 @@ export function CompareContent() {
             <table className="w-max min-w-full table-fixed border-collapse text-right">
               <thead>
                 <tr className="border-b border-border/80 bg-muted/20">
-                  <th className="w-44 min-w-[180px] max-w-[180px] p-3 text-2xs font-black text-muted-foreground shrink-0 sticky start-0 bg-card z-20 shadow-[-4px_0_10px_rgba(0,0,0,0.03)] align-top">
+                  <th className="w-44 min-w-[11.25rem] max-w-[11.25rem] p-3 text-2xs font-bold text-muted-foreground shrink-0 sticky start-0 bg-card z-20 shadow-sticky-start align-top">
                     <div className="flex flex-col gap-0.5 pt-1">
                       <span>کالاهای منتخب</span>
                       <span className="text-3xs text-muted-foreground font-normal">مشخصات و قیمت</span>
@@ -597,10 +597,10 @@ export function CompareContent() {
                     const allSellers = pricing?.allSellers || [];
 
                     return (
-                      <th key={p.id} className="w-56 min-w-[220px] max-w-[230px] p-3 align-top">
+                      <th key={p.id} className="w-56 min-w-[13.75rem] max-w-[14.375rem] p-3 align-top">
                         <div className="flex flex-col gap-2.5 h-full">
                           <div className="flex items-center justify-between">
-                            <span className="text-3xs font-black bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                            <span className="text-3xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                               کالای {toPersianDigits(idx + 1)}
                             </span>
 
@@ -638,7 +638,7 @@ export function CompareContent() {
                               <span className="text-3xs text-muted-foreground font-normal">
                                 {allSellers.length > 1 ? `${toPersianDigits(allSellers.length)} فروشگاه` : 'قیمت قطعه'}
                               </span>
-                              <span className="text-xs font-black text-foreground" dir="rtl">
+                              <span className="text-xs font-bold text-foreground" dir="rtl">
                                 {pricing?.priceRangeLabel}
                               </span>
                             </div>
@@ -683,7 +683,7 @@ export function CompareContent() {
                   })}
 
                   {productsData.length < MAX_COMPARE_ITEMS && (
-                    <th className="w-48 min-w-[180px] max-w-[190px] p-3 align-middle text-center border-s border-dashed border-border/60">
+                    <th className="w-48 min-w-[11.25rem] max-w-[11.875rem] p-3 align-middle text-center border-s border-dashed border-border/60">
                       <button
                         type="button"
                         onClick={() => setIsAddModalOpen(true)}
@@ -703,20 +703,20 @@ export function CompareContent() {
                 <tr className="bg-muted/40 border-b border-border/80">
                   <td
                     colSpan={productsData.length + (productsData.length < MAX_COMPARE_ITEMS ? 2 : 1)}
-                    className="py-1.5 px-3 text-2xs font-black text-primary sticky start-0"
+                    className="py-1.5 px-3 text-2xs font-bold text-primary sticky start-0"
                   >
                     تامین‌کننده و اصالت
                   </td>
                 </tr>
                 <tr className="border-b border-border/50 hover:bg-muted/10 transition-colors">
-                  <td className="w-44 min-w-[180px] max-w-[180px] p-2.5 text-2xs font-bold text-muted-foreground sticky start-0 bg-card z-10 shadow-[-4px_0_10px_rgba(0,0,0,0.03)] truncate">
+                  <td className="w-44 min-w-[11.25rem] max-w-[11.25rem] p-2.5 text-label-2xs sticky start-0 bg-card z-10 shadow-sticky-start truncate">
                     گارانتی قطعه
                   </td>
                   {productsData.map((pd: any) => {
                     const pricing = productPricingAnalysis[pd.product.code];
                     return (
-                      <td key={pd.product.id} className="w-56 min-w-[220px] max-w-[230px] p-2.5 text-2xs font-semibold text-foreground text-center">
-                        <div className="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <td key={pd.product.id} className="w-56 min-w-[13.75rem] max-w-[14.375rem] p-2.5 text-2xs font-semibold text-foreground text-center">
+                        <div className="flex items-center justify-center gap-1 text-success/90 dark:text-success/80">
                           <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                           <span className="truncate">{pricing?.activeSeller?.warrantyTitle || 'ضمانت اصالت'}</span>
                         </div>
@@ -727,13 +727,13 @@ export function CompareContent() {
                 </tr>
 
                 <tr className="border-b border-border/50 hover:bg-muted/10 transition-colors">
-                  <td className="w-44 min-w-[180px] max-w-[180px] p-2.5 text-2xs font-bold text-muted-foreground sticky start-0 bg-card z-10 shadow-[-4px_0_10px_rgba(0,0,0,0.03)] truncate">
+                  <td className="w-44 min-w-[11.25rem] max-w-[11.25rem] p-2.5 text-label-2xs sticky start-0 bg-card z-10 shadow-sticky-start truncate">
                     زمان ارسال
                   </td>
                   {productsData.map((pd: any) => {
                     const pricing = productPricingAnalysis[pd.product.code];
                     return (
-                      <td key={pd.product.id} className="w-56 min-w-[220px] max-w-[230px] p-2.5 text-2xs font-semibold text-foreground text-center">
+                      <td key={pd.product.id} className="w-56 min-w-[13.75rem] max-w-[14.375rem] p-2.5 text-2xs font-semibold text-foreground text-center">
                         <div className="flex items-center justify-center gap-1 text-muted-foreground">
                           <Truck className="h-3 w-3 shrink-0 text-primary" />
                           <span>{pricing?.activeSeller?.deliveryDays || 'آماده ارسال'}</span>
@@ -759,7 +759,7 @@ export function CompareContent() {
                       <tr className="bg-muted/40 border-b border-border/80">
                         <td
                           colSpan={productsData.length + (productsData.length < MAX_COMPARE_ITEMS ? 2 : 1)}
-                          className="py-1.5 px-3 text-2xs font-black text-primary sticky start-0"
+                          className="py-1.5 px-3 text-2xs font-bold text-primary sticky start-0"
                         >
                           {groupName}
                         </td>
@@ -777,12 +777,12 @@ export function CompareContent() {
                               isRowDifferent ? 'bg-primary/[0.03] hover:bg-primary/[0.06]' : 'hover:bg-muted/10'
                             )}
                           >
-                            <td className="w-44 min-w-[180px] max-w-[180px] p-2.5 text-2xs font-bold text-muted-foreground sticky start-0 bg-card z-10 shadow-[-4px_0_10px_rgba(0,0,0,0.03)] truncate">
+                            <td className="w-44 min-w-[11.25rem] max-w-[11.25rem] p-2.5 text-label-2xs sticky start-0 bg-card z-10 shadow-sticky-start truncate">
                               {specName}
                             </td>
 
                             {values.map((val, vIdx) => (
-                              <td key={vIdx} className="w-56 min-w-[220px] max-w-[230px] p-2.5 text-2xs font-semibold text-foreground text-center truncate">
+                              <td key={vIdx} className="w-56 min-w-[13.75rem] max-w-[14.375rem] p-2.5 text-2xs font-semibold text-foreground text-center truncate">
                                 {toPersianDigits(val)}
                               </td>
                             ))}

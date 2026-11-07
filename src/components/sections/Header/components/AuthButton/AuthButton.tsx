@@ -1,4 +1,4 @@
-﻿// src/components/sections/Header/components/AuthButton/AuthButton.tsx
+// src/components/sections/Header/components/AuthButton/AuthButton.tsx
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -66,7 +66,7 @@ export function AuthButton() {
           {/* آیکون کاربر مشکی/تیره */}
           <User className="h-4 w-4 text-foreground shrink-0" />
           
-          <span className="text-xs font-bold text-foreground max-w-[110px] truncate leading-none">
+          <span className="text-label max-w-[6.875rem] truncate leading-none">
             {displayName}
           </span>
 
@@ -88,7 +88,7 @@ export function AuthButton() {
                 <Link
                   href="/profile"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2.5 w-full px-3 py-2 text-xs font-bold text-foreground rounded-lg hover:bg-muted transition-colors"
+                  className="flex items-center gap-2.5 w-full px-3 py-2 text-label rounded-lg hover:bg-muted transition-colors"
                 >
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span>پنل کاربری من</span>
@@ -117,7 +117,7 @@ export function AuthButton() {
     <Link href="/login" className="inline-block">
       <button 
         type="button"
-        className="h-10 px-4 rounded-md border border-border bg-card text-xs font-bold text-foreground flex items-center gap-2 shadow-xs hover:bg-muted dark:hover:bg-muted transition-colors"
+        className="h-10 px-4 rounded-md border border-border bg-card text-label flex items-center gap-2 shadow-xs hover:bg-muted dark:hover:bg-muted transition-colors"
       >
         <User className="h-4 w-4 text-foreground" />
         <span>ورود / ثبت‌نام</span>

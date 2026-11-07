@@ -170,8 +170,8 @@ export function SettingsForm() {
     <div className="flex w-full flex-col gap-5">
       {/* هدر بخش تنظیمات در دسکتاپ */}
       <div className="hidden lg:flex flex-col gap-1 border-b border-border/70 pb-4">
-        <h1 className="text-base font-black text-foreground sm:text-lg">اطلاعات حساب کاربری</h1>
-        <p className="text-xs text-muted-foreground">
+        <h1 className="text-xl font-bold text-foreground sm:text-2xl">اطلاعات حساب کاربری</h1>
+        <p className="text-base text-muted-foreground">
           اطلاعات هویتی و حقوقی خود را جهت صدور فاکتور رسمی و تسویه سفارشات مدیریت کنید.
         </p>
       </div>
@@ -213,7 +213,7 @@ export function SettingsForm() {
             <Smartphone className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-foreground">شماره موبایل فعال</span>
+            <span className="text-label">شماره موبایل فعال</span>
             <span className="text-2xs text-muted-foreground  mt-0.5" dir="ltr">
               {user?.phoneNumber}
             </span>
@@ -236,7 +236,7 @@ export function SettingsForm() {
         {activeTab === 'personal' ? (
           <div className="flex flex-col gap-4">
             <Card className="rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
-              <h2 className="mb-4 text-xs font-bold text-foreground">شناسنامه هویتی</h2>
+              <h2 className="mb-4 text-label">شناسنامه هویتی</h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Input
                   label="نام و نام خانوادگی *"
@@ -279,7 +279,7 @@ export function SettingsForm() {
 
                 {/* انتخاب تاریخ تولد */}
                 <div className="flex flex-col gap-1.5 md:col-span-2">
-                  <label className="text-2xs font-bold text-muted-foreground">تاریخ تولد</label>
+                  <label className="text-label-2xs">تاریخ تولد</label>
                   <div className="grid grid-cols-3 gap-2">
                     <Select
                       placeholder="روز"
@@ -309,7 +309,7 @@ export function SettingsForm() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <CreditCard className="h-4.5 w-4.5 text-primary" />
-                  <h2 className="text-xs font-bold text-foreground">حساب بانکی پیش‌فرض تسویه</h2>
+                  <h2 className="text-label">حساب بانکی پیش‌فرض تسویه</h2>
                 </div>
                 <Button
                   type="button"
@@ -340,7 +340,7 @@ export function SettingsForm() {
                   )}
                 </div>
               ) : (
-                <p className="text-2xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   هنوز شماره کارت یا شبایی برای تسویه در کیف پول ثبت نکرده‌اید.
                 </p>
               )}
@@ -349,7 +349,7 @@ export function SettingsForm() {
         ) : (
           /* اطلاعات حقوقی */
           <Card className="rounded-2xl border border-border/80 bg-card p-5 shadow-xs">
-            <h2 className="mb-4 text-xs font-bold text-foreground">اطلاعات حقوقی شرکت (جهت فاکتور رسمی)</h2>
+            <h2 className="mb-4 text-label">اطلاعات حقوقی شرکت (جهت فاکتور رسمی)</h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input
                 label="نام سازمان / شرکت"

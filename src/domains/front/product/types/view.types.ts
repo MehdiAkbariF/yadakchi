@@ -90,6 +90,8 @@ export interface SearchProductsRequest {
   onlyInStock?: boolean;
   onlyDiscounted?: boolean;
   onlyDirectShipping?: boolean;
+  onlyNominated?: boolean;             // ✅ اضافه شد (مطابق سواگر)
+  excludeDuplicateProducts?: boolean;  // ✅ اضافه شد (مطابق سواگر)
   sortBy?: string;
   sortDesc?: boolean;
   includeAggregations?: boolean;

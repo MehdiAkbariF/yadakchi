@@ -27,10 +27,10 @@ export default async function ProfileLayout({ children }: ProfileLayoutProps) {
         <ProfileHeader />
 
         {/* افزایش عرض دسکتاپ به 1680px برای مانیتورهای عریض و استفاده حداکثری از فضا */}
-        <div className="mx-auto w-full max-w-[1680px] px-3 sm:px-6 lg:px-8 xl:px-10 py-4 lg:py-8">
+        <div className="mx-auto w-full max-w-[105rem] px-3 sm:px-6 lg:px-8 xl:px-10 py-4 lg:py-8">
           <div className="flex items-start gap-8">
             {/* منوی ثابت سایدبار در دسکتاپ (عرض 300px عریض و خوانا) */}
-            <div className="hidden lg:block w-[290px] xl:w-[320px] shrink-0">
+            <div className="hidden lg:block w-[18.125rem] xl:w-[20rem] shrink-0">
               <ProfileDesktopNav />
             </div>
 

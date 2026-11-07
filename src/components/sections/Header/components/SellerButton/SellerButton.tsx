@@ -1,4 +1,3 @@
-// src/components/sections/Header/components/SellerButton/SellerButton.tsx
 'use client';
 
 import Link from 'next/link';
@@ -15,31 +14,28 @@ export function SellerButton({ className, size = 'md' }: SellerButtonProps) {
   return (
     <Link
       href="/seller/register"
+      aria-label="ثبت‌نام فروشنده و باز کردن فروشگاه در یدکچی"
       className={cn(
-        "relative inline-flex items-center justify-center select-none overflow-hidden rounded-md font-bold text-primary-foreground transition-all active:scale-95 shadow-sm",
-        "bg-primary hover:bg-primary", // دقیقاً رنگ و بدون تغییر در هاور
+        "relative inline-flex items-center justify-center select-none overflow-hidden rounded-lg font-bold text-primary-foreground transition-all active:scale-95 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "bg-primary hover:bg-primary-hover",
         size === 'sm' ? "h-9 px-3 text-xs gap-1.5" : "h-10 px-4 text-xs sm:text-sm gap-2",
         className
       )}
     >
-      {/* اشعه شاینینگ ظریف و روان */}
       <motion.span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-l from-transparent via-white/25 to-transparent -skew-x-20"
+        className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-l from-transparent via-white/20 to-transparent -skew-x-20"
         initial={{ x: '200%' }}
         animate={{ x: '-200%' }}
         transition={{
           repeat: Infinity,
-          repeatDelay: 3.5,
+          repeatDelay: 4,
           duration: 1.2,
           ease: "easeInOut",
         }}
       />
 
-      {/* آیکون مرتبط فروشگاه مشابه تصویر */}
-      <Store className={cn("shrink-0 text-primary-foreground", size === 'sm' ? "h-4 w-4" : "h-4 w-4")} />
-
-      {/* متن دکمه */}
+      <Store aria-hidden="true" className="h-4 w-4 shrink-0 text-primary-foreground" />
       <span className="leading-none pt-0.5 whitespace-nowrap">
         فروشنده شو
       </span>

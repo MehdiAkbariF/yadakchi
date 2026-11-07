@@ -313,7 +313,6 @@ async verifySamanPayment(
   params: SamanPaymentCallbackParams
 ): Promise<any> {
   // ⚠️ MOCK — برای تست UI
-  console.log('[MOCK] verifySamanPayment called:', params);
   await new Promise((r) => setTimeout(r, 1200));
 
   // شبیه‌سازی: اگر Status=2 → موفق

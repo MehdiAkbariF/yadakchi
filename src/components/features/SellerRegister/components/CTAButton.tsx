@@ -36,7 +36,7 @@ export function CTAButton({ onClick, label, className, size = 'lg' }: CTAButtonP
           'shadow-lg transition-colors duration-normal',
           'active:scale-95',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-          size === 'lg' && 'h-[52px] px-10 text-sm',
+          size === 'lg' && 'h-[3.25rem] px-10 text-sm',
           size === 'md' && 'h-11 px-7 text-xs'
         )}
       >

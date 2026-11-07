@@ -128,8 +128,8 @@ function PayableTimer({ payableUntil }: PayableTimerProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-1 text-2xs font-black tracking-wide',
-        isExpired ? 'text-destructive' : 'text-amber-700 dark:text-amber-400'
+        'flex items-center gap-1 text-2xs font-bold tracking-wide',
+        isExpired ? 'text-destructive' : 'text-warning/80 dark:text-warning/90'
       )}
       dir="ltr"
     >
@@ -179,13 +179,13 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
   const getOrderStatusMeta = (orderStatus: string) => {
     switch (orderStatus) {
       case 'WaitingForPayment':
-        return { label: 'در انتظار پرداخت', color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20' };
+        return { label: 'در انتظار پرداخت', color: 'text-warning/90 dark:text-warning/90 bg-warning/10 border-warning/20' };
       case 'InProgress':
         return { label: 'در حال پردازش و ارسال', color: 'text-primary bg-primary/10 border-primary/20' };
       case 'Delivered':
-        return { label: 'تحویل داده شده', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' };
+        return { label: 'تحویل داده شده', color: 'text-success bg-success/10 border-success/20' };
       case 'ReturnRequest':
-        return { label: 'درخواست مرجوعی', color: 'text-rose-500 bg-rose-500/10 border-rose-500/20' };
+        return { label: 'درخواست مرجوعی', color: 'text-destructive bg-destructive/10 border-destructive/20' };
       case 'Cancelled':
       case 'SystemCancelled':
         return { label: 'لغو شده', color: 'text-muted-foreground bg-muted border-border' };
@@ -199,8 +199,8 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
       
       {/* هدر بخش سفارش‌ها در دسکتاپ */}
       <div className="hidden lg:flex flex-col gap-1 border-b border-border/70 pb-4">
-        <h1 className="text-base font-black text-foreground sm:text-lg">سفارش‌های من</h1>
-        <p className="text-xs text-muted-foreground">
+        <h1 className="text-xl font-bold text-foreground sm:text-2xl">سفارش‌های من</h1>
+        <p className="text-base text-muted-foreground">
           پیگیری وضعیت سفارشات، پرداخت آنلاین فاکتورها و مشاهده تاریخچه مرسولات
         </p>
       </div>
@@ -255,7 +255,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
                           {statusMeta.label}
                         </span>
 
-                        <span className="text-2xs font-bold text-muted-foreground sm:text-xs" dir="ltr">
+                        <span className="text-label-2xs sm:text-xs" dir="ltr">
                           #{toPersianDigits(order.orderNumber)}
                         </span>
                       </div>
@@ -281,8 +281,8 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
                       </div>
 
                       {isWaiting && order.payableUntil ? (
-                        <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/20 bg-amber-500/10 px-2 py-0.5">
-                          <span className="text-3xs font-bold text-amber-700 dark:text-amber-400">مهلت:</span>
+                        <div className="flex items-center gap-1.5 rounded-lg border border-warning/20 bg-warning/10 px-2 py-0.5">
+                          <span className="text-3xs font-bold text-warning/80 dark:text-warning/90">مهلت:</span>
                           <PayableTimer payableUntil={order.payableUntil} />
                         </div>
                       ) : null}
@@ -320,7 +320,7 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
 
                     <div className="flex items-center justify-between sm:flex-col sm:items-end gap-1.5 shrink-0 pt-3 sm:pt-0 border-t border-dashed border-border/50 sm:border-0">
                       <span className="text-2xs text-muted-foreground">مبلغ نهایی سفارش:</span>
-                      <span className="text-base font-black text-foreground" dir="ltr">
+                      <span className="text-base font-bold text-foreground" dir="ltr">
                         {order.totalFinalPrice}
                       </span>
                     </div>
@@ -345,10 +345,10 @@ export function OrdersList({ initialStatus, initialPage }: OrdersListProps) {
           <div className="mx-auto flex h-48 w-48 max-w-full items-center justify-center -mb-2">
             <LottiePlayer path="/animations/packaging-for-delivery.json" className="h-full w-full" loop={true} />
           </div>
-          <p className="text-sm font-bold text-foreground mt-5">
+          <p className="text-title-sm mt-5">
             سفارشی در این بخش وجود ندارد
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-base text-muted-foreground">
             شما هیچ سفارشی با وضعیت «{STATUS_TABS.find(t => t.id === status)?.label}» ندارید.
           </p>
           <Button

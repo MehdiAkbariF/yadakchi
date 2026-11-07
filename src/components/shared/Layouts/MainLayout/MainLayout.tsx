@@ -12,6 +12,8 @@ export interface MainLayoutProps {
   hideHeader?: boolean;
   hideFooter?: boolean;
   hideBottomNav?: boolean;
+  /** مخفی کردن هدر اصلی فقط در موبایل (دسکتاپ نمایش داده می‌شود) */
+  hideHeaderOnMobile?: boolean;
 }
 
 const FLOW_PAGES = ['/basket', '/checkout', '/basket-payment'];
@@ -26,6 +28,7 @@ export function MainLayout({
   hideHeader = false,
   hideFooter = false,
   hideBottomNav = false,
+  hideHeaderOnMobile = false,
 }: MainLayoutProps) {
   const pathname = usePathname();
 
@@ -39,7 +42,8 @@ export function MainLayout({
         <div
           className={cn(
             isProfileSection && 'hidden lg:block',
-            isProductPage && 'hidden lg:block'
+            isProductPage && 'hidden lg:block',
+            hideHeaderOnMobile && 'hidden lg:block'
           )}
         >
           <Header />
@@ -48,15 +52,14 @@ export function MainLayout({
 
       <main
         className={cn(
-          'flex-1 w-full max-w-[1840px] mx-auto min-h-[80vh]',
+          'flex-1 w-full max-w-[1400px] mx-auto min-h-[80vh]',
           isProfileSection
             ? 'px-0 py-0 pb-16 lg:pb-8 lg:px-6 lg:py-6'
             : isProductPage
             ? 'px-0 py-0 pb-0 lg:px-6 lg:py-6'
             : isFlow
-            ? // flow: BottomNav (64px) + MobileBottomAction (~68px) + فاصله = ~140px
-              'px-4 md:px-6 py-6 pb-44 lg:pb-6'
-            : 'px-4 md:px-6 py-6 pb-20 lg:pb-6',
+            ? 'px-4 md:px-6 py-5 pb-44 lg:pb-6'
+            : 'px-4 md:px-6 py-5 pb-20 lg:pb-6',
           className
         )}
       >

@@ -112,7 +112,7 @@ export function SettingsForm() {
 
   const renderItemCard = (item: SettingItem) => (
     <div key={item.label} className="flex w-full select-none flex-col gap-1.5">
-      <span className="me-1 flex items-center gap-1 text-xs font-bold text-muted-foreground">
+      <span className="me-1 flex items-center gap-1 text-label-muted">
         {item.label}
         {item.required ? <span className="text-destructive">*</span> : null}
       </span>
@@ -147,7 +147,7 @@ export function SettingsForm() {
           >
             <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
           </button>
-          <span className="text-sm font-bold text-foreground">اطلاعات حساب کاربری</span>
+          <span className="text-title-sm">اطلاعات حساب کاربری</span>
         </div>
       </div>
 
@@ -156,7 +156,7 @@ export function SettingsForm() {
           <Settings aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
           <span className="text-xl font-bold text-foreground">اطلاعات حساب</span>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           مشاهده شناسنامه اطلاعات فردی، کارت تسویه، و فاکتور حقوقی شما (برای ویرایش روی هر کارت کلیک کنید)
         </p>
       </div>

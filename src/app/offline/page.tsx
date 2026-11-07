@@ -17,9 +17,9 @@ export default function OfflinePage() {
         <WifiOff className="h-10 w-10" />
       </div>
       
-      <h1 className="text-base md:text-lg font-black mb-2">ارتباط شما با اینترنت قطع شده است</h1>
+      <h1 className="text-xl md:text-2xl font-bold mb-2">ارتباط شما با اینترنت قطع شده است</h1>
       
-      <p className="text-xs md:text-sm text-muted-foreground font-iran-sans max-w-xs leading-relaxed mb-6">
+      <p className="text-base md:text-base text-muted-foreground font-iran-sans max-w-xs leading-relaxed mb-6">
         برای استفاده از امکانات یدکچی نیاز به اتصال فعال شبکه دارید. لطفا اتصال دیتا یا وای‌فای گوشی خود را بررسی کنید.
       </p>
 

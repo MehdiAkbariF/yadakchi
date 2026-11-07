@@ -1,0 +1,1376 @@
+
+==================== FILE: next.config.js ====================
+
+// next.config.js
+
+/** @type {import('next').NextConfig} */
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  publicExcludes: [
+    '!Font/**/*',
+    '!font/**/*',
+    '!images/**/*',
+    '!image/**/*',
+    '!banners/**/*',
+    '!banner/**/*',
+    '!**/*.{png,jpg,jpeg,gif,webp,svg,mp4,webm,pdf,ico}',
+  ],
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+const nextConfig = {
+  reactStrictMode: true,
+  compress: true, // فشرده‌سازی خودکار Gzip / Brotli
+
+  // بهینه‌سازی چشمگیر ایمپورت آیکون‌های لوسید و کاهش زمان بلاک جاوااسکریپت (TBT)
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
+
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  images: {
+    // اصلاح شد: موتور بهینه‌سازی فعال شد تا حجم تصاویر تا ۸۰٪ کاهش یابد
+    unoptimized: false,
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // ۳۰ روز کش در مرورگر برای تصاویر
+    deviceSizes: [640, 750, 828, 1080, 1200, 1400],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'api.yadakchi.local' },
+      { protocol: 'https', hostname: 'api.yadakchi.com' },
+      { protocol: 'https', hostname: 'cdn.yadakchi.com' },
+      { protocol: 'http', hostname: '51.158.252.139' },
+      { protocol: 'http', hostname: '172.92.92.237' },
+      { protocol: 'http', hostname: 'localhost' },
+    ],
+  },
+
+  // هدرهای امنیتی مطابق الزامات Best Practices گوگل
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+      {
+        // کش قدرتمند و بدون تغییر برای فونت‌ها
+        source: '/Font/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
+
+  env: {
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_MEDIA_BASE_URL:
+      process.env.NEXT_PUBLIC_MEDIA_BASE_URL || '/proxy-api',
+    NEXT_PUBLIC_SEARCH_API_BASE_URL:
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local',
+    NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
+    NEXT_PUBLIC_ENABLE_LOGGING: process.env.NEXT_PUBLIC_ENABLE_LOGGING,
+    NEXT_PUBLIC_ENABLE_DEV_TOOLS: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+    NEXT_PUBLIC_DEFAULT_PAGE_SIZE: process.env.NEXT_PUBLIC_DEFAULT_PAGE_SIZE,
+    NEXT_PUBLIC_MAX_PAGE_SIZE: process.env.NEXT_PUBLIC_MAX_PAGE_SIZE,
+  },
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  async rewrites() {
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.local';
+    const searchApiBaseUrl =
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local';
+
+    return [
+      {
+        source: '/proxy-api/api/Search/:path*',
+        destination: `${searchApiBaseUrl}/api/Search/:path*`,
+        basePath: false,
+      },
+      {
+        source: '/proxy-api/:path*',
+        destination: `${apiBaseUrl}/:path*`,
+        basePath: false,
+      },
+    ];
+  },
+
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/home',
+        permanent: true,
+      },
+    ];
+  },
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+};
+
+module.exports = withPWA(nextConfig);
+
+==================== FILE: src\app\layout.tsx ====================
+
+import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
+import localFont from 'next/font/local';
+import { RootProvider } from '@/providers/root.provider';
+import { GlobalNavigationLoader } from '@/shared/Transitions/GlobalNavigationLoader';
+import './globals.css';
+
+// لود بهینه و بومی فونت ایران‌یکان با Zero Layout Shift (CLS = 0)
+const iranYekan = localFont({
+  src: [
+    {
+      path: '../../public/Font/IranYekan/woff2/IRANYekanXFaNum-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/Font/IranYekan/woff2/IRANYekanXFaNum-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-sans',
+  display: 'swap',
+  preload: true,
+});
+
+export const viewport: Viewport = {
+  themeColor: '#CE3E04',
+  width: 'device-width',
+  initialScale: 1,
+  // اصلاح شد: userScalable و maximumScale حذف شدند تا خطای بحرانی دسترسی‌پذیری گوگل برطرف شود
+  viewportFit: 'cover',
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com'
+  ),
+  title: {
+    default: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+    template: '%s | یدکچی',
+  },
+  description: 'بزرگ‌ترین بازارگاه تخصصی لوازم یدکی و قطعات خودرو در ایران با تضمین اصالت و بهترین قیمت',
+  applicationName: 'یدکچی',
+  authors: [{ name: 'Yadakchi' }],
+  creator: 'Yadakchi',
+  publisher: 'Yadakchi',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'یدکچی',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icon-192x192.png',
+  },
+  alternates: {
+    canonical: '/',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html
+      lang="fa"
+      dir="rtl"
+      className={iranYekan.variable}
+      suppressHydrationWarning
+    >
+      <body className="font-sans antialiased">
+        <RootProvider>
+          <Suspense fallback={null}>
+            <GlobalNavigationLoader />
+          </Suspense>
+
+          {children}
+        </RootProvider>
+      </body>
+    </html>
+  );
+}
+
+==================== FILE: src\app\(public)\home\page.tsx ====================
+
+import type { Metadata } from 'next';
+import { cache } from 'react';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getBannerService } from '@/domains/front/banner/services/banner.service';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getShopService } from '@/domains/front/shop/services/shop.service';
+import { getPartService } from '@/domains/front/part/services/part.service';
+import { getHttpClient } from '@/core/http/client';
+import { HomeContent } from '@/components/features/Home/HomeContent';
+
+const SHOP_CARDS_PARAMS = {
+  orderBy: 'Rating',
+  pageNumber: 1,
+  pageSize: 30,
+} as const;
+
+const getQueryClient = cache(
+  () =>
+    new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 60 * 1000,
+          gcTime: 5 * 60 * 1000,
+        },
+      },
+    })
+);
+
+export const metadata: Metadata = {
+  title: 'یدکچی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
+  description:
+    'خرید مستقیم و آنلاین انواع قطعات یدکی، لوازم بدنه، ابزارآلات و تجهیزات خودرو از معتبرترین فروشگاه‌های سراسر کشور با ضمانت اصالت کالا در یدکچی.',
+  alternates: {
+    canonical: 'https://yadakchi.com/home',
+  },
+  openGraph: {
+    title: 'یدکچی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
+    description:
+      'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران. خرید مستقیم قطعات خودرو از فروشگاه‌های سراسر کشور.',
+    url: 'https://yadakchi.com/home',
+    siteName: 'یدکچی',
+    locale: 'fa_IR',
+    type: 'website',
+    images: [
+      {
+        url: 'https://api.yadakchi.com/Logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+      },
+    ],
+  },
+};
+
+export const revalidate = 60;
+
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+const schemaJson = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'AutoPartsStore',
+      '@id': 'https://yadakchi.com/#organization',
+      name: 'یدکچی',
+      url: 'https://yadakchi.com',
+      logo: {
+        '@type': 'ImageObject',
+        '@id': 'https://yadakchi.com/#logo',
+        url: 'https://api.yadakchi.com/Logo.svg',
+        caption: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+      },
+      image: 'https://api.yadakchi.com/Logo.svg',
+      description:
+        'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران. خرید مستقیم قطعات خودرو از فروشگاه‌های سراسر کشور.',
+      priceRange: 'IRR',
+      inLanguage: 'fa-IR',
+      sameAs: [
+        'https://www.instagram.com/yadakchi',
+        'https://t.me/yadakchi',
+      ],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://yadakchi.com/#website',
+      url: 'https://yadakchi.com',
+      name: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+      description: 'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران',
+      publisher: {
+        '@id': 'https://yadakchi.com/#organization',
+      },
+      potentialAction: [
+        {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: 'https://yadakchi.com/search?q={search_term_string}',
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      ],
+      inLanguage: 'fa-IR',
+    },
+  ],
+};
+
+export default async function HomePage() {
+  const queryClient = getQueryClient();
+
+  const bannerService = getBannerService();
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const shopService = getShopService();
+  const partService = getPartService();
+  const httpClient = getHttpClient();
+
+  let mainCategories: any[] = [];
+  try {
+    mainCategories = await partService.getPartCategories(undefined, true);
+  } catch {
+    mainCategories = [];
+  }
+
+  const validCategories = Array.isArray(mainCategories) ? mainCategories : [];
+
+  const prefetches: Array<Promise<void>> = [
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'banners', 'Home'],
+      queryFn: () => bannerService.getBanners('Home'),
+      retry: 2,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories', undefined, true],
+      queryFn: () => validCategories,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'get-home-page'],
+      queryFn: async () => {
+        const response = await httpClient.get<any>('/api/Front/GetHomePage');
+        return response.data;
+      },
+      retry: 1,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'products', 'nominated-deals', null],
+      queryFn: () => productService.getNominatedProducts(),
+      retry: 1,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'main'],
+      queryFn: () => brandService.getMainBrands(),
+      retry: 1,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'shop', 'cards', SHOP_CARDS_PARAMS],
+      queryFn: () => shopService.getShopCards(SHOP_CARDS_PARAMS),
+      retry: 1,
+    }),
+
+    ...validCategories.map((cat: any) =>
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'products', 'nominated-category', cat.englishTitle || cat.id, null],
+        queryFn: () => productService.getNominatedProductsByCategory(cat.englishTitle || cat.id),
+        retry: 1,
+      })
+    ),
+  ];
+
+  await Promise.allSettled(prefetches);
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <HomeContent />
+    </HydrationBoundary>
+  );
+}
+
+==================== FILE: src\components\features\Banner\Banner.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
+import { useBannerImpression } from '@/shared/hooks/useBannerImpression';
+import { bannerTracker } from '@/core/utils/banner-tracker';
+
+export interface BannerItem {
+  id: string;
+  title: string;
+  targetURL: string | null;
+  image: string;
+  imageAlt: string | null;
+  size: 'Desktop' | 'Mobile';
+}
+
+export interface BannerGroup {
+  id: string;
+  name: string;
+  type: string;
+  banners: BannerItem[];
+}
+
+export interface BannerProps {
+  group?: BannerGroup;
+  className?: string;
+  aspectRatio?: string;
+  priority?: boolean;
+}
+
+export function Banner({
+  group,
+  className,
+  aspectRatio = 'aspect-[2.3/1] sm:aspect-[3/1] md:aspect-[3.5/1] lg:aspect-[3.8/1]',
+  priority = false,
+}: BannerProps) {
+  if (!group || !group.banners || group.banners.length === 0) return null;
+
+  const desktopBanner = group.banners.find((b) => b.size === 'Desktop') || group.banners[0];
+  const mobileBanner = group.banners.find((b) => b.size === 'Mobile') || desktopBanner;
+
+  const desktopImpressionRef = useBannerImpression(desktopBanner.id);
+  const mobileImpressionRef = useBannerImpression(mobileBanner.id);
+
+  const renderBannerImage = (
+    banner: BannerItem,
+    sizeVisibilityClass: string,
+    ref: React.Ref<HTMLDivElement>,
+    sizes: string
+  ) => {
+    const fullSrc = getFullUrl(banner.image);
+    const alt = banner.imageAlt || banner.title || 'بنر فروشگاه یدکچی';
+
+    const rawUrl = banner.targetURL?.trim() || '';
+    const isInternal = rawUrl.startsWith('/') || rawUrl.startsWith('#');
+    const href = !rawUrl
+      ? null
+      : isInternal
+      ? rawUrl
+      : rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+      ? rawUrl
+      : `https://${rawUrl}`;
+
+    const imageElement = (
+      <div
+        ref={ref}
+        className={cn(
+          'group relative h-full w-full overflow-hidden rounded-2xl bg-muted/40 shadow-xs transition-all duration-300',
+          'hover:shadow-md hover:border-primary/20',
+          aspectRatio === 'h-full' ? 'h-full min-h-full' : aspectRatio
+        )}
+      >
+        <Image
+          src={fullSrc}
+          alt={alt}
+          fill
+          priority={priority}
+          sizes={sizes}
+          className="rounded-2xl object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.015]"
+        />
+      </div>
+    );
+
+    if (href) {
+      return (
+        <Link
+          href={href}
+          target={isInternal ? '_self' : '_blank'}
+          rel={isInternal ? undefined : 'noopener noreferrer'}
+          aria-label={banner.title || alt}
+          className={cn(
+            'block h-full w-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            sizeVisibilityClass
+          )}
+          onClick={() => bannerTracker.trackClick(banner.id)}
+        >
+          {imageElement}
+        </Link>
+      );
+    }
+
+    return <div className={cn('h-full w-full', sizeVisibilityClass)}>{imageElement}</div>;
+  };
+
+  return (
+    <div className={cn('relative h-full w-full overflow-hidden', className)}>
+      {renderBannerImage(desktopBanner, 'hidden md:block', desktopImpressionRef, '(max-width: 1400px) 100vw, 1400px')}
+      {renderBannerImage(mobileBanner, 'block md:hidden', mobileImpressionRef, '100vw')}
+    </div>
+  );
+}
+
+==================== FILE: src\components\features\Banner\BannerSlider.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
+import Image from 'next/image';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
+import { useBannerImpression } from '@/shared/hooks/useBannerImpression';
+import { bannerTracker } from '@/core/utils/banner-tracker';
+
+interface BannerSliderProps {
+  group?: any;
+  className?: string;
+  autoPlayInterval?: number;
+  aspectRatio?: string;
+}
+
+export function BannerSlider({
+  group,
+  className,
+  autoPlayInterval = 5000,
+  aspectRatio = 'aspect-[16/9] md:aspect-[16/7.5] lg:aspect-[16/7]',
+}: BannerSliderProps) {
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const banners = group?.banners || [];
+  const totalSlides = banners.length;
+
+  React.useEffect(() => {
+    if (!isMounted || totalSlides <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % totalSlides);
+    }, autoPlayInterval);
+    return () => clearInterval(interval);
+  }, [totalSlides, autoPlayInterval, isMounted]);
+
+  if (!group || totalSlides === 0) return null;
+
+  const currentSlide = banners[currentIndex] || banners[0];
+  const slideImpressionRef = useBannerImpression(currentSlide?.id || null);
+
+  const initialSlide = banners[0];
+
+  const slideContent = (
+    <div
+      ref={slideImpressionRef}
+      className={cn('relative w-full overflow-hidden rounded-xl shadow-xs', aspectRatio)}
+    >
+      {!isMounted ? (
+        <Image
+          src={getFullUrl(initialSlide.image)}
+          alt={initialSlide.imageAlt || initialSlide.title || 'بنر یدکچی'}
+          fill
+          priority
+          sizes="(max-width: 768px) 100vw, 1400px"
+          className="rounded-xl object-cover"
+        />
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            className="absolute inset-0 h-full w-full transform-gpu"
+          >
+            <Image
+              src={getFullUrl(currentSlide.image)}
+              alt={currentSlide.imageAlt || currentSlide.title || 'بنر یدکچی'}
+              fill
+              priority={currentIndex === 0}
+              sizes="(max-width: 768px) 100vw, 1400px"
+              className="rounded-xl object-cover"
+            />
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+      {totalSlides > 1 && isMounted ? (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+            }}
+            className="absolute start-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/40 p-2 text-white backdrop-blur-md transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="اسلاید قبلی بنر"
+          >
+            <ChevronRight aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setCurrentIndex((prev) => (prev + 1) % totalSlides);
+            }}
+            className="absolute end-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-black/40 p-2 text-white backdrop-blur-md transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="اسلاید بعدی بنر"
+          >
+            <ChevronLeft aria-hidden="true" className="h-4 w-4 sm:h-5 sm:w-5" />
+          </button>
+
+          <div className="absolute bottom-3 start-1/2 z-10 flex -translate-x-1/2 gap-1.5 rtl:translate-x-1/2">
+            {banners.map((_: any, index: number) => (
+              <button
+                key={index}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCurrentIndex(index);
+                }}
+                className={cn(
+                  'h-1.5 rounded-full transition-all duration-normal',
+                  index === currentIndex ? 'w-5 bg-primary' : 'w-1.5 bg-white/60 hover:bg-white'
+                )}
+                aria-label={`نمایش اسلاید شماره ${index + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+
+  if (currentSlide?.targetURL) {
+    const rawUrl = currentSlide.targetURL.trim();
+    const isInternal = rawUrl.startsWith('/') || rawUrl.startsWith('#');
+    const href = isInternal ? rawUrl : rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
+
+    return (
+      <Link
+        href={href}
+        target={isInternal ? '_self' : '_blank'}
+        rel={isInternal ? undefined : 'noopener noreferrer'}
+        aria-label={currentSlide.title || 'اسلاید بنر'}
+        className={cn('block h-full w-full', className)}
+        onClick={() => bannerTracker.trackClick(currentSlide.id)}
+      >
+        {slideContent}
+      </Link>
+    );
+  }
+
+  return <div className={cn('h-full w-full', className)}>{slideContent}</div>;
+}
+
+==================== FILE: src\components\features\Part\HomeCategories.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { Settings, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
+import { useGetPartCategories } from '@/domains/front/part/hooks/part.hooks';
+import { Typography } from '@/components/primitives/Typography';
+import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { cn } from '@/design-system/utils/cn';
+import { getFullUrl } from '@/core/utils/formatters';
+import { PartCategoryViewModel } from '@/domains/front/part/types/view.types';
+
+interface PartCategoryItem extends PartCategoryViewModel {
+  thumbnailAlt?: string | null;
+  icon?: string | null;
+  iconAlt?: string | null;
+  hasDiscount?: boolean;
+  isInMain?: boolean;
+}
+
+export function HomeCategories() {
+  // ✅ استفاده از useGetPartCategories با فیلتر IsInMain = true
+  const { data: rawCategories = [], isLoading, isError } = useGetPartCategories(undefined, true);
+
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const [dragWidth, setDragWidth] = React.useState(0);
+  const x = useMotionValue(0);
+  const isDraggingRef = React.useRef(false);
+
+  const categories = (rawCategories as PartCategoryItem[]).filter(
+    (cat) => cat.name && cat.name.trim() !== '' && cat.englishTitle !== 'asd'
+  );
+
+  const mobileCategories = categories.slice(0, 7);
+
+  React.useEffect(() => {
+    if (carouselRef.current) {
+      const scrollW = carouselRef.current.scrollWidth;
+      const offsetW = carouselRef.current.offsetWidth;
+      setDragWidth(Math.max(0, scrollW - offsetW));
+    }
+  }, [categories]);
+
+  // در RTL: اسکرول به راست x را کم می‌کند، اسکرول به چپ x را زیاد می‌کند
+  const handleScroll = (direction: 'left' | 'right') => {
+    const step = 340;
+    let newX = x.get() + (direction === 'left' ? step : -step);
+    if (newX < 0) newX = 0;
+    if (newX > dragWidth) newX = dragWidth;
+    animate(x, newX, { type: 'spring', stiffness: 220, damping: 28 });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full space-y-6 py-6">
+        <Typography variant="h5" className="text-center font-bold text-foreground">
+          خرید بر اساس دسته‌بندی قطعات
+        </Typography>
+        <div className="grid grid-cols-4 gap-x-2 gap-y-6 px-3 md:hidden">
+          {[...Array(8)].map((_, index) => (
+            <div key={index} className="flex flex-col items-center gap-2">
+              <Skeleton variant="circle" className="h-16 w-16 sm:h-20 sm:w-20" />
+              <Skeleton variant="text" className="h-3 w-12" />
+            </div>
+          ))}
+        </div>
+        <div className="hidden justify-center gap-8 overflow-hidden px-12 py-2 md:flex">
+          {[...Array(7)].map((_, index) => (
+            <div key={index} className="flex w-28 shrink-0 flex-col items-center gap-3">
+              <Skeleton variant="circle" className="h-24 w-24" />
+              <Skeleton variant="text" className="h-3.5 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || categories.length === 0) return null;
+
+  return (
+    <div className="w-full select-none space-y-6 py-6">
+      <Typography
+        variant="h5"
+        className="text-center text-base font-bold text-foreground sm:text-xl"
+      >
+        خرید بر اساس دسته‌بندی قطعات
+      </Typography>
+
+      {/* نمای موبایل */}
+      <div className="grid grid-cols-4 gap-x-2 gap-y-6 px-2 sm:px-4 md:hidden">
+        {mobileCategories.map((cat) => {
+          const href = `/part-category/${cat.englishTitle}`;
+          const imageSrc = cat.thumbnail || cat.icon;
+
+          return (
+            <Link
+              key={cat.id}
+              href={href}
+              className="group/cat flex flex-col items-center text-center"
+            >
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border/80 bg-card p-2 shadow-xs transition-colors group-hover/cat:border-primary/50 sm:h-20 sm:w-20">
+                {imageSrc ? (
+                  <img
+                    src={getFullUrl(imageSrc)}
+                    alt={cat.thumbnailAlt || cat.name}
+                    className="h-full w-full rounded-full object-contain drop-shadow-sm"
+                    loading="lazy"
+                  />
+                ) : (
+                  <Settings aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
+                )}
+
+                {cat.hasDiscount ? (
+                  <span className="pointer-events-none absolute -bottom-2 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
+                    تخفیف ویژه
+                  </span>
+                ) : null}
+              </div>
+
+              <span className="mt-3 flex min-h-[1.75rem] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
+                {cat.name}
+              </span>
+            </Link>
+          );
+        })}
+
+        <Link href="/categories" className="flex flex-col items-center text-center">
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-border/80 bg-card shadow-xs transition-colors hover:border-primary/50 sm:h-20 sm:w-20">
+            <MoreHorizontal aria-hidden="true" className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <span className="mt-3 flex min-h-[1.75rem] items-center justify-center text-2xs font-bold leading-tight text-foreground line-clamp-2">
+            سایر دسته‌ها
+          </span>
+        </Link>
+      </div>
+
+      {/* نمای دسکتاپ */}
+      <div className="relative hidden w-full md:block">
+        {categories.length > 6 ? (
+          <>
+            {/* دکمه سمت راست (شروع در RTL): رفتن به دسته‌های قبلی */}
+            <button
+              type="button"
+              onClick={() => handleScroll('right')}
+              className="absolute start-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="دسته‌بندی‌های قبلی"
+            >
+              <ChevronRight aria-hidden="true" className="h-5 w-5" />
+            </button>
+
+            {/* دکمه سمت چپ (پایان در RTL): رفتن به دسته‌های بعدی */}
+            <button
+              type="button"
+              onClick={() => handleScroll('left')}
+              className="absolute end-3 top-12 z-20 -translate-y-1/2 cursor-pointer rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="دسته‌بندی‌های بعدی"
+            >
+              <ChevronLeft aria-hidden="true" className="h-5 w-5" />
+            </button>
+          </>
+        ) : null}
+
+        <div ref={carouselRef} className="relative z-10 w-full overflow-hidden">
+          <motion.div
+            drag="x"
+            style={{ x }}
+            dragConstraints={{ left: 0, right: dragWidth }}
+            dragElastic={0.12}
+            dragMomentum
+            onDragStart={() => {
+              isDraggingRef.current = true;
+            }}
+            onDragEnd={() => {
+              setTimeout(() => {
+                isDraggingRef.current = false;
+              }, 80);
+            }}
+            className="flex cursor-grab justify-start gap-8 px-14 py-2 active:cursor-grabbing"
+          >
+            {categories.map((cat) => {
+              const href = `/part-category/${cat.englishTitle}`;
+              const imageSrc = cat.thumbnail || cat.icon;
+
+              return (
+                <Link
+                  key={cat.id}
+                  href={href}
+                  draggable={false}
+                  onClick={(e) => {
+                    if (isDraggingRef.current) e.preventDefault();
+                  }}
+                  className="group/cat flex w-28 shrink-0 cursor-pointer flex-col items-center text-center"
+                >
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-border/80 bg-card p-2.5 shadow-xs transition-all duration-fast group-hover/cat:border-primary/50 group-hover/cat:shadow-sm">
+                    {imageSrc ? (
+                      <img
+                        src={getFullUrl(imageSrc)}
+                        alt={cat.thumbnailAlt || cat.name}
+                        draggable={false}
+                        className="pointer-events-none h-full w-full rounded-full object-contain drop-shadow-sm transition-transform duration-fast group-hover/cat:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <Settings
+                        aria-hidden="true"
+                        className="h-9 w-9 text-muted-foreground transition-transform duration-fast group-hover/cat:rotate-45"
+                      />
+                    )}
+
+                    {cat.hasDiscount ? (
+                      <span className="pointer-events-none absolute -bottom-2.5 start-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-2.5 py-0.5 text-2xs font-bold text-primary-foreground shadow-xs rtl:translate-x-1/2">
+                        تخفیف ویژه
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <span className="mt-3.5 flex min-h-[2.125rem] items-center justify-center text-xs font-semibold leading-relaxed text-muted-foreground line-clamp-2 transition-colors group-hover/cat:text-foreground">
+                    {cat.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+==================== FILE: src\components\features\Car\ShopByCar.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { useRouter } from 'next/navigation';
+import { Car, Search, Loader2, ArrowRight, X } from 'lucide-react';
+import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
+import { Modal, ModalBody } from '@/components/composites/Modal/Modal';
+import { Button } from '@/components/primitives/Button/Button';
+import { Input } from '@/components/primitives/Input/Input';
+import { Typography } from '@/components/primitives/Typography';
+import { cn } from '@/design-system/utils/cn';
+import { getCarUrl, getFullUrl } from '@/core/utils/formatters';
+
+interface CarItem {
+  id: string;
+  model: string;
+  englishTitle: string;
+  cover: string;
+  coverAlt: string | null;
+}
+
+export function ShopByCar() {
+  const router = useRouter();
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [selectedCar, setSelectedCar] = React.useState<CarItem | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const { data: cars = [], isLoading } = useGetCarListFlat(1, 200, { enabled: isOpen });
+
+  const handleSearchSubmit = () => {
+    if (!selectedCar || isSubmitting) return;
+    setIsSubmitting(true);
+    // استفاده از router.push باعث می‌شود پروگرس‌بار گلوبال و لودینگ سه‌نقطه فعال شوند
+    router.push(getCarUrl(selectedCar.englishTitle));
+  };
+
+  const filteredCars = cars.filter(
+    (car: CarItem) =>
+      car.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      car.englishTitle.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="flex w-full flex-col items-center gap-2.5 py-1 md:py-4">
+      <Typography variant="h4" className="text-center text-title-sm sm:text-base md:text-lg">
+        خرید بر اساس خودرو
+      </Typography>
+
+      <div className="flex w-full max-w-3xl flex-col items-stretch gap-3 px-4 sm:flex-row sm:px-0">
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="flex h-10 flex-1 items-center justify-between rounded-md border border-border bg-card px-4 py-3 shadow-xs 
+          outline-none transition-colors hover:border-primary/40"
+        >
+          {selectedCar ? (
+            <div className="flex items-center gap-2">
+              <img
+                src={getFullUrl(selectedCar.cover)}
+                alt={selectedCar.model}
+                className="h-7 w-10 rounded-sm object-contain"
+              />
+              <span className="text-title-sm">{selectedCar.model}</span>
+            </div>
+          ) : (
+            <span className="text-sm font-medium text-muted-foreground">مدل خودروی خود را انتخاب کنید...</span>
+          )}
+          <Car aria-hidden="true" className="me-2 h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
+
+        <Button
+          variant="primary"
+          onClick={handleSearchSubmit}
+          disabled={!selectedCar || isSubmitting}
+          isLoading={isSubmitting}
+          className="h-12 shrink-0 rounded-md px-8 text-sm font-bold shadow-xs"
+          leftIcon={!isSubmitting ? <Search aria-hidden="true" className="h-4 w-4" /> : undefined}
+        >
+          {isSubmitting ? 'در حال جستجو...' : 'جستجوی قطعات'}
+        </Button>
+      </div>
+
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:rounded-lg md:overflow-hidden"
+        overlayClassName="bg-foreground/40 backdrop-blur-md"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              aria-label="بازگشت"
+              className="-me-1 rounded-full p-1 hover:bg-muted md:hidden"
+            >
+              <ArrowRight aria-hidden="true" className="h-5 w-5" />
+            </button>
+            <span className="flex items-center gap-1.5 text-title-sm">
+              <Car aria-hidden="true" className="h-4 w-4 text-primary" />
+              انتخاب خودرو
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            aria-label="بستن"
+            className="hidden rounded-full p-1.5 transition-colors hover:bg-muted md:flex"
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="shrink-0 border-b border-border bg-card p-4">
+          <Input
+            placeholder="جستجوی مدل خودرو (مثال: پراید، تارا...)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search aria-hidden="true" className="h-4 w-4" />}
+            className="w-full"
+          />
+        </div>
+
+        <ModalBody className="flex-1 overflow-y-auto bg-card p-6">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-12">
+              <Loader2 aria-hidden="true" className="h-7 w-7 animate-spin text-primary" />
+              <Typography variant="small" color="muted">
+                در حال لود لیست خودروها...
+              </Typography>
+            </div>
+          ) : filteredCars.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {filteredCars.map((car: CarItem) => (
+                <div
+                  key={car.id}
+                  onClick={() => {
+                    setSelectedCar(car);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    'flex cursor-pointer flex-col items-center gap-3 rounded-md border border-border p-4 text-center transition-colors hover:border-primary/50 hover:bg-accent/50',
+                    selectedCar?.id === car.id && 'border-primary bg-accent/50 ring-1 ring-primary'
+                  )}
+                >
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md">
+                    <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain" />
+                  </div>
+                  <span className="text-label sm:text-sm">{car.model}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center">
+              <Typography variant="small" color="muted">
+                خودرویی با مشخصات مدنظر یافت نشد.
+              </Typography>
+            </div>
+          )}
+        </ModalBody>
+      </Modal>
+    </div>
+  );
+}
+
+==================== FILE: src\components\sections\BottomNav\BottomNav.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Home, LayoutGrid, ShoppingBag, Car, User } from 'lucide-react';
+import { useGetBasket } from '@/domains/front/basket/hooks/basket.hooks';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { Badge } from '@/components/primitives/Badge';
+import { cn } from '@/design-system/utils/cn';
+
+export function BottomNav() {
+  const pathname = usePathname();
+  const [mounted, setMounted] = React.useState(false);
+  const { user, isAuthenticated } = useAuth();
+  const { data: basket } = useGetBasket();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // در صفحه چت تیکت نوار پایین را مخفی می‌کنیم تا کیبورد موبایل بدون مشکل باز شود
+  const isInsideTicketChat = pathname.startsWith('/profile/support/') && pathname !== '/profile/support' && pathname !== '/profile/support/new';
+
+  if (!mounted || isInsideTicketChat) return null;
+
+  const cartCount = basket?.summary?.itemCount ?? 0;
+  const profileLabel = isAuthenticated && user ? (user.fullName ?? user.lastName ?? 'پروفایل') : 'ورود';
+  const profileHref = isAuthenticated ? '/profile' : '/login';
+
+  const navItems = [
+    { id: 'home', label: 'خانه', icon: Home, href: '/home' },
+    { id: 'categories', label: 'دسته‌بندی', icon: LayoutGrid, href: '/categories' },
+    { id: 'basket', label: 'سبد خرید', icon: ShoppingBag, href: '/basket', badge: cartCount },
+    { id: 'my-car', label: 'ماشین من', icon: Car, href: '/my-car' },
+    { id: 'profile', label: profileLabel, icon: User, href: profileHref },
+  ];
+
+  return (
+   <nav
+  aria-label="ناوبری پایین"
+  className="lg:hidden fixed inset-x-0 bottom-0 z-fixed flex h-16 items-center justify-between border-t border-border/80 bg-card px-3 pb-safe select-none shadow-nav-top-sm transform-gpu"
+>
+      <div className="mx-auto flex h-full w-full max-w-md items-center justify-between">
+        {navItems.map((item) => {
+          // بررسی فعال بودن تب (شامل تمام زیرمسیرهای پروفایل)
+          const isActive = item.href === '/' 
+            ? pathname === '/' 
+            : pathname.startsWith(item.href);
+          const IconComponent = item.icon;
+
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              draggable={false}
+              className="relative flex h-full flex-1 flex-col items-center justify-center rounded-xl outline-none"
+            >
+              <motion.div
+                whileTap={{ scale: 0.88 }}
+                className={cn(
+                  'relative flex items-center justify-center transition-colors duration-fast',
+                  isActive ? 'text-primary' : 'text-muted-foreground'
+                )}
+              >
+                <IconComponent className={cn('h-5 w-5', isActive && 'stroke-[2.5px]')} />
+
+                {item.badge !== undefined && item.badge > 0 ? (
+                  <Badge
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-1.5 -end-2.5 h-4 min-w-4 justify-center rounded-full p-0.5 text-3xs font-bold"
+                  >
+                    {item.badge}
+                  </Badge>
+                ) : null}
+              </motion.div>
+
+              <span
+                className={cn(
+                  'mt-1 max-w-[4.375rem] truncate text-2xs  transition-colors duration-fast',
+                  isActive ? 'font-bold text-primary' : 'font-medium text-muted-foreground'
+                )}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+==================== FILE: src\components\features\ProductCard\ProductSlider.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
+import { ProductStandardCard } from './ProductStandardCard';
+import { Typography } from '@/components/primitives/Typography';
+import { SliderSkeleton } from './SliderSkeleton';
+import { cn } from '@/design-system/utils/cn';
+import { toPersianDigits } from '@/core/utils/formatters';
+
+export interface ProductSliderProps {
+  title: string;
+  products: any[];
+  isLoading: boolean;
+  isError: boolean;
+  viewAllLink?: string;
+  className?: string;
+  showTimer?: boolean;
+  totalSalesCount?: number;
+  customIcon?: React.ReactNode;
+}
+
+export function ProductSlider({
+  title,
+  products = [],
+  isLoading,
+  isError,
+  viewAllLink = '#',
+  className,
+  totalSalesCount,
+  customIcon,
+}: ProductSliderProps) {
+  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const [dragWidth, setDragWidth] = React.useState(0);
+  const x = useMotionValue(0);
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  React.useEffect(() => {
+    if (carouselRef.current) {
+      setDragWidth(carouselRef.current.scrollWidth - carouselRef.current.offsetWidth);
+    }
+  }, [products]);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    const step = 450;
+    let newX = x.get() + (direction === 'left' ? step : -step);
+    if (newX < 0) newX = 0;
+    if (newX > dragWidth) newX = dragWidth;
+    animate(x, newX, { type: 'spring', stiffness: 200, damping: 30 });
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 50);
+  };
+
+  const handleDragClickCapture = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  if (isLoading) {
+    return <SliderSkeleton title={title} />;
+  }
+
+  if (isError || products.length === 0) return null;
+
+  return (
+    <div className={cn('flex w-full flex-col space-y-4 py-4', className)}>
+      {/* هدر اسلایدر */}
+      <div className="flex w-full items-center justify-between px-1">
+        <div className="flex items-center gap-2.5">
+          {customIcon ? (
+            customIcon
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Wrench aria-hidden="true" className="h-4 w-4 shrink-0" />
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <Typography variant="h4" className="font-bold text-foreground">
+              {title}
+            </Typography>
+            {totalSalesCount !== undefined && totalSalesCount > 0 && (
+              <span className="rounded-md bg-muted px-2 py-0.5 text-label-2xs tabular-nums">
+                {toPersianDigits(totalSalesCount)} کالا
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* دکمه مشاهده همه */}
+        <Link
+          href={viewAllLink}
+          prefetch={false}
+          className="group inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-info/90 transition-colors hover:text-info/90 dark:text-info/90 sm:text-sm"
+        >
+          <span>مشاهده همه</span>
+          <ChevronLeft aria-hidden="true" className="h-4 w-4 stroke-[2.25] transition-transform duration-fast group-hover:-translate-x-1" />
+        </Link>
+      </div>
+
+      {/* کانتینر اسلایدر */}
+      <div className="group relative w-full overflow-hidden rounded-xl border border-border/70 bg-card p-4 shadow-xs">
+        {products.length > 4 ? (
+          <>
+            <button
+              type="button"
+              onClick={() => handleScroll('right')}
+              className="absolute start-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              aria-label="محصولات قبلی"
+            >
+              <ChevronRight aria-hidden="true" className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleScroll('left')}
+              className="absolute end-3 top-1/2 z-20 hidden -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border/80 bg-card p-2.5 text-foreground shadow-md transition-all duration-fast hover:border-primary/50 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
+              aria-label="محصولات بعدی"
+            >
+              <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </>
+        ) : null}
+
+        <div ref={carouselRef} className="relative z-10 w-full select-none overflow-hidden">
+          <motion.div
+            drag="x"
+            style={{ x, touchAction: 'pan-y' }}
+            dragConstraints={{ left: 0, right: dragWidth }}
+            dragElastic={0.1}
+            dragMomentum
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            dragTransition={{ power: 0.2, bounceStiffness: 220, bounceDamping: 28 }}
+            onClickCapture={handleDragClickCapture}
+            className="flex cursor-grab gap-4 py-1 active:cursor-grabbing transform-gpu will-change-transform"
+          >
+            {products.map((prod: any) => (
+              <div key={prod.id} className="w-[11.875rem] shrink-0 sm:w-[15.625rem]">
+                <ProductStandardCard product={prod} />
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}

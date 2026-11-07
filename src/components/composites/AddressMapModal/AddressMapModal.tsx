@@ -1,4 +1,4 @@
-﻿// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\composites\AddressMapModal\AddressMapModal.tsx
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\components\composites\AddressMapModal\AddressMapModal.tsx
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -107,7 +107,7 @@ function getPlaceBadge(type?: string) {
     case 'road':
       return {
         label: 'خیابان',
-        icon: <Navigation className="w-3.5 h-3.5 text-sky-500" />,
+        icon: <Navigation className="w-3.5 h-3.5 text-info" />,
         className: 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300',
       };
     case 'neighborhood':
@@ -122,13 +122,13 @@ function getPlaceBadge(type?: string) {
     case 'town':
       return {
         label: 'شهر',
-        icon: <Building2 className="w-3.5 h-3.5 text-amber-500" />,
-        className: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+        icon: <Building2 className="w-3.5 h-3.5 text-warning" />,
+        className: 'bg-amber-50 text-warning/80 dark:bg-amber-950/40 dark:text-amber-300',
       };
     case 'poi':
       return {
         label: 'مکان شاخص',
-        icon: <Store className="w-3.5 h-3.5 text-emerald-500" />,
+        icon: <Store className="w-3.5 h-3.5 text-success" />,
         className: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
       };
     default:
@@ -782,8 +782,8 @@ function InternalMapComponent({
 
   if (webglError) {
     return (
-      <div className="relative flex h-full min-h-[420px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/50 p-6 text-center dark:border-amber-900/50 dark:bg-amber-950/20">
-        <AlertTriangle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+      <div className="relative flex h-full min-h-[26.25rem] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/50 p-6 text-center dark:border-amber-900/50 dark:bg-amber-950/20">
+        <AlertTriangle className="h-8 w-8 text-warning/90 dark:text-warning/90" />
         <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200 ">
           مرورگر شما از شتاب‌دهنده گرافیکی WebGL پشتیبانی نمی‌کند
         </h4>
@@ -792,7 +792,7 @@ function InternalMapComponent({
             setWebglError(false);
             setIsReady(false);
           }}
-          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-amber-700"
+          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-warning/90 px-3.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-amber-700"
         >
           <RefreshCw className="h-3.5 w-3.5" />
           تلاش مجدد
@@ -802,10 +802,10 @@ function InternalMapComponent({
   }
 
   return (
-    <div className="relative w-full h-full min-h-[420px] overflow-hidden">
+    <div className="relative w-full h-full min-h-[26.25rem] overflow-hidden">
       <div
         ref={containerRef}
-        className={`w-full h-full min-h-[420px] transition-colors duration-500 ${
+        className={`w-full h-full min-h-[26.25rem] transition-colors duration-500 ${
           isDarkMode ? 'bg-[#0D1117]' : 'bg-[#F8FAFC]'
         }`}
       />
@@ -820,7 +820,7 @@ function InternalMapComponent({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
           </span>
-          <span className="text-[12px] font-semibold tracking-tight text-foreground">
+          <span className="text-[0.75rem] font-semibold tracking-tight text-foreground">
             در حال بارگذاری نقشه...
           </span>
         </div>
@@ -1194,7 +1194,7 @@ export function AddressMapModal({
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4" dir="rtl">
+      <div className="fixed inset-0 z-loader flex items-center justify-center p-0 md:p-4" dir="rtl">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -1210,7 +1210,7 @@ export function AddressMapModal({
           onClick={(e) => e.stopPropagation()}
           className={cn(
             'bg-card overflow-hidden flex flex-col z-10',
-            'w-full h-full md:h-[85vh] md:max-h-[750px] md:max-w-4xl md:rounded-2xl shadow-2xl border border-border'
+            'w-full h-full md:h-[85vh] md:max-h-[46.875rem] md:max-w-4xl md:rounded-2xl shadow-2xl border border-border'
           )}
         >
           {/* Header */}
@@ -1252,7 +1252,7 @@ export function AddressMapModal({
                     if (searchResults.length > 0) setIsDropdownOpen(true);
                   }}
                   placeholder="جستجوی نام خیابان، محله، شهر یا مکان شاخص..."
-                  className="w-full h-11 pe-10 ps-9 rounded-2xl border border-border bg-card text-xs font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all shadow-sm"
+                  className="w-full h-11 pe-10 ps-9 rounded-2xl border border-border bg-card text-label placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all shadow-sm"
                 />
 
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
@@ -1328,12 +1328,12 @@ export function AddressMapModal({
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-xs font-black text-foreground truncate">
+                              <p className="text-base font-bold text-foreground truncate">
                                 {titleText}
                               </p>
                               <span
                                 className={cn(
-                                  'text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 ',
+                                  'text-[0.5625rem] font-bold px-1.5 py-0.5 rounded-md shrink-0 ',
                                   badge.className
                                 )}
                               >
@@ -1341,7 +1341,7 @@ export function AddressMapModal({
                               </span>
                             </div>
                             {subtitleText && (
-                              <p className="text-[11px] text-muted-foreground font-medium truncate mt-0.5">
+                              <p className="text-[0.6875rem] text-muted-foreground font-medium truncate mt-0.5">
                                 {subtitleText}
                               </p>
                             )}
@@ -1350,7 +1350,7 @@ export function AddressMapModal({
 
                         {result.distance_meters !== null &&
                           result.distance_meters !== undefined && (
-                            <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap bg-card border border-border px-2 py-0.5 rounded-lg shrink-0">
+                            <span className="text-[0.625rem] font-bold text-muted-foreground whitespace-nowrap bg-card border border-border px-2 py-0.5 rounded-lg shrink-0">
                               {formatDistance(result.distance_meters)}
                             </span>
                           )}
@@ -1363,7 +1363,7 @@ export function AddressMapModal({
           </div>
 
           {/* بدنه اصلی نقشه */}
-          <div className="flex-1 relative w-full h-full min-h-[350px] sm:min-h-[450px] bg-card overflow-hidden">
+          <div className="flex-1 relative w-full h-full min-h-[350px] sm:min-h-[28.125rem] bg-card overflow-hidden">
             <InternalMapComponent
               position={position}
               onPositionChange={handlePositionChange}
@@ -1403,20 +1403,20 @@ export function AddressMapModal({
                   {isFetchingAddress ? (
                     <Loader2 className="w-4 h-4 text-primary animate-spin" />
                   ) : (
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 ms-1 animate-pulse" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-success mt-1 ms-1 animate-pulse" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-black text-foreground mb-1">
+                  <p className="text-[0.6875rem] font-black text-foreground mb-1">
                     موقعیت جغرافیایی انتخابی:
                   </p>
-                  <p className="text-xs font-bold text-muted-foreground truncate">
+                  <p className="text-label-muted truncate">
                     {isFetchingAddress
                       ? 'در حال استخراج نشانی پستی...'
                       : address || 'نقشه را حرکت دهید تا نشانی دریافت شود'}
                   </p>
                   {(province || city) && !isFetchingAddress && (
-                    <p className="text-[10px] text-muted-foreground font-bold mt-1.5">
+                    <p className="text-[0.625rem] text-muted-foreground font-bold mt-1.5">
                       استان: <strong className="text-foreground">{province}</strong> | شهر:{' '}
                       <strong className="text-foreground">{city}</strong>
                     </p>
@@ -1431,7 +1431,7 @@ export function AddressMapModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground hover:text-foreground font-black text-xs transition-colors cursor-pointer"
+              className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground hover:text-foreground font-bold text-xs transition-colors cursor-pointer"
             >
               انصراف
             </button>

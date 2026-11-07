@@ -11,7 +11,7 @@ export function ProductSpecsTable({ specGroups }: ProductSpecsTableProps) {
 
   return (
     <div className="flex w-full flex-col gap-6 bg-inherit">
-      <h3 className="mb-2 text-sm font-bold text-foreground md:text-base">مشخصات فنی قطعه</h3>
+      <h3 className="mb-2 text-title-sm md:text-base">مشخصات فنی قطعه</h3>
 
       <div className="flex w-full flex-col gap-6">
         {specGroups.map((group, gIdx) => (

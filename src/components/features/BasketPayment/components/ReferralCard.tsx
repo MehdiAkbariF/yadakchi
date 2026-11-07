@@ -34,7 +34,7 @@ export function ReferralCard() {
         <div className="flex w-full flex-col items-start justify-start text-right gap-1">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-muted-foreground" />
-            <span className="text-sm font-bold text-foreground">ثبت کد معرف</span>
+            <span className="text-title-sm">ثبت کد معرف</span>
           </div>
           <span className="text-xs text-muted-foreground">
             با وارد کردن کد معرف، هم دوستت و هم خودت (۱,۰۰۰,۰۰۰ ریال) اعتبار خرید دریافت می‌کنید.

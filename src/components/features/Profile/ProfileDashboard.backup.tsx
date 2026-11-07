@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useRouter } from 'next/navigation';
 import {
@@ -46,7 +46,7 @@ export function ProfileDashboard() {
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               <ShoppingBag aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
-              <span className="text-sm font-bold text-foreground">سفارش‌های من</span>
+              <span className="text-title-sm">سفارش‌های من</span>
             </div>
             <button
               type="button"
@@ -70,8 +70,8 @@ export function ProfileDashboard() {
                   className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-border bg-card p-4 text-center transition-colors hover:border-primary/40 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <StatusIcon aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-xs font-bold text-foreground">{status.label}</span>
-                  <span className="mt-1 rounded-full bg-muted px-2.5 py-0.5 text-2xs font-bold text-muted-foreground">
+                  <span className="text-label">{status.label}</span>
+                  <span className="mt-1 rounded-full bg-muted px-2.5 py-0.5 text-label-2xs">
                     {count} سفارش
                   </span>
                 </button>
@@ -86,7 +86,7 @@ export function ProfileDashboard() {
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               <Car aria-hidden="true" className="h-5 w-5 text-primary" />
-              <span className="text-sm font-bold text-foreground">گاراژ من</span>
+              <span className="text-title-sm">گاراژ من</span>
             </div>
             <button
               type="button"
@@ -115,8 +115,8 @@ export function ProfileDashboard() {
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex w-full items-center gap-2">
-                        <span className="truncate text-sm font-bold text-foreground">{vehicle.carModel}</span>
-                        <span className="rounded-sm bg-muted px-2 py-0.5 text-2xs font-bold text-muted-foreground">
+                        <span className="truncate text-title-sm">{vehicle.carModel}</span>
+                        <span className="rounded-sm bg-muted px-2 py-0.5 text-label-2xs">
                           - {vehicle.title}
                         </span>
                       </div>
@@ -159,7 +159,7 @@ export function ProfileDashboard() {
             </div>
           ) : (
             <div className="flex w-full flex-col items-center justify-center py-8 text-center">
-              <p className="text-xs text-muted-foreground">هیچ خودرویی در گاراژ شما ثبت نشده است.</p>
+              <p className="text-base text-muted-foreground">هیچ خودرویی در گاراژ شما ثبت نشده است.</p>
               <Button
                 variant="outline"
                 size="sm"

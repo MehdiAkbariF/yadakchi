@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Truck, Users, Calendar, Check, Package, Store } from 'lucide-react';
 import { Card, CardBody } from '@/components/composites/Card';
@@ -46,7 +46,7 @@ export function CheckoutShipmentGroup({
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
             {toPersianDigits(index + 1)}
           </span>
-          <span className="text-sm font-bold text-foreground">
+          <span className="text-title-sm">
             مرسوله {toPersianDigits(index + 1)} از {toPersianDigits(totalSubBaskets)}
           </span>
           <span className="rounded-full bg-muted px-2 py-0.5 text-2xs font-semibold text-muted-foreground">
@@ -66,7 +66,7 @@ export function CheckoutShipmentGroup({
           {/* ۱. اقلام سفارش در این مرسوله (در بالای کارت) */}
           {/* ========================================================================= */}
           <div className="flex flex-col gap-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+            <div className="flex items-center gap-2 text-label">
               <Package className="h-4 w-4 text-primary" />
               <span>اقلام موجود در این مرسوله:</span>
             </div>
@@ -91,7 +91,7 @@ export function CheckoutShipmentGroup({
                     </div>
 
                     <div className="flex min-w-0 flex-1 flex-col justify-center gap-1 text-right">
-                      <h4 className="line-clamp-1 text-xs font-bold text-foreground" title={product?.title}>
+                      <h4 className="line-clamp-1 text-label" title={product?.title}>
                         {product?.title}
                       </h4>
 
@@ -116,7 +116,7 @@ export function CheckoutShipmentGroup({
           {/* ۲. گزینه‌های انتخاب روش دریافت (فقط یک‌بار و بدون تکرار) */}
           {/* ========================================================================= */}
           <div className="flex flex-col gap-3">
-            <div className="text-right text-xs font-bold text-foreground">
+            <div className="text-right text-label">
               شیوه دریافت مرسوله را انتخاب کنید:
             </div>
 
@@ -133,7 +133,7 @@ export function CheckoutShipmentGroup({
                   )}
                 >
                   <div className="flex flex-col gap-1 text-right">
-                    <span className="text-xs font-bold text-foreground">
+                    <span className="text-label">
                       اسنپ باکس (فوری)
                     </span>
                     <span className="text-3xs text-muted-foreground">
@@ -178,7 +178,7 @@ export function CheckoutShipmentGroup({
                   )}
                 >
                   <div className="flex flex-col gap-1 text-right">
-                    <span className="text-xs font-bold text-foreground">
+                    <span className="text-label">
                       ارسال تیپاکس
                     </span>
                     <span className="text-3xs text-muted-foreground">
@@ -223,7 +223,7 @@ export function CheckoutShipmentGroup({
                   )}
                 >
                   <div className="flex flex-col gap-1 text-right">
-                    <span className="text-xs font-bold text-foreground">
+                    <span className="text-label">
                       ارسال فروشنده
                     </span>
                     <span className="text-3xs text-muted-foreground">
@@ -270,7 +270,7 @@ export function CheckoutShipmentGroup({
                   )}
                 >
                   <div className="flex flex-col gap-1 text-right">
-                    <span className="text-xs font-bold text-foreground">
+                    <span className="text-label">
                       دریافت حضوری
                     </span>
                     <span className="text-3xs text-muted-foreground">

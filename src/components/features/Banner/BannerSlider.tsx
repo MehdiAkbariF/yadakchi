@@ -1,4 +1,5 @@
-﻿'use client';
+﻿// src/components/features/Banner/BannerSlider.tsx
+'use client';
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,80 +18,56 @@ interface BannerSliderProps {
   aspectRatio?: string;
 }
 
-interface BaseSliderProps {
-  slides: any[];
-  autoPlayInterval: number;
-  aspectRatio: string;
-  className?: string;
-}
-
-function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSliderProps) {
+export function BannerSlider({
+  group,
+  className,
+  autoPlayInterval = 5000,
+  aspectRatio = 'aspect-[16/9] md:aspect-[16/7.5] lg:aspect-[16/7]',
+}: BannerSliderProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0);
-  const [isMounted, setIsMounted] = React.useState(false);
+  const banners = group?.banners || [];
+  const totalSlides = banners.length;
 
   React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const totalSlides = slides.length;
-
-  React.useEffect(() => {
-    if (!isMounted || totalSlides <= 1) return;
+    if (totalSlides <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % totalSlides);
     }, autoPlayInterval);
     return () => clearInterval(interval);
-  }, [totalSlides, autoPlayInterval, isMounted]);
+  }, [totalSlides, autoPlayInterval]);
 
-  const currentSlide = slides[currentIndex];
+  if (!group || totalSlides === 0) return null;
+
+  const currentSlide = banners[currentIndex] || banners[0];
   const slideImpressionRef = useBannerImpression(currentSlide?.id || null);
 
-  if (totalSlides === 0) return null;
-
-  if (!isMounted) {
-    const initialSlide = slides[0];
-    return (
-      <div className={cn('relative w-full overflow-hidden rounded-xl shadow-xs', aspectRatio, className)}>
-        <Image
-          src={getFullUrl(initialSlide.image)}
-          alt={initialSlide.imageAlt || initialSlide.title}
-          fill
-          priority
-          sizes="100vw"
-          className="rounded-xl object-cover"
-        />
-      </div>
-    );
-  }
-
-  const slideElement = (
+  const slideContent = (
     <div
       ref={slideImpressionRef}
-      className={cn('relative w-full overflow-hidden rounded-xl shadow-xs', aspectRatio)}
+      className={cn('relative w-full h-full overflow-hidden rounded-xl shadow-xs', aspectRatio)}
     >
-      <AnimatePresence mode="wait">
-       <motion.div
-  key={currentSlide.id}
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  exit={{ opacity: 0 }}
-  transition={{ duration: 0.4, ease: 'easeInOut' }}
-  className="absolute inset-0 h-full w-full transform-gpu"
->
-  <Image
-    src={getFullUrl(currentSlide.image)}
-    alt={currentSlide.imageAlt || currentSlide.title}
-    fill
-    priority={currentIndex === 0}
-    sizes="(max-width: 768px) 100vw, 70vw"
-    className="rounded-xl object-cover"
-  />
-</motion.div>
+      <AnimatePresence initial={false} mode="wait">
+        <motion.div
+          key={currentSlide.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="absolute inset-0 h-full w-full"
+        >
+          <Image
+            src={getFullUrl(currentSlide.image)}
+            alt={currentSlide.imageAlt || currentSlide.title || 'بنر فروشگاه یدکچی'}
+            fill
+            priority={currentIndex === 0}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 1000px"
+            className="rounded-xl object-cover"
+          />
+        </motion.div>
       </AnimatePresence>
 
       {totalSlides > 1 ? (
         <>
-          {/* دکمه سمت راست (شروع در RTL): رفتن به اسلاید قبلی */}
           <button
             type="button"
             onClick={(e) => {
@@ -98,13 +75,12 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
               e.stopPropagation();
               setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
             }}
-            className="absolute start-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white backdrop-blur-md transition-all duration-fast hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute start-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="اسلاید قبلی بنر"
           >
             <ChevronRight aria-hidden="true" className="h-5 w-5" />
           </button>
 
-          {/* دکمه سمت چپ (پایان در RTL): رفتن به اسلاید بعدی */}
           <button
             type="button"
             onClick={(e) => {
@@ -112,15 +88,15 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
               e.stopPropagation();
               setCurrentIndex((prev) => (prev + 1) % totalSlides);
             }}
-            className="absolute end-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/10 bg-black/35 p-2 text-white backdrop-blur-md transition-all duration-fast hover:bg-black/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute end-3 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="اسلاید بعدی بنر"
           >
             <ChevronLeft aria-hidden="true" className="h-5 w-5" />
           </button>
 
-          {/* نشانگرهای نقطه‌ای پایین اسلایدر */}
-          <div className="absolute bottom-4 start-1/2 z-10 flex -translate-x-1/2 gap-1.5 rtl:translate-x-1/2">
-            {slides.map((_: any, index: number) => (
+          {/* Dots با رعایت اندازه تاچ استاندارد 44px برای رفع خطای Touch Target در موبایل */}
+          <div className="absolute bottom-3 start-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rtl:translate-x-1/2">
+            {banners.map((_: any, index: number) => (
               <button
                 key={index}
                 type="button"
@@ -129,12 +105,16 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
                   e.stopPropagation();
                   setCurrentIndex(index);
                 }}
-                className={cn(
-                  'h-2 rounded-full transition-all duration-normal',
-                  index === currentIndex ? 'w-6 bg-primary' : 'w-2 bg-white/50 hover:bg-white/80'
-                )}
+                className="relative flex h-11 w-6 items-center justify-center focus:outline-none"
                 aria-label={`نمایش اسلاید شماره ${index + 1}`}
-              />
+              >
+                <span
+                  className={cn(
+                    'h-1.5 rounded-full transition-all duration-300 block',
+                    index === currentIndex ? 'w-5 bg-primary' : 'w-1.5 bg-white/60 hover:bg-white'
+                  )}
+                />
+              </button>
             ))}
           </div>
         </>
@@ -142,60 +122,24 @@ function BaseSlider({ slides, autoPlayInterval, aspectRatio, className }: BaseSl
     </div>
   );
 
-  if (currentSlide.targetURL) {
-    const href = currentSlide.targetURL.startsWith('http')
-      ? currentSlide.targetURL
-      : `https://${currentSlide.targetURL}`;
+  if (currentSlide?.targetURL) {
+    const rawUrl = currentSlide.targetURL.trim();
+    const isInternal = rawUrl.startsWith('/') || rawUrl.startsWith('#');
+    const href = isInternal ? rawUrl : rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`;
+
     return (
       <Link
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={currentSlide.title || currentSlide.imageAlt || 'اسلاید بنر تبلیغاتی'}
+        target={isInternal ? '_self' : '_blank'}
+        rel={isInternal ? undefined : 'noopener noreferrer'}
+        aria-label={currentSlide.title || 'اسلاید بنر'}
         className={cn('block h-full w-full', className)}
         onClick={() => bannerTracker.trackClick(currentSlide.id)}
       >
-        {slideElement}
+        {slideContent}
       </Link>
     );
   }
 
-  return <div className={cn('h-full w-full', className)}>{slideElement}</div>;
-}
-
-export function BannerSlider({
-  group,
-  className,
-  autoPlayInterval = 5000,
-  aspectRatio = 'aspect-[16/9] md:aspect-[16/7.5] lg:aspect-[16/7]',
-}: BannerSliderProps) {
-  if (!group || !group.banners || group.banners.length === 0) return null;
-
-  const desktopSlides = group.banners.filter((b: any) => b.size === 'Desktop');
-  const mobileSlides = group.banners.filter((b: any) => b.size === 'Mobile');
-
-  const finalDesktopSlides = desktopSlides.length > 0 ? desktopSlides : group.banners;
-  const finalMobileSlides = mobileSlides.length > 0 ? mobileSlides : group.banners;
-
-  return (
-    <div className="h-full w-full">
-      <div className="hidden h-full w-full md:block">
-        <BaseSlider
-          slides={finalDesktopSlides}
-          autoPlayInterval={autoPlayInterval}
-          aspectRatio={aspectRatio}
-          className={className}
-        />
-      </div>
-
-      <div className="block h-full w-full md:hidden">
-        <BaseSlider
-          slides={finalMobileSlides}
-          autoPlayInterval={autoPlayInterval}
-          aspectRatio={aspectRatio}
-          className={className}
-        />
-      </div>
-    </div>
-  );
+  return <div className={cn('h-full w-full', className)}>{slideContent}</div>;
 }

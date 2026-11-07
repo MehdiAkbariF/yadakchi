@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { createPortal } from 'react-dom';
@@ -207,7 +207,7 @@ export function InPersonSellersMapModal({
             >
               <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
             </button>
-            <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <span className="flex items-center gap-1.5 text-title-sm">
               <MapPin aria-hidden="true" className="h-4 w-4 text-primary" />
               فروشگاه‌های حضوری: {productTitle}
             </span>
@@ -223,7 +223,7 @@ export function InPersonSellersMapModal({
         </div>
 
         <div className="relative flex min-h-0 w-full flex-1 flex-col md:flex-row">
-          <div className="hidden min-h-0 w-[380px] shrink-0 flex-col gap-3 overflow-y-auto border-e border-border bg-card p-4 md:flex">
+          <div className="hidden min-h-0 w-[23.75rem] shrink-0 flex-col gap-3 overflow-y-auto border-e border-border bg-card p-4 md:flex">
             {sellers.map((seller) => {
               const isSelected = activeSellerId === seller.id;
               return (
@@ -292,15 +292,15 @@ export function InPersonSellersMapModal({
                         className="mt-1 flex w-full flex-col gap-3.5 overflow-hidden border-t border-dashed border-border pt-3"
                       >
                         <div className="flex w-full flex-col gap-1">
-                          <span className="text-2xs font-bold text-muted-foreground">آدرس فروشگاه:</span>
-                          <p className="text-xs font-bold leading-relaxed text-foreground">{seller.shop.address}</p>
+                          <span className="text-label-2xs">آدرس فروشگاه:</span>
+                          <p className="text-base font-medium leading-relaxed text-foreground">{seller.shop.address}</p>
                         </div>
 
                         <div className="flex w-full gap-2">
                           <a
                             href={`tel:${seller.shop.tell}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border text-xs font-bold text-foreground shadow-xs transition-colors hover:bg-muted"
+                            className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border text-label shadow-xs transition-colors hover:bg-muted"
                           >
                             <Phone aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                             <span>تماس با فروشگاه</span>
@@ -343,7 +343,7 @@ export function InPersonSellersMapModal({
                   ref={(el) => { cardRefs.current[seller.id] = el; }}
                   onClick={() => handleSelectSeller(seller)}
                   className={cn(
-                    'flex h-fit min-w-[280px] max-w-[280px] shrink-0 flex-col overflow-hidden rounded-md border bg-card shadow-lg transition-colors',
+                    'flex h-fit min-w-[17.5rem] max-w-[17.5rem] shrink-0 flex-col overflow-hidden rounded-md border bg-card shadow-lg transition-colors',
                     isSelected ? 'border-primary p-4 gap-3' : 'border-border p-3.5 gap-0'
                   )}
                 >
@@ -389,15 +389,15 @@ export function InPersonSellersMapModal({
                   {isSelected ? (
                     <div className="mt-1 flex w-full flex-col gap-3 border-t border-dashed border-border pt-3">
                       <div className="flex w-full flex-col gap-1">
-                        <span className="text-2xs font-bold text-muted-foreground">آدرس فروشگاه:</span>
-                        <p className="text-xs font-bold leading-relaxed text-foreground">{seller.shop.address}</p>
+                        <span className="text-label-2xs">آدرس فروشگاه:</span>
+                        <p className="text-base font-medium leading-relaxed text-foreground">{seller.shop.address}</p>
                       </div>
 
                       <div className="flex w-full gap-2">
                         <a
                           href={`tel:${seller.shop.tell}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border bg-card text-xs font-bold text-foreground shadow-xs"
+                          className="flex h-9 flex-1 items-center justify-center gap-1 rounded-md border border-border bg-card text-label shadow-xs"
                         >
                           <Phone aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                           <span>تماس</span>
@@ -423,7 +423,7 @@ export function InPersonSellersMapModal({
 
         <Modal isOpen={!!reportShop} onClose={() => setReportShop(null)} className="w-full max-w-md">
           <ModalHeader onClose={() => setReportShop(null)}>
-            <ModalTitle className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <ModalTitle className="flex items-center gap-1.5 text-title-sm">
               <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
               گزارش خطا در قیمت فروشگاه {reportShop?.shop.title}
             </ModalTitle>

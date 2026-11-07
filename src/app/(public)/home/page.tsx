@@ -1,5 +1,3 @@
-// src/app/(public)/home/page.tsx
-
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
@@ -7,69 +5,16 @@ import { getBannerService } from '@/domains/front/banner/services/banner.service
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
 import { getShopService } from '@/domains/front/shop/services/shop.service';
+import { getPartService } from '@/domains/front/part/services/part.service';
 import { getHttpClient } from '@/core/http/client';
 import { HomeContent } from '@/components/features/Home/HomeContent';
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
-
-interface HomePageResponse {
-  description?: string;
-  [key: string]: unknown;
-}
-
-interface PartCategory {
-  id?: string | number;
-  name?: string;
-  slug?: string;
-  [key: string]: unknown;
-}
-
-/* -------------------------------------------------------------------------- */
-/*                                 Constants                                  */
-/* -------------------------------------------------------------------------- */
-
-const NOMINATED_CATEGORIES = [
-  'car-tools',
-  'audio-video-multimedia-system',
-  'Exhaust',
-  'heater',
-  'door-handles-locks-and-safety',
-  'body-and-weatherstrips',
-] as const;
-
-type NominatedCategory = (typeof NOMINATED_CATEGORIES)[number];
-
-// ✅ اصلاح شد: دقیقا منطبق با پارامترهای ارسالی در کامپوننت کلاینتی ShopSlider
 const SHOP_CARDS_PARAMS = {
-  orderBy: 'Rating', // اصلاح از 'Rank' به 'Rating' جهت برقراری کش در کلاینت
+  orderBy: 'Rating',
   pageNumber: 1,
   pageSize: 30,
 } as const;
 
-/* -------------------------------------------------------------------------- */
-/*                              Query Key Factory                             */
-/* -------------------------------------------------------------------------- */
-
-const homeKeys = {
-  all: ['front'] as const,
-  banners: (placement: string) => ['front', 'banners', placement] as const,
-  homePage: () => ['front', 'get-home-page'] as const,
-  nominatedDeals: () => ['front', 'products', 'nominated-deals', null] as const,
-  partsCategories: () => ['front', 'parts', 'categories-flat', 'all'] as const,
-  nominatedCategory: (slug: NominatedCategory) =>
-    ['front', 'products', 'nominated-category', slug, null] as const,
-  mainBrands: () => ['reference', 'brands', 'main'] as const,
-  shopCards: (params: typeof SHOP_CARDS_PARAMS) =>
-    ['front', 'shop', 'cards', params] as const,
-};
-
-/* -------------------------------------------------------------------------- */
-/*                          React Query Client Factory                        */
-/* -------------------------------------------------------------------------- */
-
-// الگوی استاندارد ایزوله‌سازی QueryClient برای هر رکوئست سروری
 const getQueryClient = cache(
   () =>
     new QueryClient({
@@ -82,22 +27,18 @@ const getQueryClient = cache(
     })
 );
 
-/* -------------------------------------------------------------------------- */
-/*                                  Metadata                                  */
-/* -------------------------------------------------------------------------- */
-
 export const metadata: Metadata = {
   title: 'یدکچی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
   description:
     'خرید مستقیم و آنلاین انواع قطعات یدکی، لوازم بدنه، ابزارآلات و تجهیزات خودرو از معتبرترین فروشگاه‌های سراسر کشور با ضمانت اصالت کالا در یدکچی.',
   alternates: {
-    canonical: 'https://www.yadakchi.com/home',
+    canonical: 'https://yadakchi.com/home',
   },
   openGraph: {
     title: 'یدکچی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
     description:
       'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران. خرید مستقیم قطعات خودرو از فروشگاه‌های سراسر کشور.',
-    url: 'https://www.yadakchi.com/home',
+    url: 'https://yadakchi.com/home',
     siteName: 'یدکچی',
     locale: 'fa_IR',
     type: 'website',
@@ -112,7 +53,6 @@ export const metadata: Metadata = {
   },
 };
 
-// بازتولید صفحه در پس‌زمینه سرور هر ۶۰ ثانیه (ISR)
 export const revalidate = 60;
 
 function serializeJsonLd(data: unknown): string {
@@ -124,12 +64,12 @@ const schemaJson = {
   '@graph': [
     {
       '@type': 'AutoPartsStore',
-      '@id': 'https://www.yadakchi.com/#organization',
+      '@id': 'https://yadakchi.com/#organization',
       name: 'یدکچی',
-      url: 'https://www.yadakchi.com',
+      url: 'https://yadakchi.com',
       logo: {
         '@type': 'ImageObject',
-        '@id': 'https://www.yadakchi.com/#logo',
+        '@id': 'https://yadakchi.com/#logo',
         url: 'https://api.yadakchi.com/Logo.svg',
         caption: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
       },
@@ -145,20 +85,19 @@ const schemaJson = {
     },
     {
       '@type': 'WebSite',
-      '@id': 'https://www.yadakchi.com/#website',
-      url: 'https://www.yadakchi.com',
+      '@id': 'https://yadakchi.com/#website',
+      url: 'https://yadakchi.com',
       name: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
       description: 'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران',
       publisher: {
-        '@id': 'https://www.yadakchi.com/#organization',
+        '@id': 'https://yadakchi.com/#organization',
       },
       potentialAction: [
         {
           '@type': 'SearchAction',
           target: {
             '@type': 'EntryPoint',
-            urlTemplate:
-              'https://www.yadakchi.com/search?q={search_term_string}',
+            urlTemplate: 'https://yadakchi.com/search?q={search_term_string}',
           },
           'query-input': 'required name=search_term_string',
         },
@@ -168,10 +107,6 @@ const schemaJson = {
   ],
 };
 
-/* -------------------------------------------------------------------------- */
-/*                                  Page                                      */
-/* -------------------------------------------------------------------------- */
-
 export default async function HomePage() {
   const queryClient = getQueryClient();
 
@@ -179,82 +114,70 @@ export default async function HomePage() {
   const productService = getProductService();
   const brandService = getBrandService();
   const shopService = getShopService();
+  const partService = getPartService();
   const httpClient = getHttpClient();
 
-  // اجرای موازی تمام Prefetchها بدون مسدود کردن یکدیگر
+  let mainCategories: any[] = [];
+  try {
+    mainCategories = await partService.getPartCategories(undefined, true);
+  } catch {
+    mainCategories = [];
+  }
+
+  const validCategories = Array.isArray(mainCategories) ? mainCategories : [];
+
   const prefetches: Array<Promise<void>> = [
     queryClient.prefetchQuery({
-      queryKey: homeKeys.banners('Home'),
+      queryKey: ['front', 'banners', 'Home'],
       queryFn: () => bannerService.getBanners('Home'),
       retry: 2,
     }),
 
     queryClient.prefetchQuery({
-      queryKey: homeKeys.homePage(),
+      queryKey: ['front', 'parts', 'categories', undefined, true],
+      queryFn: () => validCategories,
+    }),
+
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'get-home-page'],
       queryFn: async () => {
-        const response =
-          await httpClient.get<HomePageResponse>('/api/Front/GetHomePage');
+        const response = await httpClient.get<any>('/api/Front/GetHomePage');
         return response.data;
       },
       retry: 1,
     }),
 
     queryClient.prefetchQuery({
-      queryKey: homeKeys.nominatedDeals(),
+      queryKey: ['front', 'products', 'nominated-deals', null],
       queryFn: () => productService.getNominatedProducts(),
       retry: 1,
     }),
 
     queryClient.prefetchQuery({
-      queryKey: homeKeys.partsCategories(),
-      queryFn: async () => {
-        const response = await httpClient.get<PartCategory[]>(
-          '/api/Front/PartCategories',
-          { params: { CarId: '' } },
-        );
-        return Array.isArray(response.data) ? response.data : [];
-      },
-      retry: 1,
-    }),
-
-    ...NOMINATED_CATEGORIES.map((slug) =>
-      queryClient.prefetchQuery({
-        queryKey: homeKeys.nominatedCategory(slug),
-        queryFn: () => productService.getNominatedProductsByCategory(slug),
-        retry: 1,
-      }),
-    ),
-
-    queryClient.prefetchQuery({
-      queryKey: homeKeys.mainBrands(),
+      queryKey: ['reference', 'brands', 'main'],
       queryFn: () => brandService.getMainBrands(),
       retry: 1,
     }),
 
     queryClient.prefetchQuery({
-      queryKey: homeKeys.shopCards(SHOP_CARDS_PARAMS),
+      queryKey: ['front', 'shop', 'cards', SHOP_CARDS_PARAMS],
       queryFn: () => shopService.getShopCards(SHOP_CARDS_PARAMS),
       retry: 1,
     }),
+
+    ...validCategories.map((cat: any) =>
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'products', 'nominated-category', cat.englishTitle || cat.id, null],
+        queryFn: () => productService.getNominatedProductsByCategory(cat.englishTitle || cat.id),
+        retry: 1,
+      })
+    ),
   ];
 
-  // استفاده از allSettled برای اطمینان از اینکه قطعی یک سرویس مانع لود بقیه صفحه نمی‌شود
-  const results = await Promise.allSettled(prefetches);
-
-  if (process.env.NODE_ENV === 'development') {
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        console.error(
-          `❌ [HomePage Prefetch Error] Index ${index}:`,
-          result.reason,
-        );
-      }
-    });
-  }
+  await Promise.allSettled(prefetches);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      {/* اسکیما و سئوی ساختاریافته گوگل */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}

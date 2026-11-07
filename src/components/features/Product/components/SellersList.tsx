@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -38,6 +38,15 @@ function getShopHref(seller: any): string {
   const shop = seller.shop || {};
   const shopId = shop.id || seller.shopId;
   return `/shops/${shopId}`;
+}
+
+/**
+ * کلید یکتاسازی فروشگاه
+ * اولویت با shop.id است (چون یک فروشگاه ممکن است چند shopProduct داشته باشد)
+ * و در نبود آن از seller.id استفاده می‌شود.
+ */
+function getUniqueKey(seller: any): string {
+  return seller?.shop?.id || seller?.shopId || seller?.id || '';
 }
 
 export function SellersList({
@@ -84,11 +93,22 @@ export function SellersList({
     return map;
   }, [basketData]);
 
-  // ── لیست کامل (هم online هم local) ─────────────────────────
-  const allSellersList = React.useMemo(
-    () => [...(activeSellers.online || []), ...(activeSellers.local || [])],
-    [activeSellers.online, activeSellers.local]
-  );
+  // ── لیست کامل (هم online هم local) — یکتاسازی بر اساس shop.id ────
+  // رفع باگ: اگر یک فروشگاه هم در online و هم در local باشد، قبلاً دوبار
+  // در لیست ظاهر می‌شد. حالا با getUniqueKey یکتا می‌شود.
+  const allSellersList = React.useMemo(() => {
+    const merged = [
+      ...(activeSellers.online || []),
+      ...(activeSellers.local || []),
+    ];
+    const seen = new Set<string>();
+    return merged.filter((s: any) => {
+      const key = getUniqueKey(s);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [activeSellers.online, activeSellers.local]);
 
   const hasMoreOnline = allSellersList.length > DESKTOP_MAX_VISIBLE;
 
@@ -96,26 +116,37 @@ export function SellersList({
   // قاعده:
   // 1. فروشگاه انتخاب‌شده فعلی همیشه نمایش داده شود
   // 2. هر فروشگاهی که در سبد است همیشه نمایش داده شود
-  // 3. بقیه فروشگاه‌ها تا سقف DESKTOP_MAX_VISIBLE
+  // 3. فروشگاه اول (منتخب) همیشه نمایش داده شود
+  // 4. بقیه فروشگاه‌ها تا سقف DESKTOP_MAX_VISIBLE (با احتساب موارد بالا)
   const visibleOnline = React.useMemo(() => {
-    const mustShowIds = new Set<string>();
-  // فروشگاه اول (منتخب) همیشه
-  if (allSellersList[0]) mustShowIds.add(allSellersList[0].id);
-  if (selectedSellerId) mustShowIds.add(selectedSellerId);
-  basketMap.forEach((qty, id) => {
-    if (qty > 0) mustShowIds.add(id);
-  });
+    const priority: any[] = [];
+    const seen = new Set<string>();
 
-    // فروشگاه‌های must-show از لیست کامل
-    const mustShow = allSellersList.filter((s: any) => mustShowIds.has(s.id));
+    const push = (s: any) => {
+      if (!s) return;
+      const key = getUniqueKey(s);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      priority.push(s);
+    };
 
-    // بقیه فروشگاه‌ها (نه در must-show)
-    const rest = allSellersList.filter((s: any) => !mustShowIds.has(s.id));
+    // اولویت ۱: فروشگاه انتخاب‌شده
+    if (selectedSellerId) {
+      push(allSellersList.find((s: any) => s.id === selectedSellerId));
+    }
+    // اولویت ۲: فروشگاه‌های درون سبد
+    basketMap.forEach((qty, id) => {
+      if (qty > 0) push(allSellersList.find((s: any) => s.id === id));
+    });
+    // اولویت ۳: فروشگاه اول (منتخب)
+    push(allSellersList[0]);
+    // اولویت ۴: بقیه فروشگاه‌ها تا سقف
+    for (const s of allSellersList) {
+      if (priority.length >= DESKTOP_MAX_VISIBLE) break;
+      push(s);
+    }
 
-    // تعداد باقی‌مانده برای نمایش
-    const remaining = Math.max(0, DESKTOP_MAX_VISIBLE - mustShow.length);
-
-    return [...mustShow, ...rest.slice(0, remaining)];
+    return priority;
   }, [allSellersList, selectedSellerId, basketMap]);
 
   const handleReportSubmit = async () => {
@@ -166,13 +197,13 @@ export function SellersList({
       isSelected
         ? 'border-foreground/30 bg-muted/40 ring-1 ring-foreground/10'
         : 'border-border/80 hover:border-border hover:bg-muted/10',
-      isFeatured && !isSelected && 'ring-1 ring-amber-300/50 dark:ring-amber-400/30'
+      isFeatured && !isSelected && 'ring-1 ring-warning/50 dark:ring-warning/30'
     );
 
     const cardContent = (
       <>
         {isFeatured && (
-          <div className="absolute -top-2 right-3 z-10 inline-flex items-center gap-1 rounded-full border border-amber-300/60 bg-gradient-to-l from-amber-50 to-amber-100/70 px-2 py-0.5 text-[10px] font-bold text-amber-700 shadow-sm dark:border-amber-400/30 dark:from-amber-500/10 dark:to-amber-400/5 dark:text-amber-300">
+          <div className="absolute -top-2 right-3 z-10 inline-flex items-center gap-1 rounded-full border border-warning/60 bg-gradient-to-l from-amber-50 to-warning/10 px-2 py-0.5 text-[0.625rem] font-bold text-warning/80 shadow-sm dark:border-warning/30 dark:from-warning/10 dark:to-warning/5 dark:text-warning/90">
             <Award className="h-3 w-3" aria-hidden="true" />
             <span>منتخب</span>
           </div>
@@ -188,7 +219,7 @@ export function SellersList({
           </div>
         )}
 
-        <div className="flex items-center justify-between lg:justify-start gap-3 min-w-0 lg:w-[230px] xl:w-[270px] shrink-0">
+        <div className="flex items-center justify-between lg:justify-start gap-3 min-w-0 lg:w-[14.375rem] xl:w-[16.875rem] shrink-0">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-1">
               {seller.shop?.logo ? (
@@ -204,7 +235,7 @@ export function SellersList({
 
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[140px] sm:max-w-[180px]">
+                <span className="text-xs sm:text-title-sm truncate max-w-[8.75rem] sm:max-w-[11.25rem]">
                   {seller.shop?.title}
                 </span>
                 <span className="rounded-md bg-muted px-2 py-0.5 text-3xs font-bold text-muted-foreground shrink-0">
@@ -220,7 +251,7 @@ export function SellersList({
                 <span>•</span>
                 <span className="flex items-center gap-1 truncate">
                   <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <span className="truncate max-w-[90px]">
+                  <span className="truncate max-w-[5.625rem]">
                     {(seller.shop as any)?.cityName ||
                       seller.shop?.address?.split('،')[0] ||
                       'تهران'}
@@ -254,15 +285,15 @@ export function SellersList({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate">
+            <ShieldCheck className="h-4 w-4 text-success/90 dark:text-success/80 shrink-0" />
+            <span className="font-bold text-success/90 dark:text-success/80 truncate">
               {seller.warrantyTitle || 'ضمانت اصالت و سلامت فیزیکی'}
             </span>
           </div>
         </div>
 
         <div className="flex items-center justify-between lg:justify-end gap-3 sm:gap-4 pt-3 lg:pt-0 border-t lg:border-t-0 border-dashed border-border/60 shrink-0 lg:ms-auto">
-          <div className="flex flex-col items-start lg:items-end min-w-[90px] sm:min-w-[100px]">
+          <div className="flex flex-col items-start lg:items-end min-w-[5.625rem] sm:min-w-[6.25rem]">
             {hasDiscount && (
               <div className="flex items-center gap-1">
                 <span className="text-3xs text-muted-foreground line-through">
@@ -274,7 +305,7 @@ export function SellersList({
               </div>
             )}
             <div className="flex items-baseline gap-1">
-              <span className="text-sm sm:text-base font-black text-foreground" dir="ltr">
+              <span className="text-sm sm:text-base font-bold text-foreground" dir="ltr">
                 {seller.finalPrice}
               </span>
               <span className="text-3xs text-muted-foreground">تومان</span>
@@ -312,7 +343,7 @@ export function SellersList({
     if (mode === 'modal') {
       return (
         <Link
-          key={seller.id}
+          key={getUniqueKey(seller) || seller.id}
           href={shopHref}
           onClick={() => setIsAllSellersModalOpen(false)}
           className={cardClassName}
@@ -324,7 +355,7 @@ export function SellersList({
 
     return (
       <div
-        key={seller.id}
+        key={getUniqueKey(seller) || seller.id}
         onClick={() => onSelectSeller(seller.id)}
         className={cardClassName}
         role="button"
@@ -345,7 +376,7 @@ export function SellersList({
     <div className="relative mt-2 flex w-full select-none flex-col gap-4" dir="rtl">
       <div className="flex w-full items-center gap-2 border-b border-border pb-3">
         <Store className="h-5 w-5 text-primary shrink-0" />
-        <h3 className="text-sm font-bold text-foreground md:text-base">
+        <h3 className="text-title-sm md:text-base">
           فروشندگان اینترنتی این قطعه
         </h3>
         <span className="rounded-md bg-muted px-2 py-0.5 text-3xs font-bold text-muted-foreground">
@@ -358,9 +389,6 @@ export function SellersList({
           <>
             <div className="flex flex-col gap-3">
               {visibleOnline.map((s: any) => {
-                // isFeatured فقط برای اولین فروشگاه در حالت اولیه است
-                // اگر visibleOnline به هم خورد (چون فروشگاه در سبد اضافه شد)،
-                // همچنان اولین فروشگاه لیست را featured نشان می‌دهیم
                 const originalIndex = allSellersList.findIndex(
                   (x: any) => x.id === s.id
                 );
@@ -373,7 +401,7 @@ export function SellersList({
                 <button
                   type="button"
                   onClick={() => setIsAllSellersModalOpen(true)}
-                  className="group inline-flex items-center gap-1 rounded-lg px-1 py-0.5 text-xs font-bold text-blue-600 transition-colors hover:text-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:text-blue-400 dark:hover:text-blue-300"
+                  className="group inline-flex items-center gap-1 rounded-lg px-1 py-0.5 text-xs font-bold text-info/90 transition-colors hover:text-info/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 dark:text-info/90 dark:hover:text-info/80"
                 >
                   <span>مشاهده همه فروشندگان</span>
                   <ChevronLeft
@@ -420,7 +448,7 @@ export function SellersList({
         className="w-full max-w-md overflow-hidden md:rounded-2xl"
       >
         <ModalHeader onClose={() => setReportShop(null)}>
-          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <ModalTitle className="flex items-center gap-2 text-title-sm">
             <AlertTriangle aria-hidden="true" className="h-5 w-5 text-destructive" />
             <span>گزارش خطا در قیمت فروشگاه {reportShop?.shop?.title}</span>
           </ModalTitle>

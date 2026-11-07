@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -71,7 +71,7 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
       
       {/* هدر چسبان موبایل: لبه تا لبه (Edge-to-Edge) در 56px */}
       <div
-        className="sticky top-[56px] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden rounded-none"
+        className="sticky top-[3.5rem] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden rounded-none"
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
@@ -82,7 +82,7 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
               <span className="text-3xs font-bold text-muted-foreground">
                 {categoryData?.category?.name || 'قطعات'}
               </span>
-              <span className="mt-0.5 truncate text-xs font-black text-foreground">
+              <span className="mt-0.5 truncate text-xs font-bold text-foreground">
                 {carData?.model || 'خودرو'}
               </span>
             </div>
@@ -113,7 +113,7 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-xs font-bold text-foreground shadow-2xs active:scale-95 transition-transform"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-label shadow-2xs active:scale-95 transition-transform"
           >
             <span>فیلترها</span>
           </button>
@@ -140,8 +140,8 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
                 <img src={getFullUrl(carData?.cover)} className="h-full w-full object-contain" alt="" />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-2xs font-bold text-muted-foreground">خودرو انتخابی:</span>
-                <h2 className="text-sm font-bold text-foreground md:text-base">
+                <span className="text-label-2xs">خودرو انتخابی:</span>
+                <h2 className="text-title-sm md:text-base">
                   {carData?.model || decodedCarModel}
                 </h2>
               </div>
@@ -162,8 +162,8 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
                 )}
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-2xs font-bold text-muted-foreground">دسته قطعات:</span>
-                <h2 className="text-sm font-bold text-foreground md:text-base">
+                <span className="text-label-2xs">دسته قطعات:</span>
+                <h2 className="text-title-sm md:text-base">
                   {categoryData?.category?.name || partSlug}
                 </h2>
               </div>
@@ -220,14 +220,14 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
           </div>
 
           {isProductsLoading ? (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -245,7 +245,7 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
               </Typography>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 هنوز هیچ محصول فعال و موجودی برای این ترکیب خودرو و قطعه یافت نشد.
               </p>
             </div>
@@ -263,11 +263,11 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
       <Modal
         isOpen={isChangeCarOpen}
         onClose={() => setIsChangeCarOpen(false)}
-        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:rounded-2xl md:overflow-hidden"
+        className="flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:rounded-2xl md:overflow-hidden"
         overlayClassName="bg-foreground/40 backdrop-blur-md"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
-          <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+          <span className="flex items-center gap-1.5 text-title-sm">
             <CarIcon aria-hidden="true" className="h-4 w-4 text-primary" />
             تغییر خودرو فعال
           </span>
@@ -311,13 +311,13 @@ export function CarPartsContent({ partSlug, carSlug }: CarPartsContentProps) {
                   <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted/20">
                     <img src={getFullUrl(car.cover)} alt={car.model} className="h-full w-full object-contain p-1" />
                   </div>
-                  <span className="text-xs font-bold text-foreground truncate w-full">{car.model}</span>
+                  <span className="text-label truncate w-full">{car.model}</span>
                 </div>
               ))}
             </div>
           ) : (
             <div className="w-full rounded-2xl border border-dashed border-border bg-card py-12 text-center">
-              <span className="text-xs font-bold text-muted-foreground">خودرویی یافت نشد.</span>
+              <span className="text-label-muted">خودرویی یافت نشد.</span>
             </div>
           )}
         </ModalBody>

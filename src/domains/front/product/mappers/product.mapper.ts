@@ -25,14 +25,13 @@ import {
 import { getProductUrl } from '@/core/utils/formatters';
 
 export class ProductMapper {
- static toDomain(rawDto: any): Product {
+  static toDomain(rawDto: any): Product {
     if (!rawDto) {
       return {} as Product;
     }
 
     const dto = rawDto._source ? { ...rawDto._source, id: rawDto._id || rawDto._source.id } : rawDto;
 
-    // استخراج قیمت‌ها (سازگار با OpenSearch جدید و ساختار قدیم)
     const nominated = dto.nominatedShopProduct || {};
     const rawPrice = dto.rialRetailPrice ?? dto.price ?? nominated.rialRetailPrice ?? nominated.price ?? 0;
     const rawFinalPrice = dto.rialFinalPrice ?? dto.discountPrice ?? nominated.rialFinalPrice ?? nominated.price ?? rawPrice;
@@ -42,7 +41,6 @@ export class ProductMapper {
       currency: 'IRR',
     };
 
-    // درصد تخفیف
     const hasDiscount = dto.isDiscountApplied !== undefined 
       ? dto.isDiscountApplied 
       : (rawPrice > rawFinalPrice);
@@ -59,7 +57,6 @@ export class ProductMapper {
       };
     }
 
-    // استخراج تصاویر
     const images: Image[] = [];
     const mainTitle = dto.productTitle || dto.title || dto.name || '';
     if (dto.image) {
@@ -70,7 +67,6 @@ export class ProductMapper {
       });
     }
 
-    // تبدیل امن type (عددی یا رشته‌ای به استرینگ استاندارد فرانت)
     let typeValue: 'NEW' | 'STOCK' | 'TAKEOFF' = 'NEW';
     const rawType = dto.type ?? nominated.type;
     if (rawType === 2 || rawType === '2' || rawType === 'Stock' || rawType === 'STOCK') {
@@ -79,7 +75,6 @@ export class ProductMapper {
       typeValue = 'TAKEOFF';
     }
 
-    // موجودی انبار
     const count = dto.quantity ?? dto.stockCount ?? nominated.quantity ?? 0;
     const isInStock = dto.isInStock !== undefined ? dto.isInStock : count > 0;
 
@@ -207,23 +202,72 @@ export class ProductMapper {
     };
   }
 
-  // نگاشت درخواست فرانت‌ به بادی JSON استاندارد OpenSearch
+  // =========================================================================
+  // نگاشت دقیق فرانت‌ به بادی JSON استاندارد OpenSearch (مطابق با Swagger سرور)
+  // =========================================================================
   static toOpenSearchRequest(request: SearchProductsRequest): OpenSearchProductsRequestDto {
+    // 1. مپینگ Enum عددی نوع کالا (New=1, Stock=2, TakeOff=3)
     let types: number[] | undefined = undefined;
     if (request.types && request.types.length > 0) {
-      types = request.types.map((t: any) => {
-        if (typeof t === 'number') return t;
-        if (t === 'New') return 1;
-        if (t === 'Stock') return 2;
-        if (t === 'TakeOff') return 3;
-        return Number(t) || 0;
-      });
+      types = request.types
+        .map((t: any) => {
+          if (typeof t === 'number') return t;
+          const s = String(t).toLowerCase();
+          if (s === 'new') return 1;
+          if (s === 'stock') return 2;
+          if (s === 'takeoff') return 3;
+          return Number(t) || 0;
+        })
+        .filter((num: number) => num > 0);
+
+      if (types.length === 0) types = undefined;
+    }
+
+    // 2. مپینگ گزینه‌های Sort به فیلد و جهت مورد انتظار OpenSearch
+    let sortBy: string | undefined = undefined;
+    let sortDescending: boolean | undefined = undefined;
+
+    const orderType = request.sortBy || request.orderType || 'Selected';
+
+    switch (orderType) {
+      case 'Cheapest':
+        sortBy = 'Price';
+        sortDescending = false;
+        break;
+      case 'MostExpensive':
+        sortBy = 'Price';
+        sortDescending = true;
+        break;
+      case 'Newest':
+        sortBy = 'CreationDate';
+        sortDescending = true;
+        break;
+      case 'BestSelling':
+        sortBy = 'SalesCount';
+        sortDescending = true;
+        break;
+      case 'MostVisited':
+        sortBy = 'Views';
+        sortDescending = true;
+        break;
+      case 'Selected':
+      default:
+        sortBy = 'Score';
+        sortDescending = true;
+        break;
+    }
+
+    // اگر مرتب‌سازی مستقیم ارسال شده باشد، اولویت با آن است
+    if (request.sortDesc !== undefined) {
+      sortDescending = request.sortDesc;
     }
 
     const shopIds = request.shopIds || (request.shopId ? [request.shopId] : undefined);
 
     const payload: OpenSearchProductsRequestDto = {
-      searchTitle: request.searchTitle || undefined,
+      onlyNominated: request.onlyNominated ?? undefined,
+      excludeDuplicateProducts: request.excludeDuplicateProducts ?? true, // جلوگیری از تکرار کالا
+      searchTitle: request.searchTitle?.trim() || undefined,
       brandIds: request.brandIds && request.brandIds.length > 0 ? request.brandIds : undefined,
       partIds: request.partIds && request.partIds.length > 0 ? request.partIds : undefined,
       partCategoryIds: request.partCategoryIds && request.partCategoryIds.length > 0 ? request.partCategoryIds : undefined,
@@ -231,19 +275,22 @@ export class ProductMapper {
       shopIds: shopIds && shopIds.length > 0 ? shopIds : undefined,
       productCode: request.productCode || undefined,
       types,
-      fromPrice: request.fromPrice || undefined,
-      toPrice: request.toPrice || undefined,
+      fromPrice: request.fromPrice !== undefined && request.fromPrice > 0 ? request.fromPrice : undefined,
+      toPrice: request.toPrice !== undefined && request.toPrice > 0 ? request.toPrice : undefined,
+      hasDiscountWithExpiration: request.hasDiscountWithExpiration ?? undefined,
       onlyInStock: request.onlyInStock ?? request.isProductInStock ?? undefined,
       onlyDiscounted: request.onlyDiscounted ?? request.hasDiscount ?? undefined,
       onlyDirectShipping: request.onlyDirectShipping ?? undefined,
-      sortBy: request.sortBy || request.orderType || undefined,
-      sortDesc: request.sortDesc ?? undefined,
+      sortBy,
+      sortDescending, // منطبق با Swagger
       pageNumber: request.pageNumber || 1,
       pageSize: request.pageSize || 30,
+      // خط 214 را تغییر دهید به:
       includeAggregations: request.includeAggregations ?? true,
+      cityId: request.cityId || undefined,
     };
 
-    // پاکسازی کلیدهای تعریف نشده جهت جلوگیری از ارسال فیلدهای بیهوده
+    // پاکسازی کلیدهای undefined قبل از ارسال به شبکه
     Object.keys(payload).forEach((key) => {
       if ((payload as any)[key] === undefined) {
         delete (payload as any)[key];
@@ -437,100 +484,95 @@ export class ProductMapper {
       bestReply: dto.bestReply ? this.toViewInquiryItem(dto.bestReply) : null
     };
   }
-// ✅ Mapper: یک hit از Search/Products به ShopProductViewModel
-static toViewSearchHit(dto: SearchProductHitDto): ShopProductViewModel {
-  const isDiscountActive =
-    dto.isDiscountApplied || dto.rialRetailPrice > dto.rialFinalPrice;
 
-  const typeLabel =
-    dto.type === 'New'
-      ? 'قطعه نو'
-      : dto.type === 'Stock'
-      ? 'قطعه استوک'
-      : 'قطعه زیرصفری';
+  static toViewSearchHit(dto: SearchProductHitDto): ShopProductViewModel {
+    const isDiscountActive =
+      dto.isDiscountApplied || dto.rialRetailPrice > dto.rialFinalPrice;
 
-  return {
-    id: dto.shopProductId,
-    quantity: dto.quantity,
-    retailPrice: this.formatPrice(dto.rialRetailPrice / 10) + ' تومان',
-    finalPrice: this.formatPrice(dto.rialFinalPrice / 10) + ' تومان',
-    retailPriceRaw: dto.rialRetailPrice,
-    finalPriceRaw: dto.rialFinalPrice,
-    discountPercentage: dto.discountPercentage,
-    hasDiscount: isDiscountActive,
-    type: dto.type as 'New' | 'Stock' | 'TakeOff',
-    typeLabel,
-    isAdvertised: dto.hasSpecialAttention,
-    isLocalSale: dto.isLocalShop ?? false,
-    isTipaxShipping: dto.isTipaxShipping ?? false,
-    isDirectShipping: dto.hasDirectShipment ?? dto.isDirectShipping ?? false,
-    dayOfDelivery: dto.dayOfDelivery ?? 0,
-    dayOfDeliveryLabel: dto.dayOfDelivery
-      ? `ارسال ${this.formatNumber(dto.dayOfDelivery)} روزه فروشنده`
-      : 'ارسال نامشخص',
-    shop: {
-      id: dto.shopId || '',
-      title: dto.shopTitle || '',
-      latitude: dto.shopLatitude || 0,
-      longitude: dto.shopLongitude || 0,
-      address: dto.shopAddress || '',
-      phone: dto.shopTell || null,
-      averageRate: dto.averageRate || 0,
-      logo: dto.shopLogo || null,
-    },
-    warrantyTitle: dto.warrantyTitle || 'بدون گارانتی',
-  };
-}
+    const typeLabel =
+      dto.type === 'New'
+        ? 'قطعه نو'
+        : dto.type === 'Stock'
+        ? 'قطعه استوک'
+        : 'قطعه زیرصفری';
 
-// ✅ Mapper: گروه‌بندی hits بر اساس type برای سازگاری با ProductPageViewModel
-static groupSearchHitsByType(hits: SearchProductHitDto[]): ShopProductsGroupViewModel {
-  const views = hits.map((h) => this.toViewSearchHit(h));
-
-  const byType = (t: string) => views.filter((v) => v.type === t);
-
-  const newList = byType('New');
-  const stockList = byType('Stock');
-  const takeOffList = byType('TakeOff');
-
-  // جدا کردن nominated (isAdvertised) از online/local:
-  // - اگر isAdvertised → nominated
-  // - اگر isLocalSale → local
-  // - وگرنه → online
-  const pickNominated = (list: ShopProductViewModel[]) => {
-    const nominated = list.find((s) => s.isAdvertised);
-    if (!nominated) return { nominated: null, remaining: list };
     return {
-      nominated,
-      remaining: list.filter((s) => s.id !== nominated.id),
+      id: dto.shopProductId,
+      quantity: dto.quantity,
+      retailPrice: this.formatPrice(dto.rialRetailPrice / 10) + ' تومان',
+      finalPrice: this.formatPrice(dto.rialFinalPrice / 10) + ' تومان',
+      retailPriceRaw: dto.rialRetailPrice,
+      finalPriceRaw: dto.rialFinalPrice,
+      discountPercentage: dto.discountPercentage,
+      hasDiscount: isDiscountActive,
+      type: dto.type as 'New' | 'Stock' | 'TakeOff',
+      typeLabel,
+      isAdvertised: dto.hasSpecialAttention,
+      isLocalSale: dto.isLocalShop ?? false,
+      isTipaxShipping: dto.isTipaxShipping ?? false,
+      isDirectShipping: dto.hasDirectShipment ?? dto.isDirectShipping ?? false,
+      dayOfDelivery: dto.dayOfDelivery ?? 0,
+      dayOfDeliveryLabel: dto.dayOfDelivery
+        ? `ارسال ${this.formatNumber(dto.dayOfDelivery)} روزه فروشنده`
+        : 'ارسال نامشخص',
+      shop: {
+        id: dto.shopId || '',
+        title: dto.shopTitle || '',
+        latitude: dto.shopLatitude || 0,
+        longitude: dto.shopLongitude || 0,
+        address: dto.shopAddress || '',
+        phone: dto.shopTell || null,
+        averageRate: dto.averageRate || 0,
+        logo: dto.shopLogo || null,
+      },
+      warrantyTitle: dto.warrantyTitle || 'بدون گارانتی',
     };
-  };
+  }
 
-  const splitOnlineLocal = (list: ShopProductViewModel[]) => ({
-    online: list.filter((s) => !s.isLocalSale),
-    local: list.filter((s) => s.isLocalSale),
-  });
+  static groupSearchHitsByType(hits: SearchProductHitDto[]): ShopProductsGroupViewModel {
+    const views = hits.map((h) => this.toViewSearchHit(h));
 
-  const newSplit = pickNominated(newList);
-  const newOnlineLocal = splitOnlineLocal(newSplit.remaining);
+    const byType = (t: string) => views.filter((v) => v.type === t);
 
-  const stockSplit = pickNominated(stockList);
-  const stockOnlineLocal = splitOnlineLocal(stockSplit.remaining);
+    const newList = byType('New');
+    const stockList = byType('Stock');
+    const takeOffList = byType('TakeOff');
 
-  const takeOffSplit = pickNominated(takeOffList);
-  const takeOffOnlineLocal = splitOnlineLocal(takeOffSplit.remaining);
+    const pickNominated = (list: ShopProductViewModel[]) => {
+      const nominated = list.find((s) => s.isAdvertised);
+      if (!nominated) return { nominated: null, remaining: list };
+      return {
+        nominated,
+        remaining: list.filter((s) => s.id !== nominated.id),
+      };
+    };
 
-  return {
-    newNominated: newSplit.nominated,
-    newOnline: newOnlineLocal.online,
-    newLocal: newOnlineLocal.local,
-    stockNominated: stockSplit.nominated,
-    stockOnline: stockOnlineLocal.online,
-    stockLocal: stockOnlineLocal.local,
-    takeOffNominated: takeOffSplit.nominated,
-    takeOffOnline: takeOffOnlineLocal.online,
-    takeOffLocal: takeOffOnlineLocal.local,
-  };
-}
+    const splitOnlineLocal = (list: ShopProductViewModel[]) => ({
+      online: list.filter((s) => !s.isLocalSale),
+      local: list.filter((s) => s.isLocalSale),
+    });
+
+    const newSplit = pickNominated(newList);
+    const newOnlineLocal = splitOnlineLocal(newSplit.remaining);
+
+    const stockSplit = pickNominated(stockList);
+    const stockOnlineLocal = splitOnlineLocal(stockSplit.remaining);
+
+    const takeOffSplit = pickNominated(takeOffList);
+    const takeOffOnlineLocal = splitOnlineLocal(takeOffSplit.remaining);
+
+    return {
+      newNominated: newSplit.nominated,
+      newOnline: newOnlineLocal.online,
+      newLocal: newOnlineLocal.local,
+      stockNominated: stockSplit.nominated,
+      stockOnline: stockOnlineLocal.online,
+      stockLocal: stockOnlineLocal.local,
+      takeOffNominated: takeOffSplit.nominated,
+      takeOffOnline: takeOffOnlineLocal.online,
+      takeOffLocal: takeOffOnlineLocal.local,
+    };
+  }
 
   private static formatNumber(value: number): string {
     return new Intl.NumberFormat('fa-IR').format(value);

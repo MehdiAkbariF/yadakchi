@@ -73,7 +73,7 @@ export function ReturnShipmentModal({ isOpen, onClose, returnRequestId }: Return
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-md">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <ModalTitle className="flex items-center gap-2 text-title-sm">
           <Truck className="h-5 w-5 text-primary" />
           <span>ثبت مشخصات ارسال کالای مرجوعی</span>
         </ModalTitle>
@@ -96,7 +96,7 @@ export function ReturnShipmentModal({ isOpen, onClose, returnRequestId }: Return
           </div>
 
           <div className="w-full">
-            <label className="mb-1 block text-2xs font-bold text-muted-foreground">کد یا شماره رهگیری بارنامه *</label>
+            <label className="mb-1 block text-label-2xs">کد یا شماره رهگیری بارنامه *</label>
             <Input
               placeholder="مثال: ۲۴۴۵۸۹۶۳۱۰۰۲"
               value={traceNumber}
@@ -109,11 +109,11 @@ export function ReturnShipmentModal({ isOpen, onClose, returnRequestId }: Return
 
           {/* بارگذاری تصویر فیش */}
           <div className="flex w-full flex-col gap-2">
-            <span className="text-2xs font-bold text-muted-foreground">تصویر قبض پستی یا رسید باربری *</span>
+            <span className="text-label-2xs">تصویر قبض پستی یا رسید باربری *</span>
             {!file ? (
               <label className="flex h-24 w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-card p-4 text-center transition-colors hover:border-primary hover:bg-primary/5">
                 <UploadCloud className="h-6 w-6 text-primary mb-1" />
-                <span className="text-xs font-bold text-foreground">برای انتخاب عکس فیش کلیک کنید</span>
+                <span className="text-label">برای انتخاب عکس فیش کلیک کنید</span>
                 <span className="text-2xs text-muted-foreground mt-0.5">فرمت‌های مجاز: JPG, PNG</span>
                 <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               </label>

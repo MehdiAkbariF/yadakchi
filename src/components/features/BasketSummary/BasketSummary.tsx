@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -130,11 +130,11 @@ export function BasketSummary() {
         <Typography variant="h3" className="text-base font-black text-foreground md:text-xl">
           سبد خرید شما خالی است
         </Typography>
-        <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground md:text-sm">
+        <p className="mt-2 max-w-sm text-base leading-relaxed text-muted-foreground md:text-base">
           هیچ قطعه‌ای در سبد خرید شما وجود ندارد. می‌توانید برای جستجوی لوازم یدکی موردنیاز خود به صفحه جستجو مراجعه کنید.
         </p>
         <Link href="/search" prefetch={false} className="mt-6">
-          <Button variant="primary" className="h-11 rounded-2xl px-8 text-xs font-bold shadow-sm">
+          <Button variant="primary" className="h-11 rounded-2xl px-8 text-sm font-bold shadow-sm">
             شروع خرید قطعات یدکی
           </Button>
         </Link>
@@ -169,7 +169,7 @@ export function BasketSummary() {
   const leftPriceContent = (
     <div className="flex flex-col text-right">
       <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ قابل پرداخت:</span>
-      <span className="text-sm font-black text-foreground" dir="rtl">
+      <span className="text-sm font-bold text-foreground" dir="rtl">
         {formattedFinalPrice}
       </span>
     </div>

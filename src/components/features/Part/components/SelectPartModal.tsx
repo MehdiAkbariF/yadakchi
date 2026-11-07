@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -139,7 +139,7 @@ export function SelectPartModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-lg">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <ModalTitle className="flex items-center gap-2 text-title-sm">
           <SlidersHorizontal aria-hidden="true" className="h-5 w-5 text-primary" />
           <span>انتخاب قطعه برای {categoryName}</span>
         </ModalTitle>
@@ -178,7 +178,7 @@ export function SelectPartModal({
                       <Package aria-hidden="true" className="h-6 w-6 text-primary/70" />
                     )}
                   </div>
-                  <span className="w-full truncate text-xs font-bold text-foreground">
+                  <span className="w-full truncate text-label">
                     {part.name}
                   </span>
                 </Card>
@@ -188,7 +188,7 @@ export function SelectPartModal({
             !isLoading && (
               <div className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border py-16 text-center">
                 <Inbox aria-hidden="true" className="h-8 w-8 text-muted-foreground/60" />
-                <span className="text-xs font-bold text-muted-foreground">قطعه‌ای یافت نشد.</span>
+                <span className="text-label-muted">قطعه‌ای یافت نشد.</span>
               </div>
             )
           )}

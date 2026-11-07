@@ -55,11 +55,11 @@ export function ProfileDesktopNav() {
       {/* کارد اطلاعات کاربری */}
       <div className="flex flex-col gap-4 rounded-2xl border border-border/80 bg-card p-4.5 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-black text-base border border-primary/20">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-bold text-base border border-primary/20">
             {user?.fullName ? user.fullName[0] : 'U'}
           </div>
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-bold text-foreground">
+            <span className="truncate text-title-sm">
               {user?.fullName || user?.lastName || 'کاربر یدکچی'}
             </span>
             <span className="text-2xs text-muted-foreground  mt-0.5" dir="ltr">
@@ -72,7 +72,7 @@ export function ProfileDesktopNav() {
         <div className="flex items-center justify-between rounded-xl bg-muted/50 p-3 border border-border/40">
           <div className="flex flex-col">
             <span className="text-3xs text-muted-foreground">کیف پول</span>
-            <span className="text-xs font-bold text-foreground mt-0.5">
+            <span className="text-label mt-0.5">
               {wallet?.totalBalance || '۰ تومان'}
             </span>
           </div>

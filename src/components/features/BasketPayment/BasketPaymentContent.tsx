@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -154,14 +154,14 @@ export default function BasketPaymentContent() {
           سفارش شما ثبت شده و در انتظار پرداخت است
         </h2>
 
-        <p className="mt-2.5 max-w-md text-xs leading-relaxed text-muted-foreground sm:text-sm">
+        <p className="mt-2.5 max-w-md text-base leading-relaxed text-muted-foreground sm:text-base">
           سبد خرید شما به سفارش تبدیل شده و قطعات تا چند دقیقه دیگر برای شما رزرو خواهند ماند. چنانچه پرداخت را انجام نداده‌اید، می‌توانید مجدداً وارد درگاه شوید.
         </p>
 
         {pendingPayment.totalPrice ? (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground">
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-label">
             <span className="text-muted-foreground">مبلغ قابل پرداخت:</span>
-            <span className="text-primary text-sm font-black">
+            <span className="text-primary text-sm font-bold">
               {formatRialToToman(pendingPayment.totalPrice)}
             </span>
           </div>
@@ -185,7 +185,7 @@ export default function BasketPaymentContent() {
               sessionStorage.removeItem('yadakchi_pending_payment');
               router.push('/profile/orders');
             }}
-            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-input bg-card px-5 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95"
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-input bg-card px-5 text-label transition-all hover:bg-accent active:scale-95"
           >
             <span>مشاهده سفارش در پروفایل</span>
           </button>
@@ -216,7 +216,7 @@ export default function BasketPaymentContent() {
           <ShoppingBag className="h-10 w-10" />
         </div>
         <h2 className="text-base font-bold text-foreground">سبد خرید شما در حال حاضر خالی است</h2>
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 text-base text-muted-foreground">
           برای ادامه خرید می‌توانید به صفحه قطعات و محصولات بازگردید.
         </p>
         <button
@@ -268,7 +268,7 @@ export default function BasketPaymentContent() {
   const leftPriceContent = (
     <div className="flex flex-col text-right">
       <span className="mb-0.5 text-2xs text-muted-foreground">مبلغ نهایی سفارش:</span>
-      <span className="text-sm font-black text-foreground" dir="rtl">
+      <span className="text-sm font-bold text-foreground" dir="rtl">
         {formatRialToToman(grandTotalRaw)}
       </span>
     </div>
@@ -282,25 +282,25 @@ export default function BasketPaymentContent() {
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
-          <span className="text-[10px] sm:text-xs">سبد خرید</span>
+          <span className="text-[0.625rem] sm:text-xs">سبد خرید</span>
         </div>
 
-        <div className="mx-1.5 h-[2px] flex-1 bg-success/50 sm:mx-3" />
+        <div className="mx-1.5 h-[0.125rem] flex-1 bg-success/50 sm:mx-3" />
 
         <div className="flex shrink-0 items-center gap-1.5 font-semibold text-success sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/15 text-success sm:h-7 sm:w-7">
             <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
-          <span className="text-[10px] sm:text-xs">زمان و شیوه ارسال</span>
+          <span className="text-[0.625rem] sm:text-xs">زمان و شیوه ارسال</span>
         </div>
 
-        <div className="mx-1.5 h-[2px] flex-1 bg-primary/50 sm:mx-3" />
+        <div className="mx-1.5 h-[0.125rem] flex-1 bg-primary/50 sm:mx-3" />
 
         <div className="flex shrink-0 items-center gap-1.5 font-bold text-primary sm:gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xs sm:h-7 sm:w-7">
             <CreditCard className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </div>
-          <span className="text-[10px] sm:text-xs">پرداخت نهایی</span>
+          <span className="text-[0.625rem] sm:text-xs">پرداخت نهایی</span>
         </div>
       </div>
 

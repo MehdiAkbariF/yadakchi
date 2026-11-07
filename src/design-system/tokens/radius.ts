@@ -1,23 +1,13 @@
 // src/design-system/tokens/radius.ts
-//
-// فقط ۵ سطح radius مجاز است. مقادیر دلخواه ممنوع.
-//
-// نقشها (تصمیم ثابت):
-//   sm   → بج کوچک، input درونخطی ریز
-//   md   → دکمه، ورودی، Textarea، Select  ← پیشفرض
-//   lg   → کارت، پنل، dropdown
-//   xl   → مودال، bottom sheet
-//   full → آواتار، بج کپسولی، pill
-//
-// نکته: `none` برای موارد خاص (مثلاً جدول) نگه داشته شده، ولی در
-// کامپوننتهای عمومی استفاده نکن.
+// همگام با globals.css و tailwind.config. تغییر = همه‌جا.
 
 export const radius = {
   none: '0px',
-  sm:   '6px',
-  md:   '10px',
-  lg:   '14px',
-  xl:   '20px',
+  sm:   '0.375rem',
+  md:   '0.625rem',
+  lg:   '0.875rem',
+  xl:   '1.25rem',
+  '2xl':'1.5rem',
   full: '9999px',
 } as const;
 

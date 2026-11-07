@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { cn } from '@/design-system/utils/cn';
 
@@ -22,7 +22,7 @@ export function ConditionSelector({ selectedCondition, onChangeCondition, seller
 
   return (
     <div className="mt-2 flex w-full select-none flex-col gap-2.5">
-      <span className="text-xs font-bold text-foreground">نوع قطعه را انتخاب کنید:</span>
+      <span className="text-label">نوع قطعه را انتخاب کنید:</span>
       <div className="flex flex-wrap gap-2">
         {isNewAvailable ? (
           <button

@@ -87,7 +87,7 @@ export function FavoritesList() {
           >
             <ArrowRight aria-hidden="true" className="h-5 w-5 text-foreground" />
           </button>
-          <span className="text-sm font-bold text-foreground">کالاهای محبوب من</span>
+          <span className="text-title-sm">کالاهای محبوب من</span>
         </div>
       </div>
 
@@ -97,7 +97,7 @@ export function FavoritesList() {
             <Heart aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
             <span className="text-xl font-bold text-foreground">کالاهای محبوب</span>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             لیست کالاهایی که با قلبی کردن در صفحات محصول، برای دسترسی سریع ذخیره کرده‌اید
           </p>
         </div>
@@ -119,7 +119,7 @@ export function FavoritesList() {
         <PageLoading label="در حال دریافت کالاهای محبوب شما..." />
       ) : favorites.length > 0 ? (
         <div className="flex w-full flex-col gap-6">
-          <div className="grid w-full grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid w-full grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
             {favorites.map((product: any) => (
               <ProductSearchCard key={product.id} product={product} />
             ))}

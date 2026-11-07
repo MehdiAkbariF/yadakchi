@@ -144,8 +144,8 @@ function PayableTimer({
   return (
     <div
       className={cn(
-        'flex items-center gap-1 text-xs font-black tracking-wider',
-        isExpired ? 'text-destructive' : 'text-amber-600 dark:text-amber-400'
+        'flex items-center gap-1 text-xs font-bold tracking-wider',
+        isExpired ? 'text-destructive' : 'text-warning/90 dark:text-warning/90'
       )}
       dir="ltr"
     >
@@ -164,7 +164,7 @@ const getStatusColor = (status: string) => {
     case 'SellerConfirmed':
     case 'Success':
     case 'Received':
-      return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+      return 'text-success bg-success/10 border-success/20';
 
     case 'SellerCancelled':
     case 'UserCancelled':
@@ -177,14 +177,14 @@ const getStatusColor = (status: string) => {
     case 'PartialReturnRequested':
     case 'PartiallyReturned':
     case 'FullyReturned':
-      return 'text-rose-500 bg-rose-500/10 border-rose-500/20';
+      return 'text-destructive bg-destructive/10 border-destructive/20';
 
     case 'WaitingForPayment':
     case 'WaitingForSellerConfirm':
     case 'WaitingTipaxConfirm':
     case 'WaitingMahexConfirm':
     case 'Pending':
-      return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+      return 'text-warning bg-warning/10 border-warning/20';
 
     case 'Sent':
     case 'Processing':
@@ -331,24 +331,24 @@ export function OrderDetails({ orderId }: { orderId: string }) {
     <div className="flex w-full flex-col gap-4 pb-16" dir="rtl">
       {/* بنر در انتظار پرداخت */}
       {isWaitingForPayment && (
-        <div className="flex w-full flex-col gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex w-full flex-col gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 text-xs shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/20 text-warning/90 dark:text-warning/90">
               <Clock className="h-5 w-5 animate-pulse" />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-black text-foreground">
+              <span className="text-sm font-bold text-foreground">
                 این سفارش در انتظار پرداخت است
               </span>
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p className="text-base leading-relaxed text-muted-foreground">
                 قطعات این فاکتور به مدت <strong>۳۰ دقیقه</strong> از زمان ثبت برای شما رزرو شده‌اند. لطفاً قبل از اتمام زمان، پرداخت را نهایی کنید.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-amber-500/20 pt-3 sm:border-t-0 sm:pt-0 sm:justify-end">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-warning/20 pt-3 sm:border-t-0 sm:pt-0 sm:justify-end">
             {order.payableUntil ? (
-              <div className="flex items-center gap-2 rounded-xl border border-amber-500/30 bg-card px-3 py-2 shadow-2xs">
+              <div className="flex items-center gap-2 rounded-xl border border-warning/30 bg-card px-3 py-2 shadow-2xs">
                 <span className="text-xs font-semibold text-muted-foreground">مهلت پرداخت:</span>
                 <PayableTimer payableUntil={order.payableUntil} />
               </div>
@@ -480,7 +480,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
               <div className="flex flex-col gap-3 border-b border-border/60 bg-muted/20 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-2">
                   <Store className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="text-xs font-bold text-foreground">
+                  <span className="text-label">
                     فروشگاه: {subOrder.shop?.shopTitle}
                   </span>
                   <span
@@ -515,7 +515,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedSubOrderForReturn(subOrder)}
-                      className="h-8 gap-1.5 rounded-xl border-rose-500/30 text-xs font-bold text-rose-500 hover:bg-rose-500/5 active:scale-95"
+                      className="h-8 gap-1.5 rounded-xl border-destructive/30 text-xs font-bold text-destructive hover:bg-destructive/5 active:scale-95"
                     >
                       <RotateCcw className="h-4 w-4" />
                       <span>درخواست مرجوعی مرسوله</span>
@@ -544,7 +544,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
                       </div>
 
                       <div className="flex min-w-0 flex-col gap-1 text-right">
-                        <span className="line-clamp-1 text-xs font-bold text-foreground">
+                        <span className="line-clamp-1 text-label">
                           {item.shopProduct?.product?.title}
                         </span>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -560,7 +560,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
                               {formatRialToToman(item.originalPrice)}
                             </span>
                           )}
-                          <span className="text-xs font-black text-foreground">
+                          <span className="text-xs font-bold text-foreground">
                             {formatRialToToman(item.finalTotalPrice)}
                           </span>
                         </div>
@@ -601,7 +601,7 @@ export function OrderDetails({ orderId }: { orderId: string }) {
 
       {/* ۳. خلاصه مالی صورت‌حساب */}
       <Card className="rounded-2xl border border-border/80 bg-card p-4 shadow-xs sm:p-5">
-        <h2 className="mb-3 text-right text-xs font-bold text-foreground">
+        <h2 className="mb-3 text-right text-label">
           خلاصه مالی صورت‌حساب
         </h2>
 
@@ -638,9 +638,9 @@ export function OrderDetails({ orderId }: { orderId: string }) {
             </span>
           </div>
 
-          <div className="mt-2 flex items-center justify-between border-t border-border/80 pt-3 text-sm font-black">
+          <div className="mt-2 flex items-center justify-between border-t border-border/80 pt-3 text-sm font-bold">
             <span className="text-right text-foreground">مبلغ پرداختی نهایی</span>
-            <span className="text-left text-base font-black text-primary" dir="rtl">
+            <span className="text-left text-base font-bold text-primary" dir="rtl">
               {formatRialToToman(order.totalFinalPrice)}
             </span>
           </div>

@@ -1,3 +1,4 @@
+// src/components/composites/FilterList/FilterList.tsx
 'use client';
 
 import * as React from 'react';
@@ -6,10 +7,12 @@ import { Input } from '@/components/primitives/Input/Input';
 import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
 import { Search, Loader2, Inbox, X } from 'lucide-react';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { toPersianDigits } from '@/core/utils/formatters';
 
-interface FilterItem {
+export interface FilterItem {
   id: string;
   name: string;
+  count?: number;
 }
 
 export interface FilterListProps {
@@ -86,7 +89,7 @@ export function FilterList({
               key={`selected-${item.id}`}
               className="flex items-center gap-1 rounded-sm bg-accent px-2 py-1 text-2xs font-medium text-accent-foreground"
             >
-              <span className="truncate max-w-[80px]">{item.name}</span>
+              <span className="truncate max-w-[6.5rem]">{item.name}</span>
               <button
                 type="button"
                 onClick={() => onChange(item.id, false)}
@@ -105,14 +108,21 @@ export function FilterList({
         className="flex flex-col gap-2.5 max-h-48 overflow-y-auto ps-1 pe-3.5 py-1 scrollbar-thin"
       >
         {items.length > 0 ? (
-          items.map((item) => (
-            <Checkbox
-              key={item.id}
-              label={item.name}
-              checked={selectedIds.includes(item.id)}
-              onChange={(checked) => onChange(item.id, checked)}
-            />
-          ))
+          items.map((item) => {
+            const labelText =
+              item.count !== undefined && item.count > 0
+                ? `${item.name} (${toPersianDigits(item.count)})`
+                : item.name;
+
+            return (
+              <Checkbox
+                key={item.id}
+                label={labelText}
+                checked={selectedIds.includes(item.id)}
+                onChange={(checked) => onChange(item.id, checked)}
+              />
+            );
+          })
         ) : (
           <div className="w-full flex flex-col items-center justify-center py-6 text-center select-none">
             <Inbox aria-hidden="true" className="mb-2 h-6 w-6 text-muted-foreground/50" />

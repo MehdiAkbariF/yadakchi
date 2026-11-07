@@ -1,7 +1,8 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { createPortal } from 'react-dom';
+import Image from 'next/image';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import {
   ZoomIn,
@@ -56,7 +57,7 @@ function useCountdown(expiration?: string | null) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*             ایده جسورانه: اسکرابر کپسولی مقطعی (Segmented Capsule)          */
+/*              نوار اسکرابر مقطعی هوشمند (دسکتاپ، موبایل و فول‌اسکرین)         */
 /* -------------------------------------------------------------------------- */
 interface GalleryScrubberProps {
   total: number;
@@ -78,15 +79,15 @@ function GalleryScrubber({
   return (
     <div
       className={cn(
-        'flex flex-col select-none w-full max-w-[220px] sm:max-w-[260px] gap-1.5',
-        align === 'start' ? 'items-start' : 'items-center mx-auto'
+        'flex select-none items-center gap-2 w-full max-w-[15rem]',
+        align === 'start' ? 'justify-start' : 'justify-center mx-auto'
       )}
     >
-      {/* تراک مقطعی تعاملی */}
+      {/* تراک مقطعی کپسولی */}
       <div
         className={cn(
-          'flex items-center gap-1.5 w-full p-1 rounded-full backdrop-blur-md transition-colors',
-          isDark ? 'bg-neutral-900/80 border border-neutral-800' : 'bg-muted/60 border border-border/60'
+          'flex items-center gap-1.5 flex-1 p-1 rounded-full backdrop-blur-md transition-colors',
+          isDark ? 'bg-white/10 border border-white/10' : 'bg-muted/80 border border-border'
         )}
       >
         {Array.from({ length: total }).map((_, idx) => {
@@ -98,25 +99,22 @@ function GalleryScrubber({
               key={idx}
               type="button"
               onClick={() => onChange(idx)}
-              aria-label={`رفتن به تصویر ${idx + 1}`}
-              className="relative flex-1 h-2 rounded-full overflow-hidden transition-all duration-300 focus:outline-none"
+              aria-label={`رفتن به تصویر شماره ${idx + 1}`}
+              className="relative flex-1 h-1.5 rounded-full overflow-hidden transition-all duration-200 focus:outline-none"
             >
-              {/* پس‌زمینه قطعه */}
               <div
                 className={cn(
                   'absolute inset-0 rounded-full transition-colors',
-                  isDark ? 'bg-neutral-800' : 'bg-muted-foreground/20'
+                  isDark ? 'bg-white/20' : 'bg-muted-foreground/20'
                 )}
               />
-
-              {/* نشانگر وضعیت */}
               <div
                 className={cn(
                   'h-full rounded-full transition-all duration-300',
                   isActive
-                    ? isDark ? 'bg-primary shadow-sm shadow-primary/50' : 'bg-primary shadow-sm'
+                    ? 'bg-primary shadow-xs'
                     : isPassed
-                    ? isDark ? 'bg-neutral-600' : 'bg-primary/40'
+                    ? isDark ? 'bg-white/50' : 'bg-primary/40'
                     : 'w-0'
                 )}
                 style={{ width: isActive || isPassed ? '100%' : '0%' }}
@@ -126,16 +124,14 @@ function GalleryScrubber({
         })}
       </div>
 
-      {/* بج شمارشگر ارقام فارسی با استایل مینیمال */}
+      {/* شماره عکس به فارسی */}
       <div
         className={cn(
-          'flex items-center gap-1 text-3xs font-black tracking-wider px-2 py-0.5 rounded-md tabular-nums',
-          isDark ? 'bg-neutral-900 text-neutral-300' : 'bg-card text-muted-foreground border border-border/50'
+          'flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full tabular-nums shrink-0',
+          isDark ? 'bg-white/10 text-white' : 'bg-card text-foreground border border-border/70 shadow-xs'
         )}
       >
-        <span className={cn('text-xs font-black', isDark ? 'text-primary' : 'text-primary')}>
-          {toPersianDigits(current + 1)}
-        </span>
+        <span className="text-primary font-black">{toPersianDigits(current + 1)}</span>
         <span className="opacity-40">/</span>
         <span>{toPersianDigits(total)}</span>
       </div>
@@ -223,18 +219,11 @@ export function ProductGallery({
     setIsFullscreenOpen(false);
   }, []);
 
-  // ✅ بستن تمام‌صفحه با دکمه فیزیکی بازگشت گوشی (Android Back / Browser History Back)
   React.useEffect(() => {
     if (!isFullscreenOpen) return;
-
     window.history.pushState({ modal: 'product-gallery-fullscreen' }, '');
-
-    const handlePopState = () => {
-      closeFullscreen();
-    };
-
+    const handlePopState = () => closeFullscreen();
     window.addEventListener('popstate', handlePopState);
-
     return () => {
       window.removeEventListener('popstate', handlePopState);
       if (window.history.state?.modal === 'product-gallery-fullscreen') {
@@ -243,25 +232,18 @@ export function ProductGallery({
     };
   }, [isFullscreenOpen, closeFullscreen]);
 
-  // کنترل با کلیدهای کیبورد
   React.useEffect(() => {
     if (!isFullscreenOpen) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeFullscreen();
-      } else if (e.key === 'ArrowLeft') {
-        handleNext();
-      } else if (e.key === 'ArrowRight') {
-        handlePrev();
-      }
+      if (e.key === 'Escape') closeFullscreen();
+      else if (e.key === 'ArrowLeft') handleNext();
+      else if (e.key === 'ArrowRight') handlePrev();
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreenOpen, closeFullscreen, handleNext, handlePrev]);
 
-  // رویدادهای اسکرول در حالت عادی موبایل
+  // رهگیری دقیق اسکرول لمسی کاروسل موبایل
   const handleMobileScroll = () => {
     if (!mobileCarouselRef.current) return;
     const { scrollLeft, clientWidth } = mobileCarouselRef.current;
@@ -272,16 +254,12 @@ export function ProductGallery({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartRef.current = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY,
-    };
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     const deltaX = Math.abs(e.touches[0].clientX - touchStartRef.current.x);
     const deltaY = e.touches[0].clientY - touchStartRef.current.y;
-
     if (Math.abs(deltaY) > deltaX && onDragVertical) {
       onDragVertical(deltaY);
       touchStartRef.current.y = e.touches[0].clientY;
@@ -293,13 +271,9 @@ export function ProductGallery({
     info: PanInfo
   ) => {
     if (zoomScale > 1) return;
-
     const swipeThreshold = 40;
-    if (info.offset.x < -swipeThreshold) {
-      handlePrev();
-    } else if (info.offset.x > swipeThreshold) {
-      handleNext();
-    }
+    if (info.offset.x < -swipeThreshold) handlePrev();
+    else if (info.offset.x > swipeThreshold) handleNext();
   };
 
   const handleDoubleTap = () => {
@@ -321,7 +295,7 @@ export function ProductGallery({
   }
 
   /* -------------------------------------------------------------------------- */
-  /*            مودال تمام‌صفحه (کامل مشکی، با پشتیبانی از دکمه بازگشت)            */
+  /*                      مودال تمام‌صفحه تصاویر کالا                          */
   /* -------------------------------------------------------------------------- */
   const fullscreenModalContent = (
     <AnimatePresence>
@@ -333,16 +307,15 @@ export function ProductGallery({
           role="dialog"
           aria-modal="true"
           aria-label="نمایش تمام‌صفحه تصاویر کالا"
-          className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen flex-col bg-black select-none touch-none transform-gpu"
+          className="fixed inset-0 z-modal flex h-[100dvh] w-screen flex-col bg-black select-none touch-none transform-gpu"
           dir="rtl"
         >
-          {/* هدر کاملاً مشکی */}
-          <div className="flex shrink-0 items-center justify-between border-b border-neutral-800 bg-black px-4 py-3 sm:px-6 z-20">
+          <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-black px-4 py-3 sm:px-6 z-20">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="truncate text-xs sm:text-sm font-bold text-white max-w-[200px] sm:max-w-xl">
+              <span className="truncate text-xs sm:text-sm font-bold text-white max-w-[12.5rem] sm:max-w-xl">
                 {title}
               </span>
-              <span className="rounded-md bg-neutral-800 px-2 py-0.5 text-3xs font-bold text-neutral-300">
+              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-2xs font-bold text-white/90">
                 {toPersianDigits(safeIndex + 1)} از {toPersianDigits(validImages.length)}
               </span>
             </div>
@@ -350,21 +323,20 @@ export function ProductGallery({
             <button
               type="button"
               onClick={closeFullscreen}
-              aria-label="بستن گالری (Escape یا دکمه بازگشت)"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-white hover:bg-destructive transition-colors focus:ring-2 focus:ring-white active:scale-95"
+              aria-label="بستن تمام‌صفحه"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-destructive transition-colors active:scale-95"
             >
               <X aria-hidden="true" className="h-5 w-5" />
             </button>
           </div>
 
-          {/* بدنه و تصویر اسلایدر */}
           <div className="relative min-h-0 w-full flex-1 overflow-hidden flex items-center justify-center bg-black p-2 sm:p-6">
             {validImages.length > 1 && (
               <button
                 type="button"
                 onClick={handlePrev}
                 aria-label="عکس قبلی"
-                className="hidden sm:flex absolute start-6 z-20 h-12 w-12 items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-white hover:bg-neutral-800 transition-all active:scale-95"
+                className="hidden sm:flex absolute start-6 z-20 h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 transition-all active:scale-95"
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
@@ -398,9 +370,6 @@ export function ProductGallery({
                     y: zoomScale > 1 ? panOffset.y : 0,
                   }}
                   transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                  onUpdate={(latest: any) => {
-                    if (zoomScale > 1) setPanOffset({ x: latest.x || 0, y: latest.y || 0 });
-                  }}
                   className={cn(
                     'max-h-full max-w-full select-none object-contain',
                     zoomScale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'
@@ -414,57 +383,21 @@ export function ProductGallery({
                 type="button"
                 onClick={handleNext}
                 aria-label="عکس بعدی"
-                className="hidden sm:flex absolute end-6 z-20 h-12 w-12 items-center justify-center rounded-full bg-neutral-900 border border-neutral-800 text-white hover:bg-neutral-800 transition-all active:scale-95"
+                className="hidden sm:flex absolute end-6 z-20 h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 transition-all active:scale-95"
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
             )}
           </div>
 
-          {/* فوتر مشکی با اسکرابر کپسولی مقطعی */}
-          <div className="flex shrink-0 flex-col sm:flex-row items-center justify-between gap-3 border-t border-neutral-800 bg-black p-3 sm:px-8 sm:py-4 z-20">
-            <div className="w-full sm:w-auto flex-1 max-w-xs">
-              <GalleryScrubber
-                total={validImages.length}
-                current={safeIndex}
-                onChange={goToSlide}
-                isDark
-                align="center"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setZoomScale((prev) => Math.min(prev + 0.75, 4))}
-                disabled={zoomScale >= 4}
-                aria-label="بزرگنمایی"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-white active:scale-95 disabled:opacity-30"
-              >
-                <ZoomIn className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setZoomScale((prev) => Math.max(prev - 0.75, 1))}
-                disabled={zoomScale === 1}
-                aria-label="کوچک‌نمایی"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-white active:scale-95 disabled:opacity-30"
-              >
-                <ZoomOut className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setZoomScale(1);
-                  setPanOffset({ x: 0, y: 0 });
-                }}
-                disabled={zoomScale === 1}
-                aria-label="بازنشانی زوم"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900 text-white active:scale-95 disabled:opacity-30"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="flex shrink-0 items-center justify-center border-t border-white/10 bg-black p-3 sm:py-4 z-20">
+            <GalleryScrubber
+              total={validImages.length}
+              current={safeIndex}
+              onChange={goToSlide}
+              isDark
+              align="center"
+            />
           </div>
         </motion.div>
       )}
@@ -475,7 +408,7 @@ export function ProductGallery({
     <section
       role="region"
       aria-roledescription="carousel"
-      aria-label={`تصاویر ${title}`}
+      aria-label={`گالری تصاویر ${title}`}
       className="w-full select-none"
       dir="rtl"
     >
@@ -484,46 +417,44 @@ export function ProductGallery({
       </div>
 
       {/* ================= نسخه دسکتاپ ================= */}
-      <div className="hidden lg:flex w-full flex-col items-start gap-4 text-right pt-1">
-        <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-border/80 bg-card p-4 shadow-xs">
+      <div className="hidden lg:flex w-full flex-col items-start gap-3.5 text-right pt-1">
+        <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xs">
           {hasTimedDiscount ? (
-            <div className="absolute end-3 top-3 z-10 flex items-center gap-2 rounded-xl bg-destructive px-3 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
-              <Ticket aria-hidden="true" className="h-4 w-4" />
+            <div className="absolute end-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
+              <Ticket aria-hidden="true" className="h-3.5 w-3.5" />
               <span>تخفیف {toPersianDigits(discountPercent || 0)}٪</span>
               {countdown && (
-                <span className="rounded-md bg-white/20 px-2 py-1 text-3xs font-bold" dir="ltr">
+                <span className="rounded bg-black/20 px-1 py-0.5 text-3xs font-bold" dir="ltr">
                   {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:
                   {String(countdown.s).padStart(2, '0')}
                 </span>
               )}
             </div>
           ) : hasDiscount && discountPercent ? (
-            <div className="absolute end-3 top-3 z-10 rounded-xl bg-destructive px-3 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
+            <div className="absolute end-3 top-3 z-10 rounded-lg bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
               تخفیف {toPersianDigits(discountPercent)}٪
             </div>
           ) : null}
 
-          <div className="relative h-full w-full flex items-center justify-center overflow-hidden">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              <motion.img
-                key={safeIndex}
-                src={resolveImageUrl(validImages[safeIndex])}
-                alt={`${title} - عکس ${safeIndex + 1}`}
-                onClick={() => setIsFullscreenOpen(true)}
-                initial={{ opacity: 0, x: -direction * 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction * 30 }}
-                transition={{ duration: 0.2 }}
-                className="h-full w-full cursor-zoom-in object-contain transform-gpu"
-              />
-            </AnimatePresence>
+          <div 
+            onClick={() => setIsFullscreenOpen(true)}
+            className="relative h-full w-full cursor-zoom-in flex items-center justify-center"
+          >
+            <Image
+              src={resolveImageUrl(validImages[safeIndex])}
+              alt={`${title} - عکس ${safeIndex + 1}`}
+              fill
+              priority={safeIndex === 0}
+              sizes="(max-width: 1400px) 40vw, 450px"
+              className="object-contain p-2 transition-transform duration-normal group-hover:scale-105"
+            />
           </div>
 
           <button
             type="button"
             onClick={() => setIsFullscreenOpen(true)}
-            aria-label="مشاهده تمام‌صفحه"
-            className="absolute bottom-3 start-3 z-10 flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-card text-muted-foreground shadow-xs hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all"
+            aria-label="مشاهده تمام‌صفحه تصویر"
+            className="absolute bottom-3 start-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-xs hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all"
           >
             <Maximize2 aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -534,7 +465,7 @@ export function ProductGallery({
                 type="button"
                 onClick={handlePrev}
                 aria-label="عکس قبلی"
-                className="absolute start-3 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card text-foreground shadow-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+                className="absolute start-3 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -542,7 +473,7 @@ export function ProductGallery({
                 type="button"
                 onClick={handleNext}
                 aria-label="عکس بعدی"
-                className="absolute end-3 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-card text-foreground shadow-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+                className="absolute end-3 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -550,10 +481,11 @@ export function ProductGallery({
           )}
         </div>
 
+        {/* لیست تصاویر بندانگشتی دسکتاپ */}
         {validImages.length > 1 && (
-          <div className="flex w-full flex-col items-start gap-3">
-            <div className="w-full overflow-x-auto scrollbar-none py-1">
-              <div className="flex items-center gap-3 w-max justify-start px-0.5">
+          <div className="w-full flex flex-col items-start gap-2.5">
+            <div className="w-full overflow-x-auto scrollbar-thin py-1">
+              <div className="flex items-center gap-2.5 w-max justify-start px-0.5">
                 {validImages.map((img, idx) => {
                   const thumbUrl = resolveImageUrl(img);
                   if (!thumbUrl) return null;
@@ -564,15 +496,21 @@ export function ProductGallery({
                       key={idx}
                       type="button"
                       onClick={() => goToSlide(idx)}
-                      aria-label={`انتخاب عکس ${idx + 1}`}
+                      aria-label={`انتخاب عکس شماره ${idx + 1}`}
                       className={cn(
-                        'relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-card p-1 outline-none transition-all',
+                        'relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border bg-card p-1 outline-none transition-all',
                         isSelected
-                          ? 'border-primary ring-2 ring-primary/20 scale-105'
+                          ? 'border-primary ring-2 ring-primary/20 scale-105 shadow-xs'
                           : 'border-border/80 opacity-60 hover:opacity-100 hover:border-primary/40'
                       )}
                     >
-                      <img src={thumbUrl} alt="" className="h-full w-full rounded-lg object-contain" />
+                      <Image
+                        src={thumbUrl}
+                        alt=""
+                        fill
+                        sizes="56px"
+                        className="object-contain p-0.5"
+                      />
                     </button>
                   );
                 })}
@@ -589,30 +527,13 @@ export function ProductGallery({
         )}
       </div>
 
-      {/* ================= نسخه موبایل ================= */}
+      {/* ================= نسخه موبایل با نوار اسکرابر و شمارشگر ================= */}
       <div
-        className="lg:hidden relative w-full flex flex-col items-center pt-3.5"
+        className="lg:hidden relative w-full flex flex-col items-center pt-2 gap-2.5"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
       >
-        {hasTimedDiscount ? (
-          <div className="absolute end-4 top-5 z-20 flex items-center gap-2 rounded-xl bg-destructive px-3 py-1 text-2xs font-bold text-destructive-foreground shadow-md">
-            <Ticket aria-hidden="true" className="h-4 w-4" />
-            <span>تخفیف {toPersianDigits(discountPercent || 0)}٪</span>
-            {countdown && (
-              <span className="rounded-md bg-black/20 px-1.5 py-0.5 text-3xs font-black tracking-wider" dir="ltr">
-                {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:
-                {String(countdown.s).padStart(2, '0')}
-              </span>
-            )}
-          </div>
-        ) : hasDiscount && discountPercent ? (
-          <div className="absolute end-4 top-5 z-20 rounded-xl bg-destructive px-3 py-1 text-2xs font-bold text-destructive-foreground shadow-md">
-            تخفیف {toPersianDigits(discountPercent)}٪
-          </div>
-        ) : null}
-
-        {/* کاروسل تصاویر */}
+        {/* کاروسل اصلی تصاویر */}
         <div
           ref={mobileCarouselRef}
           onScroll={handleMobileScroll}
@@ -625,25 +546,35 @@ export function ProductGallery({
               <div key={idx} className="w-full shrink-0 snap-center px-4">
                 <div
                   onClick={() => setIsFullscreenOpen(true)}
-                  className="relative h-[250px] w-full flex items-center justify-center cursor-zoom-in overflow-hidden 
-                  rounded-2xl bg-card border border-border/60 shadow-xs"
+                  className="relative h-[15.5rem] w-full flex items-center justify-center cursor-zoom-in overflow-hidden rounded-2xl bg-card border border-border shadow-xs"
                 >
-                  <img
+                  <Image
                     src={currentUrl}
                     alt={`${title} - تصویر ${idx + 1}`}
-                    className="h-full w-full object-contain p-2"
-                    loading={idx === 0 ? 'eager' : 'lazy'}
+                    fill
+                    priority={idx === 0}
+                    sizes="100vw"
+                    className="object-contain p-3"
                   />
 
+                  {/* بچ شناور شمارشگر کالا روی تصویر: ۱ از ۴ */}
+                  {validImages.length > 1 && (
+                    <div className="absolute top-2.5 start-2.5 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-2xs font-bold text-white backdrop-blur-md tabular-nums shadow-xs">
+                      <span>{toPersianDigits(safeIndex + 1)}</span>
+                      <span className="opacity-50">از</span>
+                      <span>{toPersianDigits(validImages.length)}</span>
+                    </div>
+                  )}
+
+                  {/* دکمه تمام صفحه */}
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsFullscreenOpen(true);
                     }}
-                    aria-label="مشاهده تمام‌صفحه"
-                    className="absolute bottom-2.5 start-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-lg border
-                     border-border/80 bg-card text-foreground shadow-xs active:scale-95 transition-all"
+                    aria-label="مشاهده تمام‌صفحه تصویر"
+                    className="absolute bottom-2.5 start-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card/90 text-foreground shadow-xs active:scale-95"
                   >
                     <Maximize2 aria-hidden="true" className="h-4 w-4" />
                   </button>
@@ -653,9 +584,9 @@ export function ProductGallery({
           })}
         </div>
 
-        {/* اسکرابر کپسولی تعاملی زیر کاروسل موبایل */}
+        {/* نوار اسکرابر کپسولی مقطعی زیر تصویر در موبایل */}
         {validImages.length > 1 && (
-          <div className="w-full pt-2.5 pb-1 px-6">
+          <div className="w-full px-6 flex justify-center">
             <GalleryScrubber
               total={validImages.length}
               current={safeIndex}

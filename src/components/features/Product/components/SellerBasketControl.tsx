@@ -144,7 +144,7 @@ export function SellerBasketControl({ seller, onAddedToBasket }: SellerBasketCon
   // ── حالت لودینگ اولیه ─────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex h-9 w-[110px] items-center justify-center rounded-xl border border-border bg-muted/40">
+      <div className="flex h-9 w-[6.875rem] items-center justify-center rounded-xl border border-border bg-muted/40">
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       </div>
     );
@@ -193,7 +193,7 @@ export function SellerBasketControl({ seller, onAddedToBasket }: SellerBasketCon
         <Plus className="h-3.5 w-3.5" />
       </button>
 
-      <span className="min-w-[26px] text-center text-xs font-black text-primary">
+      <span className="min-w-[1.625rem] text-center text-xs font-bold text-primary">
         {pending ? (
           <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin" />
         ) : (

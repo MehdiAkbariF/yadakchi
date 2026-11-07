@@ -14,11 +14,11 @@ import { AnimatedWaves } from './svgs/DecorativeShapes';
 export function SellerRegisterContent() {
   const features = [
     { id: 'panel', title: 'پنل اختصاصی فروشگاه', desc: 'مدیریت ساده، کامل و یکپارچه فروشگاه آنلاین', color: 'text-primary bg-accent' },
-    { id: 'accounting', title: 'مدیریت فروش و حسابداری', desc: 'گزارش دقیق فروش، تسویه و درآمد فروشنده', color: 'text-emerald-500 bg-emerald-500/10' },
-    { id: 'inventory', title: 'مدیریت محصولات و موجودی', desc: 'کنترل کامل قطعات، قیمت‌ها و موجودی انبار', color: 'text-blue-500 bg-blue-500/10' },
-    { id: 'shipping', title: 'مدیریت سفارش و ارسال', desc: 'پیگیری سریع سفارش‌ها و وضعیت ارسال آن‌ها', color: 'text-orange-500 bg-orange-500/10' },
-    { id: 'ads', title: 'تبلیغات و افزایش فروش', desc: 'افزایش بازدید و جذب مشتریان با کمپین‌ها', color: 'text-amber-500 bg-amber-500/10' },
-    { id: 'b2b', title: 'شبکه فروشندگان یدکچی (B2B)', desc: 'ارتباط مستقیم با فروشندگان و تأمین‌کنندگان', color: 'text-purple-500 bg-purple-500/10' },
+    { id: 'accounting', title: 'مدیریت فروش و حسابداری', desc: 'گزارش دقیق فروش، تسویه و درآمد فروشنده', color: 'text-success bg-success/10' },
+    { id: 'inventory', title: 'مدیریت محصولات و موجودی', desc: 'کنترل کامل قطعات، قیمت‌ها و موجودی انبار', color: 'text-info bg-info/10' },
+    { id: 'shipping', title: 'مدیریت سفارش و ارسال', desc: 'پیگیری سریع سفارش‌ها و وضعیت ارسال آن‌ها', color: 'text-shop bg-shop/10' },
+    { id: 'ads', title: 'تبلیغات و افزایش فروش', desc: 'افزایش بازدید و جذب مشتریان با کمپین‌ها', color: 'text-warning bg-warning/10' },
+    { id: 'b2b', title: 'شبکه فروشندگان یدکچی (B2B)', desc: 'ارتباط مستقیم با فروشندگان و تأمین‌کنندگان', color: 'text-status-waiting-response bg-status-waiting-response/10' },
   ];
 
   const steps = [
@@ -59,7 +59,7 @@ export function SellerRegisterContent() {
         <section className="relative w-full overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
 
-          <div className="relative mx-auto grid min-h-[500px] w-full max-w-[1840px] grid-cols-1 items-center gap-10 px-4 py-12 sm:px-6 md:px-12 md:py-20 lg:grid-cols-12 lg:gap-12">
+          <div className="relative mx-auto grid min-h-[31.25rem] w-full max-w-[115rem] grid-cols-1 items-center gap-10 px-4 py-12 sm:px-6 md:px-12 md:py-20 lg:grid-cols-12 lg:gap-12">
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
@@ -148,7 +148,7 @@ export function SellerRegisterContent() {
         </section>
 
         <section className="relative w-full">
-          <div className="mx-auto flex w-full max-w-[1840px] flex-col gap-10 px-4 sm:px-6 md:px-12">
+          <div className="mx-auto flex w-full max-w-[115rem] flex-col gap-10 px-4 sm:px-6 md:px-12">
             <SectionHeader
               title="امکانات فروشندگان در یدکچی"
               subtitle="همه ابزارهایی که برای توسعه یک کسب‌وکار دیجیتال نیاز دارید"
@@ -162,7 +162,7 @@ export function SellerRegisterContent() {
         </section>
 
         <section className="relative w-full">
-          <div className="mx-auto flex w-full max-w-[1840px] flex-col gap-10 px-4 sm:px-6 md:px-12">
+          <div className="mx-auto flex w-full max-w-[115rem] flex-col gap-10 px-4 sm:px-6 md:px-12">
             <SectionHeader
               title="مسیر فروشنده شدن"
               subtitle="فقط در ۴ قدم ساده، فروشگاه آنلاین خود را راه‌اندازی کنید"
@@ -176,7 +176,7 @@ export function SellerRegisterContent() {
         </section>
 
         <section className="relative w-full">
-          <div className="mx-auto flex w-full max-w-[1840px] flex-col gap-10 px-4 sm:px-6 md:px-12">
+          <div className="mx-auto flex w-full max-w-[115rem] flex-col gap-10 px-4 sm:px-6 md:px-12">
             <SectionHeader
               title="فروشندگان درباره یدکچی چه می‌گویند؟"
               subtitle="تجربه همکاران واقعی فعال در سراسر کشور"
@@ -190,7 +190,7 @@ export function SellerRegisterContent() {
         </section>
 
         <section className="relative w-full">
-          <div className="mx-auto flex w-full max-w-[1840px] flex-col gap-10 px-4 sm:px-6 md:px-12">
+          <div className="mx-auto flex w-full max-w-[115rem] flex-col gap-10 px-4 sm:px-6 md:px-12">
             <SectionHeader title="پرسش و پاسخ" subtitle="پاسخ به سوالات متداول فروشندگان" />
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -203,7 +203,7 @@ export function SellerRegisterContent() {
               <div className="relative flex flex-col gap-1 rounded-lg border border-border bg-card p-4 shadow-lg sm:p-6">
                 {faqs.map((faq, idx) => (
                   <Accordion key={idx} title={faq.q}>
-                    <p className="pe-1 pb-1 text-justify text-sm leading-reading text-muted-foreground">
+                    <p className="pe-1 pb-1 text-justify text-base leading-reading text-muted-foreground">
                       {faq.a}
                     </p>
                   </Accordion>
@@ -230,7 +230,7 @@ export function SellerRegisterContent() {
               className="pointer-events-none absolute -bottom-12 -left-12 h-56 w-56 text-primary/5"
             />
 
-            <div className="relative mx-auto flex w-full max-w-[1840px] flex-col items-center justify-between gap-6 sm:gap-8 md:flex-row">
+            <div className="relative mx-auto flex w-full max-w-[115rem] flex-col items-center justify-between gap-6 sm:gap-8 md:flex-row">
               <div className="z-10 mx-auto flex max-w-lg flex-col gap-3 md:mx-0 md:me-auto">
                 <motion.h3
                   initial={{ opacity: 0, x: 20 }}
@@ -241,7 +241,7 @@ export function SellerRegisterContent() {
                 >
                   آماده‌ی ورود به بازار آنلاین هستید؟
                 </motion.h3>
-                <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+                <p className="text-base leading-relaxed text-muted-foreground md:text-base">
                   ثبت‌نام فروشگاه کمتر از ۵ دقیقه زمان می‌برد. همین امروز شعبه آنلاین کسب‌وکار خود را راه‌اندازی کنید.
                 </p>
               </div>

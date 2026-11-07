@@ -38,7 +38,7 @@ export function TestimonialCard({ testimonial, index }: TestimonialCardProps) {
 
         <div className="relative flex flex-1 flex-col gap-4">
           <Quote aria-hidden="true" className="h-6 w-6 rotate-180 text-primary/60" />
-          <p className="relative z-10 text-sm leading-reading text-foreground/90">{testimonial.quote}</p>
+          <p className="relative z-10 text-base leading-reading text-foreground/90">{testimonial.quote}</p>
         </div>
 
         <div className="mt-auto flex items-center gap-3 border-t border-border pt-4">
@@ -54,7 +54,7 @@ export function TestimonialCard({ testimonial, index }: TestimonialCardProps) {
             </div>
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-foreground">{testimonial.name}</span>
+            <span className="text-label">{testimonial.name}</span>
             <span className="mt-0.5 text-2xs text-muted-foreground">{testimonial.shop}</span>
           </div>
         </div>

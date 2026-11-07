@@ -1,4 +1,4 @@
-﻿// src/components/features/ProductGrid/PriceSlider.tsx
+// src/components/features/ProductGrid/PriceSlider.tsx
 'use client';
 
 import * as React from 'react';
@@ -120,18 +120,18 @@ export function PriceSlider({
 
       <div className="grid grid-cols-2 gap-2 text-right">
         <div className="flex flex-col gap-0.5 rounded-xl border border-border/80 bg-muted/30 px-2.5 py-1.5">
-          <span className="text-[10px] font-bold text-muted-foreground">از</span>
+          <span className="text-[0.625rem] font-bold text-muted-foreground">از</span>
           <div className="flex items-baseline justify-between gap-1">
-            <span className="text-xs font-black text-foreground">{toToman(minVal)}</span>
-            <span className="text-[10px] text-muted-foreground">تومان</span>
+            <span className="text-xs font-bold text-foreground">{toToman(minVal)}</span>
+            <span className="text-[0.625rem] text-muted-foreground">تومان</span>
           </div>
         </div>
 
         <div className="flex flex-col gap-0.5 rounded-xl border border-border/80 bg-muted/30 px-2.5 py-1.5">
-          <span className="text-[10px] font-bold text-muted-foreground">تا</span>
+          <span className="text-[0.625rem] font-bold text-muted-foreground">تا</span>
           <div className="flex items-baseline justify-between gap-1">
-            <span className="text-xs font-black text-foreground">{toToman(maxVal)}</span>
-            <span className="text-[10px] text-muted-foreground">تومان</span>
+            <span className="text-xs font-bold text-foreground">{toToman(maxVal)}</span>
+            <span className="text-[0.625rem] text-muted-foreground">تومان</span>
           </div>
         </div>
       </div>

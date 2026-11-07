@@ -25,8 +25,8 @@ export function PartCategoryHeaderCard({ slug, categoryName, thumbnail }: PartCa
             <img src={getFullUrl(thumbnail)} className="h-full w-full object-contain" alt="" />
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-2xs font-bold text-muted-foreground md:text-xs">دسته‌بندی انتخاب شده:</span>
-            <h2 className="text-sm font-bold text-foreground md:text-base">{categoryName}</h2>
+            <span className="text-label-2xs md:text-xs">دسته‌بندی انتخاب شده:</span>
+            <h2 className="text-title-sm md:text-base">{categoryName}</h2>
           </div>
         </div>
 

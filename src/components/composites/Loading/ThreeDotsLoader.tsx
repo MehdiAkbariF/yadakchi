@@ -11,15 +11,15 @@ interface ThreeDotsLoaderProps {
 }
 
 const DOT_SIZES = {
-  sm: 'h-1 w-1',
-  md: 'h-1.5 w-1.5',
-  lg: 'h-2 w-2',
+  sm: 'h-1.5 w-1.5',   // 6px
+  md: 'h-2 w-2',       // 8px
+  lg: 'h-2.5 w-2.5',   // 10px
 } as const;
 
 const GAP_SIZES = {
-  sm: 'gap-1',
-  md: 'gap-1.5',
-  lg: 'gap-2',
+  sm: 'gap-1.5',
+  md: 'gap-2',
+  lg: 'gap-2.5',
 } as const;
 
 export function ThreeDotsLoader({
@@ -62,7 +62,7 @@ export function ThreeDotsLoader({
   const content = (
     <div
       className={cn(
-        'flex flex-col items-center justify-center gap-2.5 select-none',
+        'flex flex-col items-center justify-center gap-3 select-none',
         className
       )}
       role="status"
@@ -74,16 +74,19 @@ export function ThreeDotsLoader({
           <span
             key={i}
             className={cn(
-              'rounded-full bg-muted-foreground/50',
+              'loader-dot rounded-full bg-muted-foreground/60',
               DOT_SIZES[size],
-              'animate-[dotFade_1.2s_ease-in-out_infinite]'
+              'animate-[dotPulse_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite]',
+              'will-change-transform'
             )}
-            style={{ animationDelay: `${i * 0.18}s` }}
+            style={{ animationDelay: `${i * 0.16}s` }}
           />
         ))}
       </div>
       {label && (
-        <span className="text-3xs font-medium text-muted-foreground/70">{label}</span>
+        <span className="text-3xs font-medium text-muted-foreground/70">
+          {label}
+        </span>
       )}
     </div>
   );
@@ -93,7 +96,7 @@ export function ThreeDotsLoader({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-background"
+      className="fixed inset-0 z-loader flex items-center justify-center bg-background"
     >
       {content}
     </div>

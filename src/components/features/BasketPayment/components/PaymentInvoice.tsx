@@ -32,7 +32,7 @@ export function PaymentInvoice({
   onCompleteLegalInfo,
 }: PaymentInvoiceProps) {
   return (
-    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]" dir="rtl">
+    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[22.5rem]" dir="rtl">
       <CardTitle className="mb-4 flex items-center gap-2 border-b border-border/60 pb-3.5 font-bold text-foreground">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <FileCheck aria-hidden="true" className="h-4 w-4" />
@@ -64,7 +64,7 @@ export function PaymentInvoice({
       </div>
 
       <div className="mb-6 flex items-baseline justify-between">
-        <span className="text-xs font-bold text-foreground">مبلغ نهایی قابل پرداخت:</span>
+        <span className="text-label">مبلغ نهایی قابل پرداخت:</span>
         <div className="flex items-baseline gap-1">
           <span className="text-xl font-black text-primary">
             {formatRialToToman(finalPrice)}
@@ -94,8 +94,8 @@ export function PaymentInvoice({
             onChange={onLegalInvoiceChange}
           />
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold text-foreground">درخواست صدور فاکتور رسمی حقوقی</span>
-            <p className="select-none text-2xs leading-relaxed text-muted-foreground">
+            <span className="text-label">درخواست صدور فاکتور رسمی حقوقی</span>
+            <p className="select-none text-xs leading-relaxed text-muted-foreground">
               فاکتور رسمی شرکتی با کد اقتصادی صادر و در پنل کاربری قابل دریافت خواهد بود.
             </p>
             {!isLegalUser ? (

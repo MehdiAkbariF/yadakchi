@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,7 +26,7 @@ const orbitItems = [
     title: 'فروشگاه شما',
     desc: 'ثبت موجودی آسان',
     icon: Store,
-    color: 'text-emerald-500 bg-emerald-500/10',
+    color: 'text-success bg-success/10',
     top: '75%',
     left: '93.3%',
   },
@@ -35,7 +35,7 @@ const orbitItems = [
     title: 'تأمین‌کننده',
     desc: 'فروش بی‌واسطه',
     icon: Layers,
-    color: 'text-blue-500 bg-blue-500/10',
+    color: 'text-info bg-info/10',
     top: '75%',
     left: '6.7%',
   },
@@ -58,7 +58,7 @@ export function OrbitDiagram() {
 
   return (
     <div className="relative order-2 flex w-full items-center justify-center py-10 sm:py-16 lg:col-span-6">
-      <div className="relative flex h-[280px] w-[280px] items-center justify-center sm:h-[380px] sm:w-[380px] md:h-[460px] md:w-[460px]">
+      <div className="relative flex h-[17.5rem] w-[17.5rem] items-center justify-center sm:h-[23.75rem] sm:w-[23.75rem] md:h-[28.75rem] md:w-[28.75rem]">
         <svg
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 h-full w-full"
@@ -149,7 +149,7 @@ export function OrbitDiagram() {
                       <ItemIcon aria-hidden="true" className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-foreground">{item.title}</span>
+                      <span className="text-label">{item.title}</span>
                       <span className="mt-0.5 text-2xs text-muted-foreground">{item.desc}</span>
                     </div>
                   </div>
@@ -178,7 +178,7 @@ export function OrbitDiagram() {
           </div>
         </div>
 
-        <div className="absolute -bottom-6 left-1/2 z-20 w-[calc(100%-2rem)] max-w-[280px] -translate-x-1/2 sm:bottom-0 rtl:translate-x-1/2">
+        <div className="absolute -bottom-6 left-1/2 z-20 w-[calc(100%-2rem)] max-w-[17.5rem] -translate-x-1/2 sm:bottom-0 rtl:translate-x-1/2">
           <AnimatePresence mode="wait">
             <motion.div
               key={notifIndex}
@@ -192,9 +192,9 @@ export function OrbitDiagram() {
                 className={cn(
                   'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
                   notifications[notifIndex].type === 'buy' && 'bg-accent text-primary',
-                  notifications[notifIndex].type === 'add' && 'bg-blue-500/10 text-blue-500',
+                  notifications[notifIndex].type === 'add' && 'bg-info/10 text-info',
                   notifications[notifIndex].type === 'approve' &&
-                    'bg-emerald-500/10 text-emerald-500'
+                    'bg-success/10 text-success'
                 )}
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 0.5 }}
@@ -210,11 +210,11 @@ export function OrbitDiagram() {
                 ) : null}
               </motion.div>
               <div className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-bold text-foreground">
+                <span className="block truncate text-label">
                   {notifications[notifIndex].text}
                 </span>
                 <span className="mt-0.5 flex items-center gap-1 text-2xs text-muted-foreground">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
                   به صورت زنده در یدکچی
                 </span>
               </div>

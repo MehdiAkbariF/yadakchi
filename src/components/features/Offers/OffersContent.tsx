@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { Percent, ShoppingBag } from 'lucide-react';
@@ -32,7 +32,7 @@ export function OffersContent() {
     <div className="flex w-full flex-col gap-6">
       {/* هدر موبایل */}
       <div
-        style={{ top: isHeaderMinimized ? '56px' : '122px' }}
+        style={{ top: isHeaderMinimized ? '3.5rem' : '122px' }}
         className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
       >
         <div className="flex w-full items-center justify-between">
@@ -41,8 +41,8 @@ export function OffersContent() {
               <Percent aria-hidden="true" className="h-4 w-4" />
             </div>
             <div className="flex flex-col">
-              <span className="text-2xs font-bold text-muted-foreground">جشنواره تخفیف‌ها</span>
-              <span className="mt-0.5 text-xs font-bold text-foreground">یدکچی آف</span>
+              <span className="text-label-2xs">جشنواره تخفیف‌ها</span>
+              <span className="mt-0.5 text-label">یدکچی آف</span>
             </div>
           </div>
         </div>
@@ -51,7 +51,7 @@ export function OffersContent() {
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-xs font-bold text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-label shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="truncate">فیلترها</span>
           </button>
@@ -62,7 +62,7 @@ export function OffersContent() {
             variant="trigger"
           />
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
+          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-label-2xs">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -76,10 +76,10 @@ export function OffersContent() {
             <Percent aria-hidden="true" className="h-5 w-5 shrink-0" />
             <span className="text-sm font-bold tracking-wide">جشنواره تخفیف‌های طلایی</span>
           </div>
-          <h2 className="mt-1 text-2xl font-bold text-foreground">
+          <h2 className="mt-1 text-xl font-bold text-foreground">
             تخفیف‌های شگفت‌انگیز یدکچی آف
           </h2>
-          <p className="mt-0.5 max-w-md text-xs leading-relaxed text-muted-foreground">
+          <p className="mt-0.5 max-w-md text-base leading-relaxed text-muted-foreground">
             فرصت استثنایی خرید لوازم یدکی و قطعات خودرو با بیشترین تخفیف‌ها از فروشگاه‌های معتبر سراسر کشور
           </p>
         </div>
@@ -103,7 +103,7 @@ export function OffersContent() {
               <Typography variant="h3" className="font-bold text-foreground">
                 یدکچی آف
               </Typography>
-              <span className="rounded-md bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">
+              <span className="rounded-md bg-muted px-2.5 py-1 text-label-muted">
                 {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا دارای تخفیف
               </span>
             </div>
@@ -115,14 +115,14 @@ export function OffersContent() {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 md:gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -140,7 +140,7 @@ export function OffersContent() {
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
               </Typography>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 در حال حاضر هیچ کالای تخفیف‌داری در این دسته یافت نشد.
               </p>
             </div>

@@ -18,7 +18,7 @@ export default function StaticPageNotFound() {
         صفحه مورد نظر یافت نشد
       </h1>
 
-      <p className="text-xs md:text-sm text-muted-foreground max-w-md leading-relaxed">
+      <p className="text-base md:text-base text-muted-foreground max-w-md leading-relaxed">
         صفحه‌ای که به دنبال آن هستید حذف شده یا آدرس آن تغییر کرده است.
       </p>
 

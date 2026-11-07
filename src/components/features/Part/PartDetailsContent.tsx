@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { ShoppingBag } from 'lucide-react';
@@ -99,13 +99,13 @@ export function PartDetailsContent({
     <div className="flex flex-col gap-6 w-full" dir="rtl">
       {/* نوار چسبان کنترل‌های موبایل (تمام‌عرض و چسبیده به دو طرف صفحه) */}
       <div
-        style={{ top: isHeaderMinimized ? '56px' : '122px' }}
+        style={{ top: isHeaderMinimized ? '3.5rem' : '122px' }}
         className="sticky z-40 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
       >
         <div className="flex w-full items-center justify-between">
           <div className="flex min-w-0 flex-col">
             <span className="text-3xs font-bold text-muted-foreground">قطعه انتخابی</span>
-            <span className="mt-0.5 truncate text-xs font-black text-foreground">
+            <span className="mt-0.5 truncate text-xs font-bold text-foreground">
               {partData?.name || 'قطعه یدکی'}
             </span>
           </div>
@@ -125,7 +125,7 @@ export function PartDetailsContent({
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-xs font-bold text-foreground shadow-xs outline-none transition-colors hover:bg-muted"
+            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-label shadow-xs outline-none transition-colors hover:bg-muted"
           >
             <span className="truncate">فیلترها</span>
           </button>
@@ -136,7 +136,7 @@ export function PartDetailsContent({
             variant="trigger"
           />
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
+          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-label-2xs">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -177,14 +177,14 @@ export function PartDetailsContent({
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -202,7 +202,7 @@ export function PartDetailsContent({
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
               </Typography>
-              <p className="mt-2 text-xs text-muted-foreground">
+              <p className="mt-2 text-base text-muted-foreground">
                 لطفاً فیلترهای خود را تغییر داده یا مجدداً امتحان کنید.
               </p>
             </div>

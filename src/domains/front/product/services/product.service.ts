@@ -176,7 +176,7 @@ export class ProductService {
     }
   }
 
-  async searchProducts(request: SearchProductsRequest): Promise<PaginatedResult<ProductViewModel>> {
+async searchProducts(request: SearchProductsRequest): Promise<PaginatedResult<ProductViewModel> & { aggregations?: any }> {
     try {
       if (request.partCategoryEnglishTitle && (!request.partCategoryIds || request.partCategoryIds.length === 0)) {
         const resolved = await resolveCategoryGuid(this.httpClient, request.partCategoryEnglishTitle);
@@ -198,6 +198,7 @@ export class ProductService {
       const pageNumber = data?.pageNumber ?? (data as any)?.currentPage ?? request.pageNumber ?? 1;
       const pageSize = data?.pageSize ?? (data as any)?.pageSize ?? request.pageSize ?? 30;
       const totalPages = pageSize > 0 ? Math.ceil(totalCount / pageSize) : 0;
+      const aggregations = (data as any)?.aggregations || null;
 
       if (!rawHits || rawHits.length === 0) {
         return {
@@ -211,7 +212,8 @@ export class ProductService {
           hasMore: false,
           from: 0,
           to: 0,
-        };
+          aggregations, // ✅ اضافه شد
+        } as any;
       }
 
       const items = rawHits.map((item: any) => {
@@ -230,7 +232,8 @@ export class ProductService {
         hasMore: pageNumber < totalPages,
         from: (pageNumber - 1) * pageSize + 1,
         to: Math.min(pageNumber * pageSize, totalCount),
-      };
+        aggregations, // ✅ اضافه شد
+      } as any;
     } catch (error) {
       logger.error('[ProductService] Search products via OpenSearch failed:', error);
       throw errorManager.normalize(error);

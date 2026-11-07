@@ -54,7 +54,7 @@ export function FlowProgressBar({ currentStep }: FlowProgressBarProps) {
                 </span>
                 <span
                   className={cn(
-                    'text-[10px]',
+                    'text-[0.625rem]',
                     isActive && 'font-black',
                     isDone && 'font-bold',
                     !isActive && !isDone && 'font-medium'
@@ -67,7 +67,7 @@ export function FlowProgressBar({ currentStep }: FlowProgressBarProps) {
               {idx < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    'mx-1.5 h-[2px] flex-1 rounded-full transition-colors',
+                    'mx-1.5 h-[0.125rem] flex-1 rounded-full transition-colors',
                     idx < currentIdx ? 'bg-shop/50' : 'bg-border'
                   )}
                 />

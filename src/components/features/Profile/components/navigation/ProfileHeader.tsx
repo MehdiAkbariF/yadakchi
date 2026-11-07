@@ -54,7 +54,7 @@ export function ProfileHeader() {
           </button>
         ) : null}
 
-        <h1 className="truncate text-xs sm:text-sm font-black text-foreground">
+        <h1 className="truncate text-base sm:text-lg font-semibold text-foreground">
           {pageTitle}
         </h1>
       </div>

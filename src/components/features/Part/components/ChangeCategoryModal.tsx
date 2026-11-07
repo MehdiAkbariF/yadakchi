@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -37,7 +37,7 @@ export function ChangeCategoryModal({ isOpen, onClose }: ChangeCategoryModalProp
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-lg">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <ModalTitle className="flex items-center gap-2 text-title-sm">
           <ListFilter aria-hidden="true" className="h-5 w-5 text-primary" />
           <span>تغییر دسته‌بندی قطعات</span>
         </ModalTitle>
@@ -75,14 +75,14 @@ export function ChangeCategoryModal({ isOpen, onClose }: ChangeCategoryModalProp
                       <Settings aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
-                  <span className="w-full truncate text-xs font-bold text-foreground">{cat.name}</span>
+                  <span className="w-full truncate text-label">{cat.name}</span>
                 </Card>
               ))}
             </div>
           </div>
         ) : (
           <div className="w-full rounded-2xl border border-dashed border-border py-12 text-center">
-            <span className="text-xs font-bold text-muted-foreground">دسته‌بندی یافت نشد.</span>
+            <span className="text-label-muted">دسته‌بندی یافت نشد.</span>
           </div>
         )}
       </ModalBody>

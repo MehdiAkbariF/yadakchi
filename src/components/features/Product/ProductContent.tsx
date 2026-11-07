@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -201,7 +201,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
 
   if (!pageData && isLoading) {
     return (
-      <div className="flex w-full min-h-[calc(100vh-160px)] items-center justify-center">
+      <div className="flex w-full min-h-[calc(100vh-10rem)] items-center justify-center">
         <ThreeDotsLoader size="md" />
       </div>
     );
@@ -424,7 +424,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
   ];
 
   const leftPriceContent = currentSelectedSeller ? (
-    <div className="flex h-10 w-36 max-w-[150px] select-none flex-col justify-between">
+    <div className="flex h-10 w-36 max-w-[9.375rem] select-none flex-col justify-between">
       <div className="relative h-4 w-full overflow-hidden">
         <span className="absolute block w-full truncate text-2xs font-bold leading-none text-muted-foreground">
           {metaItems[metaIndex]}
@@ -456,7 +456,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           <div key={crumb.id || idx} className="flex items-center gap-2 shrink-0">
             <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
             {isLast ? (
-              <span className="max-w-[170px] truncate font-bold text-foreground sm:max-w-none">{crumb.title}</span>
+              <span className="max-w-[10.625rem] truncate font-bold text-foreground sm:max-w-none">{crumb.title}</span>
             ) : (
               <Link href={url} className="whitespace-nowrap transition-colors hover:text-primary">{crumb.title}</Link>
             )}
@@ -518,7 +518,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
               productTitle={product.title}
             />
 
-            <div className="sticky top-[68px] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
+            <div className="sticky top-[4.25rem] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
               {tabs.map((id) => (
                 <button
                   key={id}
@@ -537,10 +537,10 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             </div>
 
             <div ref={dIntroRef} className="border-b border-border pb-6 pt-6">
-              <h3 className="mb-3 text-sm font-bold text-foreground md:text-base">معرفی کالا</h3>
+              <h3 className="mb-3 text-title-sm md:text-base">معرفی کالا</h3>
               <div className="relative">
                 <div
-                  style={{ maxHeight: isIntroExpanded ? 'none' : '110px' }}
+                  style={{ maxHeight: isIntroExpanded ? 'none' : '6.875rem' }}
                   className="overflow-hidden text-justify text-xs leading-reading text-muted-foreground md:text-sm"
                   dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
                 />
@@ -573,7 +573,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             </div>
           </div>
 
-          <div className="w-[320px] shrink-0 sticky top-[132px] flex flex-col gap-6 xl:w-[340px]">
+          <div className="w-[20rem] shrink-0 sticky top-[8.25rem] flex flex-col gap-6 xl:w-[21.25rem]">
             <ProductSideInvoice product={product} seller={currentSelectedSeller} sellersCount={allAvailableSellersList.length} />
           </div>
         </div>
@@ -611,7 +611,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
         <div
           ref={mobileViewportRef}
           onScroll={handleMobileViewportScroll}
-          className="relative h-full w-full overflow-y-auto overflow-x-hidden scrollbar-none overscroll-y-contain pt-[420px] sm:pt-[470px]"
+          className="relative h-full w-full overflow-y-auto overflow-x-hidden scrollbar-none overscroll-y-contain pt-[26.25rem] sm:pt-[29.375rem]"
           style={{ touchAction: 'pan-y' }}
         >
           <div
@@ -620,7 +620,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
               'relative z-40 w-full min-h-screen bg-card border-t',
               isSheetAttached
                 ? 'rounded-t-none border-border shadow-none'
-                : 'rounded-t-[32px] border-border/80 shadow-[0_-16px_40px_rgba(0,0,0,0.16)] dark:shadow-[0_-16px_40px_rgba(0,0,0,0.5)]'
+                : 'rounded-t-[2rem] border-border/80 shadow-sheet-up dark:shadow-sheet-up-dark'
             )}
           >
             <div
@@ -666,7 +666,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
                 productTitle={product.title}
               />
 
-              <div className="sticky top-[-372px] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
+              <div className="sticky top-[-23.25rem] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
                 {tabs.map((id) => (
                   <button
                     key={id}
@@ -685,10 +685,10 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
               </div>
 
               <div ref={mIntroRef} className="border-b border-border pb-6 pt-4">
-                <h3 className="mb-3 text-xs font-bold text-foreground sm:text-sm">معرفی کالا</h3>
+                <h3 className="mb-3 text-label sm:text-sm">معرفی کالا</h3>
                 <div className="relative">
                   <div
-                    style={{ maxHeight: isIntroExpanded ? 'none' : '90px' }}
+                    style={{ maxHeight: isIntroExpanded ? 'none' : '5.625rem' }}
                     className="overflow-hidden text-justify text-xs leading-reading text-muted-foreground"
                     dangerouslySetInnerHTML={{ __html: product.description || 'توضیحی برای این کالا ثبت نشده است.' }}
                   />
@@ -723,41 +723,10 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           </div>
         </div>
 
-        {/* ================= کانتینر ترغیب به رفتن به سبد خرید (روی موبایل) ================= */}
-        <AnimatePresence>
-          {showCartBanner && (
-            <motion.div
-              initial={{ y: 80, opacity: 0, scale: 0.95 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 80, opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="fixed bottom-[74px] inset-x-3 z-50 select-none transform-gpu"
-              dir="rtl"
-            >
-              <Link
-                href="/basket"
-                className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-gradient-to-r from-neutral-900 to-neutral-800 border border-neutral-700/80 text-white shadow-2xl backdrop-blur-xl active:scale-[0.98] transition-transform"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-success/20 text-success border border-success/30">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-white truncate">کالا به سبد اضافه شد</span>
-                    <span className="text-3xs text-neutral-300">برای نهایی‌سازی سفارش ضربه بزنید</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold shrink-0 shadow-sm">
-                  <span>مشاهده سبد</span>
-                  <ArrowLeft className="h-3.5 w-3.5 stroke-[2.5]" />
-                </div>
-              </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
+     
 
         {/* دکمه چسبان پایین موبایل */}
+      {/* دکمه چسبان پایین موبایل با کشوی متصل تمام‌عرض */}
         <MobileBottomAction
           variant={currentSelectedSeller ? 'default' : 'notify'}
           label={currentSelectedSeller ? 'افزودن به سبد خرید' : 'موجود شد خبرم کن'}
@@ -782,14 +751,40 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           onIncrease={handleIncreaseBasket}
           onDecrease={handleDecreaseBasket}
           isUpdatingQuantity={isBasketUpdating}
-          className="!fixed !bottom-0 !z-50"
+          topDrawer={
+            showCartBanner ? (
+              <Link
+                href="/basket"
+                className="flex items-center justify-between gap-3 px-4 py-2.5 bg-muted/40 hover:bg-muted/70 transition-colors border-b border-border/60"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-success/15 text-success">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-bold text-foreground truncate">
+                      کالا به سبد خرید اضافه شد
+                    </span>
+                    <span className="text-3xs text-muted-foreground">
+                      برای تسویه و ثبت سفارش ضربه بزنید
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold shrink-0 shadow-2xs">
+                  <span>مشاهده سبد</span>
+                  <ArrowLeft className="h-3.5 w-3.5 stroke-[2.5]" />
+                </div>
+              </Link>
+            ) : null
+          }
         />
       </div>
 
       {/* ==================== مودال‌ها ==================== */}
       <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="w-full max-w-md">
         <ModalHeader onClose={() => setIsReportModalOpen(false)}>
-          <ModalTitle className="text-sm font-bold text-foreground">گزارش خطای کالا</ModalTitle>
+          <ModalTitle className="text-title-sm">گزارش خطای کالا</ModalTitle>
         </ModalHeader>
         <ModalBody className="flex flex-col gap-4 p-5 pt-4">
           <Select
@@ -808,7 +803,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
           />
         </ModalBody>
         <ModalFooter className="gap-3 p-5 pt-4">
-          <Button variant="outline" onClick={() => setIsReportModalOpen(false)} className="h-10 flex-1 text-xs font-bold">
+          <Button variant="outline" onClick={() => setIsReportModalOpen(false)} className="h-10 flex-1 text-sm font-bold">
             انصراف
           </Button>
           <Button
@@ -839,11 +834,11 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
             درخواست شما با موفقیت ثبت شد!
           </h4>
 
-          <p className="text-center text-sm leading-reading text-foreground">
+          <p className="text-center text-base leading-reading text-foreground">
             به‌محض موجود شدن این کالا، به شما اطلاع می‌دیم.
           </p>
 
-          <p className="mx-auto max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
+          <p className="mx-auto max-w-xs text-center text-base leading-relaxed text-muted-foreground">
             تا اون موقع، می‌تونید قطعات موردنیاز خودروتون رو در یدکچی جستجو و قیمت‌ها رو مقایسه کنید.
           </p>
 
@@ -886,7 +881,7 @@ function PriceChartModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-md overflow-hidden rounded-2xl">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <ModalTitle className="flex items-center gap-2 text-title-sm">
           <LineChart className="h-4 w-4 text-shop" />
           <span>نمودار تغییرات قیمت فروش</span>
         </ModalTitle>
@@ -897,7 +892,7 @@ function PriceChartModal({
             <ThreeDotsLoader size="sm" />
           </div>
         ) : chartData?.prices?.length > 0 ? (
-          <div className="w-full py-4 text-xs font-bold text-foreground">
+          <div className="w-full py-4 text-label">
             میانگین قیمت: {toPersianDigits(chartData.averagePrice || 0)} تومان
           </div>
         ) : (
@@ -905,7 +900,7 @@ function PriceChartModal({
             اطلاعات تغییرات قیمتی برای این کالا ثبت نشده است.
           </div>
         )}
-        <Button variant="outline" fullWidth onClick={onClose} className="mt-4 h-10 text-xs font-bold">
+        <Button variant="outline" fullWidth onClick={onClose} className="mt-4 h-10 text-sm font-bold">
           متوجه شدم
         </Button>
       </ModalBody>

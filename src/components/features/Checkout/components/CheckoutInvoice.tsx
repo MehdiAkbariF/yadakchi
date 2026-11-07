@@ -37,7 +37,7 @@ export function CheckoutInvoice({
   const discountValue = extractPureNumber(basket?.totalDiscountValue ?? basket?.total?.totalDiscountRaw ?? 0);
 
   return (
-    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[360px]" dir="rtl">
+    <Card className="sticky top-28 h-fit w-full shrink-0 rounded-xl border border-border/70 bg-card p-5 shadow-xs lg:w-[22.5rem]" dir="rtl">
       <CardTitle className="mb-4 flex items-center gap-2 border-b border-border/60 pb-3.5 font-bold text-foreground">
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <CreditCard aria-hidden="true" className="h-4 w-4" />
@@ -76,7 +76,7 @@ export function CheckoutInvoice({
       </div>
 
       <div className="mb-6 flex items-baseline justify-between">
-        <span className="text-xs font-bold text-foreground">مبلغ نهایی قابل پرداخت:</span>
+        <span className="text-label">مبلغ نهایی قابل پرداخت:</span>
         <div className="flex items-baseline gap-1">
           <span className="text-lg font-black text-primary">
             {formatRialToToman(finalPayablePrice)}

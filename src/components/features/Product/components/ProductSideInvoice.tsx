@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Store,
   ShieldCheck,
@@ -31,68 +32,13 @@ import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composit
 import { getHttpClient } from '@/core/http/client';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
-
 import { getFullUrl, toPersianDigits } from '@/core/utils/formatters';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
 
 export interface ProductSideInvoiceProps {
   product: any;
   seller: any | null;
   sellersCount?: number;
-}
-
-function LottiePlayer({
-  path,
-  className = 'w-48 h-48',
-  loop = false,
-}: {
-  path: string;
-  className?: string;
-  loop?: boolean;
-}) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    let anim: any = null;
-    let isMounted = true;
-
-    const init = async () => {
-      try {
-        const altPath = path.includes('/anumations/')
-          ? path.replace('/anumations/', '/animations/')
-          : path.replace('/animations/', '/anumations/');
-        let animationData: any = null;
-        for (const p of [path, altPath]) {
-          try {
-            const res = await fetch(p);
-            if (res.ok) {
-              animationData = await res.json();
-              break;
-            }
-          } catch {}
-        }
-        if (!animationData || !isMounted || !containerRef.current) return;
-        const lottieModule = await import('lottie-web');
-        const lottie = lottieModule.default || lottieModule;
-        if (containerRef.current && isMounted) {
-          anim = lottie.loadAnimation({
-            container: containerRef.current,
-            renderer: 'svg',
-            loop,
-            autoplay: true,
-            animationData,
-          });
-        }
-      } catch {}
-    };
-
-    init();
-    return () => {
-      isMounted = false;
-      anim?.destroy();
-    };
-  }, [path, loop]);
-
-  return <div ref={containerRef} className={className} />;
 }
 
 export function ProductSideInvoice({ product, seller, sellersCount = 0 }: ProductSideInvoiceProps) {
@@ -104,7 +50,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
   const [metaIndex, setMetaIndex] = React.useState(0);
   const [lottieKey, setLottieKey] = React.useState(0);
 
-  // هوک‌های سبد خرید
   const { data: basketData } = useGetBasket();
   const addToBasket = useAddToBasket();
   const deleteFromBasket = useDeleteFromBasket();
@@ -114,7 +59,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
     seller ? seller.type : 'New'
   );
 
-  // استخراج تمام اقلام سبد خرید
   const basketItems: any[] = React.useMemo(() => {
     if (!basketData) return [];
     if (Array.isArray(basketData.items)) return basketData.items;
@@ -124,7 +68,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
     return [];
   }, [basketData]);
 
-  // بررسی وضعیت موجود بودن فروشنده انتخاب‌شده در سبد خرید
   const currentBasketItem = React.useMemo(() => {
     if (!seller || basketItems.length === 0) return null;
     return (
@@ -137,7 +80,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
   const isInBasket = !!currentBasketItem && currentBasketItem.quantity > 0;
   const basketQuantity = currentBasketItem?.quantity || 0;
 
-  // ✅ محاسبه دقیق سقف مجاز سفارش بر اساس موجودی انبار فروشنده (seller.quantity)
   const maxAllowedQuantity = React.useMemo(() => {
     const stockQuantity = Number(seller?.quantity);
     if (!isNaN(stockQuantity) && stockQuantity > 0) {
@@ -151,7 +93,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
     );
   }, [seller, currentBasketItem]);
 
-  // شرط غیرفعال‌سازی دکمه افزایش بر اساس سقف موجودی انبار
   const isMaxStockReached = basketQuantity >= maxAllowedQuantity;
 
   const metaItems = [
@@ -165,7 +106,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
     return () => clearInterval(iv);
   }, []);
 
-  // افزودن اولیه به سبد خرید
   const handleAddToBasket = async () => {
     if (!seller || isSubmitting) return;
     if (maxAllowedQuantity <= 0) {
@@ -183,7 +123,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
     }
   };
 
-  // افزایش تعداد کالا در سبد خرید با رعایت موجودی انبار
   const handleIncreaseQuantity = async () => {
     if (!seller || isBasketUpdating) return;
     if (isMaxStockReached) {
@@ -201,7 +140,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
     }
   };
 
-  // کاهش یا حذف کالا از سبد خرید
   const handleDecreaseQuantity = async () => {
     if (!seller || isBasketUpdating || basketQuantity <= 0) return;
     setIsBasketUpdating(true);
@@ -247,9 +185,9 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
   const isLowStock = seller && seller.quantity > 0 && seller.quantity < 4;
 
   return (
-    <Card className="flex w-full flex-col overflow-hidden rounded-2xl border-border/80 shadow-xs" dir="rtl">
+    <Card className="flex w-full flex-col overflow-hidden rounded-2xl border-border bg-card shadow-sm" dir="rtl">
       {seller && seller.hasDiscount && discountPercentage > 0 && (
-        <div className="w-full shrink-0 bg-destructive px-4 py-2 text-center text-xs font-bold text-destructive-foreground">
+        <div className="w-full shrink-0 bg-destructive px-4 py-1.5 text-center text-xs font-bold text-destructive-foreground">
           با تخفیف ویژه {toPersianDigits(discountPercentage)} درصد
         </div>
       )}
@@ -257,20 +195,26 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
       <div className="flex flex-col gap-4 p-5">
         {seller ? (
           <>
-            <div className="flex w-full items-center justify-between border-b border-border/60 pb-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/80 bg-muted/30 p-1">
+            <div className="flex w-full items-center justify-between border-b border-border/70 pb-3.5">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/30 p-1">
                   {seller.shop.logo ? (
-                    <img src={getFullUrl(seller.shop.logo)} className="h-full w-full object-contain" alt="" />
+                    <Image
+                      src={getFullUrl(seller.shop.logo)}
+                      alt={seller.shop.title || 'فروشگاه'}
+                      fill
+                      sizes="40px"
+                      className="object-contain p-1"
+                    />
                   ) : (
                     <Store aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1 text-right">
-                  <span className="block truncate text-xs font-bold text-shop md:text-sm">
+                  <span className="block truncate text-xs font-bold text-foreground md:text-sm">
                     {seller.shop.title}
                   </span>
-                  <span className="mt-1 block text-3xs text-muted-foreground">
+                  <span className="mt-0.5 block text-3xs text-muted-foreground">
                     عملکرد عالی فروشنده
                   </span>
                 </div>
@@ -281,22 +225,22 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
               </span>
             </div>
 
-            <div className="flex w-full flex-col gap-3 border-b border-border/60 pb-4 text-xs text-muted-foreground text-right">
+            <div className="flex w-full flex-col gap-2.5 border-b border-border/70 pb-3.5 text-xs text-muted-foreground text-right">
               <div className="flex items-center gap-2">
-                <ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0 text-emerald-500" />
-                <span className="font-bold text-foreground">
+                <ShieldCheck aria-hidden="true" className="h-4 w-4 shrink-0 text-success" />
+                <span className="font-semibold text-foreground">
                   {seller.warrantyTitle || 'ضمانت اصل بودن کالا'}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
                 <Sparkles aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
-                <span className="font-bold text-foreground">نوع قطعه: {seller.typeLabel}</span>
+                <span className="font-semibold text-foreground">نوع قطعه: {seller.typeLabel}</span>
               </div>
 
               <div className="flex items-center gap-2">
                 <Truck aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="font-bold text-foreground">
+                <span className="font-semibold text-foreground">
                   ارسال از {(seller.shop as any).cityName || seller.shop.address?.split('،')[0] || 'فروشنده'} | {seller.dayOfDeliveryLabel}
                 </span>
               </div>
@@ -304,7 +248,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
           </>
         ) : (
           <div className="flex w-full flex-col items-center justify-center gap-4 px-2 py-4 text-center">
-            <p className="text-sm leading-reading text-foreground">
+            <p className="text-sm leading-reading text-foreground font-medium">
               این کالا فعلاً ناموجود است اما می‌توانید زنگوله را بزنید تا به محض موجود شدن، به شما خبر دهیم.
             </p>
 
@@ -312,7 +256,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
               type="button"
               onClick={handleNotifyMe}
               disabled={isNotifying}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-destructive text-sm font-bold text-destructive-foreground shadow-xs transition-colors hover:bg-destructive/90 disabled:opacity-80 md:text-base"
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-destructive text-sm font-bold text-destructive-foreground shadow-xs transition-colors hover:bg-destructive/90 disabled:opacity-80"
             >
               {isNotifying ? (
                 <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" />
@@ -326,19 +270,19 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
 
         {/* اطلاعات متحرک */}
         {seller && (
-          <div className="relative flex h-8 w-full shrink-0 items-center justify-start overflow-hidden py-3 text-right">
+          <div className="relative flex h-7 w-full shrink-0 items-center justify-start overflow-hidden text-right">
             <AnimatePresence mode="wait">
               <motion.div
                 key={metaIndex}
-                initial={{ y: 12, opacity: 0 }}
+                initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -12, opacity: 0 }}
-                transition={{ duration: 0.25 }}
-                className="absolute inset-0 flex items-center justify-start gap-2 text-2xs font-bold text-foreground"
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0 flex items-center justify-start gap-2 text-2xs font-semibold text-foreground/80"
               >
                 {(() => {
                   const Icon = metaItems[metaIndex].icon;
-                  return <Icon aria-hidden="true" className="h-4 w-4 text-primary shrink-0" />;
+                  return <Icon aria-hidden="true" className="h-3.5 w-3.5 text-primary shrink-0" />;
                 })()}
                 <span className="truncate">{metaItems[metaIndex].text}</span>
               </motion.div>
@@ -347,7 +291,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
         )}
 
         {isLowStock && (
-          <div className="w-full rounded-xl bg-destructive/10 py-2 text-center text-2xs font-bold text-destructive">
+          <div className="w-full rounded-xl bg-destructive/10 py-1.5 text-center text-2xs font-bold text-destructive">
             فقط {toPersianDigits(seller.quantity)} عدد در انبار باقی مانده
           </div>
         )}
@@ -355,34 +299,35 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
         {seller && (
           <div className="flex w-full items-center justify-between pt-1">
             <div className="flex flex-col text-right">
-              <span className="mb-1 text-2xs text-muted-foreground">قیمت فروشنده:</span>
+              <span className="text-2xs font-medium text-muted-foreground">قیمت قطعه:</span>
               {seller.hasDiscount && (
-                <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
+                <span className="text-2xs leading-none text-muted-foreground line-through mt-0.5">
                   {seller.retailPrice}
                 </span>
               )}
-              <span className="text-base font-black leading-none text-foreground md:text-lg" dir="ltr">
-                {seller.finalPrice}
-              </span>
+              <div className="flex items-baseline gap-1 mt-1">
+                <span className="text-xl font-black text-foreground">
+                  {seller.finalPrice}
+                </span>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={() => setIsChartOpen(true)}
-              aria-label="نمودار قیمت"
-              className="shrink-0 rounded-xl border border-border p-2 text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-primary shadow-xs"
+              aria-label="مشاهده نمودار تغییرات قیمت"
+              className="shrink-0 rounded-xl border border-border p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-primary shadow-xs"
             >
               <LineChart aria-hidden="true" className="h-5 w-5" />
             </button>
           </div>
         )}
 
-        {/* اکشن باکس: کنترلر کم/زیاد با غیرفعال‌سازی دکمه افزایش هنگام رسیدن به سقف موجودی انبار */}
+        {/* اکشن خرید */}
         {seller && (
           isInBasket && basketQuantity > 0 ? (
             <div className="mt-2 flex flex-col gap-2">
               <div className="flex h-11 w-full items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-3 shadow-xs select-none">
-                {/* دکمه افزایش - غیرفعال‌شده هنگام رسیدن به سقف موجودی انبار */}
                 <button
                   type="button"
                   onClick={handleIncreaseQuantity}
@@ -396,13 +341,12 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
                   <Plus className="h-4 w-4" />
                 </button>
 
-                {/* شمارنده در وسط */}
                 <div className="flex flex-col items-center justify-center px-2">
                   {isBasketUpdating ? (
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   ) : (
                     <>
-                      <span className="text-sm font-black text-primary tabular-nums">
+                      <span className="text-sm font-bold text-primary tabular-nums">
                         {toPersianDigits(basketQuantity)} عدد
                       </span>
                       {isMaxStockReached ? (
@@ -411,14 +355,13 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
                         </span>
                       ) : (
                         <span className="text-3xs text-muted-foreground font-medium leading-none mt-0.5">
-                          در سبد خرید شما
+                          در سبد خرید
                         </span>
                       )}
                     </>
                   )}
                 </div>
 
-                {/* دکمه کاهش یا حذف */}
                 <button
                   type="button"
                   onClick={handleDecreaseQuantity}
@@ -440,10 +383,9 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
                 </button>
               </div>
 
-              {/* دکمه میانبر ورود به سبد خرید */}
               <Link
                 href="/basket"
-                className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-card text-xs font-bold text-primary transition-colors hover:bg-primary/5 shadow-xs"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-card text-xs font-bold text-primary transition-colors hover:bg-primary/5 shadow-xs"
               >
                 <ShoppingBag className="h-4 w-4" />
                 <span>مشاهده و تسویه سبد خرید</span>
@@ -469,7 +411,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
       {/* مودال نمودار قیمت */}
       <Modal isOpen={isChartOpen} onClose={() => setIsChartOpen(false)} className="w-full max-w-md overflow-hidden rounded-2xl">
         <ModalHeader onClose={() => setIsChartOpen(false)}>
-          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <ModalTitle className="flex items-center gap-2 text-title-sm">
             <LineChart aria-hidden="true" className="h-4 w-4 text-shop" />
             <span>نمودار تغییرات قیمت فروش</span>
           </ModalTitle>
@@ -503,7 +445,7 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
       {/* مودال اطلاع‌رسانی موجودی */}
       <Modal isOpen={isNotifySuccessOpen} onClose={() => setIsNotifySuccessOpen(false)} className="w-full max-w-md overflow-hidden rounded-2xl">
         <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 pt-4 text-center" dir="rtl">
-          <div className="mx-auto -mt-2 mb-1 h-56 w-56 max-w-full">
+          <div className="mx-auto -mt-2 mb-1 h-52 w-52 max-w-full">
             <LottiePlayer key={lottieKey} path="/anumations/notif-success.json" className="h-full w-full" loop={false} />
           </div>
 
@@ -513,10 +455,6 @@ export function ProductSideInvoice({ product, seller, sellersCount = 0 }: Produc
 
           <p className="text-center text-sm leading-reading text-foreground">
             به‌محض موجود شدن این کالا، به شما اطلاع می‌دیم.
-          </p>
-
-          <p className="mx-auto max-w-xs text-center text-xs leading-relaxed text-muted-foreground">
-            تا اون موقع، می‌تونید قطعات موردنیاز خودروتون رو در یدکچی جستجو و قیمت‌ها رو مقایسه کنید.
           </p>
 
           <div className="mt-3 flex w-full flex-col gap-2">

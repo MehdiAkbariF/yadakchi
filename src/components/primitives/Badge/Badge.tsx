@@ -9,11 +9,12 @@ export const badgeVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground',
         secondary: 'bg-secondary text-secondary-foreground',
-        destructive: 'bg-destructive text-destructive-foreground',
-        success: 'bg-success text-success-foreground',
-        warning: 'bg-warning text-warning-foreground',
-        info: 'bg-info text-info-foreground',
+        destructive: 'bg-destructive/15 text-destructive border border-destructive/25',
+        success: 'bg-success/15 text-success border border-success/25',
+        warning: 'bg-warning/15 text-warning border border-warning/25',
+        info: 'bg-info/15 text-info border border-info/25',
         outline: 'border border-border text-foreground bg-transparent',
+        muted: 'bg-muted text-muted-foreground',
       },
       size: {
         sm: 'h-5 px-2 text-2xs',

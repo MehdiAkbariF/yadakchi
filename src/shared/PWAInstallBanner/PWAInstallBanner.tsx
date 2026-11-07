@@ -90,11 +90,11 @@ export function PWAInstallBanner() {
           transition={{ type: 'spring', stiffness: 260, damping: 26 }}
           style={{
             bottom: typeof window !== 'undefined' && window.innerWidth < 1024 
-              ? 'calc(84px + env(safe-area-inset-bottom))' 
+              ? 'calc(5.25rem + env(safe-area-inset-bottom))' 
               : '1.25rem'
           }}
           className={cn(
-            "fixed left-4 right-4 z-[100] bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto select-none"
+            "fixed left-4 right-4 z-loader bg-card border border-border/85 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-md mx-auto select-none"
           )}
           dir="rtl"
         >
@@ -105,7 +105,7 @@ export function PWAInstallBanner() {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between w-full">
-                <span className="text-xs font-black text-foreground font-iran-sans">نصب وب‌اپلیکیشن یدکچی</span>
+                <span className="text-xs font-bold text-foreground font-iran-sans">نصب وب‌اپلیکیشن یدکچی</span>
                 <button
                   onClick={handleDismiss}
                   className="p-1 hover:bg-muted text-muted-foreground/80 hover:text-foreground rounded-full transition-colors outline-none shrink-0"
@@ -116,11 +116,11 @@ export function PWAInstallBanner() {
               </div>
 
               {isIOS ? (
-                <p className="text-[10px] md:text-[11px] leading-relaxed text-muted-foreground font-iran-sans mt-1">
+                <p className="text-[0.625rem] md:text-[0.6875rem] leading-relaxed text-muted-foreground font-iran-sans mt-1">
                   برای نصب، در نوار پایین سافاری دکمه اشتراک‌گذاری <Share className="h-3 w-3 inline text-primary mx-0.5" /> را زده و سپس گزینه <PlusSquare className="h-3.5 w-3.5 inline text-primary mx-0.5" /> **Add to Home Screen** را انتخاب کنید.
                 </p>
               ) : (
-                <p className="text-[10px] md:text-[11px] leading-relaxed text-muted-foreground font-iran-sans mt-1">
+                <p className="text-[0.625rem] md:text-[0.6875rem] leading-relaxed text-muted-foreground font-iran-sans mt-1">
                   با نصب اپلیکیشن، یدکچی را همیشه سریع‌تر، سبک‌تر و بدون نیاز به مرورگر در دسترس داشته باشید.
                 </p>
               )}
@@ -149,19 +149,19 @@ export function PWAInstallBanner() {
           </ModalTitle>
         </ModalHeader>
         <ModalBody className="p-5 pt-4 flex flex-col gap-4">
-          <p className="text-xs leading-relaxed text-muted-foreground font-iran-sans">
+          <p className="text-base leading-relaxed text-muted-foreground font-iran-sans">
             مرورگر شما هنوز برای نصب اتوماتیک آماده نیست. شما می‌توانید به راحتی و به صورت دستی اپلیکیشن را روی گوشی یا کامپیوتر خود نصب کنید:
           </p>
           
           <div className="flex flex-col gap-3.5 border-t border-dashed pt-4">
             <div className="flex items-start gap-2.5 text-xs text-foreground font-iran-sans">
-              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black shrink-0">۱</span>
+              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[0.625rem] font-black shrink-0">۱</span>
               <p className="leading-relaxed">
                 در بالای صفحه مرورگر، دکمه سه نقطه <MoreVertical className="h-4 w-4 inline text-muted-foreground mx-0.5" /> (یا دکمه نصب مانیتور شکل <Monitor className="h-4 w-4 inline text-muted-foreground mx-0.5" /> در کادر آدرس سیستم) را کلیک کنید.
               </p>
             </div>
             <div className="flex items-start gap-2.5 text-xs text-foreground font-iran-sans">
-              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black shrink-0">۲</span>
+              <span className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[0.625rem] font-black shrink-0">۲</span>
               <p className="leading-relaxed">
                 از منوی باز شده، گزینه **Install** یا **Add to Home screen** (افزودن به صفحه اصلی) را انتخاب کنید.
               </p>

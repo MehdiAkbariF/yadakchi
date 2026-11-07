@@ -79,11 +79,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           />
         </div>
         {hasError ? (
-          <p id={errorId} role="alert" className="text-xs text-destructive">
+          <p id={errorId} role="alert" className="text-base text-destructive">
             {error}
           </p>
         ) : description ? (
-          <p id={descriptionId} className="text-xs text-muted-foreground">
+          <p id={descriptionId} className="text-base text-muted-foreground">
             {description}
           </p>
         ) : null}

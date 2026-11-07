@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Store } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '@/components/composites/Card';
@@ -15,7 +15,7 @@ export function BasketMerchantGroup({ sub }: BasketMerchantGroupProps) {
       <CardHeader className="flex items-center justify-between border-b border-border bg-muted px-4 py-3.5">
         <div className="flex items-center gap-2">
           <Store aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
-          <span className="text-xs font-bold text-foreground">ارسال از فروشگاه: {sub.shop.title}</span>
+          <span className="text-label">ارسال از فروشگاه: {sub.shop.title}</span>
         </div>
         {sub.shop.logo ? (
           <div className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-border bg-card">

@@ -1,44 +1,44 @@
 export const darkTheme = {
-  background:            '#0F1317',
-  foreground:            '#F4F6F8',
+  background:            '#0B0F17', // تم عمیق و بدون خستگی چشم (OLED-friendly)
+  foreground:            '#F8FAFC',
 
-  card:                  '#151A20',
-  'card-foreground':     '#F4F6F8',
+  card:                  '#111827', // خاکستری متمایل به آبی تیره لوکس (تضاد عالی با background)
+  'card-foreground':     '#F8FAFC',
 
-  popover:               '#151A20',
-  'popover-foreground':  '#F4F6F8',
+  popover:               '#111827',
+  'popover-foreground':  '#F8FAFC',
 
-  primary:               '#F37643',
-  'primary-foreground':  '#0F1317', // اصلاح شد: روی پس زمینه نارنجی روشن، متن تیره کنتراست بالاتری دارد
-  'primary-hover':       '#F69165',
-  'primary-active':      '#EE5717',
+  primary:               '#FB923C', // نارنجی درخشان
+  'primary-foreground':  '#0B0F17', // متن تیره روی نارنجی روشن = بالاترین کانتراست ممکن
+  'primary-hover':       '#FDBA74',
+  'primary-active':      '#F97316',
 
-  secondary:             '#212831',
-  'secondary-foreground':'#F4F6F8',
+  secondary:             '#1E293B',
+  'secondary-foreground':'#F8FAFC',
 
-  muted:                 '#212831',
-  'muted-foreground':    '#A8B1BC',
+  muted:                 '#1E293B',
+  'muted-foreground':    '#94A3B8', // Slate-400: خوانایی فوق‌العاده در تاریکی بدون زدن چشم
 
-  accent:                '#391A0F',
-  'accent-foreground':   '#F8BFAB',
+  accent:                '#2D1B13',
+  'accent-foreground':   '#FDBA74',
 
   destructive:           '#EF4444',
   'destructive-foreground':'#FFFFFF',
 
-  success:               '#25B85C',
-  'success-foreground':  '#0F1317',
+  success:               '#22C55E',
+  'success-foreground':  '#0B0F17',
 
-  warning:               '#F59E0B',
-  'warning-foreground':  '#0F1317',
+  warning:               '#FBBF24',
+  'warning-foreground':  '#0B0F17',
 
-  info:                  '#3B82F6',
-  'info-foreground':     '#FFFFFF',
+  info:                  '#38BDF8',
+  'info-foreground':     '#0B0F17', // اصلاح شد: روی آبی روشن در دارک‌مد متن تیره خواناست
 
-  border:                '#2D3643', // اصلاح شد: واضح‌تر شدن بوردرها در دارک مد
-  input:                 '#2D3643',
-  ring:                  '#F37643',
+  border:                '#1E293B', // خطوط مرزی دقیق و شارپ
+  input:                 '#334155',
+  ring:                  '#FB923C',
 
-  shop:                  '#3D94C6',
-  'shop-foreground':     '#FFFFFF',
-  'shop-hover':          '#5FA6D1',
+  shop:                  '#38BDF8', // آبی درخشان و پرکنتراست
+  'shop-foreground':     '#0B0F17', // اصلاح شد: متن تیره برای پاس کردن تست خوانایی
+  'shop-hover':          '#7DD3FC',
 } as const;

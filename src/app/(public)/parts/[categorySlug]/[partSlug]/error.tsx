@@ -41,7 +41,7 @@ export default function PartPageError({
       <h1 className="text-lg font-bold text-foreground">
         خطایی در بارگذاری صفحه رخ داد
       </h1>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         {error?.message || 'لطفاً دوباره تلاش کنید یا به صفحه اصلی بازگردید.'}
       </p>
 
@@ -55,7 +55,7 @@ export default function PartPageError({
         </button>
         <Link
           href="/"
-          className="rounded-md border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:bg-muted"
+          className="rounded-md border border-border px-4 py-2 text-title-sm transition-colors hover:bg-muted"
         >
           بازگشت به خانه
         </Link>

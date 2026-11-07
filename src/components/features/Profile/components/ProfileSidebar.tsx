@@ -127,7 +127,7 @@ export function ProfileSidebar() {
       <Card className="flex w-full items-center justify-between gap-4 p-4">
         <div className="flex flex-col">
           <span className="mb-1 text-2xs text-muted-foreground">موجودی کیف پول</span>
-          <span className="text-sm font-bold text-foreground">
+          <span className="text-title-sm">
             {wallet?.totalBalance || '۰ تومان'}
           </span>
         </div>
@@ -143,7 +143,7 @@ export function ProfileSidebar() {
       {user?.referralCode ? (
         <Card className="flex w-full flex-col gap-3 p-4">
           <div className="flex w-full items-center justify-between border-b border-dashed border-border pb-2">
-            <span className="text-2xs font-bold text-muted-foreground">کد معرف شما:</span>
+            <span className="text-label-2xs">کد معرف شما:</span>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold tracking-widest text-foreground">
                 {user.referralCode}
@@ -166,7 +166,7 @@ export function ProfileSidebar() {
               </button>
             </div>
           </div>
-          <p className="text-justify text-2xs leading-relaxed text-muted-foreground">
+          <p className="text-justify text-xs leading-relaxed text-muted-foreground">
             با اشتراک‌گذاری این کد، هم دوستت برای خرید اولش ۱۰۰,۰۰۰ تومان تخفیف می‌گیره و هم خودت ۱۰۰,۰۰۰ تومان اعتبار خرید دریافت می‌کنی.
           </p>
         </Card>
@@ -179,7 +179,7 @@ export function ProfileSidebar() {
               <User aria-hidden="true" className="h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-foreground">
+              <span className="text-label">
                 {user?.fullName || user?.lastName || 'کاربر یدکچی'}
               </span>
               <span className="mt-0.5 text-2xs text-muted-foreground">{user?.userName}</span>

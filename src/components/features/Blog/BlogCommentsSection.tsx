@@ -79,16 +79,16 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
             دیدگاه‌ها و نظرات کاربران
           </h2>
         </div>
-        <span className="rounded-sm bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">
+        <span className="rounded-sm bg-muted px-2.5 py-1 text-label-muted">
           {toPersianDigits(totalCount)} نظر
         </span>
       </div>
 
       <div className="w-full rounded-lg border border-border bg-card p-4 shadow-xs sm:p-6">
-        <h3 className="mb-1 text-sm font-bold text-foreground">
+        <h3 className="mb-1 text-title-sm">
           دیدگاه یا پرسش خود را درباره این مقاله بنویسید
         </h3>
-        <p className="mb-4 text-xs text-muted-foreground">
+        <p className="mb-4 text-base text-muted-foreground">
           دیدگاه شما پس از تایید مدیریت در سایت نمایش داده خواهد شد.
         </p>
 
@@ -154,17 +154,17 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
                   <article className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-xs sm:p-5">
                     <div className="flex items-center justify-between border-b border-border pb-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-foreground">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-label">
                           <User aria-hidden="true" className="h-4 w-4" />
                         </div>
-                        <span className="text-xs font-bold text-foreground">{c.creatorName}</span>
+                        <span className="text-label">{c.creatorName}</span>
                       </div>
                       <time className="text-2xs font-medium text-muted-foreground">
                         {c.createDateFormatted}
                       </time>
                     </div>
 
-                    <p className="whitespace-pre-wrap text-sm leading-reading text-foreground/90">
+                    <p className="whitespace-pre-wrap text-base leading-reading text-foreground/90">
                       {c.comment}
                     </p>
                   </article>
@@ -183,7 +183,7 @@ export function BlogCommentsSection({ blogPostId }: BlogCommentsSectionProps) {
             <div className="rounded-full bg-muted p-3 text-muted-foreground">
               <MessageSquare aria-hidden="true" className="h-6 w-6" />
             </div>
-            <p className="mt-1 text-sm font-bold text-foreground">
+            <p className="mt-1 text-title-sm">
               هنوز دیدگاهی برای این مقاله ثبت نشده است
             </p>
             <span className="text-xs text-muted-foreground">

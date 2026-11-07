@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -105,17 +105,17 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
                   <div className="flex flex-col gap-1 text-xs">
                     <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{b.cardNumber}</span>
                     {b.shebaNumber && (
-                      <span className="text-[10px] text-muted-foreground mt-1 ltr:inline-block" dir="ltr">شبا: {b.shebaNumber}</span>
+                      <span className="text-[0.625rem] text-muted-foreground mt-1 ltr:inline-block" dir="ltr">شبا: {b.shebaNumber}</span>
                     )}
                   </div>
 
                   {b.isDefault ? (
-                    <span className="text-[10px] font-bold text-success-500 bg-success-50 dark:bg-success-950/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                    <span className="text-[0.625rem] font-bold text-success-500 bg-success-50 dark:bg-success-950/20 px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                       <Check className="h-3 w-3" />
                       پیش‌فرض
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
+                    <span className="text-[0.625rem] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
                       اطلاعات بانک نامشخص
                     </span>
                   )}
@@ -144,7 +144,7 @@ export function DefaultBankModal({ isOpen, onClose }: DefaultBankModalProps) {
               >
                 <ArrowRight className="h-4.5 w-4.5" />
               </button>
-              <span className="text-xs font-bold text-foreground ">افزودن حساب جدید</span>
+              <span className="text-label ">افزودن حساب جدید</span>
             </div>
 
             <span className="text-xs text-muted-foreground block mb-1">

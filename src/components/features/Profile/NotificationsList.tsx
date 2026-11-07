@@ -52,8 +52,8 @@ function getChannelMeta(channel: string) {
       };
     case 'Information':
       return {
-        icon: <Info className="h-4.5 w-4.5 text-blue-500" />,
-        bg: 'bg-blue-500/10 border-blue-500/20',
+        icon: <Info className="h-4.5 w-4.5 text-info" />,
+        bg: 'bg-info/10 border-info/20',
         badgeLabel: 'اطلاعیه',
       };
     case 'AdminMessage':
@@ -64,14 +64,14 @@ function getChannelMeta(channel: string) {
       };
     case 'SellerMessage':
       return {
-        icon: <Store className="h-4.5 w-4.5 text-amber-500" />,
-        bg: 'bg-amber-500/10 border-amber-500/20',
+        icon: <Store className="h-4.5 w-4.5 text-warning" />,
+        bg: 'bg-warning/10 border-warning/20',
         badgeLabel: 'پیام فروشنده',
       };
     case 'Advertise':
       return {
-        icon: <Sparkles className="h-4.5 w-4.5 text-amber-500" />,
-        bg: 'bg-amber-500/10 border-amber-500/20',
+        icon: <Sparkles className="h-4.5 w-4.5 text-warning" />,
+        bg: 'bg-warning/10 border-warning/20',
         badgeLabel: 'ویژه',
       };
     case 'WebBroadcastMessage':
@@ -125,9 +125,9 @@ export function NotificationsList() {
       <div className="hidden lg:flex flex-col gap-1 border-b border-border/70 pb-4">
         <div className="flex items-center gap-2">
           <Bell className="h-5 w-5 text-primary" />
-          <h1 className="text-base font-black text-foreground sm:text-lg">پیام‌ها و اعلان‌ها</h1>
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">پیام‌ها و اعلان‌ها</h1>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           تمام اطلاعیه‌های سفارش‌ها، کدهای تخفیف و پیام‌های سیستمی را در این بخش پیگیری کنید.
         </p>
       </div>
@@ -244,7 +244,7 @@ export function NotificationsList() {
                     {/* ردیف تایتل و تگ نوع پیام */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="truncate text-xs sm:text-sm font-black text-foreground">
+                        <span className="truncate text-xs sm:text-sm font-bold text-foreground">
                           {notif.title}
                         </span>
                         <span className="hidden sm:inline-block rounded-md bg-muted px-2 py-0.5 text-3xs font-bold text-muted-foreground">
@@ -259,7 +259,7 @@ export function NotificationsList() {
                     </div>
 
                     {/* متن پیام با فاصله‌گذاری و خوانایی بالا */}
-                    <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed text-right whitespace-pre-line break-words">
+                    <p className="mt-0.5 text-base text-muted-foreground leading-relaxed text-right whitespace-pre-line break-words">
                       {notif.body}
                     </p>
 
@@ -293,7 +293,7 @@ export function NotificationsList() {
         /* استیت خالی اعلان‌ها */
         <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center">
           <LottiePlayer path="/animations/notif-bell.json" className="mx-auto h-40 w-40" />
-          <span className="text-xs font-bold text-muted-foreground">
+          <span className="text-label-muted">
             هیچ پیامی در این دسته‌بندی یافت نشد.
           </span>
         </div>

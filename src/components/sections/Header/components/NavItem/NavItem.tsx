@@ -1,5 +1,3 @@
-// src/components/sections/Header/components/NavItem/NavItem.tsx
-
 'use client';
 
 import Link from 'next/link';
@@ -29,22 +27,28 @@ export function NavItem({
 }: NavItemProps) {
   return (
     <div 
-      className="relative group"
+      className="relative flex items-center h-full"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
       <Link
         href={href}
         className={cn(
-          "flex items-center gap-1 font-medium hover:text-primary transition-colors py-2",
+          "flex items-center gap-1.5 font-medium hover:text-primary transition-colors h-full px-1",
           "text-xs xl:text-sm",
+          isOpen && "text-primary font-bold",
           className
         )}
       >
-        {Icon && <Icon className="h-3 w-3 xl:h-4 xl:w-4" />}
+        {Icon && <Icon className="h-3.5 w-3.5 xl:h-4 xl:w-4 text-primary shrink-0" />}
         <span className="whitespace-nowrap">{label}</span>
         {hasDropdown && (
-          <ChevronDown className={cn('h-3 w-3 transition-transform', isOpen && 'rotate-180')} />
+          <ChevronDown
+            className={cn(
+              'h-3.5 w-3.5 transition-transform duration-200 text-muted-foreground',
+              isOpen && 'rotate-180 text-primary'
+            )}
+          />
         )}
       </Link>
     </div>

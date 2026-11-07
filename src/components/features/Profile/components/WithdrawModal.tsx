@@ -111,7 +111,7 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
               <button
                 type="button"
                 onClick={() => setIsAddCardOpen(true)}
-                className="text-[10px] font-bold text-primary hover:underline self-end flex items-center gap-1 mt-1 outline-none"
+                className="text-[0.625rem] font-bold text-primary hover:underline self-end flex items-center gap-1 mt-1 outline-none"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>افزودن کارت بانکی جدید</span>
@@ -119,7 +119,7 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
             </div>
           ) : (
             <div className="w-full py-6 border border-dashed rounded-xl flex flex-col items-center justify-center gap-3 bg-muted/10">
-              <span className="text-xs font-bold text-muted-foreground ">هیچ کارت بانکی ثبت نکرده‌اید.</span>
+              <span className="text-label-muted ">هیچ کارت بانکی ثبت نکرده‌اید.</span>
               <Button
                 type="button"
                 variant="outline"
@@ -140,13 +140,13 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
             placeholder="مبلغ مورد نظر خود را به تومان وارد کنید..."
             type="number"
             error={errors.amount?.message ? String(errors.amount.message) : undefined}
-            rightIcon={<span className="text-xs font-bold text-muted-foreground ">تومان</span>}
+            rightIcon={<span className="text-label-muted ">تومان</span>}
             className="text-xs"
             dir="ltr"
             {...register('amount', { valueAsNumber: true })}
           />
           {watchAmount > 0 && (
-            <span className="text-[10px] font-bold text-muted-foreground mt-1 block">
+            <span className="text-[0.625rem] font-bold text-muted-foreground mt-1 block">
               معادل {formatNumber(Number(watchAmount) * 10)} ریال به بانک مقصد ارسال خواهد شد.
             </span>
           )}
@@ -164,7 +164,7 @@ export function WithdrawModal({ isOpen, onClose, wallet }: WithdrawModalProps) {
           >
             <ArrowRight className="h-4.5 w-4.5" />
           </button>
-          <span className="text-xs font-bold text-foreground ">ثبت کارت بانکی جدید</span>
+          <span className="text-label ">ثبت کارت بانکی جدید</span>
         </div>
 
         <AddBankCardForm onCancel={() => setIsAddCardOpen(false)} />

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { User, MessageSquare, ThumbsUp, ThumbsDown, HelpCircle, ArrowLeft, Clock, Package } from 'lucide-react';
@@ -135,11 +135,11 @@ export function ProductInquiriesSection({
 
   return (
     <div className="mt-6 flex w-full flex-col gap-6 pb-12">
-      <h3 className="text-sm font-bold text-foreground md:text-base">پرسش‌ها و پاسخ‌ها</h3>
+      <h3 className="text-title-sm md:text-base">پرسش‌ها و پاسخ‌ها</h3>
 
       <div className="flex flex-col items-center justify-between gap-4 border-b border-border pb-3 md:flex-row">
         <div className="flex items-center gap-4 overflow-x-auto py-1 scrollbar-none">
-          <span className="shrink-0 text-xs font-bold text-muted-foreground">نمایش بر اساس:</span>
+          <span className="shrink-0 text-label-muted">نمایش بر اساس:</span>
           {[
             { value: 'Latest', label: 'جدیدترین' },
             { value: 'Oldest', label: 'قدیمی‌ترین' },
@@ -196,7 +196,7 @@ export function ProductInquiriesSection({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-bold text-foreground">{author}</span>
+                        <span className="text-label">{author}</span>
                         {inquiry.isConfirmed === false && (
                           <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-2xs font-bold text-warning">
                             <Clock aria-hidden="true" className="h-3 w-3" />
@@ -208,7 +208,7 @@ export function ProductInquiriesSection({
                         <span className="text-2xs text-muted-foreground">{toPersianDigits(displayDate)}</span>
                       )}
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-foreground">{inquiryContent}</p>
+                    <p className="mt-2 text-base leading-relaxed text-foreground">{inquiryContent}</p>
                   </div>
                 </div>
 
@@ -226,7 +226,7 @@ export function ProductInquiriesSection({
                           {inquiry.bestReply.createDateFormatted || ''}
                         </span>
                       </div>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      <p className="mt-1 text-base leading-relaxed text-muted-foreground">
                         {inquiry.bestReply.comment || inquiry.bestReply.content}
                       </p>
                     </div>
@@ -280,7 +280,7 @@ export function ProductInquiriesSection({
       {/* مودال ثبت سوال با نمایش مشخصات محصول */}
       <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
         <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
-          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <ModalTitle className="flex items-center gap-2 text-title-sm">
             <HelpCircle aria-hidden="true" className="h-4 w-4 text-primary" />
             شما هم سوال خودتون رو بپرسید
           </ModalTitle>
@@ -302,8 +302,8 @@ export function ProductInquiriesSection({
               </div>
 
               <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-2xs font-bold text-muted-foreground">پرسش درباره کالا:</span>
-                <h4 className="text-xs sm:text-sm font-bold text-foreground leading-snug line-clamp-2">
+                <span className="text-label-2xs">پرسش درباره کالا:</span>
+                <h4 className="text-xs sm:text-title-sm leading-snug line-clamp-2">
                   {productTitle}
                 </h4>
               </div>

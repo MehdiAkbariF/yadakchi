@@ -60,8 +60,8 @@ function EmptyState({ title, description, actionText, actionHref }: EmptyStatePr
           loop={true}
         />
       </div>
-      <p className="mt-5 text-sm font-bold text-foreground">{title}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+      <p className="mt-5 text-title-sm">{title}</p>
+      <p className="mt-1 text-base text-muted-foreground">{description}</p>
       {/* {actionText && actionHref && (
         <Button
           variant="outline"
@@ -161,7 +161,7 @@ export function CommentsDashboard() {
           <MessageSquare aria-hidden="true" className="h-5 w-5 shrink-0 text-primary" />
           <span className="text-xl font-bold text-foreground">نظرات و پرسش‌ها</span>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           مدیریت نظرات محصولات، پرسش‌های ثبت‌شده در بخش پرسش و پاسخ، و نظرات وبلاگ
         </p>
       </div>
@@ -220,7 +220,7 @@ export function CommentsDashboard() {
                         <img src={getFullUrl(item.productImage)} className="h-full w-full object-contain" alt="" />
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col gap-1">
-                        <span className="block truncate text-sm font-bold text-foreground">{item.productTitle}</span>
+                        <span className="block truncate text-title-sm">{item.productTitle}</span>
                         <span className="block text-2xs text-muted-foreground">
                           خریداری شده از فروشگاه {item.shopTitle}
                         </span>
@@ -275,7 +275,7 @@ export function CommentsDashboard() {
                         <img src={getFullUrl(comment.productImage)} className="h-full w-full object-contain" alt="" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-bold text-foreground">{comment.productTitle}</span>
+                        <span className="block truncate text-label">{comment.productTitle}</span>
                         <div className="mt-1 flex items-center gap-1.5">
                           <span
                             className={cn(
@@ -303,7 +303,7 @@ export function CommentsDashboard() {
                           />
                         ))}
                       </div>
-                      <p className="mt-1 break-words text-sm leading-relaxed text-foreground">{comment.comment}</p>
+                      <p className="mt-1 break-words text-base leading-relaxed text-foreground">{comment.comment}</p>
                     </div>
 
                     <div className="mt-1.5 flex items-center justify-end gap-2.5 border-t border-dashed border-border pt-3">
@@ -361,7 +361,7 @@ export function CommentsDashboard() {
                         <img src={getFullUrl(inquiry.productImage)} className="h-full w-full object-contain" alt="" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="block truncate text-xs font-bold text-foreground">{inquiry.productTitle}</span>
+                        <span className="block truncate text-label">{inquiry.productTitle}</span>
                         <div className="mt-1 flex items-center gap-1.5">
                           <span
                             className={cn(
@@ -378,8 +378,8 @@ export function CommentsDashboard() {
 
                     <div className="flex flex-col gap-1.5">
                       <span className="text-2xs font-bold text-primary">متن پرسش:</span>
-                      <p className="break-words text-sm leading-relaxed text-foreground">{inquiry.comment}</p>
-                      <span className="mt-1.5 text-2xs font-bold text-muted-foreground">
+                      <p className="break-words text-base leading-relaxed text-foreground">{inquiry.comment}</p>
+                      <span className="mt-1.5 text-label-2xs">
                         {inquiry.replyCount} پاسخ ثبت شده
                       </span>
                     </div>
@@ -433,7 +433,7 @@ export function CommentsDashboard() {
                       <div className="min-w-0 flex-1">
                         <Link
                           href={comment.blogPostEnglishTitle ? `/blog/${encodeURIComponent(comment.blogPostEnglishTitle)}` : '/blog'}
-                          className="block truncate text-xs font-bold text-foreground transition-colors hover:text-primary"
+                          className="block truncate text-label transition-colors hover:text-primary"
                         >
                           {comment.blogPostTitle}
                         </Link>
@@ -453,7 +453,7 @@ export function CommentsDashboard() {
 
                     <div className="flex flex-col gap-1.5">
                       <span className="text-2xs font-bold text-primary">متن دیدگاه:</span>
-                      <p className="break-words text-sm leading-relaxed text-foreground">{comment.comment}</p>
+                      <p className="break-words text-base leading-relaxed text-foreground">{comment.comment}</p>
                     </div>
 
                     <div className="mt-1.5 flex items-center justify-end border-t border-dashed border-border pt-3">

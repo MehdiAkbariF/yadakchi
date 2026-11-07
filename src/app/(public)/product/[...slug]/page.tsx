@@ -10,23 +10,22 @@ interface ProductPageProps {
   params: Promise<{ slug: string[] }> | { slug: string[] };
 }
 
-// ✅ بهینه‌سازی بحرانی ۱: کش کردن ریکوئست با React.cache برای جلوگیری از ۲ بار صدا زدن API
-// در فایل src/app/(public)/product/[...slug]/page.tsx این تابع را جایگزین کنید:
+// بازتولید هوشمند کش سروری صفحه هر ۱۲۰ ثانیه (ISR برای سرعت رعدآسا)
+export const revalidate = 120;
 
+// ایزوله‌سازی و کش درخواست واکشی اطلاعات محصول در طول رندر سرور
 const getCachedProductData = cache(async (productCode: number) => {
   const productService = getProductService();
   try {
     const data = await productService.getProductPageData(productCode);
     return data;
   } catch (error: any) {
-    // به جای کرش دادن صفحه در برابر خطاهای سرور (500 یا 404)،
-    // خطا را در کنسول لاگ می‌کنیم و null برمی‌گردانیم تا کاربر به صفحه 404 هدایت شود
     console.error(`❌ [ProductPage Error] Failed to load productCode ${productCode}:`, error?.message || error);
     return null;
   }
 });
 
-// استخراج ایمن کد محصول از اسلاگ
+// استخراج ایمن کد عددی کالا از اسلاگ فارسی/انگلیسی
 async function extractProductCode(paramsPromise: ProductPageProps['params']): Promise<number> {
   const resolvedParams = await Promise.resolve(paramsPromise);
   const slugSegment = resolvedParams?.slug?.[0] || '';
@@ -34,7 +33,7 @@ async function extractProductCode(paramsPromise: ProductPageProps['params']): Pr
   return parseInt(cleanCode, 10);
 }
 
-// جلوگیری از باگ‌های امنیتی XSS در اسکریپت‌های JSON-LD
+// انکود امن داده‌های اسکیما برای جلوگیری از باگ‌های XSS
 function serializeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
@@ -45,30 +44,44 @@ function serializeJsonLd(data: unknown): string {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const productCode = await extractProductCode(params);
-  if (!productCode || isNaN(productCode)) return { title: 'محصول یدکچی' };
+  if (!productCode || isNaN(productCode)) return { title: 'محصول | یدکچی' };
 
   try {
     const pageData = await getCachedProductData(productCode);
     if (!pageData?.product) return { title: 'محصول یافت نشد | یدکچی' };
 
     const product = pageData.product;
-    const cleanDesc = (product.seo?.description || product.description || '').replace(/<[^>]*>/g, '').trim();
+    const cleanDesc = (product.seo?.description || product.description || '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     const resolvedParams = await Promise.resolve(params);
-    
-    // انکود ایمن اسلاگ‌های فارسی برای URL کانونیکال
     const safeSlugPath = (resolvedParams.slug || []).map((s) => encodeURIComponent(s)).join('/');
-    const canonicalUrl = `https://www.yadakchi.com/product/${safeSlugPath}`;
-    const ogImage = product.image ? getFullUrl(product.image) : 'https://api.yadakchi.com/Logo.svg';
+    
+    // یکپارچه‌سازی دامنه بدون www با بقیه بخش‌های سایت
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com';
+    const canonicalUrl = `${baseUrl}/product/${safeSlugPath}`;
+    const ogImage = product.image ? getFullUrl(product.image) : `${baseUrl}/Logo.svg`;
+
+    const title = `${product.title} | یدکچی`;
+    const description = cleanDesc.slice(0, 160) || `خرید اینترنتی ${product.title} با تضمین اصالت و بهترین قیمت در یدکچی`;
 
     return {
-      title: `${product.title} | یدکچی`,
-      description: cleanDesc.slice(0, 160) || `خرید اینترنتی ${product.title} با ضمانت اصالت کالا در یدکچی`,
+      title,
+      description,
       alternates: {
         canonical: canonicalUrl,
       },
+      robots: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
       openGraph: {
-        title: `${product.title} | یدکچی`,
-        description: cleanDesc.slice(0, 160),
+        title,
+        description,
         url: canonicalUrl,
         siteName: 'یدکچی',
         locale: 'fa_IR',
@@ -77,14 +90,20 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
           {
             url: ogImage,
             width: 800,
-            height: 600,
+            height: 800,
             alt: product.title,
           },
         ],
       },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [ogImage],
+      },
     };
   } catch {
-    return { title: 'یدکچی' };
+    return { title: 'یدکچی | بازارگاه تخصصی قطعات خودرو' };
   }
 }
 
@@ -99,14 +118,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  // دریافت دیتا (از کش حافظه مشترک با generateMetadata استفاده می‌کند و هیچ ریکوئست اضافه‌ای نمی‌زند)
   const pageData = await getCachedProductData(productCode);
 
   if (!pageData || !pageData.product) {
     notFound();
   }
 
-  // کانفیگ ایزوله QueryClient برای Hydration بدون نشت کش بین ریکوئست‌ها
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -115,10 +132,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   });
 
-  // ثبت داده‌های واکشی‌شده در کش React Query سرور
   queryClient.setQueryData(['front', 'products', 'page-data', productCode], pageData);
 
   const product = pageData.product;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com';
+  const defaultImage = `${baseUrl}/Logo.svg`;
+
+  // گردآوری تمام فروشندگان و استوک‌ها
   const sellers = [
     ...(pageData.shopProducts?.newOnline || []),
     ...(pageData.shopProducts?.newLocal || []),
@@ -128,68 +148,117 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ...(pageData.shopProducts?.takeOffLocal || []),
   ];
 
-  const offers = sellers.map((s: any) => ({
-    '@type': 'Offer',
-    price: s.finalPriceRaw || s.price || 0,
-    priceCurrency: 'IRR',
-    itemCondition: s.type === 'New' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
-    availability: s.quantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-    seller: {
-      '@type': 'Store',
-      name: s.shop?.title || s.shop?.shopTitle || 'یدکچی',
-    },
-  }));
+  // محاسبه کمترین و بیشترین قیمت معتبر
+  const validPrices = sellers
+    .map((s: any) => s.finalPriceRaw || s.price || 0)
+    .filter((p: number) => p > 0);
 
-  const validPrices = sellers.map((s: any) => s.finalPriceRaw || s.price || 0).filter((p: number) => p > 0);
   const lowPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
-  const highPrice = validPrices.length > 0 ? Math.max(...validPrices) : 0;
+  const highPrice = validPrices.length > 0 ? Math.max(...validPrices) : lowPrice;
 
-  // ✅ اسکیما استاندارد و تمیز بدون فیلدهای نامعتبر برای گوگل
+  // ساخت لیست تصاویر معتبر با فال‌بک مطمئن (الزام گوگل)
+  const productImages =
+    product.gallery?.length > 0
+      ? product.gallery.map((img: string) => getFullUrl(img))
+      : product.image
+      ? [getFullUrl(product.image)]
+      : [defaultImage];
+
+  // ساخت آفرها با تضمین عدم بروز خطا در گوگل حتی در کالاهای ناموجود
+  const offersData =
+    sellers.length > 0
+      ? {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'IRR',
+          lowPrice: lowPrice,
+          highPrice: highPrice,
+          offerCount: sellers.length,
+          offers: sellers.map((s: any) => ({
+            '@type': 'Offer',
+            price: s.finalPriceRaw || s.price || lowPrice,
+            priceCurrency: 'IRR',
+            itemCondition:
+              s.type === 'New'
+                ? 'https://schema.org/NewCondition'
+                : 'https://schema.org/UsedCondition',
+            availability:
+              s.quantity > 0
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            seller: {
+              '@type': 'Store',
+              name: s.shop?.title || s.shop?.shopTitle || 'یدکچی',
+            },
+          })),
+        }
+      : {
+          '@type': 'Offer',
+          price: 0,
+          priceCurrency: 'IRR',
+          availability: 'https://schema.org/OutOfStock',
+          itemCondition: 'https://schema.org/NewCondition',
+        };
+
+  // اسکیمای جامع و رسمی Google Rich Snippet
   const schemaJson = {
     '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.title,
-    image:
-      product.gallery?.length > 0
-        ? product.gallery.map((img: string) => getFullUrl(img))
-        : product.image
-        ? [getFullUrl(product.image)]
-        : [],
-    description: product.description ? product.description.replace(/<[^>]*>/g, '').trim() : '',
-    sku: product.partNumber || String(product.code || productCode),
-    mpn: product.partNumber || String(product.code || productCode),
-    brand: product.brand?.name
-      ? {
+    '@graph': [
+      {
+        '@type': 'Product',
+        name: product.title,
+        image: productImages,
+        description: product.description
+          ? product.description.replace(/<[^>]*>/g, '').trim()
+          : `خرید آنلاین ${product.title} در بازارگاه یدکچی`,
+        sku: String(product.partNumber || product.code || productCode),
+        mpn: String(product.partNumber || product.code || productCode),
+        brand: {
           '@type': 'Brand',
-          name: product.brand.name,
-        }
-      : undefined,
-    aggregateRating:
-      product.rateCount > 0
-        ? {
-            '@type': 'AggregateRating',
-            ratingValue: product.averageRate,
-            reviewCount: product.rateCount,
-            bestRating: '5',
-            worstRating: '1',
-          }
-        : undefined,
-    offers:
-      sellers.length > 0
-        ? {
-            '@type': 'AggregateOffer',
-            priceCurrency: 'IRR',
-            lowPrice: lowPrice,
-            highPrice: highPrice,
-            offerCount: sellers.length,
-            offers: offers,
-          }
-        : undefined,
+          name: product.brand?.name || 'یدکچی',
+        },
+        ...(product.rateCount > 0
+          ? {
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: Number(product.averageRate || 5).toFixed(1),
+                reviewCount: product.rateCount,
+                bestRating: '5',
+                worstRating: '1',
+              },
+            }
+          : {}),
+        offers: offersData,
+      },
+      // اسکیمای BreadcrumbList جهت نمایش شاخه ناوبری در نتایج سرچ گوگل
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'صفحه اصلی',
+            item: baseUrl,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'قطعات خودرو',
+            item: `${baseUrl}/categories`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: product.title,
+            item: `${baseUrl}/product/ykp-${productCode}`,
+          },
+        ],
+      },
+    ],
   };
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      {/* اسکریپت امن و سئو شده برای ریچ اسنیپت قیمت و امتیاز گوگل */}
+      {/* تزریق اسکریپت رسمی داده‌های ساختاریافته گوگل */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}

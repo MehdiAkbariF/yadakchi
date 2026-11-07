@@ -237,9 +237,9 @@ const queryClient = useQueryClient();
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
-            <h1 className="text-base font-black text-foreground sm:text-lg">آدرس‌های من</h1>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">آدرس‌های من</h1>
           </div>
-          <p className="hidden text-xs text-muted-foreground sm:block">
+          <p className="hidden text-base text-muted-foreground sm:block">
             آدرس‌های ثبت‌شده جهت تسریع در ارسال سفارش‌ها و محاسبه دقیق هزینه حمل‌ونقل
           </p>
         </div>
@@ -270,9 +270,9 @@ const queryClient = useQueryClient();
                 {/* ردیف تایتل و دکمه پیش‌فرض */}
                 <div className="flex items-center justify-between border-b border-border/50 pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-black text-foreground">{loc.title}</span>
+                    <span className="text-sm font-bold text-foreground">{loc.title}</span>
                     {loc.isDefault && (
-                      <span className="flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-3xs font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="flex items-center gap-1 rounded-md bg-success/10 px-2 py-0.5 text-3xs font-bold text-success/90 dark:text-success/80">
                         <CheckCircle2 className="h-3 w-3" />
                         پیش‌فرض تحویل
                       </span>
@@ -346,7 +346,7 @@ const queryClient = useQueryClient();
         /* استیت خالی بدون آدرس */
         <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center">
           <LottiePlayer path="/animations/addresss.json" className="mx-auto h-44 w-44" />
-          <span className="text-xs font-bold text-muted-foreground">
+          <span className="text-label-muted">
             هیچ آدرسی در حساب کاربری شما ثبت نشده است.
           </span>
           <Button
@@ -387,7 +387,7 @@ const queryClient = useQueryClient();
                 <Navigation className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <div className="flex flex-col gap-1 min-w-0">
                   <span className="text-3xs font-bold text-primary">موقعیت جغرافیایی انتخابی:</span>
-                  <span className="text-xs font-bold text-foreground leading-relaxed">
+                  <span className="text-label leading-relaxed">
                     {mapData.cityName}، {mapData.address}
                   </span>
                 </div>
@@ -432,7 +432,7 @@ const queryClient = useQueryClient();
                   className="h-4 w-4 rounded-md border-border text-primary focus:ring-primary cursor-pointer"
                   {...register('isUserReceiver')}
                 />
-                <label htmlFor="user_is_receiver" className="text-xs font-bold text-foreground cursor-pointer">
+                <label htmlFor="user_is_receiver" className="text-label cursor-pointer">
                   تحویل‌گیرنده سفارش خودم هستم
                 </label>
               </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -67,9 +67,9 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
   const getTicketStatusBadge = (ticketStatus: string, label: string) => {
     switch (ticketStatus) {
       case 'WaitingForAnswer':
-        return 'text-amber-500 bg-amber-500/10 border-amber-500/20';
+        return 'text-warning bg-warning/10 border-warning/20';
       case 'Answered':
-        return 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20';
+        return 'text-success bg-success/10 border-success/20';
       case 'Closed':
         return 'text-muted-foreground bg-muted border-border';
       default:
@@ -85,9 +85,9 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            <h1 className="text-base font-black text-foreground sm:text-lg">پشتیبانی و تیکت‌ها</h1>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">پشتیبانی و تیکت‌ها</h1>
           </div>
-          <p className="hidden text-xs text-muted-foreground sm:block">
+          <p className="hidden text-base text-muted-foreground sm:block">
             ارتباط مستقیم با کارشناسان فنی و پشتیبانی یدکچی، پیگیری درخواست‌ها و مرجوعی‌ها
           </p>
         </div>
@@ -165,7 +165,7 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
 
                     {/* موضوع و خلاصه تیکت */}
                     <div className="mt-3 flex flex-col gap-1.5 text-right">
-                      <h2 className="text-xs sm:text-sm font-black text-foreground line-clamp-1 leading-snug">
+                      <h2 className="text-base sm:text-lg font-semibold text-foreground line-clamp-1 leading-snug">
                         {ticket.title}
                       </h2>
 
@@ -226,7 +226,7 @@ export function TicketsList({ initialStatus, initialPage }: TicketsListProps) {
         /* استیت خالی بدون تیکت */
         <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/80 bg-card py-16 text-center shadow-xs">
           <LottiePlayer path="/animations/ticket.json" className="mx-auto h-40 w-40" />
-          <p className="text-xs font-bold text-muted-foreground">هیچ تیکت پشتیبانی یافت نشد.</p>
+          <p className="text-label-muted">هیچ تیکت پشتیبانی یافت نشد.</p>
           <Button
             variant="primary"
             size="sm"

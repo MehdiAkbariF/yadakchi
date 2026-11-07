@@ -86,7 +86,7 @@ export function Modal({
         className={cn(
           'relative z-10 flex flex-col bg-card border-border overflow-hidden outline-none',
           'w-full h-full max-h-full rounded-none',
-          'md:w-full md:h-auto md:max-h-[88vh] md:rounded-2xl md:border md:shadow-2xl md:animate-in md:fade-in-0 md:zoom-in-95',
+          'md:w-full md:h-auto md:max-h-[88vh] md:rounded-2xl md:border md:shadow-2xl md:animate-enter',
           sizeClasses[size],
           className
         )}
@@ -151,7 +151,7 @@ export const ModalTitle = React.forwardRef<HTMLHeadingElement, ModalTitleProps>(
   ({ className, ...props }, ref) => (
     <h2
       ref={ref}
-      className={cn('text-sm font-bold text-foreground', className)}
+      className={cn('text-title-sm', className)}
       {...props}
     />
   )

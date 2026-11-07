@@ -1,0 +1,1726 @@
+
+==================== FILE: src\shared\hooks\useSearchFilters.ts ====================
+
+'use client';
+
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useCallback, useTransition } from 'react';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+export function useSearchFilters() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
+  const getFilters = useCallback((): SearchProductsRequest => {
+    return {
+      searchTitle: searchParams.get('q') || undefined,
+      isProductInStock: searchParams.get('inStock') === 'true' ? true : undefined,
+      isSellerInUserCity: searchParams.get('userCity') === 'true' ? true : undefined,
+      partCategoryEnglishTitle: searchParams.get('category') || undefined,
+      partEnglishTitle: searchParams.get('part') || undefined,
+      carModel: searchParams.get('carModel') || undefined,
+      shopId: searchParams.get('shopId') || undefined,
+      cityId: searchParams.get('cityId') || undefined,
+      hasDiscount: searchParams.get('discount') === 'true' ? true : undefined,
+      hasDiscountWithExpiration: searchParams.get('discountExp') === 'true' ? true : undefined,
+      fromPrice: searchParams.get('fromPrice') ? Number(searchParams.get('fromPrice')) : undefined,
+      toPrice: searchParams.get('toPrice') ? Number(searchParams.get('toPrice')) : undefined,
+      orderType: (searchParams.get('sort') as any) || 'Selected',
+      pageNumber: searchParams.get('page') ? Number(searchParams.get('page')) : 1,
+      pageSize: searchParams.get('pageSize') ? Number(searchParams.get('pageSize')) : 30,
+      brandIds: searchParams.getAll('brandIds').length ? searchParams.getAll('brandIds') : undefined,
+      carIds: searchParams.getAll('carIds').length ? searchParams.getAll('carIds') : undefined,
+      partCategoryIds: searchParams.getAll('partCategoryIds').length ? searchParams.getAll('partCategoryIds') : undefined,
+      partIds: searchParams.getAll('partIds').length ? searchParams.getAll('partIds') : undefined,
+      types: searchParams.getAll('types').length ? (searchParams.getAll('types') as any) : undefined,
+    };
+  }, [searchParams]);
+
+  const setFilter = useCallback((name: string, value: any) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (value === undefined || value === null || value === '' || value === false) {
+      params.delete(name);
+    } else if (Array.isArray(value)) {
+      params.delete(name);
+      value.forEach(item => params.append(name, String(item)));
+    } else {
+      params.set(name, String(value));
+    }
+
+    // همیشه با تغییر هر فیلتر شماره صفحه را ۱ کن تا خطای خالی بودن صفحه رخ ندهد
+    if (name !== 'page') {
+      params.delete('page');
+    }
+
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [router, pathname, searchParams]);
+
+  // متد اختصاصی حذف یک چیپ فیلتر خاص
+  const removeFilter = useCallback((name: string, valueToRemove?: any) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (valueToRemove !== undefined && Array.isArray(searchParams.getAll(name))) {
+      const allValues = searchParams.getAll(name).filter((v) => v !== String(valueToRemove));
+      params.delete(name);
+      allValues.forEach((v) => params.append(name, v));
+    } else {
+      params.delete(name);
+    }
+
+    params.delete('page');
+
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [router, pathname, searchParams]);
+
+  const clearFilters = useCallback(() => {
+    const params = new URLSearchParams();
+    const query = searchParams.get('q');
+    if (query) {
+      params.set('q', query);
+    }
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }, [router, pathname, searchParams]);
+
+  return {
+    filters: getFilters(),
+    setFilter,
+    removeFilter,
+    clearFilters,
+    isPending,
+  };
+}
+
+==================== FILE: src\components\features\ProductGrid\SearchSidebar.tsx ====================
+
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
+import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
+import { useGetPartsName } from '@/domains/front/part/hooks/part.hooks';
+import { Accordion } from '@/components/composites/Accordion/Accordion';
+import { Switch } from '@/components/primitives/Switch/Switch';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+import { PriceSlider } from '@/components/composites/PriceSlider/PriceSlider';
+import { FilterList } from '@/components/composites/FilterList/FilterList';
+import { Button } from '@/components/primitives/Button/Button';
+import { Typography } from '@/components/primitives/Typography';
+import { X, Filter, ArrowRight } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { Modal } from '@/components/composites/Modal/Modal';
+import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner';
+
+interface SearchSidebarProps {
+  filters: SearchProductsRequest;
+  onFilterChange: (name: string, value: any) => void;
+  onClearAll: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  hidePartFilter?: boolean;
+  carId?: string;
+  partCategoryId?: string;
+  partId?: string;
+}
+
+export function SearchSidebar({
+  filters,
+  onFilterChange,
+  onClearAll,
+  isOpen,
+  onClose,
+  hidePartFilter = false,
+  carId,
+  partCategoryId,
+  partId,
+}: SearchSidebarProps) {
+  const [brandSearch, setBrandSearch] = useState('');
+  const [carSearch, setCarSearch] = useState('');
+  const [partSearch, setPartSearch] = useState('');
+
+  const [partPage, setPartPage] = useState(1);
+  const [accumulatedParts, setAccumulatedParts] = useState<any[]>([]);
+
+  const { data: brandsList = [] } = useGetBrandsName({
+    searchTerm: brandSearch || undefined,
+  });
+
+  const { data: carsList = [] } = useGetCarsName({
+    model: carSearch || undefined,
+  });
+
+  const { data: partsData, isLoading: isPartsLoading } = useGetPartsName({
+    name: partSearch || undefined,
+    pageNumber: partPage,
+    pageSize: 30,
+  });
+
+  const hasMoreParts = partsData ? partPage < partsData.totalPages : false;
+
+  useEffect(() => {
+    setPartPage(1);
+    setAccumulatedParts([]);
+  }, [partSearch]);
+
+  useEffect(() => {
+    if (partPage === 1) {
+      setAccumulatedParts(partsData?.items || []);
+    } else if (partsData?.items) {
+      setAccumulatedParts((prev) => [...prev, ...partsData.items]);
+    }
+  }, [partsData, partPage]);
+
+  const [priceRange, setPriceRange] = useState<[number, number]>([500000, 100000000]);
+
+  useEffect(() => {
+    setPriceRange([
+      filters.fromPrice || 500000,
+      filters.toPrice || 100000000,
+    ]);
+  }, [filters.fromPrice, filters.toPrice]);
+
+  const handleCheckboxChange = (name: string, id: string, checked: boolean) => {
+    const currentList = (filters[name as keyof SearchProductsRequest] as string[]) || [];
+    let updatedList = [...currentList];
+
+    if (checked) {
+      if (!updatedList.includes(id)) {
+        updatedList.push(id);
+      }
+    } else {
+      updatedList = updatedList.filter((item) => item !== id);
+    }
+
+    onFilterChange(name, updatedList.length ? updatedList : undefined);
+  };
+
+  const handleTypeChange = (type: 'New' | 'Stock' | 'TakeOff', checked: boolean) => {
+    const currentTypes = (filters.types as string[]) || [];
+    let updatedTypes = [...currentTypes];
+
+    if (checked) {
+      if (!updatedTypes.includes(type)) {
+        updatedTypes.push(type);
+      }
+    } else {
+      updatedTypes = updatedTypes.filter((t) => t !== type);
+    }
+
+    onFilterChange('types', updatedTypes.length ? updatedTypes : undefined);
+  };
+
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      filters.isProductInStock ||
+      filters.isSellerInUserCity ||
+      filters.hasDiscount ||
+      filters.fromPrice ||
+      filters.toPrice ||
+      filters.brandIds?.length ||
+      filters.carIds?.length ||
+      filters.partIds?.length ||
+      filters.types?.length
+    );
+  }, [filters]);
+
+  const formattedBrands = brandsList.map((b: any) => ({ id: b.id, name: b.name }));
+  const formattedCars = carsList.map((c: any) => ({ id: c.id, name: c.displayName || c.model }));
+  const formattedParts = accumulatedParts.map((p: any) => ({ id: p.id, name: p.name }));
+
+  const activeTypesCount = filters.types?.length || 0;
+  const activePartsCount = filters.partIds?.length || 0;
+  const activeBrandsCount = filters.brandIds?.length || 0;
+  const activeCarsCount = filters.carIds?.length || 0;
+  const isPriceFilterActive = !!(filters.fromPrice || filters.toPrice);
+
+  const formatCount = (count: number) => {
+    return count > 0 ? ` (${new Intl.NumberFormat('fa-IR').format(count)})` : '';
+  };
+
+  const renderFilterContent = (isMobile: boolean) => (
+    <div className={cn('flex w-full flex-col gap-4', isMobile && 'pb-24')} dir="rtl">
+      {/* سوییچ‌های دسترسی سریع */}
+      <div className="flex flex-col gap-3.5 border-b border-border/80 pb-4">
+        <div className="flex w-full select-none items-center justify-between">
+          <span className="text-xs font-semibold text-foreground">فقط کالاهای موجود</span>
+          <Switch
+            checked={!!filters.isProductInStock}
+            onChange={(checked) => onFilterChange('inStock', checked ? true : undefined)}
+          />
+        </div>
+
+        <div className="flex w-full select-none items-center justify-between">
+          <span className="text-xs font-semibold text-foreground">فقط فروشنده‌های شهر من</span>
+          <Switch
+            checked={!!filters.isSellerInUserCity}
+            onChange={(checked) => onFilterChange('userCity', checked ? true : undefined)}
+          />
+        </div>
+
+        <div className="flex w-full select-none items-center justify-between">
+          <span className="text-xs font-semibold text-foreground">دارای تخفیف ویژه</span>
+          <Switch
+            checked={!!filters.hasDiscount}
+            onChange={(checked) => onFilterChange('discount', checked ? true : undefined)}
+          />
+        </div>
+      </div>
+
+      {/* نوع قطعه */}
+      <Accordion title={`نوع قطعه${formatCount(activeTypesCount)}`} defaultOpen={activeTypesCount > 0}>
+        <div className="flex flex-col gap-2 pe-1 pt-1">
+          <Checkbox
+            label="همه قطعات"
+            checked={!filters.types || filters.types.length === 0}
+            onChange={(checked) => checked && onFilterChange('types', undefined)}
+          />
+          <Checkbox
+            label="نو"
+            checked={((filters.types as string[]) || []).includes('New')}
+            onChange={(checked) => handleTypeChange('New', checked)}
+          />
+          <Checkbox
+            label="استوک"
+            checked={((filters.types as string[]) || []).includes('Stock')}
+            onChange={(checked) => handleTypeChange('Stock', checked)}
+          />
+          <Checkbox
+            label="زیرصفری"
+            checked={((filters.types as string[]) || []).includes('TakeOff')}
+            onChange={(checked) => handleTypeChange('TakeOff', checked)}
+          />
+        </div>
+      </Accordion>
+
+      {/* انتخاب قطعه */}
+      {!hidePartFilter && (
+        <Accordion title={`قطعه${formatCount(activePartsCount)}`} defaultOpen={activePartsCount > 0}>
+          <FilterList
+            items={formattedParts}
+            selectedIds={(filters.partIds as string[]) || []}
+            onChange={(id, checked) => handleCheckboxChange('partIds', id, checked)}
+            searchPlaceholder="جستجوی نام قطعه..."
+            onSearchChange={(query) => {
+              setPartSearch(query);
+            }}
+            onLoadMore={() => setPartPage((prev) => prev + 1)}
+            hasMore={hasMoreParts}
+            isLoadingMore={isPartsLoading}
+          />
+        </Accordion>
+      )}
+
+      {/* انتخاب برند */}
+      <Accordion title={`برند قطعه${formatCount(activeBrandsCount)}`} defaultOpen={activeBrandsCount > 0}>
+        <FilterList
+          items={formattedBrands}
+          selectedIds={(filters.brandIds as string[]) || []}
+          onChange={(id, checked) => handleCheckboxChange('brandIds', id, checked)}
+          searchPlaceholder="جستجوی برند..."
+          onSearchChange={(query) => {
+            setBrandSearch(query);
+          }}
+        />
+      </Accordion>
+
+      {/* انتخاب مدل خودرو */}
+      <Accordion title={`مدل خودرو${formatCount(activeCarsCount)}`} defaultOpen={activeCarsCount > 0}>
+        <FilterList
+          items={formattedCars}
+          selectedIds={(filters.carIds as string[]) || []}
+          onChange={(id, checked) => handleCheckboxChange('carIds', id, checked)}
+          searchPlaceholder="جستجوی مدل خودرو..."
+          onSearchChange={(query) => {
+            setCarSearch(query);
+          }}
+        />
+      </Accordion>
+
+      {/* فیلتر قیمت */}
+      <Accordion title={isPriceFilterActive ? 'محدوده قیمت (فعال)' : 'محدوده قیمت'} defaultOpen={isPriceFilterActive}>
+        <PriceSlider
+          min={500000}
+          max={100000000}
+          value={priceRange}
+          onChange={(val) => setPriceRange(val)}
+          onApply={() => {
+            onFilterChange('fromPrice', priceRange[0]);
+            onFilterChange('toPrice', priceRange[1]);
+          }}
+        />
+      </Accordion>
+    </div>
+  );
+
+  return (
+    <>
+      {/* سایدبار دسکتاپ: چسبان هوشمند با اسکرول باریک */}
+      <aside
+        style={{
+          top: 'calc(var(--header-height, 108px) + 0.75rem)',
+          maxHeight: 'calc(100vh - var(--header-height, 108px) - 1.5rem)',
+        }}
+        className="hidden lg:flex w-[18rem] shrink-0 sticky flex-col gap-4 overflow-y-auto scrollbar-thin select-none"
+        dir="rtl"
+      >
+        <ShopProductAdBanner
+          carId={carId}
+          partCategoryId={partCategoryId}
+          partId={partId}
+        />
+
+        <div className="h-fit w-full rounded-2xl border border-border bg-card p-4 shadow-xs">
+          <div className="mb-4 flex w-full select-none items-center justify-between border-b border-border pb-3">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-primary" />
+              <Typography variant="h5" className="font-bold text-foreground">
+                فیلترها
+              </Typography>
+            </div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={onClearAll}
+                className="text-xs font-bold text-destructive transition-colors hover:underline"
+              >
+                حذف همه
+              </button>
+            )}
+          </div>
+          {renderFilterContent(false)}
+        </div>
+      </aside>
+
+      {/* دراور فیلترهای موبایل */}
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0"
+        overlayClassName="bg-black/40 backdrop-blur-sm"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full p-1 text-foreground transition-colors hover:bg-muted"
+              aria-label="بستن پنجره"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <span className="flex items-center gap-1.5 text-xs font-bold sm:text-sm">
+              <Filter className="h-4 w-4 text-primary" />
+              فیلترها
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center justify-center rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="بستن پنجره"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="relative flex-1 overflow-y-auto p-4 scrollbar-thin" dir="rtl">
+          {renderFilterContent(true)}
+        </div>
+
+        <div className="sticky bottom-0 right-0 left-0 z-sticky flex shrink-0 gap-3 border-t border-border bg-card p-4 shadow-lg" dir="rtl">
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                onClearAll();
+                onClose();
+              }}
+              className="h-10 flex-1 rounded-xl border-destructive/20 text-xs font-bold text-destructive hover:bg-destructive/5"
+            >
+              حذف فیلترها
+            </Button>
+          )}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onClose}
+            className="h-10 flex-1 rounded-xl text-xs font-bold"
+          >
+            مشاهده نتایج
+          </Button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+==================== FILE: src\components\features\ProductGrid\SearchHeader.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { Typography } from '@/components/primitives/Typography';
+import { SlidersHorizontal, X, RotateCcw } from 'lucide-react';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
+import { toPersianDigits } from '@/core/utils/formatters';
+
+interface SearchHeaderProps {
+  totalCount: number;
+  currentSort: string;
+  onSortChange: (sort: string) => void;
+  filters: SearchProductsRequest;
+  onOpenMobileFilters?: () => void;
+  onOpenMobileSort?: () => void;
+  onRemoveFilter?: (name: string, value?: any) => void;
+  onClearAll?: () => void;
+  searchTitle?: string;
+  isMobileSticky?: boolean;
+}
+
+export function SearchHeader({
+  totalCount,
+  currentSort,
+  onSortChange,
+  filters,
+  onOpenMobileFilters,
+  onRemoveFilter,
+  onClearAll,
+  searchTitle,
+  isMobileSticky = false,
+}: SearchHeaderProps) {
+  const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
+
+  const activeChips = React.useMemo(() => {
+    const chips: Array<{ id: string; name: string; label: string; value?: any }> = [];
+
+    if (filters.isProductInStock) {
+      chips.push({ id: 'inStock', name: 'inStock', label: 'فقط کالاهای موجود' });
+    }
+    if (filters.hasDiscount) {
+      chips.push({ id: 'discount', name: 'discount', label: 'دارای تخفیف ویژه' });
+    }
+    if (filters.isSellerInUserCity) {
+      chips.push({ id: 'userCity', name: 'userCity', label: 'فروشنده‌های شهر من' });
+    }
+    if (filters.types && filters.types.length > 0) {
+      const typeLabels: Record<string, string> = { New: 'نو', Stock: 'استوک', TakeOff: 'زیرصفری' };
+      filters.types.forEach((t: string) => {
+        chips.push({ id: `type-${t}`, name: 'types', label: `نوع: ${typeLabels[t] || t}`, value: t });
+      });
+    }
+    if (filters.fromPrice || filters.toPrice) {
+      const from = filters.fromPrice ? Math.round(filters.fromPrice / 10) : 0;
+      const to = filters.toPrice ? Math.round(filters.toPrice / 10) : 0;
+      chips.push({
+        id: 'price',
+        name: 'fromPrice',
+        label: `قیمت: ${formatNumber(from)} تا ${formatNumber(to)} تومان`,
+      });
+    }
+
+    return chips;
+  }, [filters]);
+
+if (isMobileSticky) {
+    return (
+      <div
+        dir="rtl"
+        className="sticky top-14 z-30 -mx-4 -mt-4 mb-1 flex w-[calc(100%+2rem)] select-none items-center justify-between gap-2.5 border-b border-border/80 bg-card/95 px-4 py-2.5 shadow-xs backdrop-blur-md md:hidden"
+      >
+        <button
+          type="button"
+          onClick={onOpenMobileFilters}
+          className="flex h-9 flex-1 select-none items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 text-xs font-bold shadow-xs hover:border-primary/40 active:scale-95"
+        >
+          <SlidersHorizontal className="h-4 w-4 text-primary" />
+          <span>فیلترها</span>
+        </button>
+
+        <SortSelector
+          value={currentSort}
+          onChange={onSortChange}
+          variant="trigger"
+        />
+
+        <span className="flex h-9 shrink-0 select-none items-center justify-center rounded-xl bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
+          {formatNumber(totalCount)} کالا
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex w-full select-none flex-col gap-3 pb-1" dir="rtl">
+      <div className="flex w-full items-center justify-between md:border-b md:border-border md:pb-3">
+        <Typography variant="h3" className="text-base sm:text-lg md:text-xl font-bold text-foreground">
+          {searchTitle ? `نتایج جستجو برای «${searchTitle}»` : 'لیست قطعات یدکی خودرو'}
+        </Typography>
+        <span className="hidden rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground md:inline-block">
+          {formatNumber(totalCount)} کالا
+        </span>
+      </div>
+
+      {/* مرتب‌سازی کپسولی در دسکتاپ */}
+      <div className="hidden md:block">
+        <SortSelector
+          value={currentSort}
+          onChange={onSortChange}
+        />
+      </div>
+
+      {/* چیپ‌های فیلترهای فعال (Active Filter Chips) */}
+      {activeChips.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
+          <span className="text-2xs font-bold text-muted-foreground ml-1">فیلترهای فعال:</span>
+
+          {activeChips.map((chip) => (
+            <div
+              key={chip.id}
+              className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-2xs font-semibold text-primary shadow-xs"
+            >
+              <span>{chip.label}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (chip.name === 'fromPrice') {
+                    onRemoveFilter?.('fromPrice');
+                    onRemoveFilter?.('toPrice');
+                  } else {
+                    onRemoveFilter?.(chip.name, chip.value);
+                  }
+                }}
+                className="flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-primary/20 transition-colors"
+                aria-label={`حذف فیلتر ${chip.label}`}
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
+            </div>
+          ))}
+
+          {activeChips.length > 1 && onClearAll && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="inline-flex items-center gap-1 text-2xs font-bold text-destructive hover:underline pr-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span>حذف همه</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+==================== FILE: src\components\features\ProductGrid\SearchContent.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
+import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
+import { SearchHeader } from './SearchHeader';
+import { SearchSidebar } from './SearchSidebar';
+import { ProductSearchCard } from '../ProductCard/ProductSearchCard';
+import { ProductCardSkeleton } from '../ProductCard/ProductCardSkeleton';
+import { Pagination } from '@/components/composites/Pagination/Pagination';
+import { BottomSheet } from '@/components/composites/BottomSheet/BottomSheet';
+import { Typography } from '@/components/primitives/Typography';
+import { Button } from '@/components/primitives/Button/Button';
+import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
+import { Check, Loader2, AlertCircle, Sparkles, RotateCcw } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+
+const SORT_OPTIONS = [
+  { value: 'Selected', label: 'منتخب' },
+  { value: 'MostVisited', label: 'پربازدیدترین' },
+  { value: 'Newest', label: 'جدیدترین' },
+  { value: 'BestSelling', label: 'پرفروش‌ترین' },
+  { value: 'Cheapest', label: 'ارزان‌ترین' },
+  { value: 'MostExpensive', label: 'گران‌ترین' },
+];
+
+export function SearchContent() {
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
+  const [isMobileSortOpen, setIsMobileSortOpen] = React.useState(false);
+  const { filters, setFilter, removeFilter, clearFilters } = useSearchFilters();
+
+  const { data, isLoading, isFetching, isError } = useSearchProducts(filters);
+  const isSearching = isLoading || isFetching;
+
+  const productItems = data?.items || [];
+  const totalCount = data?.totalCount || 0;
+  const totalPages = data?.totalPages || 1;
+
+  const handleMobileSortSelect = (value: string) => {
+    setFilter('sort', value);
+    setIsMobileSortOpen(false);
+  };
+
+  const searchedKeyword = filters.searchTitle?.trim() || '';
+
+  return (
+    <div className="relative flex w-full flex-col gap-4 md:gap-5" dir="rtl">
+      {/* هدر چسبان موبایل */}
+      <SearchHeader
+        totalCount={isSearching ? 0 : totalCount}
+        currentSort={filters.orderType || 'Selected'}
+        onSortChange={(sort) => setFilter('sort', sort)}
+        filters={filters}
+        onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
+        onOpenMobileSort={() => setIsMobileSortOpen(true)}
+        onRemoveFilter={removeFilter}
+        onClearAll={clearFilters}
+        searchTitle={filters.searchTitle}
+        isMobileSticky={true}
+      />
+
+      <div className="flex w-full items-start gap-6 lg:gap-7">
+        {/* سایدبار چسبان دسکتاپ */}
+        <SearchSidebar
+          filters={filters}
+          onFilterChange={(name, val) => setFilter(name, val)}
+          onClearAll={clearFilters}
+          isOpen={isMobileFiltersOpen}
+          onClose={() => setIsMobileFiltersOpen(false)}
+        />
+
+        {/* بخش اصلی نتایج */}
+        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-5">
+          <div className="hidden md:block">
+            <SearchHeader
+              totalCount={isSearching ? 0 : totalCount}
+              currentSort={filters.orderType || 'Selected'}
+              onSortChange={(sort) => setFilter('sort', sort)}
+              filters={filters}
+              onRemoveFilter={removeFilter}
+              onClearAll={clearFilters}
+              searchTitle={filters.searchTitle}
+              isMobileSticky={false}
+            />
+          </div>
+
+          {/* نشانگر بارگذاری نتایج جدید */}
+          {isSearching && (
+            <div className="flex animate-pulse items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold text-primary">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>در حال جستجو و دریافت نتایج جدید...</span>
+            </div>
+          )}
+
+          {/* ۱. حالت لودینگ: اسکلتون کارت‌ها */}
+          {isSearching ? (
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+              {[...Array(8)].map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : isError ? (
+            /* ۲. حالت خطای سرور */
+            <div className="mx-4 flex select-none flex-col items-center justify-center rounded-2xl border border-dashed border-destructive/30 bg-card p-8 text-center md:mx-0">
+              <AlertCircle className="mb-4 h-12 w-12 text-destructive stroke-[1.5]" />
+              <Typography variant="h4" className="font-bold text-foreground">
+                خطای ارتباط با سرور
+              </Typography>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                لطفاً بعداً دوباره تلاش کنید یا اتصال اینترنت خود را بررسی نمایید.
+              </p>
+            </div>
+          ) : productItems.length > 0 ? (
+            /* ۳. نمایش نتایج کالاها */
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+                {productItems.map((prod) => (
+                  <ProductSearchCard key={prod.id} product={prod} />
+                ))}
+              </div>
+
+              <div className="pt-4">
+                <Pagination
+                  currentPage={filters.pageNumber || 1}
+                  totalPages={totalPages}
+                  onPageChange={(page) => setFilter('page', page)}
+                />
+              </div>
+            </>
+          ) : (
+            /* ۴. حالت نتیجه‌ای یافت نشد */
+            <div className="mx-2 flex select-none flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card px-4 py-12 text-center md:mx-0 shadow-xs">
+              <div className="-mt-2 mb-2 flex h-52 w-52 max-w-full items-center justify-center">
+                <LottiePlayer path="/animations/no-product.json" className="h-full w-full" />
+              </div>
+
+              <Typography variant="h3" className="text-base font-bold text-foreground md:text-xl">
+                چیزی پیدا نشد!
+              </Typography>
+
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {searchedKeyword ? (
+                  <>برای «<span className="font-bold text-foreground">{searchedKeyword}</span>» نتیجه‌ای پیدا نکردیم.</>
+                ) : (
+                  <>برای فیلترهای انتخاب‌شده نتیجه‌ای پیدا نکردیم.</>
+                )}
+              </p>
+
+              <div className="mt-6 flex w-full max-w-md flex-col gap-2 rounded-2xl border border-border/70 bg-muted/40 p-4">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                  <Sparkles className="h-3.5 w-3.5 text-warning shrink-0" />
+                  <span>پیشنهاد می‌کنیم:</span>
+                </div>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  جستجو با نام قطعه + مدل خودرو
+                </p>
+                <div className="mt-1 flex items-center justify-between gap-2 border-t border-dashed border-border/60 pt-2">
+                  <span className="text-2xs text-muted-foreground">
+                    مثال: «لنت ترمز پژو ۲۰۶»
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFilter('searchTitle', 'لنت ترمز پژو ۲۰۶')}
+                    className="cursor-pointer text-2xs font-bold text-primary transition-colors hover:underline shrink-0"
+                  >
+                    جستجوی این نمونه
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center gap-2.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="flex h-10 items-center gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs border-border"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>پاک کردن فیلترها</span>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* باتم‌شیت مرتب‌سازی در موبایل */}
+      <BottomSheet
+        isOpen={isMobileSortOpen}
+        onClose={() => setIsMobileSortOpen(false)}
+        title="مرتب‌سازی بر اساس"
+      >
+        <div className="flex w-full flex-col divide-y divide-border/60" dir="rtl">
+          {SORT_OPTIONS.map((opt) => {
+            const isActive = (filters.orderType || 'Selected') === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => handleMobileSortSelect(opt.value)}
+                className={cn(
+                  'flex w-full items-center justify-between py-3.5 text-xs font-bold transition-colors outline-none',
+                  isActive ? 'text-primary' : 'text-foreground hover:bg-muted/30'
+                )}
+              >
+                <span>{opt.label}</span>
+                {isActive && <Check className="h-4 w-4 text-primary stroke-[2.5]" />}
+              </button>
+            );
+          })}
+        </div>
+      </BottomSheet>
+    </div>
+  );
+}
+
+==================== FILE: src\components\composites\FilterList\FilterList.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+import { Input } from '@/components/primitives/Input/Input';
+import { Skeleton } from '@/components/primitives/Skeleton/Skeleton';
+import { Search, Loader2, Inbox, X } from 'lucide-react';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+
+interface FilterItem {
+  id: string;
+  name: string;
+}
+
+export interface FilterListProps {
+  items: FilterItem[];
+  selectedIds: string[];
+  onChange: (id: string, checked: boolean) => void;
+  searchPlaceholder: string;
+  onSearchChange: (query: string) => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  isLoading?: boolean;
+}
+
+export function FilterList({
+  items,
+  selectedIds,
+  onChange,
+  searchPlaceholder,
+  onSearchChange,
+  onLoadMore,
+  hasMore = false,
+  isLoadingMore = false,
+  isLoading = false,
+}: FilterListProps) {
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const debouncedQuery = useDebounce(searchQuery, 400);
+
+  React.useEffect(() => {
+    onSearchChange(debouncedQuery);
+  }, [debouncedQuery, onSearchChange]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (!onLoadMore || !hasMore || isLoadingMore) return;
+    const target = e.currentTarget;
+    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= 15;
+    if (isAtBottom) onLoadMore();
+  };
+
+  const activeSelectedItems = React.useMemo(
+    () => items.filter((item) => selectedIds.includes(item.id)),
+    [items, selectedIds]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex flex-col gap-3.5 pt-1 px-1">
+        <Skeleton className="w-full h-9 rounded-md" />
+        <div className="flex flex-col gap-3 ps-1 pe-3.5 mt-2.5">
+          <Skeleton variant="text" className="w-11/12" />
+          <Skeleton variant="text" className="w-3/4" />
+          <Skeleton variant="text" className="w-5/6" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full flex flex-col gap-3.5 pt-1 px-1">
+      <Input
+        type="text"
+        placeholder={searchPlaceholder}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        size="sm"
+        leftIcon={<Search className="h-3.5 w-3.5" />}
+        className="w-full"
+      />
+
+      {activeSelectedItems.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5 pb-2 border-b border-dashed border-border animate-fade-in">
+          {activeSelectedItems.map((item) => (
+            <div
+              key={`selected-${item.id}`}
+              className="flex items-center gap-1 rounded-sm bg-accent px-2 py-1 text-2xs font-medium text-accent-foreground"
+            >
+              <span className="truncate max-w-[5rem]">{item.name}</span>
+              <button
+                type="button"
+                onClick={() => onChange(item.id, false)}
+                className="shrink-0 rounded-full p-0.5 hover:bg-accent-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`حذف ${item.name}`}
+              >
+                <X aria-hidden="true" className="h-2.5 w-2.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <div
+        onScroll={handleScroll}
+        className="flex flex-col gap-2.5 max-h-48 overflow-y-auto ps-1 pe-3.5 py-1 scrollbar-thin"
+      >
+        {items.length > 0 ? (
+          items.map((item) => (
+            <Checkbox
+              key={item.id}
+              label={item.name}
+              checked={selectedIds.includes(item.id)}
+              onChange={(checked) => onChange(item.id, checked)}
+            />
+          ))
+        ) : (
+          <div className="w-full flex flex-col items-center justify-center py-6 text-center select-none">
+            <Inbox aria-hidden="true" className="mb-2 h-6 w-6 text-muted-foreground/50" />
+            <span className="text-2xs text-muted-foreground">موردی یافت نشد</span>
+          </div>
+        )}
+
+        {hasMore ? (
+          <div className="flex h-8 w-full shrink-0 items-center justify-center py-1.5">
+            {isLoadingMore ? <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin text-primary" /> : null}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+==================== FILE: src\components\composites\PriceSlider\PriceSlider.tsx ====================
+
+// src/components/features/ProductGrid/PriceSlider.tsx
+'use client';
+
+import * as React from 'react';
+import { Button } from '@/components/primitives/Button';
+
+export interface PriceSliderProps {
+  min: number;
+  max: number;
+  value: [number, number];
+  onChange: (value: [number, number]) => void;
+  onApply: () => void;
+  step?: number;
+}
+
+export function PriceSlider({
+  min = 0,
+  max = 100000000,
+  value,
+  onChange,
+  onApply,
+  step,
+}: PriceSliderProps) {
+  const safeMin = Number.isFinite(min) ? min : 0;
+  const safeMax = Number.isFinite(max) && max > safeMin ? max : safeMin + 10000000;
+
+  const [minVal, setMinVal] = React.useState(value?.[0] ?? safeMin);
+  const [maxVal, setMaxVal] = React.useState(value?.[1] ?? safeMax);
+  const [activeThumb, setActiveThumb] = React.useState<'min' | 'max' | null>(null);
+
+  const calculatedStep = React.useMemo(() => {
+    if (step && step > 0) return step;
+    const diff = safeMax - safeMin;
+    if (diff > 50000000) return 500000;
+    if (diff > 10000000) return 100000;
+    if (diff > 1000000) return 50000;
+    return 10000;
+  }, [step, safeMin, safeMax]);
+
+  const minGap = calculatedStep * 2;
+
+  React.useEffect(() => {
+    if (Array.isArray(value) && value.length === 2) {
+      setMinVal(Math.max(safeMin, Math.min(value[0], safeMax)));
+      setMaxVal(Math.min(safeMax, Math.max(value[1], safeMin)));
+    }
+  }, [value, safeMin, safeMax]);
+
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextMin = Math.min(Number(e.target.value), maxVal - minGap);
+    setMinVal(nextMin);
+    onChange([nextMin, maxVal]);
+  };
+
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextMax = Math.max(Number(e.target.value), minVal + minGap);
+    setMaxVal(nextMax);
+    onChange([minVal, nextMax]);
+  };
+
+  const toToman = (val: number) => {
+    const toman = val > 10000 ? Math.round(val / 10) : val;
+    return new Intl.NumberFormat('fa-IR').format(toman);
+  };
+
+  const rangeDiff = Math.max(1, safeMax - safeMin);
+  const minPercent = Math.min(100, Math.max(0, ((minVal - safeMin) / rangeDiff) * 100));
+  const maxPercent = Math.min(100, Math.max(0, ((maxVal - safeMin) / rangeDiff) * 100));
+
+  return (
+    <div className="flex w-full flex-col gap-4 py-2 select-none" dir="rtl">
+      <div className="relative flex h-7 w-full items-center" dir="ltr">
+        <div className="relative h-1.5 w-full rounded-full bg-muted border border-border/60 overflow-hidden">
+          <div
+            style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
+            className="absolute top-0 bottom-0 rounded-full bg-primary"
+          />
+        </div>
+
+        <input
+          type="range"
+          min={safeMin}
+          max={safeMax}
+          step={calculatedStep}
+          value={minVal}
+          onFocus={() => setActiveThumb('min')}
+          onChange={handleMinChange}
+          aria-label="حداقل قیمت"
+          className={`pointer-events-none absolute h-7 w-full appearance-none bg-transparent opacity-0 cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 ${
+            activeThumb === 'min' || minPercent > 80 ? 'z-30' : 'z-20'
+          }`}
+        />
+
+        <input
+          type="range"
+          min={safeMin}
+          max={safeMax}
+          step={calculatedStep}
+          value={maxVal}
+          onFocus={() => setActiveThumb('max')}
+          onChange={handleMaxChange}
+          aria-label="حداکثر قیمت"
+          className={`pointer-events-none absolute h-7 w-full appearance-none bg-transparent opacity-0 cursor-pointer [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 ${
+            activeThumb === 'max' ? 'z-30' : 'z-20'
+          }`}
+        />
+
+        <div
+          style={{ left: `${minPercent}%` }}
+          className="pointer-events-none absolute z-25 h-4.5 w-4.5 -translate-x-1/2 rounded-full border-2 border-background bg-primary shadow-sm ring-2 ring-primary/25 transition-transform duration-75 active:scale-110"
+          aria-hidden="true"
+        />
+
+        <div
+          style={{ left: `${maxPercent}%` }}
+          className="pointer-events-none absolute z-25 h-4.5 w-4.5 -translate-x-1/2 rounded-full border-2 border-background bg-primary shadow-sm ring-2 ring-primary/25 transition-transform duration-75 active:scale-110"
+          aria-hidden="true"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-right">
+        <div className="flex flex-col gap-0.5 rounded-xl border border-border/80 bg-muted/30 px-2.5 py-1.5">
+          <span className="text-[0.625rem] font-bold text-muted-foreground">از</span>
+          <div className="flex items-baseline justify-between gap-1">
+            <span className="text-xs font-bold text-foreground">{toToman(minVal)}</span>
+            <span className="text-[0.625rem] text-muted-foreground">تومان</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-0.5 rounded-xl border border-border/80 bg-muted/30 px-2.5 py-1.5">
+          <span className="text-[0.625rem] font-bold text-muted-foreground">تا</span>
+          <div className="flex items-baseline justify-between gap-1">
+            <span className="text-xs font-bold text-foreground">{toToman(maxVal)}</span>
+            <span className="text-[0.625rem] text-muted-foreground">تومان</span>
+          </div>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        onClick={onApply}
+        fullWidth
+        className="h-9 rounded-xl text-xs font-bold shadow-xs active:scale-98 transition-all"
+      >
+        اعمال فیلتر قیمت
+      </Button>
+    </div>
+  );
+}
+
+==================== FILE: src\components\composites\SortSelector\SortSelector.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { motion } from 'framer-motion';
+import { ArrowUpDown, Check, ChevronDown } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { BottomSheet } from '@/components/composites/BottomSheet';
+
+export const SORT_OPTIONS = [
+  { value: 'Selected', label: 'منتخب' },
+  { value: 'MostVisited', label: 'پربازدیدترین' },
+  { value: 'Newest', label: 'جدیدترین' },
+  { value: 'BestSelling', label: 'پرفروش‌ترین' },
+  { value: 'Cheapest', label: 'ارزان‌ترین' },
+  { value: 'MostExpensive', label: 'گران‌ترین' },
+] as const;
+
+export type SortValue = typeof SORT_OPTIONS[number]['value'];
+
+export interface SortSelectorProps {
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+  label?: string;
+  variant?: 'default' | 'trigger';
+}
+
+export function SortSelector({
+  value,
+  onChange,
+  className,
+  label = 'مرتب‌سازی بر اساس:',
+  variant = 'default',
+}: SortSelectorProps) {
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const activeValue = SORT_OPTIONS.some((opt) => opt.value === value) ? value : 'Selected';
+  const activeOptionLabel = SORT_OPTIONS.find((opt) => opt.value === activeValue)?.label ?? 'منتخب';
+
+  return (
+    <div className={cn(variant === 'trigger' ? 'flex-1 min-w-0' : 'w-full')}>
+      <div className={cn('hidden md:flex w-full items-center gap-3.5 rounded-lg bg-muted p-2 select-none', className)}>
+        <div className="flex shrink-0 items-center gap-2 ps-2 text-muted-foreground">
+          <ArrowUpDown aria-hidden="true" className="h-4 w-4 text-primary" />
+          <span className="text-xs font-semibold">{label}</span>
+        </div>
+
+        <div className="relative flex items-center gap-1.5">
+          {SORT_OPTIONS.map((opt) => {
+            const isActive = activeValue === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange(opt.value)}
+                className={cn(
+                  'relative shrink-0 whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {isActive && isMounted ? (
+                  <motion.span
+                    layoutId="activeSortPill"
+                    className="absolute inset-0 rounded-full bg-card shadow-sm"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                ) : null}
+                <span className="relative z-10">{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="block w-full md:hidden">
+        {variant === 'trigger' ? (
+          <button
+            type="button"
+            onClick={() => setIsMobileSheetOpen(true)}
+            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-border bg-card px-3 text-xs font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ArrowUpDown aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary" />
+            <span className="truncate">{activeOptionLabel}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsMobileSheetOpen(true)}
+            className="flex h-11 w-full items-center justify-between rounded-lg bg-muted px-4 text-xs font-semibold text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <div className="flex items-center gap-2">
+              <ArrowUpDown aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+              <span className="text-muted-foreground">مرتب‌سازی:</span>
+              <span className="font-bold text-primary">{activeOptionLabel}</span>
+            </div>
+            <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
+        )}
+
+        <BottomSheet
+          isOpen={isMobileSheetOpen}
+          onClose={() => setIsMobileSheetOpen(false)}
+          title="مرتب‌سازی بر اساس"
+        >
+          <div className="flex w-full flex-col divide-y divide-border text-start">
+            {SORT_OPTIONS.map((opt) => {
+              const isActive = activeValue === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsMobileSheetOpen(false);
+                  }}
+                  className={cn(
+                    'flex w-full items-center justify-between py-4 text-sm font-semibold transition-colors',
+                    isActive ? 'text-primary' : 'text-foreground'
+                  )}
+                >
+                  <span>{opt.label}</span>
+                  {isActive ? <Check aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" /> : null}
+                </button>
+              );
+            })}
+          </div>
+        </BottomSheet>
+      </div>
+    </div>
+  );
+}
+
+==================== FILE: src\domains\front\product\types\view.types.ts ====================
+
+export interface ProductViewModel {
+  id: string;
+  shopProductId?: string;
+  code: number;
+  name: string;
+  englishTitle: string;
+  description: string;
+  price: {
+    raw: number;
+    formatted: string;
+    toman: number;
+    formattedToman: string;
+  };
+  discount: {
+    hasDiscount: boolean;
+    percent: number;
+    originalPrice: string;
+    discountedPrice: string;
+    expirationDate: string | null;
+    isActive: boolean;
+  };
+  images: {
+    thumbnail: string;
+    medium: string;
+    large: string;
+    alt: string;
+  }[];
+  category: {
+    id: string;
+    name: string;
+    englishTitle: string;
+  };
+  brand: {
+    id: string;
+    name: string;
+    englishTitle: string;
+  };
+  shop: {
+    id: string;
+    name: string;
+    rating: number;
+    ratingStars: number;
+  };
+  inventory: {
+    isInStock: boolean;
+    count: number;
+    status: 'AVAILABLE' | 'LIMITED' | 'OUT_OF_STOCK';
+    statusText: string;
+  };
+  type: {
+    value: 'NEW' | 'STOCK' | 'TAKEOFF';
+    label: string;
+    badge: 'success' | 'warning' | 'info';
+  };
+  metadata: {
+    createdAt: string;
+    updatedAt: string;
+    isNew: boolean;
+    isRecentlyUpdated: boolean;
+  };
+  rating: {
+    average: number;
+    count: number;
+    stars: number;
+    percentage: number;
+  };
+  statistics: {
+    views: number;
+    viewsFormatted: string;
+    commentCount: number;
+    inquiryCount: number;
+    popularity: 'HIGH' | 'MEDIUM' | 'LOW';
+    popularityText: string;
+  };
+  isFavorite: boolean;
+}
+
+export interface SearchProductsRequest {
+  // فیلدهای OpenSearch
+  searchTitle?: string;
+  brandIds?: string[];
+  partIds?: string[];
+  partCategoryIds?: string[];
+  carIds?: string[];
+  shopIds?: string[];
+  productCode?: number;
+  types?: Array<number | 'New' | 'Stock' | 'TakeOff'>;
+  fromPrice?: number;
+  toPrice?: number;
+  onlyInStock?: boolean;
+  onlyDiscounted?: boolean;
+  onlyDirectShipping?: boolean;
+  sortBy?: string;
+  sortDesc?: boolean;
+  includeAggregations?: boolean;
+
+  // فیلدهای قبلی جهت سازگاری کامل صفحات
+  isProductInStock?: boolean;
+  isSellerInUserCity?: boolean;
+  partCategoryEnglishTitle?: string;
+  partEnglishTitle?: string;
+  carModel?: string;
+  shopId?: string;
+  cityId?: string;
+  hasDiscount?: boolean;
+  hasDiscountWithExpiration?: boolean;
+  orderType?: 'Selected' | 'MostVisited' | 'Newest' | 'BestSelling' | 'Cheapest' | 'MostExpensive' | 'HighestRated';
+  productDetails?: string;
+  samePartByProductCode?: number;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface ProductPriceChartViewModel {
+  dates: string[];
+  prices: number[];
+  averagePrice: number;
+  minPrice: number;
+  maxPrice: number;
+}
+
+export interface BrandViewModel {
+  id: string;
+  name: string;
+  englishTitle: string;
+  logo: string | null;
+}
+
+export interface CarViewModel {
+  id: string;
+  model: string;
+  englishTitle: string;
+  cover: string | null;
+}
+
+export interface ProductSpecViewModel {
+  name: string;
+  value: string;
+  isMain: boolean;
+}
+
+export interface ProductSpecGroupViewModel {
+  name: string;
+  specs: ProductSpecViewModel[];
+}
+
+export interface BreadCrumbViewModel {
+  id: string;
+  title: string;
+  englishTitle: string;
+  url: string;
+}
+
+export interface ProductDetailsViewModel {
+  id: string;
+  code: number;
+  title: string;
+  image: string;
+  imageAlt: string;
+  description: string;
+  partNumber: string | null;
+  averageRate: number;
+  rateCount: number;
+  views: string;
+  salesCount: string;
+  brand: BrandViewModel;
+  cars: CarViewModel[];
+  gallery: string[];
+  specGroups: ProductSpecGroupViewModel[];
+  seo: {
+    title: string;
+    description: string;
+  };
+  breadCrumbs: BreadCrumbViewModel[];
+}
+
+export interface ShopDetailsViewModel {
+  id: string;
+  title: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  phone: string | null;
+  averageRate: number;
+  logo: string | null;
+}
+
+export interface ShopProductViewModel {
+  id: string;
+  quantity: number;
+  retailPrice: string;
+  finalPrice: string;
+  retailPriceRaw: number;
+  finalPriceRaw: number;
+  discountPercentage: number;
+  hasDiscount: boolean;
+  type: 'New' | 'Stock' | 'TakeOff';
+  typeLabel: string;
+  isAdvertised: boolean;
+  isLocalSale: boolean;
+  isTipaxShipping: boolean;
+  isDirectShipping: boolean;
+  dayOfDelivery: number;
+  dayOfDeliveryLabel: string;
+  shop: ShopDetailsViewModel;
+  warrantyTitle: string;
+}
+
+export interface ShopProductsGroupViewModel {
+  newNominated: ShopProductViewModel | null;
+  newOnline: ShopProductViewModel[];
+  newLocal: ShopProductViewModel[];
+  takeOffNominated: ShopProductViewModel | null;
+  takeOffOnline: ShopProductViewModel[];
+  takeOffLocal: ShopProductViewModel[];
+  stockNominated: ShopProductViewModel | null;
+  stockOnline: ShopProductViewModel[];
+  stockLocal: ShopProductViewModel[];
+}
+
+export interface ProductPageViewModel {
+  product: ProductDetailsViewModel;
+  shopProducts: ShopProductsGroupViewModel;
+}
+
+export interface PriceChartViewModel {
+  dates: string[];
+  prices: number[];
+  averagePrice: string;
+  minPrice: string;
+  maxPrice: string;
+}
+
+export interface CommentsAverageViewModel {
+  averageRate: number;
+  allRatesCount: number;
+  allCommentsCount: number;
+  allInquiriesCount: number;
+  starPercentages: {
+    five: number;
+    four: number;
+    three: number;
+    two: number;
+    one: number;
+  };
+}
+
+export interface CommentItemViewModel {
+  id: string;
+  comment: string;
+  rate: number;
+  creator: string;
+  likes: number;
+  dislikes: number;
+  repliesCount: number;
+  createDateFormatted: string;
+  isSellerComment: boolean;
+  isBuyerUser: boolean;
+  isYourComment: boolean;
+  userBoughtFrom: string | null;
+  userLiked: boolean;
+  userDisLiked: boolean;
+}
+
+export interface InquiryItemViewModel {
+  id: string;
+  comment: string;
+  creator: string;
+  replyCount: number;
+  likes: number;
+  dislikes: number;
+  isSellerComment: boolean;
+  isBuyerUser: boolean;
+  isYourComment: boolean;
+  createDateFormatted: string;
+  userLiked: boolean;
+  userDisLiked: boolean;
+  bestReply: InquiryItemViewModel | null;
+}
+
+==================== FILE: src\app\(public)\search\page.tsx ====================
+
+import type { Metadata } from 'next';
+import { getServerCurrentUser } from '@/domains/auth/server.auth';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { getPartService } from '@/domains/front/part/services/part.service';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { SearchContent } from '@/components/features/ProductGrid/SearchContent';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { getHttpClient } from '@/core/http';
+
+interface SearchPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
+}
+
+// جلوگیری از باگ‌های امنیتی XSS در اسکریپت‌های ساختاریافته
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                 سئوی داینامیک متناسب با عبارت جستجو شده                    */
+/* -------------------------------------------------------------------------- */
+
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(searchParams);
+  const query = typeof resolvedParams.q === 'string' ? resolvedParams.q.trim() : '';
+  const carModel = typeof resolvedParams.carModel === 'string' ? resolvedParams.carModel.trim() : '';
+  const category = typeof resolvedParams.category === 'string' ? resolvedParams.category.trim() : '';
+
+  let pageTitle = 'جستجوی قطعات یدکی و لوازم خودرو';
+
+  if (query && carModel) {
+    pageTitle = `خرید و قیمت ${query} برای ${carModel}`;
+  } else if (query) {
+    pageTitle = `قیمت و خرید ${query}`;
+  } else if (carModel) {
+    pageTitle = `لوازم یدکی و قطعات ${carModel}`;
+  } else if (category) {
+    pageTitle = `قطعات دسته ${category}`;
+  }
+
+  const canonicalUrl = 'https://www.yadakchi.com/search';
+
+  return {
+    title: `${pageTitle} | یدکچی`,
+    description: `جستجو، مقایسه قیمت و خرید آنلاین ${query || 'قطعات یدکی'} از معتبرترین فروشگاه‌های قطعات کشور با ضمانت اصالت در یدکچی.`,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${pageTitle} | یدکچی`,
+      description: 'بازارگاه تخصصی و جامع خرید آنلاین انواع قطعات و لوازم یدکی خودرو در ایران',
+      url: canonicalUrl,
+      siteName: 'یدکچی',
+      locale: 'fa_IR',
+      type: 'website',
+      images: [
+        {
+          url: 'https://api.yadakchi.com/Logo.svg',
+          width: 1200,
+          height: 630,
+          alt: pageTitle,
+        },
+      ],
+    },
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                صفحه اصلی سرچ                               */
+/* -------------------------------------------------------------------------- */
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  // ✅ حل باگ Next.js 15: حل ناهمگام searchParams
+  const resolvedParams = await Promise.resolve(searchParams);
+
+  // ✅ حل باگ Cache Miss: ست کردن staleTime تا در کلاینت فورا دوباره درخواست ارسال نشود
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // ۱ دقیقه کش پایدار در کلاینت بدون رفرش ناخواسته
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const user = await getServerCurrentUser();
+  if (user) {
+    queryClient.setQueryData(queryKeys.auth.user, user);
+  }
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+  const partService = getPartService();
+
+  // نرمال‌سازی ایمن فیلترها
+  const fromPrice = resolvedParams.fromPrice ? Number(resolvedParams.fromPrice) : undefined;
+  const toPrice = resolvedParams.toPrice ? Number(resolvedParams.toPrice) : undefined;
+  const pageNumber = resolvedParams.page ? Math.max(1, Number(resolvedParams.page)) : 1;
+  const pageSize = resolvedParams.pageSize ? Math.max(1, Number(resolvedParams.pageSize)) : 30;
+
+  const filters: SearchProductsRequest = {
+    searchTitle: typeof resolvedParams.q === 'string' ? resolvedParams.q : undefined,
+    isProductInStock: resolvedParams.inStock === 'true' ? true : undefined,
+    isSellerInUserCity: resolvedParams.userCity === 'true' ? true : undefined,
+    partCategoryEnglishTitle: typeof resolvedParams.category === 'string' ? resolvedParams.category : undefined,
+    partEnglishTitle: typeof resolvedParams.part === 'string' ? resolvedParams.part : undefined,
+    carModel: typeof resolvedParams.carModel === 'string' ? resolvedParams.carModel : undefined,
+    shopId: typeof resolvedParams.shopId === 'string' ? resolvedParams.shopId : undefined,
+    cityId: typeof resolvedParams.cityId === 'string' ? resolvedParams.cityId : undefined,
+    hasDiscount: resolvedParams.discount === 'true' ? true : undefined,
+    hasDiscountWithExpiration: resolvedParams.discountExp === 'true' ? true : undefined,
+    fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
+    toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
+    orderType: (resolvedParams.sort as any) || 'Selected',
+    pageNumber: !isNaN(pageNumber) ? pageNumber : 1,
+    pageSize: !isNaN(pageSize) ? pageSize : 30,
+    brandIds: typeof resolvedParams.brandIds === 'string' ? [resolvedParams.brandIds] : Array.isArray(resolvedParams.brandIds) ? resolvedParams.brandIds : undefined,
+    carIds: typeof resolvedParams.carIds === 'string' ? [resolvedParams.carIds] : Array.isArray(resolvedParams.carIds) ? resolvedParams.carIds : undefined,
+    partCategoryIds: typeof resolvedParams.partCategoryIds === 'string' ? [resolvedParams.partCategoryIds] : Array.isArray(resolvedParams.partCategoryIds) ? resolvedParams.partCategoryIds : undefined,
+  };
+
+  // ✅ استفاده از Promise.allSettled تا در صورت خطای یک سرویس فرعی، کل صفحه مسدود نشود
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(filters),
+      queryFn: () => productService.searchProducts(filters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+ queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const client = getHttpClient();
+        const response = await client.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@type': 'SearchResultsPage',
+    '@id': 'https://www.yadakchi.com/search/#webpage',
+    url: 'https://www.yadakchi.com/search',
+    name: 'نتایج جستجوی قطعات یدکی خودرو | یدکچی',
+    description: 'صفحه نمایش نتایج جستجو و فیلترینگ قطعات خودرو بر اساس برند، مدل خودرو و دسته‌بندی قطعه',
+    isPartOf: {
+      '@id': 'https://www.yadakchi.com/#website',
+    },
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <SearchContent />
+    </HydrationBoundary>
+  );
+}

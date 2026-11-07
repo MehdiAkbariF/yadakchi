@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { createPortal } from 'react-dom';
@@ -153,7 +153,7 @@ export function AddressModal({
         animate={{ y: '0%', opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
         transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-        className="relative z-10 flex h-full max-h-full w-full max-w-none flex-col overflow-hidden bg-card shadow-2xl md:h-[580px] md:max-h-[90vh] md:max-w-xl md:rounded-2xl border border-border/80"
+        className="relative z-10 flex h-full max-h-full w-full max-w-none flex-col overflow-hidden bg-card shadow-2xl md:h-[36.25rem] md:max-h-[90vh] md:max-w-xl md:rounded-2xl border border-border/80"
       >
         {/* هدر شفاف و استاندارد مودال */}
         <div className="flex shrink-0 items-center justify-between border-b border-border/60 bg-card px-5 py-4">
@@ -169,7 +169,7 @@ export function AddressModal({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <MapPin aria-hidden="true" className="h-4 w-4" />
             </div>
-            <span className="text-sm font-bold text-foreground">
+            <span className="text-title-sm">
               {isNewAddressOpen ? 'تکمیل جزئیات آدرس جدید' : 'انتخاب آدرس تحویل سفارش'}
             </span>
           </div>
@@ -194,17 +194,17 @@ export function AddressModal({
               <div className="flex items-start gap-3 rounded-xl border border-border/70 bg-secondary/30 p-3.5">
                 <Navigation className="h-4 w-4 shrink-0 text-primary mt-0.5" />
                 <div className="flex flex-col gap-1 min-w-0 flex-1">
-                  <span className="text-2xs font-bold text-muted-foreground">
+                  <span className="text-label-2xs">
                     موقعیت مکانی: {mapAddressData?.provinceName}، {mapAddressData?.cityName}
                   </span>
-                  <p className="text-xs font-semibold leading-relaxed text-foreground truncate">
+                  <p className="text-base font-semibold leading-relaxed text-foreground truncate">
                     {mapAddressData?.address}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-2xs font-bold text-muted-foreground">عنوان آدرس *</label>
+                <label className="text-label-2xs">عنوان آدرس *</label>
                 <Input
                   placeholder="مثال: خانه، محل کار، تعمیرگاه"
                   error={errors.title?.message}
@@ -214,7 +214,7 @@ export function AddressModal({
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-2xs font-bold text-muted-foreground">کد پستی ۱۰ رقمی *</label>
+                <label className="text-label-2xs">کد پستی ۱۰ رقمی *</label>
                 <Input
                   placeholder="کد پستی بدون خط تیره"
                   error={errors.postalCode?.message}
@@ -226,7 +226,7 @@ export function AddressModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="text-2xs font-bold text-muted-foreground">شماره پلاک *</label>
+                  <label className="text-label-2xs">شماره پلاک *</label>
                   <Input
                     placeholder="پلاک"
                     error={errors.plaque?.message}
@@ -235,7 +235,7 @@ export function AddressModal({
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-2xs font-bold text-muted-foreground">واحد *</label>
+                  <label className="text-label-2xs">واحد *</label>
                   <Input
                     placeholder="واحد"
                     error={errors.unit?.message}
@@ -281,7 +281,7 @@ export function AddressModal({
                     >
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex items-center gap-2">
-                          <span className="text-xs font-bold text-foreground">{loc.title}</span>
+                          <span className="text-label">{loc.title}</span>
                           {loc.isDefault ? (
                             <span className="rounded-full bg-secondary px-2 py-0.5 text-2xs font-semibold text-muted-foreground">
                               پیش‌فرض
@@ -289,7 +289,7 @@ export function AddressModal({
                           ) : null}
                         </div>
 
-                        <p className="text-xs leading-relaxed text-muted-foreground">
+                        <p className="text-base leading-relaxed text-muted-foreground">
                           {loc.province}، شهر {loc.city}، {loc.address} (پلاک {loc.plaque}، واحد {loc.unit})
                         </p>
                       </div>

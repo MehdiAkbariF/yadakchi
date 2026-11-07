@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -167,7 +167,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder }: ReturnRequestM
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-2xl">
       <ModalHeader onClose={onClose}>
-        <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <ModalTitle className="flex items-center gap-2 text-title-sm">
           <RotateCcw className="h-5 w-5 text-destructive" />
           <span>ثبت درخواست مرجوعی مرسوله ({subOrder.shop?.shopTitle})</span>
         </ModalTitle>
@@ -223,7 +223,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder }: ReturnRequestM
                       </div>
 
                       <div className="flex flex-col gap-1 min-w-0">
-                        <span className="line-clamp-1 text-xs font-bold text-foreground">
+                        <span className="line-clamp-1 text-label">
                           {item.shopProduct?.product?.title}
                         </span>
                         <span className="text-xs text-muted-foreground">
@@ -270,7 +270,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder }: ReturnRequestM
                       </div>
 
                       <div className="flex flex-col gap-2 pt-1">
-                        <span className="text-xs font-bold text-muted-foreground">
+                        <span className="text-label-muted">
                           تصاویر قطعه معیوب یا مغایر (حداکثر ۵ تصویر)
                         </span>
 
@@ -290,7 +290,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder }: ReturnRequestM
                           {state.files.map((file, fIdx) => (
                             <div
                               key={fIdx}
-                              className="flex h-9 max-w-[130px] items-center gap-2 rounded-xl border bg-muted/30 px-2 text-xs font-semibold text-foreground"
+                              className="flex h-9 max-w-[8.125rem] items-center gap-2 rounded-xl border bg-muted/30 px-2 text-xs font-semibold text-foreground"
                             >
                               <FileText className="h-4 w-4 shrink-0 text-primary" />
                               <span className="truncate flex-1">{file.name}</span>
@@ -313,7 +313,7 @@ export function ReturnRequestModal({ isOpen, onClose, subOrder }: ReturnRequestM
           </div>
 
           <div className="mt-4 flex items-center justify-end gap-3 border-t border-border/60 pt-4">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-xs font-bold">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} className="h-9 px-4 text-sm font-bold">
               انصراف
             </Button>
             <Button

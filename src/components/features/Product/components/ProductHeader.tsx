@@ -128,14 +128,14 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
     <div className="flex w-full select-none flex-col gap-4">
       <div className="flex w-full items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-3">
-          <span className="text-2xs font-bold text-muted-foreground">
+          <span className="text-label-2xs">
             کد کالا: {toPersianDigits(product.code)}
           </span>
           <span className="text-2xs text-muted-foreground">|</span>
           <button
             type="button"
             onClick={() => setIsReportModalOpen(true)}
-            className="flex items-center gap-1 text-2xs font-bold text-muted-foreground outline-none hover:text-destructive transition-colors"
+            className="flex items-center gap-1 text-label-2xs outline-none hover:text-destructive transition-colors"
           >
             <AlertTriangle aria-hidden="true" className="h-4 w-4" />
             <span>گزارش کالا</span>
@@ -175,7 +175,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
                 aria-hidden="true"
                 className={cn(
                   'h-4 w-4 transition-colors duration-fast',
-                  localIsFavorite ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'
+                  localIsFavorite ? 'fill-destructive text-destructive' : 'text-muted-foreground'
                 )}
               />
             )}
@@ -209,7 +209,7 @@ export function ProductHeader({ product, onScrollToComments, onScrollToInquiries
 
       <Modal isOpen={isReportModalOpen} onClose={() => setIsReportModalOpen(false)} className="w-full max-w-md">
         <ModalHeader onClose={() => setIsReportModalOpen(false)}>
-          <ModalTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+          <ModalTitle className="flex items-center gap-2 text-title-sm">
             <AlertTriangle aria-hidden="true" className="h-4 w-4 text-destructive" />
             گزارش خطای کالا
           </ModalTitle>

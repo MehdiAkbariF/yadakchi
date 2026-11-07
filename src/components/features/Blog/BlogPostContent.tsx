@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -135,7 +135,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
               <div className="flex flex-col gap-2.5">
                 {post.faqs.map((faq) => (
                   <Accordion key={faq.id} title={faq.question} defaultOpen={false}>
-                    <p className="pb-2 pe-2 text-sm leading-reading text-muted-foreground">{faq.answer}</p>
+                    <p className="pb-2 pe-2 text-base leading-reading text-muted-foreground">{faq.answer}</p>
                   </Accordion>
                 ))}
               </div>
@@ -150,7 +150,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             <div className="flex w-full flex-col gap-3.5 rounded-lg border border-border bg-card p-4 shadow-xs sm:p-5">
               <div className="flex items-center gap-2 border-b border-border pb-3">
                 <Wrench aria-hidden="true" className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-bold text-foreground">قطعات مرتبط با این مقاله</h3>
+                <h3 className="text-title-sm">قطعات مرتبط با این مقاله</h3>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -179,7 +179,7 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
             <div className="flex w-full flex-col gap-3.5 rounded-lg border border-border bg-card p-4 shadow-xs sm:p-5">
               <div className="flex items-center gap-2 border-b border-border pb-3">
                 <Layers aria-hidden="true" className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-bold text-foreground">خودروهای مرتبط</h3>
+                <h3 className="text-title-sm">خودروهای مرتبط</h3>
               </div>
 
               <div className="flex flex-wrap gap-1.5 sm:gap-2">
@@ -201,12 +201,12 @@ export function BlogPostContent({ post }: BlogPostContentProps) {
               <BookOpen aria-hidden="true" className="h-4 w-4 shrink-0" />
               <span className="text-xs">مجله قطعات یدکچی</span>
             </div>
-            <h4 className="text-sm font-bold text-foreground">علاقه‌مند به مطالب بیشتر هستید؟</h4>
-            <p className="text-xs leading-relaxed text-muted-foreground">
+            <h4 className="text-title-sm">علاقه‌مند به مطالب بیشتر هستید؟</h4>
+            <p className="text-base leading-relaxed text-muted-foreground">
               صدها مقاله تخصصی و راهنمای نگهداری و خرید قطعات انواع خودرو در دسترس شماست.
             </p>
             <Link href="/blog" className="mt-2 block">
-              <Button variant="primary" size="sm" fullWidth className="h-10 text-xs font-bold">
+              <Button variant="primary" size="sm" fullWidth className="h-10 text-sm font-bold">
                 مشاهده همه مقالات
               </Button>
             </Link>

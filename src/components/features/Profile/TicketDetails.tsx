@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
@@ -68,7 +68,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
     return (
       <div className="flex w-full flex-col items-center justify-center gap-3 py-20 text-center" dir="rtl">
         <AlertCircle className="h-10 w-10 text-destructive" />
-        <p className="text-sm font-bold text-foreground">تیکت مورد نظر یافت نشد</p>
+        <p className="text-title-sm">تیکت مورد نظر یافت نشد</p>
         <Button variant="outline" size="sm" onClick={() => router.push('/profile/support')}>
           بازگشت به پشتیبانی
         </Button>
@@ -119,9 +119,9 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
   const getStatusBadge = () => {
     switch (ticket.status) {
       case 'WaitingForAnswer':
-        return 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400';
+        return 'bg-warning/10 text-warning/90 border-warning/20 dark:text-warning/90';
       case 'Answered':
-        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400';
+        return 'bg-success/10 text-success/90 border-success/20 dark:text-success/80';
       case 'Closed':
         return 'bg-muted text-muted-foreground border-border';
       default:
@@ -131,7 +131,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
 
   return (
     <div
-      className="flex flex-1 flex-col h-[calc(100dvh-70px)] md:h-[calc(100vh-120px)] -mx-4 -my-4 md:-mx-6 md:-my-6 bg-card border-x-0 md:border md:border-border/80 md:rounded-2xl overflow-hidden shadow-xs select-none"
+      className="flex flex-1 flex-col h-[calc(100dvh-4.375rem)] md:h-[calc(100vh-7.5rem)] -mx-4 -my-4 md:-mx-6 md:-my-6 bg-card border-x-0 md:border md:border-border/80 md:rounded-2xl overflow-hidden shadow-xs select-none"
       dir="rtl"
     >
       {/* ================= هدر چت ================= */}
@@ -147,7 +147,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
           </button>
 
           <div className="flex flex-col min-w-0">
-            <h1 className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[200px] sm:max-w-md">
+            <h1 className="text-xs sm:text-title-sm truncate max-w-[12.5rem] sm:max-w-md">
               {ticket.title}
             </h1>
             <span className="text-2xs text-muted-foreground mt-0.5">
@@ -196,7 +196,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
                   {/* نام فرستنده */}
                   <span
                     className={cn(
-                      'text-2xs font-bold text-muted-foreground px-1',
+                      'text-label-2xs px-1',
                       isMyMsg ? 'text-right' : 'text-left'
                     )}
                   >
@@ -226,7 +226,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
                         <CheckCheck
                           className={cn(
                             'h-3.5 w-3.5',
-                            msg.isRead ? 'text-sky-300' : 'text-primary-foreground/60'
+                            msg.isRead ? 'text-info/70' : 'text-primary-foreground/60'
                           )}
                         />
                       )}
@@ -250,7 +250,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
                           className="flex items-center gap-2 h-8 px-3 rounded-xl border border-border/80 bg-card text-2xs font-bold text-foreground hover:border-primary/40 hover:text-primary transition-colors shadow-2xs"
                         >
                           <FileText className="h-4 w-4 text-primary shrink-0" />
-                          <span className="truncate max-w-[100px]">
+                          <span className="truncate max-w-[6.25rem]">
                             فایل ضمیمه {toPersianDigits(index + 1)}
                           </span>
                           <Download className="h-3.5 w-3.5 opacity-60 shrink-0" />
@@ -280,7 +280,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
               {attachments.map((file, idx) => (
                 <div
                   key={idx}
-                  className="flex h-8 items-center gap-2 rounded-xl border border-border/80 bg-muted/40 px-2.5 text-2xs font-bold text-foreground max-w-[140px] shrink-0"
+                  className="flex h-8 items-center gap-2 rounded-xl border border-border/80 bg-muted/40 px-2.5 text-2xs font-bold text-foreground max-w-[8.75rem] shrink-0"
                 >
                   <FileText className="h-4 w-4 text-primary shrink-0" />
                   <span className="truncate flex-1">{file.name}</span>
@@ -318,7 +318,7 @@ export function TicketDetails({ ticketId }: TicketDetailsProps) {
                 placeholder="پاسخ خود را اینجا بنویسید..."
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
-                className="min-h-[40px] max-h-28 py-2 px-3 text-xs leading-relaxed border-border/80 rounded-xl focus:border-primary"
+                className="min-h-[2.5rem] max-h-28 py-2 px-3 text-xs leading-relaxed border-border/80 rounded-xl focus:border-primary"
                 rows={1}
                 required
               />

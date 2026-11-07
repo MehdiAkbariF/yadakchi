@@ -73,7 +73,7 @@ export function SuccessReceipt({ amount, traceNo }: SuccessReceiptProps) {
         {/* ⭐ Lottie کوچک‌تر + بدون فاصله اضافی */}
         <div
           ref={containerRef}
-          className="mx-auto h-[110px] w-[110px] -mb-2"
+          className="mx-auto h-[6.875rem] w-[6.875rem] -mb-2"
           aria-label="انیمیشن پرداخت موفق"
         />
 
@@ -82,17 +82,17 @@ export function SuccessReceipt({ amount, traceNo }: SuccessReceiptProps) {
         </p>
 
         <div className="mt-2 flex items-center justify-center gap-x-2">
-          <p className="text-center text-sm font-extrabold text-foreground">مبلغ:</p>
-          <p className="text-sm text-foreground">
+          <p className="text-center text-base font-extrabold text-foreground">مبلغ:</p>
+          <p className="text-base text-foreground">
             {toPersianDigits(amount)}{' '}
             <span className="text-xs text-muted-foreground">ریال</span>
           </p>
         </div>
 
         {traceNo && traceNo !== '-' && (
-          <div className="flex items-center justify-center gap-x-2 text-[15px]">
-            <p className="text-center text-sm text-muted-foreground">شماره پیگیری:</p>
-            <p className="text-sm font-bold text-foreground">{traceNo}</p>
+          <div className="flex items-center justify-center gap-x-2 text-[0.9375rem]">
+            <p className="text-center text-base text-muted-foreground">شماره پیگیری:</p>
+            <p className="text-title-sm">{traceNo}</p>
           </div>
         )}
 

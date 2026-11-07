@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { MapPin, ChevronDown, ChevronLeft, Search, X, MapPinOff, ArrowRight, Loader2 } from 'lucide-react';
@@ -70,7 +70,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
     <Modal
       isOpen={isOpen}
       onClose={() => setIsOpen(false)}
-      className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[550px] md:max-h-[90vh] md:max-w-2xl md:overflow-hidden md:rounded-xl md:border md:border-border md:shadow-lg"
+      className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:overflow-hidden md:rounded-xl md:border md:border-border md:shadow-lg"
       overlayClassName="bg-black/40 backdrop-blur-sm"
     >
       <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
@@ -78,42 +78,44 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
           <button
             onClick={() => setIsOpen(false)}
             className="rounded-full p-1 text-foreground transition-colors hover:bg-muted md:hidden"
-            aria-label="بازگشت"
+            aria-label="بازگشت به صفحه قبلی"
             type="button"
           >
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight aria-hidden="true" className="h-5 w-5" />
           </button>
-          <span className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-            <MapPin className="h-4 w-4 text-primary" />
+          <span className="flex items-center gap-1.5 text-xs font-bold sm:text-sm text-foreground">
+            <MapPin aria-hidden="true" className="h-4 w-4 text-primary" />
             انتخاب شهر یا استان
           </span>
         </div>
         <button
           onClick={() => setIsOpen(false)}
           className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:flex"
-          aria-label="بستن"
+          aria-label="بستن پنجره"
           type="button"
         >
-          <X className="h-4 w-4" />
+          <X aria-hidden="true" className="h-4 w-4" />
         </button>
       </div>
 
       <div className="shrink-0 border-b border-border bg-card p-4" dir="rtl">
+        <label htmlFor="city-search-input" className="sr-only">جستجوی نام شهر</label>
         <Input
+          id="city-search-input"
           type="text"
           placeholder="جستجوی نام شهر..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          leftIcon={<Search className="h-4 w-4 text-muted-foreground" />}
+          leftIcon={<Search aria-hidden="true" className="h-4 w-4 text-muted-foreground" />}
           rightIcon={
             searchQuery ? (
               <button
                 onClick={() => setSearchQuery('')}
                 className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
                 type="button"
-                aria-label="پاک کردن متن"
+                aria-label="پاک کردن متن جستجو"
               >
-                <X className="h-3 w-3 text-muted-foreground" />
+                <X aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
               </button>
             ) : undefined
           }
@@ -125,7 +127,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
       <div className="flex min-h-0 flex-1 overflow-hidden" dir="rtl">
         {isLoading ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-primary" />
             <span className="text-xs text-muted-foreground">در حال دریافت لیست شهرها...</span>
           </div>
         ) : searchQuery.trim() ? (
@@ -136,7 +138,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
                   key={city.id}
                   type="button"
                   onClick={() => handleSelectCity(city.id, city.name)}
-                  className="flex w-full items-center justify-between rounded-md border border-border p-3 transition-colors hover:border-primary/50 hover:bg-accent/40"
+                  className="flex w-full items-center justify-between rounded-lg border border-border p-3 transition-colors hover:border-primary/50 hover:bg-accent/40"
                 >
                   <span className="text-sm font-medium text-foreground">{city.name}</span>
                   <span className="text-xs text-muted-foreground">استان {city.provinceName}</span>
@@ -144,14 +146,14 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
               ))
             ) : (
               <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
-                <MapPinOff className="h-8 w-8 text-muted-foreground/60" />
+                <MapPinOff aria-hidden="true" className="h-8 w-8 text-muted-foreground/60" />
                 <span className="text-sm">شهری با این نام یافت نشد.</span>
               </div>
             )}
           </div>
         ) : (
           <div className="flex flex-1 overflow-hidden">
-            <div className="w-[140px] shrink-0 overflow-y-auto border-l border-border bg-muted/20 py-1 md:w-[200px]">
+            <div className="w-[8.75rem] shrink-0 overflow-y-auto border-l border-border bg-muted/20 py-1 md:w-[12.5rem]">
               {provincesTree.map((province) => {
                 const isActive = activeProvince?.id === province.id;
                 return (
@@ -175,7 +177,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
             <div className="flex-1 overflow-y-auto bg-card p-4">
               {activeProvince ? (
                 <div className="space-y-3">
-                  <span className="block border-b border-border pb-2 text-xs font-bold text-muted-foreground">
+                  <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
                     شهرهای استان {activeProvince.name} ({activeProvince.cities.length} شهر)
                   </span>
                   <div className="grid grid-cols-2 gap-2">
@@ -187,7 +189,7 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
                           type="button"
                           onClick={() => handleSelectCity(city.id, city.name)}
                           className={cn(
-                            'truncate rounded-md border px-3 py-2 text-right text-xs transition-colors md:text-sm',
+                            'truncate rounded-lg border px-3 py-2 text-right text-xs transition-colors md:text-sm',
                             isSelected
                               ? 'border-primary bg-primary/10 font-bold text-primary'
                               : 'border-border text-foreground hover:border-primary/40 hover:bg-muted/40'
@@ -215,32 +217,33 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
     return (
       <>
         <div
-          onClick={handleOpenModal}
           dir="rtl"
-          className="flex w-full cursor-pointer items-center justify-between px-1 py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+          className="flex w-full items-center justify-between px-1 py-2 text-xs font-medium text-muted-foreground"
         >
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 shrink-0 text-primary" />
-            <span className="text-sm font-bold text-foreground">
-              {selectedCity ? `موقعیت شما: ${selectedCity.name}` : 'انتخاب شهر (تعیین موقعیت)'}
-            </span>
-          </div>
-
-          <div
-            className="flex items-center gap-2"
-            onClick={(e) => selectedCity && e.stopPropagation()}
+          <button
+            type="button"
+            onClick={handleOpenModal}
+            className="flex flex-1 items-center gap-2 text-right focus-visible:outline-none"
+            aria-label="تعیین موقعیت یا انتخاب شهر"
           >
+            <MapPin aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+            <span className="text-xs font-bold text-foreground">
+              {selectedCity ? `موقعیت: ${selectedCity.name}` : 'انتخاب شهر (تعیین موقعیت)'}
+            </span>
+          </button>
+
+          <div className="flex items-center gap-1.5">
             {selectedCity ? (
               <button
                 type="button"
                 onClick={handleClearCity}
                 className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
-                aria-label="حذف موقعیت"
+                aria-label="حذف موقعیت فعلی"
               >
-                <X className="h-3.5 w-3.5" />
+                <X aria-hidden="true" className="h-3.5 w-3.5" />
               </button>
             ) : null}
-            <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
           </div>
         </div>
 
@@ -249,35 +252,38 @@ export function CitySelector({ variant = 'default' }: CitySelectorProps) {
     );
   }
 
+  // در نسخه دسکتاپ: کادر کلی دیگر button تودرتو نیست
   return (
     <>
-      <button
-        type="button"
+      <div
         dir="rtl"
-        className="flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-border hover:bg-muted/60 shadow-xs xl:text-sm"
-        onClick={handleOpenModal}
-        aria-label="انتخاب شهر"
+        className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:border-border hover:bg-muted/60 shadow-xs xl:text-sm"
       >
-        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary xl:h-4 xl:w-4" />
-        <span className="font-medium text-foreground">
-          {selectedCity ? selectedCity.name : 'انتخاب شهر'}
-        </span>
-        {selectedCity ? (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={handleClearCity}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleClearCity(e as any);
-            }}
-            className="rounded p-0.5 text-muted-foreground hover:text-destructive"
-          >
-            <X className="h-3 w-3" />
+        <button
+          type="button"
+          onClick={handleOpenModal}
+          className="flex items-center gap-1.5 focus-visible:outline-none"
+          aria-label={selectedCity ? `شهر انتخاب شده: ${selectedCity.name}` : 'انتخاب شهر'}
+          aria-haspopup="dialog"
+        >
+          <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary xl:h-4 xl:w-4" />
+          <span className="font-medium text-foreground">
+            {selectedCity ? selectedCity.name : 'انتخاب شهر'}
           </span>
-        ) : (
-          <ChevronDown className="h-3 w-3 text-muted-foreground" />
-        )}
-      </button>
+          {!selectedCity && <ChevronDown aria-hidden="true" className="h-3 w-3 text-muted-foreground" />}
+        </button>
+
+        {selectedCity ? (
+          <button
+            type="button"
+            onClick={handleClearCity}
+            aria-label="حذف شهر انتخاب شده"
+            className="rounded p-0.5 text-muted-foreground hover:text-destructive transition-colors ms-1"
+          >
+            <X aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </div>
 
       {renderModalContent()}
     </>
