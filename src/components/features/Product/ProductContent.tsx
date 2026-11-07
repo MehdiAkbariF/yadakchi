@@ -444,28 +444,50 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     </div>
   ) : null;
 
-  const renderBreadcrumb = () => (
+const renderBreadcrumb = () => (
     <div className="flex w-full select-none items-center gap-2 overflow-x-auto py-2 text-2xs text-muted-foreground scrollbar-none md:text-xs">
       <Link href="/" className="transition-colors hover:text-primary whitespace-nowrap shrink-0">
         خانه
       </Link>
       {product.breadCrumbs?.map((crumb: any, idx: number) => {
         const isLast = idx === product.breadCrumbs.length - 1;
-        const url = isLast ? getProductUrl(product.code, product.title) : `/part-category/${crumb.englishTitle}`;
+        const isPart = idx === product.breadCrumbs.length - 2;
+
+        let url = `/part-category/${crumb.englishTitle}`;
+
+        if (isLast) {
+          // ۱. نام کالا (آیتم انتهایی)
+          url = getProductUrl(product.code, product.title);
+        } else if (isPart) {
+          // ۲. قطعه (آیتم قبل از نام کالا): هدایت به روت استاندارد /parts/[categorySlug]/[partSlug]
+          const parentCategorySlug =
+            (idx > 0 ? product.breadCrumbs[idx - 1]?.englishTitle : null) ||
+            product.category?.englishTitle ||
+            'category';
+
+          url = `/parts/${parentCategorySlug}/${crumb.englishTitle}`;
+        } else {
+          // ۳. دسته‌بندی‌ها
+          url = `/part-category/${crumb.englishTitle}`;
+        }
+
         return (
           <div key={crumb.id || idx} className="flex items-center gap-2 shrink-0">
             <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
             {isLast ? (
-              <span className="max-w-[10.625rem] truncate font-bold text-foreground sm:max-w-none">{crumb.title}</span>
+              <span className="max-w-[10.625rem] truncate font-bold text-foreground sm:max-w-none">
+                {crumb.title}
+              </span>
             ) : (
-              <Link href={url} className="whitespace-nowrap transition-colors hover:text-primary">{crumb.title}</Link>
+              <Link href={url} className="whitespace-nowrap transition-colors hover:text-primary">
+                {crumb.title}
+              </Link>
             )}
           </div>
         );
       })}
     </div>
   );
-
   const tabs = ['intro', 'specs', 'comments', 'inquiries'] as const;
 
   return (

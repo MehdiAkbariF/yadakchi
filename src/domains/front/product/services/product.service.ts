@@ -87,11 +87,14 @@ async function resolveCategoryGuid(httpClient: any, identifier: string): Promise
 export class ProductService {
   private readonly httpClient = getHttpClient();
 
-  async getNominatedProducts(cityId?: string): Promise<any> {
+ async getNominatedProducts(cityId?: string): Promise<any> {
     try {
       const payload: OpenSearchProductsRequestDto = {
-        hasDiscountWithExpiration: true,
-        onlyInStock: true,
+        hasDiscountWithExpiration: true,  // فقط تخفیف‌های زمان‌دار دارای تایمر
+        onlyInStock: true,                // فقط کالاهای موجود در انبار
+        excludeDuplicateProducts: true,   // ✅ حیاتی: جلوگیری از تکرار چندباره یک کالا از فروشندگان مختلف
+        sortBy: 'CreationDate',           // ✅ مرتب‌سازی: نمایش جدیدترین تخفیف‌ها
+        sortDescending: true,             // ✅ نزولی (از جدید به قدیم)
         pageNumber: 1,
         pageSize: 30,
         cityId: cityId || undefined,

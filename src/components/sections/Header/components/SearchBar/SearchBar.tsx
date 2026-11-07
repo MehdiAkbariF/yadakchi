@@ -1,3 +1,4 @@
+// src/components/sections/Header/components/SearchBar/SearchBar.tsx
 'use client';
 
 import * as React from 'react';
@@ -30,19 +31,20 @@ import {
 import { useGetBanners } from '@/domains/front/banner/hooks/banner.hooks';
 import { useGetCarsName } from '@/domains/front/reference/car/hooks/car.hooks';
 import { useGetBrandsName } from '@/domains/front/reference/brand/hooks/brand.hooks';
-import { useGetPartCategoriesFlat } from '@/domains/front/part/hooks/part.hooks';
+import { useGetPartCategoriesFlat, useGetPartsName } from '@/domains/front/part/hooks/part.hooks';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { getFullUrl } from '@/core/utils/formatters';
 
+// کلمات پشتیبان در صورت عدم دسترسی به سرور یا در زمان لودینگ اولیه
 const DEFAULT_ROTATING_KEYWORDS = [
-  'قطعه موتور خودرو',
-  'قطعه گیربکس خودرو',
-  'روغن و مایعات خودرو',
-  'قطعه بدنه خودرو',
-  'دستگیره درب خودرو',
-  'چراغ جلو خودرو',
-  'فیلتر هوای خودرو',
-  'کمک فنر خودرو',
+  'لنت ترمز',
+  'شمع خودرو',
+  'تسمه تایم',
+  'کمک فنر',
+  'فیلتر روغن',
+  'دیسک و صفحه کلاچ',
+  'پمپ بنزین',
+  'سنسور اکسیژن',
 ];
 
 export interface SearchBarProps {
@@ -72,6 +74,17 @@ export function SearchBar({
   const { data: cars = [] } = useGetCarsName();
   const { data: brands = [] } = useGetBrandsName();
   const { data: categories = [] } = useGetPartCategoriesFlat();
+
+  // ✅ واکشی اسامی قطعات زنده و واقعی از API برای پلیس‌هولدر چرخان
+  const { data: dynamicPartsData } = useGetPartsName({ pageNumber: 1, pageSize: 50 });
+
+  const rotatingKeywords = React.useMemo(() => {
+    const apiNames = (dynamicPartsData?.items || [])
+      .map((item: any) => item.name?.trim())
+      .filter((name: string) => !!name && name.length > 1);
+
+    return apiNames.length > 0 ? apiNames : DEFAULT_ROTATING_KEYWORDS;
+  }, [dynamicPartsData]);
 
   const activeCar = cars.find((c: any) => c.id === urlCarId)?.model || '';
   const activeBrand = brands.find((b: any) => b.id === urlBrandId)?.name || '';
@@ -115,12 +128,14 @@ export function SearchBar({
   const desktopBanner = searchBannerGroup?.banners?.find((b: any) => b.size === 'Desktop') || searchBannerGroup?.banners?.[0];
   const mobileBanner = searchBannerGroup?.banners?.find((b: any) => b.size === 'Mobile') || searchBannerGroup?.banners?.[0];
 
+  // تایمر چرخش پلیس‌هولدر بر اساس لیست داینامیک API
   React.useEffect(() => {
+    if (rotatingKeywords.length === 0) return;
     const interval = setInterval(() => {
-      setKeywordIndex((prev) => (prev + 1) % DEFAULT_ROTATING_KEYWORDS.length);
+      setKeywordIndex((prev) => (prev + 1) % rotatingKeywords.length);
     }, 2800);
     return () => clearInterval(interval);
-  }, []);
+  }, [rotatingKeywords.length]);
 
   React.useEffect(() => {
     setQuery(resolvedText);
@@ -179,9 +194,10 @@ export function SearchBar({
     if (window.history.state?.modalOpen === 'search-modal') window.history.back();
   };
 
+  // رندر متن متحرک پلیس‌هولدر از دیتای زنده قطعات
   const renderAnimatedPlaceholder = () => {
     if (query) return null;
-    const currentWord = DEFAULT_ROTATING_KEYWORDS[keywordIndex];
+    const currentWord = rotatingKeywords[keywordIndex] || rotatingKeywords[0];
     return (
       <div className="pointer-events-none flex h-5 select-none items-center overflow-hidden text-xs" dir="rtl">
         <span className="ms-1 shrink-0 text-muted-foreground ml-1">جستجو در</span>
@@ -393,7 +409,6 @@ export function SearchBar({
               </div>
             </div>
 
-            {/* اصلاح ساختاری: حذف تودرتو بودن دکمه‌ها */}
             <div ref={historySliderRef} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-1">
               {history.map((item: any, idx: number) => {
                 const isObject = typeof item === 'object' && item !== null;
