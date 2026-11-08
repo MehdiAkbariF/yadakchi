@@ -8,6 +8,7 @@ import { getShopService } from '@/domains/front/shop/services/shop.service';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
 import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { ShopDetailsContent } from '@/components/features/Shop/ShopDetailsContent';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
@@ -21,7 +22,6 @@ interface ShopPageProps {
     | { [key: string]: string | string[] | undefined };
 }
 
-
 const getCachedShopData = cache(async (shopId: string) => {
   const shopService = getShopService();
   try {
@@ -30,20 +30,17 @@ const getCachedShopData = cache(async (shopId: string) => {
     const status = error?.status ?? error?.response?.status;
     logger.error('[ShopPage] getShopPage failed', { shopId, status, error });
 
-    // 404, 400, 500, 502, 503, 504 => null (یعنی صفحه notFound)
     if (
       status === 404 ||
       status === 400 ||
       status >= 500 ||
-      // خطاهای HTML that error-normalizer می‌سازد
-      typeof error?.message === 'string' &&
-        error.message.includes('returned HTML instead of JSON')
+      (typeof error?.message === 'string' &&
+        error.message.includes('returned HTML instead of JSON'))
     ) {
       return null;
     }
 
-    // خطای پیش‌بینی‌نشده
-    return null; // حتی خطاهای دیگر را هم null می‌کنیم تا کل صفحه crash نکند
+    return null;
   }
 });
 
@@ -143,10 +140,13 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
     ? Math.max(1, Number(resolvedSearchParams.pageSize))
     : 30;
 
+  // فیلترهای استاندارد منطبق بر سواگر OpenSearch
   const filters: SearchProductsRequest = {
     shopId,
-    isProductInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
-    isSellerInUserCity: resolvedSearchParams.userCity === 'true' ? true : undefined,
+    onlyInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
+    onlyDiscounted: resolvedSearchParams.discount === 'true' ? true : undefined,
+    onlyDirectShipping: resolvedSearchParams.directShipping === 'true' ? true : undefined,
+    onlyNominated: resolvedSearchParams.nominated === 'true' ? true : undefined,
     fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
     toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
     orderType: (resolvedSearchParams.sort as any) || 'Selected',
@@ -164,17 +164,24 @@ export default async function ShopPage({ params, searchParams }: ShopPageProps) 
         : Array.isArray(resolvedSearchParams.carIds)
         ? resolvedSearchParams.carIds
         : undefined,
+    partIds:
+      typeof resolvedSearchParams.partIds === 'string'
+        ? [resolvedSearchParams.partIds]
+        : Array.isArray(resolvedSearchParams.partIds)
+        ? resolvedSearchParams.partIds
+        : undefined,
     types:
       typeof resolvedSearchParams.types === 'string'
         ? ([resolvedSearchParams.types] as any)
         : Array.isArray(resolvedSearchParams.types)
         ? resolvedSearchParams.types
         : undefined,
+    includeAggregations: true, // ✅ فعال‌سازی تجمیع برای صفحه فروشگاه
   };
 
   await Promise.allSettled([
     queryClient.prefetchQuery({
-      queryKey: ['front', 'products', 'search', filters],
+      queryKey: queryKeys.front.products.search(filters), // کلید استاندارد کش
       queryFn: () => productService.searchProducts(filters),
     }),
     queryClient.prefetchQuery({

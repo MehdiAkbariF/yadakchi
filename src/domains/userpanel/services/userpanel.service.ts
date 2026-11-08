@@ -406,24 +406,40 @@ async getReturnRequests(
     }
   }
 
-  async getUserNotifications(pageNumber: number = 1, pageSize: number = 30, channel?: string, priority?: string, audienceType?: string, receiverAppliationType?: string, timePeriod?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest'): Promise<PaginatedResult<NotificationItemViewModel>> {
+async getUserNotifications(filters: {
+    pageNumber?: number;
+    pageSize?: number;
+    channel?: string;
+    priority?: string;
+    audienceType?: string;
+    receiverAppliationType?: string;
+    timePeriod?: string;
+    isRead?: boolean;
+    orderBy?: 'Latest' | 'Oldest';
+  } = {}): Promise<PaginatedResult<NotificationItemViewModel>> {
     try {
+      const params: Record<string, any> = {
+        PageNumber: filters.pageNumber || 1,
+        PageSize: filters.pageSize || 10,
+        OrderBy: filters.orderBy || 'Latest',
+      };
+
+      if (filters.channel && filters.channel.trim()) params.Channel = filters.channel.trim();
+      if (filters.priority && filters.priority.trim()) params.Priority = filters.priority.trim();
+      if (filters.audienceType && filters.audienceType.trim()) params.AudienceType = filters.audienceType.trim();
+      if (filters.receiverAppliationType && filters.receiverAppliationType.trim()) params.ReceiverAppliationType = filters.receiverAppliationType.trim();
+      if (filters.timePeriod && filters.timePeriod.trim()) params.TimePeriod = filters.timePeriod.trim();
+      
+      // فقط در صورتی که یک مقدار بولین واقعی باشد ارسال می‌شود
+      if (typeof filters.isRead === 'boolean') {
+        params.IsRead = filters.isRead;
+      }
+
       const response = await this.httpClient.get<NotificationsListResponseDto>(
         USERPANEL_ENDPOINTS.GET_NOTIFICATIONS,
-        {
-          params: {
-            PageNumber: pageNumber,
-            PageSize: pageSize,
-            Channel: channel || '',
-            Priority: priority || '',
-            AudienceType: audienceType || '',
-            ReceiverAppliationType: receiverAppliationType || '',
-            TimePeriod: timePeriod || '',
-            IsRead: isRead !== undefined ? isRead : '',
-            OrderBy: orderBy || 'Latest'
-          }
-        }
+        { params }
       );
+
       const items = (response.data.items || []).map(dto => UserPanelMapper.toViewNotification(UserPanelMapper.toDomainNotification(dto)));
       return {
         items,

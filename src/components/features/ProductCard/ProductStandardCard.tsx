@@ -1,4 +1,5 @@
-﻿'use client';
+﻿// src/components/features/ProductCard/ProductStandardCard.tsx
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
@@ -84,10 +85,15 @@ export function ProductStandardCard({
       : nominated?.discountPercentage || product?.discount?.percent || 0);
 
   const tickerItems = React.useMemo(() => {
+    // ✅ اگر کالا ناموجود باشد، هیچ آیتمی برای اسلاید تیکر ساخته نمی‌شود
+    if (isOutOfStock) return [];
+
     const items: { text: string; icon: any; isShop?: boolean }[] = [];
 
+    // ✅ اگر نام فروشگاه موجود بود نمایش بده، در غیر این صورت نام «یدکچی» را به عنوان تامین‌کننده بنویس
+    const displayShopName = shopName && shopName.trim() !== '' ? shopName : 'یدکچی';
     items.push({
-      text: shopName ? `فروشگاه: ${shopName}` : 'فروشگاه: یدکچی',
+      text: `فروشگاه: ${displayShopName}`,
       icon: Store,
       isShop: true,
     });
@@ -103,17 +109,17 @@ export function ProductStandardCard({
     });
 
     return items;
-  }, [shopName, scoreValue, quantityValue]);
+  }, [shopName, scoreValue, quantityValue, isOutOfStock]);
 
   const tickerLength = tickerItems.length;
 
   React.useEffect(() => {
-    if (!isMounted || tickerLength <= 1) return;
+    if (!isMounted || tickerLength <= 1 || isOutOfStock) return;
     const interval = setInterval(() => {
       setTickerIndex((prev) => (prev + 1) % tickerLength);
     }, 3000);
     return () => clearInterval(interval);
-  }, [tickerLength, isMounted]);
+  }, [tickerLength, isMounted, isOutOfStock]);
 
   const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
@@ -210,7 +216,7 @@ export function ProductStandardCard({
             draggable={false}
           />
 
-          {showRating ? (
+          {showRating && !isOutOfStock ? (
             <div className="absolute start-2 top-2 z-10 flex items-center justify-center rounded-md bg-card/90 px-2 py-0.5 shadow-sm backdrop-blur-sm">
               {renderStars()}
             </div>
@@ -223,8 +229,9 @@ export function ProductStandardCard({
           </h4>
         </div>
 
+        {/* بخش تیکر اطلاعات: اگر ناموجود باشد هیچ اسلایدی نشان نمداهد */}
         <div className="flex w-full select-none flex-col items-stretch">
-          {isMounted && tickerLength > 0 ? (
+          {isMounted && tickerLength > 0 && !isOutOfStock ? (
             <div className="relative mt-0.5 flex h-6 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground sm:text-xs">
               <div className="relative hidden h-full w-full md:block">
                 <AnimatePresence mode="wait">
@@ -285,7 +292,9 @@ export function ProductStandardCard({
               </div>
             </div>
           ) : (
-            <div className="mt-0.5 h-6 w-full shrink-0" />
+            <div className="mt-0.5 h-6 w-full shrink-0 flex items-center text-2xs text-muted-foreground">
+              {isOutOfStock ? 'وضعیت: ناموجود در انبار' : ''}
+            </div>
           )}
         </div>
 
@@ -294,14 +303,14 @@ export function ProductStandardCard({
             className={cn(
               'shrink-0 rounded-md px-2 py-0.5 text-xs font-bold transition-opacity duration-fast',
               'bg-destructive text-destructive-foreground',
-              hasDiscount && discountPercent > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
+              hasDiscount && discountPercent > 0 && !isOutOfStock ? 'opacity-100' : 'pointer-events-none opacity-0'
             )}
           >
             {toPersianDigits(discountPercent)}٪
           </div>
 
           <div className="flex min-w-0 flex-col items-end">
-            {hasDiscount && originalPriceToman > finalPriceToman ? (
+            {hasDiscount && originalPriceToman > finalPriceToman && !isOutOfStock ? (
               <span className="text-xs font-medium text-muted-foreground/90 line-through">
                 {formatPrice(originalPriceToman)}
               </span>

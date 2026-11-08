@@ -1,3 +1,4 @@
+// src/components/features/ProductCard/ProductSearchCard.tsx
 'use client';
 
 import * as React from 'react';
@@ -54,7 +55,6 @@ export function ProductSearchCard({
   const title =
     product?.productTitle || product?.title || product?.name?.value || product?.name || '';
 
-  // استخراج فیلدهای درخواستی شما برای اسلایدر
   const shopName = product?.shopTitle || nominated?.shopTitle || product?.shop?.name || '';
   const scoreValue = product?.score ?? nominated?.score ?? product?.averageRate ?? 5;
   const quantityValue = product?.quantity ?? nominated?.quantity ?? 0;
@@ -114,42 +114,41 @@ export function ProductSearchCard({
     nominated?.quantity ||
     10;
 
-  // ساخت دقیق اسلایدر فقط بین این 3 مورد: shopTitle, score, quantity
+  // ✅ ساخت اسلایدر فاقد موارد تیکر در صورت ناموجود بودن کالا
   const tickerItems = React.useMemo(() => {
+    if (isOutOfStock) return [];
+
     const items: { text: string; icon: any; isShop?: boolean }[] = [];
 
-    // ۱. نام فروشگاه (اگر خالی نبود یا خواستید همیشه باشه میتونید شرط رو بردارید)
+    const displayShopName = shopName && shopName.trim() !== '' ? shopName : 'یدکچی';
     items.push({
-      text: shopName ? `فروشگاه: ${shopName}` : 'فروشگاه: یدکچی',
+      text: `فروشگاه: ${displayShopName}`,
       icon: Store,
       isShop: true,
     });
 
-    // ۲. امتیاز (Score)
     items.push({
       text: `امتیاز: ${toPersianDigits(scoreValue)} از ۵`,
       icon: Star,
     });
 
-    // ۳. موجودی (Quantity)
     items.push({
       text: quantityValue > 0 ? `موجودی در انبار: ${toPersianDigits(quantityValue)} عدد` : 'وضعیت: ناموجود در انبار',
       icon: Package,
     });
 
     return items;
-  }, [shopName, scoreValue, quantityValue]);
+  }, [shopName, scoreValue, quantityValue, isOutOfStock]);
 
   const tickerLength = tickerItems.length;
 
-  // اسلایدر خودکار هر ۳ ثانیه
   React.useEffect(() => {
-    if (!isMounted || tickerLength <= 1) return;
+    if (!isMounted || tickerLength <= 1 || isOutOfStock) return;
     const interval = setInterval(() => {
       setTickerIndex((prev) => (prev + 1) % tickerLength);
     }, 3000);
     return () => clearInterval(interval);
-  }, [tickerLength, isMounted]);
+  }, [tickerLength, isMounted, isOutOfStock]);
 
   const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
@@ -247,7 +246,7 @@ export function ProductSearchCard({
           </h4>
         </div>
 
-        {showRating ? (
+        {showRating && !isOutOfStock ? (
           <div className="mt-1 flex w-full select-none items-center justify-start gap-1">
             <Star aria-hidden="true" className="h-3.5 w-3.5 shrink-0 fill-warning text-warning" />
             <span className="text-2xs font-bold text-foreground sm:text-xs">
@@ -261,9 +260,8 @@ export function ProductSearchCard({
           </div>
         ) : null}
 
-        {/* بخش اسلایدر اختصاصی بین shopTitle, score, quantity */}
         <div className="flex w-full select-none flex-col items-stretch">
-          {isMounted && tickerLength > 0 ? (
+          {isMounted && tickerLength > 0 && !isOutOfStock ? (
             <div className="relative mt-1.5 flex h-6 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground sm:text-xs">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -293,7 +291,9 @@ export function ProductSearchCard({
               </AnimatePresence>
             </div>
           ) : (
-            <div className="mt-1.5 h-6 w-full shrink-0" />
+            <div className="mt-1.5 h-6 w-full shrink-0 flex items-center text-2xs text-muted-foreground">
+              {isOutOfStock ? 'وضعیت: ناموجود در انبار' : ''}
+            </div>
           )}
         </div>
 
@@ -308,14 +308,14 @@ export function ProductSearchCard({
           <div
             className={cn(
               'shrink-0 rounded-sm border border-accent bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground transition-opacity duration-fast',
-              hasDiscount && discountPercent > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
+              hasDiscount && discountPercent > 0 && !isOutOfStock ? 'opacity-100' : 'pointer-events-none opacity-0'
             )}
           >
             {toPersianDigits(discountPercent)}٪
           </div>
 
           <div className="flex min-w-0 flex-col items-end">
-            {hasDiscount && originalPriceToman > finalPriceToman ? (
+            {hasDiscount && originalPriceToman > finalPriceToman && !isOutOfStock ? (
               <span className="text-2xs font-medium text-muted-foreground line-through sm:text-xs">
                 {formatPrice(originalPriceToman)}
               </span>
@@ -389,7 +389,6 @@ export function ProductSearchCard({
         draggable={false}
       >
         <div className="flex w-full min-w-0 items-start gap-3">
-          {/* عکس محصول */}
           <div className="relative h-[96px] w-[96px] shrink-0 overflow-hidden rounded-md bg-muted">
             <Image
               src={getFullUrl(imageSource)}
@@ -401,14 +400,13 @@ export function ProductSearchCard({
             />
           </div>
 
-          {/* محتوا و مشخصات محصول */}
           <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch">
             <div className="w-full min-w-0">
               <h4 className="line-clamp-2 text-xs font-semibold leading-relaxed text-foreground">
                 {title}
               </h4>
 
-              {showRating ? (
+              {showRating && !isOutOfStock ? (
                 <div className="mt-1 flex select-none items-center justify-start gap-1">
                   <Star aria-hidden="true" className="h-3 w-3 shrink-0 fill-warning text-warning" />
                   <span className="text-2xs font-bold text-foreground">
@@ -422,8 +420,7 @@ export function ProductSearchCard({
                 </div>
               ) : null}
 
-              {/* بخش اسلایدر موبایل بین shopTitle, score, quantity */}
-              {isMounted && tickerLength > 0 ? (
+              {isMounted && tickerLength > 0 && !isOutOfStock ? (
                 <div className="relative mt-1.5 flex h-5 w-full min-w-0 shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground">
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -453,16 +450,17 @@ export function ProductSearchCard({
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="mt-1.5 h-5 w-full shrink-0" />
+                <div className="mt-1.5 h-5 w-full shrink-0 flex items-center text-2xs text-muted-foreground">
+                  {isOutOfStock ? 'وضعیت: ناموجود در انبار' : ''}
+                </div>
               )}
             </div>
 
-            {/* ردیف قیمت و تخفیف */}
             <div className="mt-2 flex w-full min-w-0 items-end justify-between pt-1">
               <div
                 className={cn(
                   'rounded-sm border border-accent bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground shrink-0',
-                  hasDiscount && discountPercent > 0
+                  hasDiscount && discountPercent > 0 && !isOutOfStock
                     ? 'opacity-100'
                     : 'pointer-events-none opacity-0'
                 )}
@@ -471,7 +469,7 @@ export function ProductSearchCard({
               </div>
 
               <div className="flex min-w-0 flex-col items-end">
-                {hasDiscount && originalPriceToman > finalPriceToman ? (
+                {hasDiscount && originalPriceToman > finalPriceToman && !isOutOfStock ? (
                   <span className="text-2xs text-muted-foreground line-through">
                     {formatPrice(originalPriceToman)}
                   </span>
@@ -493,7 +491,6 @@ export function ProductSearchCard({
           </div>
         </div>
 
-        {/* دکمه افزودن به سبد در صورت فعال بودن */}
         {showAddToBasket && !isOutOfStock ? (
           <div className="mt-3 h-8 w-full shrink-0">
             {isInBasket ? (

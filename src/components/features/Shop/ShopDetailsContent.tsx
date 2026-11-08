@@ -1,3 +1,4 @@
+// src/components/features/Shop/ShopDetailsContent.tsx
 'use client';
 
 import * as React from 'react';
@@ -38,7 +39,7 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
   const shopHeaderCardRef = React.useRef<HTMLDivElement>(null);
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
-  const currentFilters = { ...filters, shopId: id };
+  const currentFilters = React.useMemo(() => ({ ...filters, shopId: id }), [filters, id]);
 
   const { data: shopData, isLoading: isShopLoading } = useGetShopPage(id);
   const { data: productsResponse, isLoading: isProductsLoading } =
@@ -47,6 +48,9 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
   const products = productsResponse?.items || [];
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
+
+  // ✅ استخراج دیتای تجمیعی سرور برای سایدبار فیلترها
+  const aggregations = (productsResponse as any)?.aggregations || null;
 
   React.useEffect(() => {
     const el = shopHeaderCardRef.current;
@@ -114,8 +118,10 @@ export function ShopDetailsContent({ id }: ShopDetailsContentProps) {
 
       {/* ================= 3. بخش محصولات و سایدبار فیلتر ================= */}
       <div className="flex w-full items-start gap-6 md:gap-8">
+        {/* ✅ ارسال کامل aggregations به سایدبار */}
         <SearchSidebar
           filters={currentFilters}
+          aggregations={aggregations}
           onFilterChange={(name, val) => setFilter(name, val)}
           onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}

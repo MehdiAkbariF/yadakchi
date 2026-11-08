@@ -6,6 +6,15 @@ import { getUserPanelService } from '../services/userpanel.service';
 import { OrderListItemViewModel, WalletViewModel, TransactionViewModel, UserVehicleViewModel, NotificationItemViewModel, WithdrawRequestItemViewModel } from '../types/view.types';
 import { PaginatedResult } from '@/shared/types/common.types';
 import { OrderDetailsDto, BankAccountDto, OrderReceiptDto } from '../types/dto.types';
+export interface NotificationFiltersPayload {
+  pageNumber?: number;
+  pageSize?: number;
+  channel?: string;
+  priority?: string;
+  timePeriod?: string;
+  isRead?: boolean;
+  orderBy?: 'Latest' | 'Oldest';
+}
 
 const userPanelService = getUserPanelService();
 
@@ -243,10 +252,10 @@ export function useDeleteUserVehicle() {
   );
 }
 
-export function useGetUserNotifications(pageNumber: number = 1, pageSize: number = 30, channel?: string, priority?: string, isRead?: boolean, orderBy?: 'Latest' | 'Oldest') {
+export function useGetUserNotifications(filters: NotificationFiltersPayload = {}) {
   return useTypedQuery<PaginatedResult<NotificationItemViewModel>>(
-    ['user', 'notifications', 'list', { pageNumber, channel, priority, isRead, orderBy }],
-    () => userPanelService.getUserNotifications(pageNumber, 10, channel, priority, undefined, undefined, undefined, isRead, orderBy),
+    ['user', 'notifications', 'list', filters],
+    () => userPanelService.getUserNotifications(filters),
     { staleTime: 30 * 1000 }
   );
 }

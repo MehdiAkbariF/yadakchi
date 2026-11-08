@@ -1,3 +1,4 @@
+// src/components/features/Part/PartDetailsContent.tsx
 'use client';
 
 import * as React from 'react';
@@ -17,6 +18,7 @@ import { useAppStore } from '@/shared/store/useAppStore';
 import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
 import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner';
 import { SelectPartModal } from './components/SelectPartModal';
+import { getFullUrl } from '@/core/utils/formatters';
 
 export interface PartDetailsContentProps {
   categorySlug: string;
@@ -54,6 +56,9 @@ export function PartDetailsContent({
   const products = productsResponse?.items || [];
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
+
+  // استخراج دیتای تجمیعی سرور برای سایدبار فیلترها
+  const aggregations = (productsResponse as any)?.aggregations || null;
 
   // ساخت منوی نان‌ریزه (Breadcrumb)
   const breadcrumbItems = React.useMemo(() => {
@@ -96,38 +101,41 @@ export function PartDetailsContent({
   }, [partData, categorySlug]);
 
   return (
-    <div className="flex flex-col gap-6 w-full" dir="rtl">
-      {/* نوار چسبان کنترل‌های موبایل (تمام‌عرض و چسبیده به دو طرف صفحه) */}
+    <div className="flex flex-col gap-4 sm:gap-6 w-full" dir="rtl">
+      {/* هدر چسبان موبایل با همان ابعاد و کلاس‌های دقیق مدنظر شما */}
       <div
-        style={{ top: isHeaderMinimized ? '3.5rem' : '122px' }}
-        className="sticky z-40 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
+        className="sticky top-14 z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-1 border-b border-border/80 bg-card/95 px-3 py-2 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
       >
-        <div className="flex w-full items-center justify-between">
-          <div className="flex min-w-0 flex-col">
-            <span className="text-3xs font-bold text-muted-foreground">قطعه انتخابی</span>
-            <span className="mt-0.5 truncate text-xs font-bold text-foreground">
-              {partData?.name || 'قطعه یدکی'}
-            </span>
+        <div className="flex w-full items-center justify-between mt-2">
+          <div className="flex min-w-0 items-center gap-2">
+         
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">قطعه انتخابی</span>
+              <span className="mt-0.5 truncate text-xs font-bold text-foreground">
+                {partData?.name || 'قطعه یدکی'}
+              </span>
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               type="button"
               onClick={() => setIsSelectPartOpen(true)}
-              className="rounded-md bg-accent px-3.5 py-1.5 text-2xs font-bold text-accent-foreground outline-none active:scale-95 transition-transform"
+              className="rounded-md bg-accent px-2 py-1 text-3xs font-bold text-accent-foreground active:scale-95 transition-transform"
             >
               تغییر قطعه
             </button>
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-between gap-3 border-t border-dashed border-border pt-2.5">
+        {/* ردیف دوم: فیلترها و مرتب‌سازی کامپکت */}
+        <div className="flex w-full items-center justify-between gap-2 border-t border-dashed border-border/60 pt-1.5">
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-label shadow-xs outline-none transition-colors hover:bg-muted"
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-input bg-card px-2.5 text-2xs font-bold shadow-2xs active:scale-95 transition-transform"
           >
-            <span className="truncate">فیلترها</span>
+            <span>فیلترها</span>
           </button>
 
           <SortSelector
@@ -136,7 +144,7 @@ export function PartDetailsContent({
             variant="trigger"
           />
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-label-2xs">
+          <span className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-3xs font-bold text-muted-foreground">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -145,17 +153,20 @@ export function PartDetailsContent({
       <Breadcrumb items={breadcrumbItems} className="hidden px-4 md:flex md:px-0" />
 
       <div className="flex w-full items-start gap-6 md:gap-8">
+        {/* ارسال کامل aggregations و شناسه به سایدبار */}
         <SearchSidebar
           filters={currentFilters as any}
+          aggregations={aggregations}
           onFilterChange={(name, val) => setFilter(name, val)}
           onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}
           onClose={() => setIsMobileFiltersOpen(false)}
           hidePartFilter
           partId={resolvedPartId}
+          partCategoryId={resolvedCategoryId}
         />
 
-        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-6">
+        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-5">
           <div className="hidden md:block">
             <PartHeaderCard
               partSlug={partSlug}
@@ -177,14 +188,14 @@ export function PartDetailsContent({
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -197,7 +208,7 @@ export function PartDetailsContent({
               />
             </>
           ) : (
-            <div className="mx-4 flex select-none flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card py-16 text-center md:mx-0">
+            <div className="mx-4 flex select-none flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card py-16 text-center md:mx-0 shadow-xs">
               <ShoppingBag aria-hidden="true" className="mb-4 h-12 w-12 text-muted-foreground/60" />
               <Typography variant="h4" className="font-bold text-foreground">
                 کالایی یافت نشد
@@ -217,7 +228,6 @@ export function PartDetailsContent({
         />
       ) : null}
 
-      {/* ارسال مشخصات واقعی دسته والد تا لیست قطعات خالی نماند */}
       <SelectPartModal
         isOpen={isSelectPartOpen}
         onClose={() => setIsSelectPartOpen(false)}

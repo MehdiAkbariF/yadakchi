@@ -8,6 +8,7 @@ import { getPartService } from '@/domains/front/part/services/part.service';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
 import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { PartDetailsContent } from '@/components/features/Part/PartDetailsContent';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
@@ -35,7 +36,7 @@ const getCachedPartData = cache(async (partSlug: string) => {
 });
 
 function serializeJsonLd(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, '\u003c');
+  return JSON.stringify(data).replace(/</g, '\\u003c');
 }
 
 /* -------------------------------------------------------------------------- */
@@ -97,7 +98,7 @@ export default async function PartPage({ params, searchParams }: PartPageProps) 
     notFound();
   }
 
-  // استخراج امن categoryId (از دیتای قطعه یا از روی UUID در URL)
+  // استخراج categoryId
   const isCategorySlugUuid = /^[0-9a-fA-F-]{36}$/.test(categorySlug);
   const categoryId: string | undefined = partData.category?.id || (isCategorySlugUuid ? categorySlug : undefined);
 
@@ -121,11 +122,14 @@ export default async function PartPage({ params, searchParams }: PartPageProps) 
   const pageNumber = resolvedSearchParams.page ? Math.max(1, Number(resolvedSearchParams.page)) : 1;
   const pageSize = resolvedSearchParams.pageSize ? Math.max(1, Number(resolvedSearchParams.pageSize)) : 30;
 
-  // 🎯 فیلترها کاملاً منطبق با اسکیما Swagger متد /api/Search/products
+  // فیلترها کاملاً منطبق با سواگر و شامل includeAggregations
   const filters: SearchProductsRequest = {
     partIds: partData?.id ? [partData.id] : undefined,
     partCategoryIds: categoryId ? [categoryId] : undefined,
     onlyInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
+    onlyDiscounted: resolvedSearchParams.discount === 'true' ? true : undefined,
+    onlyDirectShipping: resolvedSearchParams.directShipping === 'true' ? true : undefined,
+    onlyNominated: resolvedSearchParams.nominated === 'true' ? true : undefined,
     fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
     toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
     orderType: (resolvedSearchParams.sort as any) || 'Selected',
@@ -145,15 +149,16 @@ export default async function PartPage({ params, searchParams }: PartPageProps) 
           : undefined,
     types:
       typeof resolvedSearchParams.types === 'string'
-        ? ([Number(resolvedSearchParams.types)] as any)
+        ? ([resolvedSearchParams.types] as any)
         : Array.isArray(resolvedSearchParams.types)
-          ? (resolvedSearchParams.types.map(Number) as any)
+          ? (resolvedSearchParams.types as any)
           : undefined,
+    includeAggregations: true, // ✅ فعال‌سازی تجمیع برای صفحه قطعه
   };
 
   await Promise.allSettled([
     queryClient.prefetchQuery({
-      queryKey: ['front', 'products', 'search', filters],
+      queryKey: queryKeys.front.products.search(filters), // کلید استاندارد کش
       queryFn: () => productService.searchProducts(filters),
     }),
     queryClient.prefetchQuery({

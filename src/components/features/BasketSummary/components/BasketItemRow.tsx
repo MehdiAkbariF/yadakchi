@@ -1,10 +1,12 @@
+// src/components/features/BasketSummary/components/BasketItemRow.tsx
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { Store, ShieldCheck, ShieldAlert, Trash2, Plus, Minus, Loader2 } from 'lucide-react';
 import { useAddToBasket, useDeleteFromBasket } from '@/domains/front/basket/hooks/basket.hooks';
 import { showToast } from '@/core/utils/toast';
-import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { toPersianDigits, getFullUrl, getProductUrl } from '@/core/utils/formatters';
 import { formatRialToToman } from '@/core/utils/currency';
 
 export interface BasketItemRowProps {
@@ -41,6 +43,9 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
     hasDiscount && originalUnitPrice > 0
       ? Math.round(((originalUnitPrice - finalUnitPrice) / originalUnitPrice) * 100)
       : 0;
+
+  // لینک دقیق صفحه محصول با استفاده از productCode و title
+  const productUrl = getProductUrl(product?.productCode || product?.code, product?.title);
 
   const handleIncrease = async () => {
     if (activeLoading || !canIncrease) return;
@@ -84,13 +89,17 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
   return (
     <div className="relative flex select-none flex-col items-start justify-between gap-4 border-b border-border bg-card p-4 last:border-b-0 md:flex-row md:gap-6 md:p-5">
       <div className="flex shrink-0 flex-row items-center gap-3 md:flex-col">
-        <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-2 md:h-28 md:w-28">
+        {/* تصویر محصول با لینک به صفحه محصول (بدون تغییر دیزاین) */}
+        <Link
+          href={productUrl}
+          className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-2 md:h-28 md:w-28 transition-opacity hover:opacity-85"
+        >
           <img
             src={getFullUrl(product?.image)}
             alt={product?.title || 'محصول'}
             className="h-full w-full object-contain"
           />
-        </div>
+        </Link>
 
         <div className="flex flex-col items-center gap-1">
           <div className="flex h-8 items-center gap-2 rounded-sm border border-border bg-card px-1 py-0.5 shadow-xs">
@@ -127,9 +136,10 @@ export function BasketItemRow({ item }: BasketItemRowProps) {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <h3 className="text-xs font-bold leading-6 text-foreground md:text-sm">
+        {/* عنوان محصول با لینک به صفحه محصول (بدون تغییر دیزاین) */}
+        <Link href={productUrl} className="block text-xs font-bold leading-6 text-foreground md:text-sm transition-colors hover:text-primary">
           {product?.title}
-        </h3>
+        </Link>
 
         <div className="flex flex-col gap-2 text-2xs text-muted-foreground md:text-xs">
           <div className="flex items-center gap-1.5">

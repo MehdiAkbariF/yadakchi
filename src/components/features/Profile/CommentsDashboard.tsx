@@ -1,3 +1,4 @@
+// src/components/features/Profile/CommentsDashboard.tsx
 'use client';
 
 import * as React from 'react';
@@ -14,6 +15,7 @@ import {
   Plus,
   Search,
   BookOpen,
+  Eye,
 } from 'lucide-react';
 import {
   useGetPendingComments,
@@ -30,7 +32,7 @@ import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
 import { WriteCommentModal } from './components/WriteCommentModal';
 import { showToast } from '@/core/utils/toast';
 import { cn } from '@/design-system/utils/cn';
-import { getFullUrl } from '@/core/utils/formatters';
+import { getFullUrl, getProductUrl } from '@/core/utils/formatters';
 
 const TABS = [
   { key: 'pending' as const, label: 'در انتظار نظر', icon: Clock },
@@ -44,13 +46,9 @@ type TabKey = (typeof TABS)[number]['key'];
 interface EmptyStateProps {
   title: string;
   description: string;
-  actionText?: string;
-  actionHref?: string;
 }
 
-function EmptyState({ title, description, actionText, actionHref }: EmptyStateProps) {
-  const router = useRouter();
-
+function EmptyState({ title, description }: EmptyStateProps) {
   return (
     <div className="flex w-full flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card py-12 text-center shadow-xs">
       <div className="mx-auto flex h-48 w-48 max-w-full items-center justify-center -mb-2">
@@ -62,19 +60,19 @@ function EmptyState({ title, description, actionText, actionHref }: EmptyStatePr
       </div>
       <p className="mt-5 text-title-sm">{title}</p>
       <p className="mt-1 text-base text-muted-foreground">{description}</p>
-      {/* {actionText && actionHref && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push(actionHref)}
-          className="mt-4 h-9 gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs"
-        >
-          <Plus className="h-4 w-4" />
-          <span>{actionText}</span>
-        </Button>
-      )} */}
     </div>
   );
+}
+
+// ساخت لینک هوشمند محصول بر اساس productCode یا عنوان
+function getTargetProductUrl(item: any): string {
+  if (item?.productCode) {
+    return getProductUrl(item.productCode, item.productTitle);
+  }
+  if (item?.productTitle) {
+    return `/search?q=${encodeURIComponent(item.productTitle)}`;
+  }
+  return '/search';
 }
 
 export function CommentsDashboard() {
@@ -133,6 +131,7 @@ export function CommentsDashboard() {
       productId: comment.productId,
       productTitle: comment.productTitle,
       productImage: comment.productImage,
+      productCode: comment.productCode,
     });
     setEditingComment(comment);
     setIsModalOpen(true);
@@ -202,7 +201,7 @@ export function CommentsDashboard() {
         })}
       </div>
 
-      {/* تب در انتظار نظر */}
+      {/* تب ۱: در انتظار نظر */}
       {activeTab === 'pending' ? (
         <div className="flex w-full flex-col gap-5">
           {isPendingLoading ? (
@@ -210,37 +209,43 @@ export function CommentsDashboard() {
           ) : pendingItems.length > 0 ? (
             <div className="flex w-full flex-col gap-4">
               <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-                {pendingItems.map((item: any) => (
-                  <Card
-                    key={item.productId}
-                    className="flex w-full flex-col items-stretch justify-between gap-4 p-5 transition-colors hover:border-primary/40 sm:flex-row sm:items-center"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-3.5">
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-0.5">
-                        <img src={getFullUrl(item.productImage)} className="h-full w-full object-contain" alt="" />
-                      </div>
-                      <div className="flex min-w-0 flex-1 flex-col gap-1">
-                        <span className="block truncate text-title-sm">{item.productTitle}</span>
-                        <span className="block text-2xs text-muted-foreground">
-                          خریداری شده از فروشگاه {item.shopTitle}
-                        </span>
-                        <span className="mt-1 block text-2xs text-muted-foreground/80">
-                          تاریخ خرید: {item.lastSaleDateFormatted}
-                        </span>
-                      </div>
-                    </div>
+                {pendingItems.map((item: any) => {
+                  const productHref = getTargetProductUrl(item);
 
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => handleOpenWriteComment(item)}
-                      className="h-9 shrink-0 px-4 text-2xs font-bold shadow-xs"
+                  return (
+                    <Card
+                      key={item.productId}
+                      className="flex w-full flex-col items-stretch justify-between gap-4 p-5 transition-colors hover:border-primary/40 sm:flex-row sm:items-center"
                     >
-                      <Plus aria-hidden="true" className="h-4 w-4" />
-                      <span>ثبت نظر و امتیاز</span>
-                    </Button>
-                  </Card>
-                ))}
+                      <div className="flex min-w-0 flex-1 items-center gap-3.5">
+                        <Link href={productHref} className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border bg-muted p-0.5 hover:opacity-85 transition-opacity">
+                          <img src={getFullUrl(item.productImage)} className="h-full w-full object-contain" alt="" />
+                        </Link>
+                        <div className="flex min-w-0 flex-1 flex-col gap-1">
+                          <Link href={productHref} className="block truncate text-title-sm hover:text-primary transition-colors">
+                            {item.productTitle}
+                          </Link>
+                          <span className="block text-2xs text-muted-foreground">
+                            خریداری شده از فروشگاه {item.shopTitle}
+                          </span>
+                          <span className="mt-1 block text-2xs text-muted-foreground/80">
+                            تاریخ خرید: {item.lastSaleDateFormatted}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleOpenWriteComment(item)}
+                        className="h-9 shrink-0 px-4 text-2xs font-bold shadow-xs"
+                      >
+                        <Plus aria-hidden="true" className="h-4 w-4" />
+                        <span>ثبت نظر و امتیاز</span>
+                      </Button>
+                    </Card>
+                  );
+                })}
               </div>
 
               <Pagination
@@ -253,14 +258,12 @@ export function CommentsDashboard() {
             <EmptyState
               title="کالایی در انتظار نظر شما وجود ندارد"
               description="تمامی کالاهای خریداری‌شده توسط شما بررسی و ثبت نظر شده‌اند."
-              actionText="مشاهده سفارش‌ها"
-              actionHref="/profile/orders"
             />
           )}
         </div>
       ) : null}
 
-      {/* تب نظرات محصولات */}
+      {/* تب ۲: نظرات محصولات */}
       {activeTab === 'comments' ? (
         <div className="flex w-full flex-col gap-5">
           {isCommentsLoading ? (
@@ -268,65 +271,83 @@ export function CommentsDashboard() {
           ) : commentItems.length > 0 ? (
             <div className="flex w-full flex-col gap-4">
               <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-                {commentItems.map((comment: any) => (
-                  <Card key={comment.id} className="flex w-full flex-col justify-between gap-4 p-5">
-                    <div className="flex w-full items-center gap-3.5 border-b border-border pb-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-0.5">
-                        <img src={getFullUrl(comment.productImage)} className="h-full w-full object-contain" alt="" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="block truncate text-label">{comment.productTitle}</span>
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <span
-                            className={cn(
-                              'rounded-full px-2 py-0.5 text-2xs font-bold',
-                              comment.isConfirmed ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-                            )}
-                          >
-                            {comment.isConfirmed ? 'تایید شده' : 'در حال بررسی'}
-                          </span>
-                          <span className="text-2xs text-muted-foreground/80">{comment.createDateFormatted}</span>
+                {commentItems.map((comment: any) => {
+                  const productHref = getTargetProductUrl(comment);
+
+                  return (
+                    <Card key={comment.id} className="flex w-full flex-col justify-between gap-4 p-5">
+                      <div className="flex w-full items-center gap-3.5 border-b border-border pb-3">
+                        <Link href={productHref} className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted p-0.5 hover:opacity-85 transition-opacity">
+                          <img src={getFullUrl(comment.productImage)} className="h-full w-full object-contain" alt="" />
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <Link href={productHref} className="block truncate text-label hover:text-primary transition-colors">
+                            {comment.productTitle}
+                          </Link>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                'rounded-full px-2 py-0.5 text-2xs font-bold',
+                                comment.isConfirmed ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                              )}
+                            >
+                              {comment.isConfirmed ? 'تایید شده' : 'در حال بررسی'}
+                            </span>
+                            <span className="text-2xs text-muted-foreground/80">{comment.createDateFormatted}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            aria-hidden="true"
-                            className={cn(
-                              'h-3.5 w-3.5 shrink-0',
-                              i < comment.rate ? 'fill-warning text-warning' : 'text-border'
-                            )}
-                          />
-                        ))}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              aria-hidden="true"
+                              className={cn(
+                                'h-3.5 w-3.5 shrink-0',
+                                i < comment.rate ? 'fill-warning text-warning' : 'text-border'
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <p className="mt-1 break-words text-base leading-relaxed text-foreground">{comment.comment}</p>
                       </div>
-                      <p className="mt-1 break-words text-base leading-relaxed text-foreground">{comment.comment}</p>
-                    </div>
 
-                    <div className="mt-1.5 flex items-center justify-end gap-2.5 border-t border-dashed border-border pt-3">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditComment(comment)}
-                        aria-label="ویرایش"
-                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-primary"
-                      >
-                        <Pencil aria-hidden="true" className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteComment(comment.id)}
-                        disabled={deleteComment.isPending}
-                        aria-label="حذف"
-                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 aria-hidden="true" className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </Card>
-                ))}
+                      {/* نوار دکمه‌های اقدام: مشاهده محصول + ویرایش و حذف */}
+                      <div className="mt-1.5 flex items-center justify-between border-t border-dashed border-border pt-3">
+                        {/* ✅ دکمه مشاهده صفحه محصول */}
+                        {/* <Link
+                          href={productHref}
+                          className="flex items-center gap-1 text-2xs font-bold text-primary hover:underline transition-all"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>مشاهده محصول</span>
+                        </Link> */}
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditComment(comment)}
+                            aria-label="ویرایش نظر"
+                            className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-primary"
+                          >
+                            <Pencil aria-hidden="true" className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteComment(comment.id)}
+                            disabled={deleteComment.isPending}
+                            aria-label="حذف نظر"
+                            className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 aria-hidden="true" className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
 
               <Pagination
@@ -339,14 +360,12 @@ export function CommentsDashboard() {
             <EmptyState
               title="هنوز نظری ثبت نکرده‌اید"
               description="نظرات و بازخوردهای شما درباره محصولات در این بخش نمایش داده می‌شوند."
-              actionText="مشاهده سفارش‌ها و ثبت نظر"
-              actionHref="/profile/orders"
             />
           )}
         </div>
       ) : null}
 
-      {/* تب پرسش‌ها */}
+      {/* تب ۳: پرسش‌ها */}
       {activeTab === 'inquiries' ? (
         <div className="flex w-full flex-col gap-5">
           {isInquiriesLoading ? (
@@ -354,49 +373,64 @@ export function CommentsDashboard() {
           ) : inquiryItems.length > 0 ? (
             <div className="flex w-full flex-col gap-4">
               <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
-                {inquiryItems.map((inquiry: any) => (
-                  <Card key={inquiry.id} className="flex w-full flex-col justify-between gap-4 p-5">
-                    <div className="flex w-full items-center gap-3.5 border-b border-border pb-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted p-0.5">
-                        <img src={getFullUrl(inquiry.productImage)} className="h-full w-full object-contain" alt="" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="block truncate text-label">{inquiry.productTitle}</span>
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <span
-                            className={cn(
-                              'rounded-full px-2 py-0.5 text-2xs font-bold',
-                              inquiry.isConfirmed ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-                            )}
-                          >
-                            {inquiry.isConfirmed ? 'تایید شده' : 'در حال بررسی'}
-                          </span>
-                          <span className="text-2xs text-muted-foreground/80">{inquiry.createDateFormatted}</span>
+                {inquiryItems.map((inquiry: any) => {
+                  const productHref = getTargetProductUrl(inquiry);
+
+                  return (
+                    <Card key={inquiry.id} className="flex w-full flex-col justify-between gap-4 p-5">
+                      <div className="flex w-full items-center gap-3.5 border-b border-border pb-3">
+                        <Link href={productHref} className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted p-0.5 hover:opacity-85 transition-opacity">
+                          <img src={getFullUrl(inquiry.productImage)} className="h-full w-full object-contain" alt="" />
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <Link href={productHref} className="block truncate text-label hover:text-primary transition-colors">
+                            {inquiry.productTitle}
+                          </Link>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span
+                              className={cn(
+                                'rounded-full px-2 py-0.5 text-2xs font-bold',
+                                inquiry.isConfirmed ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
+                              )}
+                            >
+                              {inquiry.isConfirmed ? 'تایید شده' : 'در حال بررسی'}
+                            </span>
+                            <span className="text-2xs text-muted-foreground/80">{inquiry.createDateFormatted}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-2xs font-bold text-primary">متن پرسش:</span>
-                      <p className="break-words text-base leading-relaxed text-foreground">{inquiry.comment}</p>
-                      <span className="mt-1.5 text-label-2xs">
-                        {inquiry.replyCount} پاسخ ثبت شده
-                      </span>
-                    </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-2xs font-bold text-primary">متن پرسش:</span>
+                        <p className="break-words text-base leading-relaxed text-foreground">{inquiry.comment}</p>
+                        <span className="mt-1.5 text-label-2xs">
+                          {inquiry.replyCount} پاسخ ثبت شده
+                        </span>
+                      </div>
 
-                    <div className="mt-1.5 flex items-center justify-end border-t border-dashed border-border pt-3">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteInquiry(inquiry.id)}
-                        disabled={deleteInquiry.isPending}
-                        aria-label="حذف"
-                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 aria-hidden="true" className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </Card>
-                ))}
+                      <div className="mt-1.5 flex items-center justify-between border-t border-dashed border-border pt-3">
+                        {/* ✅ دکمه مشاهده صفحه محصول */}
+                        {/* <Link
+                          href={productHref}
+                          className="flex items-center gap-1 text-2xs font-bold text-primary hover:underline transition-all"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>مشاهده محصول</span>
+                        </Link> */}
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteInquiry(inquiry.id)}
+                          disabled={deleteInquiry.isPending}
+                          aria-label="حذف پرسش"
+                          className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 aria-hidden="true" className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
 
               <Pagination
@@ -409,14 +443,12 @@ export function CommentsDashboard() {
             <EmptyState
               title="هنوز پرسشی ثبت نکرده‌اید"
               description="پرسش‌های مطرح‌شده توسط شما درباره کالاها در این بخش قابل مشاهده و پیگیری است."
-              actionText="مشاهده محصولات"
-              actionHref="/search"
             />
           )}
         </div>
       ) : null}
 
-      {/* تب نظرات بلاگ */}
+      {/* تب ۴: نظرات بلاگ */}
       {activeTab === 'blogComments' ? (
         <div className="flex w-full flex-col gap-5">
           {isBlogCommentsLoading ? (
@@ -479,8 +511,6 @@ export function CommentsDashboard() {
             <EmptyState
               title="هنوز دیدگاهی برای مقالات ثبت نکرده‌اید"
               description="نظرات شما در بخش مقالات و وبلاگ پس از ثبت در این قسمت نمایش داده می‌شوند."
-              actionText="مشاهده مقالات بلاگ"
-              actionHref="/blog"
             />
           )}
         </div>
@@ -495,3 +525,5 @@ export function CommentsDashboard() {
     </div>
   );
 }
+
+export default CommentsDashboard;

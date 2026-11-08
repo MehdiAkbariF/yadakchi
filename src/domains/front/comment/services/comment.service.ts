@@ -143,15 +143,15 @@ export class CommentService {
 
 async deleteComment(commentId: string): Promise<void> {
     try {
+  
       await this.httpClient.delete(COMMENT_ENDPOINTS.DELETE_COMMENT, {
-        data: { id: commentId }
+        id: commentId
       });
     } catch (error) {
       logger.error('[CommentService] Delete comment failed:', error);
       throw errorManager.normalize(error);
     }
   }
-
   async likeComment(request: LikeCommentRequest): Promise<void> {
     try {
       const dto = CommentMapper.toLikeRequest(request);

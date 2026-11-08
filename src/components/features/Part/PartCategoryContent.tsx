@@ -1,3 +1,4 @@
+// src/components/features/Part/PartCategoryContent.tsx
 'use client';
 
 import * as React from 'react';
@@ -31,14 +32,21 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
   const [isSelectPartOpen, setIsSelectPartOpen] = React.useState(false);
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
-  const currentFilters = { ...filters, partCategoryEnglishTitle: slug };
-
   const { data: categoryData } = useGetPartCategoryPage(slug);
+
+  const currentFilters = React.useMemo(() => ({
+    ...filters,
+    partCategoryEnglishTitle: slug,
+    partCategoryIds: categoryData?.category?.id ? [categoryData.category.id] : filters.partCategoryIds,
+  }), [filters, slug, categoryData?.category?.id]);
+
   const { data: productsResponse, isLoading } = useSearchProducts(currentFilters);
 
   const products = productsResponse?.items || [];
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
+
+  const aggregations = (productsResponse as any)?.aggregations || null;
 
   const breadcrumbItems = [
     { id: 'categories-root', title: 'دسته‌بندی‌ها', href: '/categories' },
@@ -50,15 +58,17 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
   ];
 
   return (
-    <div className="flex w-full flex-col gap-6" dir="rtl">
-      {/* هدر چسبان موبایل (تمام‌عرض لبه‌به‌لبه و هماهنگ با اسکرول هدر اصلی) */}
+    <div className="flex w-full flex-col gap-4  sm:gap-6" dir="rtl">
+
       <div
-        style={{ top: isHeaderMinimized ? '3.5rem' : '6.5625rem' }}
-        className="sticky z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
+        className="sticky top-14 z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0
+         select-none flex-col gap-1 border-b border-border/80 bg-card/95 px-3 py-2 shadow-xs backdrop-blur-md transition-all 
+         duration-normal md:hidden"
       >
-        <div className="flex w-full items-center justify-between">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/40 p-1">
+        
+        <div className="flex w-full items-center justify-between mt-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-muted/40 p-0.5">
               <img
                 src={getFullUrl(categoryData?.category?.thumbnail)}
                 className="h-full w-full object-contain filter dark:invert"
@@ -66,7 +76,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
               />
             </div>
             <div className="flex min-w-0 flex-col">
-              <span className="text-3xs font-bold text-muted-foreground">گروه قطعات</span>
+              <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">گروه قطعات</span>
               <span className="mt-0.5 truncate text-xs font-bold text-foreground">
                 {categoryData?.category?.name || 'قطعات یدکی'}
               </span>
@@ -77,25 +87,26 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             <button
               type="button"
               onClick={() => setIsChangeCatOpen(true)}
-              className="rounded-lg bg-accent px-2.5 py-1.5 text-2xs font-bold text-accent-foreground active:scale-95 transition-transform"
+              className="rounded-md bg-accent px-2 py-1 text-3xs font-bold text-accent-foreground active:scale-95 transition-transform"
             >
               تغییر دسته
             </button>
             <button
               type="button"
               onClick={() => setIsSelectPartOpen(true)}
-              className="rounded-lg bg-secondary px-2.5 py-1.5 text-2xs font-bold text-secondary-foreground active:scale-95 transition-transform"
+              className="rounded-md bg-secondary px-2 py-1 text-3xs font-bold text-secondary-foreground active:scale-95 transition-transform"
             >
               انتخاب قطعه
             </button>
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-between gap-2.5 border-t border-dashed border-border/60 pt-2.5">
+        {/* ردیف دوم: فیلترها و مرتب‌سازی کامپکت */}
+        <div className="flex w-full items-center justify-between gap-2 border-t border-dashed border-border/60 pt-1.5">
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-label shadow-2xs active:scale-95 transition-transform"
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-input bg-card px-2.5 text-2xs font-bold shadow-2xs active:scale-95 transition-transform"
           >
             <span>فیلترها</span>
           </button>
@@ -106,7 +117,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             variant="trigger"
           />
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-xl bg-muted px-2.5 text-3xs font-bold text-muted-foreground">
+          <span className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-3xs font-bold text-muted-foreground">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -117,6 +128,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
       <div className="flex w-full items-start gap-6 md:gap-8">
         <SearchSidebar
           filters={currentFilters}
+          aggregations={aggregations}
           onFilterChange={(name, val) => setFilter(name, val)}
           onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}
@@ -124,7 +136,7 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           partCategoryId={categoryData?.category?.id}
         />
 
-        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-6">
+        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-5">
           <div className="hidden md:block">
             <PartCategoryHeaderCard
               slug={slug}
@@ -146,14 +158,14 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}

@@ -1,3 +1,4 @@
+// src/components/shared/Layouts/MainLayout/MainLayout.tsx
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -12,8 +13,10 @@ export interface MainLayoutProps {
   hideHeader?: boolean;
   hideFooter?: boolean;
   hideBottomNav?: boolean;
-  /** مخفی کردن هدر اصلی فقط در موبایل (دسکتاپ نمایش داده می‌شود) */
+  /** مخفی کردن هدر اصلی فقط در موبایل */
   hideHeaderOnMobile?: boolean;
+  /** مخفی کردن انتخاب شهر در موبایل برای صفحات خاص */
+  hideMobileCitySelector?: boolean;
 }
 
 const FLOW_PAGES = ['/basket', '/checkout', '/basket-payment'];
@@ -29,6 +32,7 @@ export function MainLayout({
   hideFooter = false,
   hideBottomNav = false,
   hideHeaderOnMobile = false,
+  hideMobileCitySelector,
 }: MainLayoutProps) {
   const pathname = usePathname();
 
@@ -46,7 +50,7 @@ export function MainLayout({
             hideHeaderOnMobile && 'hidden lg:block'
           )}
         >
-          <Header />
+          <Header hideMobileCitySelector={hideMobileCitySelector} />
         </div>
       )}
 
@@ -77,7 +81,6 @@ export function MainLayout({
         </div>
       )}
 
-      {/* BottomNav در همه صفحات موبایل (به‌جز product) */}
       {!hideBottomNav && !isProductPage && <BottomNav />}
     </div>
   );

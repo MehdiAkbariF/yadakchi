@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Typography } from '@/components/primitives/Typography';
-import { SlidersHorizontal, X, RotateCcw } from 'lucide-react';
+import { SlidersHorizontal, Search, X, RotateCcw } from 'lucide-react';
 import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
 
@@ -33,7 +33,7 @@ export function SearchHeader({
 }: SearchHeaderProps) {
   const formatNumber = (val: number) => new Intl.NumberFormat('fa-IR').format(val);
 
-  // استخراج چیپ‌های فیلتر فعال جهت نمایش در بالای صفحه با قابلیت حذف تک‌تک
+  // استخراج چیپ‌های فیلتر فعال جهت نمایش در بالای صفحه
   const activeChips = React.useMemo(() => {
     const chips: Array<{ id: string; name: string; label: string; value?: any }> = [];
 
@@ -47,7 +47,7 @@ export function SearchHeader({
       chips.push({ id: 'discount', name: 'discount', label: 'دارای تخفیف ویژه' });
     }
 
-    // ۳. ارسال مستقیم از فروشنده
+    // ۳. ارسال مستقیم
     if (filters.onlyDirectShipping) {
       chips.push({ id: 'directShipping', name: 'directShipping', label: 'ارسال مستقیم' });
     }
@@ -57,7 +57,7 @@ export function SearchHeader({
       chips.push({ id: 'nominated', name: 'nominated', label: 'کالاهای برگزیده' });
     }
 
-    // ۵. نوع قطعه (نو، استوک، زیرصفری)
+    // ۵. نوع قطعه
     if (filters.types && filters.types.length > 0) {
       const typeLabels: Record<string, string> = { New: 'نو', Stock: 'استوک', TakeOff: 'زیرصفری' };
       filters.types.forEach((t: any) => {
@@ -80,31 +80,53 @@ export function SearchHeader({
     return chips;
   }, [filters]);
 
-  // نسخه چسبان موبایل (کاملاً چسبیده به هدر اصلی با top-14)
+  // هدر چسبان موبایل - دقیقاً با همان ابعاد و کلاس‌های کامپکت و اختصاصی سرچ
   if (isMobileSticky) {
     return (
       <div
         dir="rtl"
-        className="sticky top-14 z-30 -mx-4 -mt-4 mb-1 flex w-[calc(100%+2rem)] select-none items-center justify-between gap-2.5 border-b border-border/80 bg-card/95 px-4 py-2.5 shadow-xs backdrop-blur-md md:hidden"
+        className="sticky top-14 z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-1 border-b border-border/80 bg-card/95 px-3 py-2 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
       >
-        <button
-          type="button"
-          onClick={onOpenMobileFilters}
-          className="flex h-9 flex-1 select-none items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 text-xs font-bold shadow-xs hover:border-primary/40 active:scale-95"
-        >
-          <SlidersHorizontal className="h-4 w-4 text-primary" />
-          <span>فیلترها</span>
-        </button>
+        {/* ردیف اول: آیکون جستجو و عبارت سرچ شده کاربر */}
+        <div className="flex w-full items-center justify-between mt-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-primary/10 text-primary p-0.5">
+              <Search className="h-4 w-4" />
+            </div>
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">
+                {searchTitle ? 'نتایج جستجو برای' : 'جستجوی قطعات'}
+              </span>
+              <span className="mt-0.5 truncate text-xs font-bold text-foreground">
+                {searchTitle ? `«${searchTitle}»` : 'کلیه قطعات و لوازم یدکی'}
+              </span>
+            </div>
+          </div>
 
-        <SortSelector
-          value={currentSort}
-          onChange={onSortChange}
-          variant="trigger"
-        />
+      
+        </div>
 
-        <span className="flex h-9 shrink-0 select-none items-center justify-center rounded-xl bg-muted px-2.5 text-2xs font-bold text-muted-foreground">
-          {formatNumber(totalCount)} کالا
-        </span>
+        {/* ردیف دوم: فیلترها و مرتب‌سازی کامپکت */}
+        <div className="flex w-full items-center justify-between gap-2 border-t border-dashed border-border/60 pt-1.5">
+          <button
+            type="button"
+            onClick={onOpenMobileFilters}
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-input bg-card px-2.5 text-2xs font-bold shadow-2xs active:scale-95 transition-transform"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+            <span>فیلترها</span>
+          </button>
+
+          <SortSelector
+            value={currentSort}
+            onChange={onSortChange}
+            variant="trigger"
+          />
+
+          <span className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-3xs font-bold text-muted-foreground">
+            {formatNumber(totalCount)} کالا
+          </span>
+        </div>
       </div>
     );
   }
@@ -129,7 +151,7 @@ export function SearchHeader({
         />
       </div>
 
-      {/* چیپ‌های فیلترهای فعال (Active Filter Chips) */}
+      {/* چیپ‌های فیلترهای فعال */}
       {activeChips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
           <span className="text-2xs font-bold text-muted-foreground ml-1">فیلترهای فعال:</span>

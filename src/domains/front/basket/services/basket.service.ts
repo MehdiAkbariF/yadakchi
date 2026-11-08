@@ -309,24 +309,34 @@ async initiatePayment(isLegalReceipt: boolean = false): Promise<{ link?: string;
     return this.getCheckoutBasket();
   }
 
-async verifySamanPayment(
-  params: SamanPaymentCallbackParams
-): Promise<any> {
-  // ⚠️ MOCK — برای تست UI
-  await new Promise((r) => setTimeout(r, 1200));
+/**
+   * تایید نهایی پرداخت از طریق ارسال اطلاعات به بک‌اند
+   * در صورت دریافت پاسخ ۲۰۰، پرداخت موفق است.
+   */
+  async verifySamanPayment(
+    params: SamanPaymentCallbackParams
+  ): Promise<any> {
+    try {
+      logger.debug('[BasketService] Verifying payment callback with backend:', params);
 
-  // شبیه‌سازی: اگر Status=2 → موفق
-  if (Number(params.status) === 2) {
-    return { success: true, orderId: 'MOCK-ORDER-123' };
+      // ساختار دقیق Body مطابق مستندات سواگر
+      const payload = {
+        refNum: params.refNum ? String(params.refNum).trim() : '',
+        status: Number(params.status) || 0,
+        token: String(params.token || '').trim(),
+      };
+
+      // ارسال درخواست POST به اندپوینت اعتبارسنجی پرداخت
+      const response = await this.httpClient.post('/api/UserPanel/CallBackUrl', payload);
+
+      logger.info('[BasketService] Payment verified successfully with status 200');
+      return response.data || { success: true };
+    } catch (error) {
+      logger.error('[BasketService] Payment verification failed on server:', error);
+      throw errorManager.normalize(error);
+    }
   }
-
-  // در غیر این صورت → ناموفق
-  throw errorManager.normalize({
-    status: 400,
-    userMessage: 'پرداخت ناموفق بود',
-  });
-}
-}
+  }
 
 let basketServiceInstance: BasketService | null = null;
 

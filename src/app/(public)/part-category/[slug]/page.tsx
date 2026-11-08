@@ -121,8 +121,10 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
 
   const filters: SearchProductsRequest = {
     partCategoryEnglishTitle: slug,
-    isProductInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
-    isSellerInUserCity: resolvedSearchParams.userCity === 'true' ? true : undefined,
+    onlyInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
+    onlyDiscounted: resolvedSearchParams.discount === 'true' ? true : undefined,
+    onlyDirectShipping: resolvedSearchParams.directShipping === 'true' ? true : undefined,
+    onlyNominated: resolvedSearchParams.nominated === 'true' ? true : undefined,
     fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
     toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
     orderType: (resolvedSearchParams.sort as any) || 'Selected',
@@ -130,7 +132,9 @@ export default async function PartCategoryPage({ params, searchParams }: PartCat
     pageSize: !isNaN(pageSize) ? pageSize : 30,
     brandIds: typeof resolvedSearchParams.brandIds === 'string' ? [resolvedSearchParams.brandIds] : Array.isArray(resolvedSearchParams.brandIds) ? resolvedSearchParams.brandIds : undefined,
     carIds: typeof resolvedSearchParams.carIds === 'string' ? [resolvedSearchParams.carIds] : Array.isArray(resolvedSearchParams.carIds) ? resolvedSearchParams.carIds : undefined,
+    partIds: typeof resolvedSearchParams.partIds === 'string' ? [resolvedSearchParams.partIds] : Array.isArray(resolvedSearchParams.partIds) ? resolvedSearchParams.partIds : undefined,
     types: typeof resolvedSearchParams.types === 'string' ? [resolvedSearchParams.types] as any : Array.isArray(resolvedSearchParams.types) ? resolvedSearchParams.types : undefined,
+    includeAggregations: true, // ✅ حتماً فعال باشد
   };
 
   await Promise.allSettled([

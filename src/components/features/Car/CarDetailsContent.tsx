@@ -1,3 +1,4 @@
+// src/components/features/Car/CarDetailsContent.tsx
 'use client';
 
 import * as React from 'react';
@@ -11,7 +12,7 @@ import { ProductSearchCard } from '@/components/features/ProductCard/ProductSear
 import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { PageDescription } from '@/components/composites/PageDescription/PageDescription';
-import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';CarHeaderCard
+import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
 import { CarHeaderCard } from './components/CarHeaderCard';
 import { Typography } from '@/components/primitives/Typography';
 import { useAppStore } from '@/shared/store/useAppStore';
@@ -48,6 +49,9 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
 
+  // استخراج دیتای تجمیعی برای فیلترها
+  const aggregations = (productsResponse as any)?.aggregations || null;
+
   const rawBreadcrumbs = (carData as any)?.breadCrumbs || [];
   const breadcrumbItems = [
     { id: 'cars-root', title: 'خودروها', href: '/search' },
@@ -59,20 +63,22 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
   );
 
   return (
-    <div className="flex w-full flex-col gap-6" dir="rtl">
-      
- 
+    <div className="flex w-full flex-col gap-4 sm:gap-6" dir="rtl">
+      {/* هدر چسبان موبایل با همان ابعاد و کلاس‌های دقیق مدنظر شما */}
       <div
-        className="sticky top-[3.5rem] z-30 -mx-4 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-3 border-b border-border/80 
-        bg-card/95 px-4 py-3 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden rounded-none"
+        className="sticky top-14 z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-1 border-b border-border/80 bg-card/95 px-3 py-2 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
       >
-        <div className="flex w-full items-center justify-between">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-muted/30 p-1">
-              <img src={getFullUrl(carData?.cover)} className="h-full w-full object-contain" alt="" />
+        <div className="flex w-full items-center justify-between mt-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-muted/40 p-0.5">
+              <img
+                src={getFullUrl(carData?.cover)}
+                className="h-full w-full object-contain"
+                alt=""
+              />
             </div>
             <div className="flex min-w-0 flex-col">
-              <span className="text-3xs font-bold text-muted-foreground">خودرو انتخابی</span>
+              <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">خودرو انتخابی</span>
               <span className="mt-0.5 truncate text-xs font-bold text-foreground">
                 {carData?.model || 'خودرو'}
               </span>
@@ -86,25 +92,26 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
                 setSearchQuery('');
                 setIsChangeCarOpen(true);
               }}
-              className="rounded-lg bg-accent px-2.5 py-1.5 text-2xs font-bold text-accent-foreground active:scale-95 transition-transform"
+              className="rounded-md bg-accent px-2 py-1 text-3xs font-bold text-accent-foreground active:scale-95 transition-transform"
             >
               تغییر خودرو
             </button>
             <button
               type="button"
               onClick={() => setIsSelectPartOpen(true)}
-              className="rounded-lg bg-secondary px-2.5 py-1.5 text-2xs font-bold text-secondary-foreground active:scale-95 transition-transform"
+              className="rounded-md bg-secondary px-2 py-1 text-3xs font-bold text-secondary-foreground active:scale-95 transition-transform"
             >
               انتخاب قطعه
             </button>
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-between gap-2.5 border-t border-dashed border-border/60 pt-2.5">
+        {/* ردیف دوم: فیلترها و مرتب‌سازی کامپکت */}
+        <div className="flex w-full items-center justify-between gap-2 border-t border-dashed border-border/60 pt-1.5">
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-label shadow-2xs active:scale-95 transition-transform"
+            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-input bg-card px-2.5 text-2xs font-bold shadow-2xs active:scale-95 transition-transform"
           >
             <span>فیلترها</span>
           </button>
@@ -115,7 +122,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
             variant="trigger"
           />
 
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-xl bg-muted px-2.5 text-3xs font-bold text-muted-foreground">
+          <span className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-3xs font-bold text-muted-foreground">
             {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
           </span>
         </div>
@@ -126,6 +133,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
       <div className="flex w-full items-start gap-6 md:gap-8">
         <SearchSidebar
           filters={currentFilters}
+          aggregations={aggregations}
           onFilterChange={(name, val) => setFilter(name, val)}
           onClearAll={clearFilters}
           isOpen={isMobileFiltersOpen}
@@ -134,8 +142,8 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
           carId={carData?.id}
         />
 
-        {/* کانتینر محصولات با min-w-0 جهت تضمین عدم بریدگی کارت‌ها در موبایل */}
-        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-6">
+        {/* کانتینر محصولات */}
+        <div className="flex flex-1 min-w-0 flex-col items-stretch gap-5">
           <div className="hidden md:block">
             <CarHeaderCard
               slug={slug}
@@ -157,14 +165,14 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
           </div>
 
           {isProductsLoading ? (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {Array.from({ length: 10 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
           ) : products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {products.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}
@@ -271,3 +279,5 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
     </div>
   );
 }
+
+export default CarDetailsContent;

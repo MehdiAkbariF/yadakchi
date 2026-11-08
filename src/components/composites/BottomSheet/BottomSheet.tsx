@@ -1,3 +1,4 @@
+// src/components/composites/BottomSheet/BottomSheet.tsx
 'use client';
 
 import * as React from 'react';
@@ -11,21 +12,18 @@ export interface BottomSheetProps {
   title: string;
   children: React.ReactNode;
   className?: string;
-  /** حداکثر عرض پنل در دسکتاپ (پیش‌فرض: max-w-lg) */
   maxWidth?: string;
-  /** ارتفاع: auto (بر اساس محتوا تا 85dvh) | half | full */
-  size?: 'auto' | 'half' | 'full';
-  /** غیرفعال کردن کشیدن برای بستن */
+  /** ارتفاع: auto | half | fixed (ارتفاع ثابت ۷۵درصد برای جلوگیری از پرش تب‌ها) | full */
+  size?: 'auto' | 'half' | 'fixed' | 'full';
   disableDrag?: boolean;
-  /** آستانه کشیدن برای بستن (px) */
   dragCloseThreshold?: number;
-  /** نمایش پنل به‌صورت Modal در دسکتاپ (پیش‌فرض: true) */
   centerOnDesktop?: boolean;
 }
 
 const SIZE_CLASSES: Record<NonNullable<BottomSheetProps['size']>, string> = {
   auto: 'max-h-[85dvh]',
   half: 'h-[55dvh]',
+  fixed: 'h-[75dvh] sm:h-[36rem]', // ارتفاع ثابت و استاندارد دو تب
   full: 'h-[92dvh] sm:h-[88dvh]',
 };
 
@@ -36,9 +34,9 @@ export function BottomSheet({
   children,
   className,
   maxWidth = 'max-w-lg',
-  size = 'auto',
+  size = 'fixed',
   disableDrag = false,
-  dragCloseThreshold = 100,
+  dragCloseThreshold = 80,
   centerOnDesktop = true,
 }: BottomSheetProps) {
   const [mounted, setMounted] = React.useState(false);
@@ -49,25 +47,18 @@ export function BottomSheet({
     setMounted(true);
   }, []);
 
-  // قفل اسکرول body با حفظ مقدار اولیه و جلوگیری از پرش اسکرول‌بار
+  // قفل اسکرول صفحه
   React.useEffect(() => {
     if (!isOpen) return;
     const originalOverflow = document.body.style.overflow;
-    const originalPaddingRight = document.body.style.paddingRight;
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-
     document.body.style.overflow = 'hidden';
-    if (scrollBarWidth > 0) {
-      document.body.style.paddingRight = `${scrollBarWidth}px`;
-    }
 
     return () => {
       document.body.style.overflow = originalOverflow;
-      document.body.style.paddingRight = originalPaddingRight;
     };
   }, [isOpen]);
 
-  // بستن با Esc
+  // بستن با Escape
   React.useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -77,24 +68,9 @@ export function BottomSheet({
     return () => window.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
 
-  // focus trap ساده
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const previousActive = document.activeElement as HTMLElement | null;
-    const timer = setTimeout(() => {
-      const focusable = panelRef.current?.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      focusable?.focus();
-    }, 60);
-    return () => {
-      clearTimeout(timer);
-      previousActive?.focus?.();
-    };
-  }, [isOpen]);
-
+  // فیزیک درگ نیتیو
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y > dragCloseThreshold || info.velocity.y > 600) {
+    if (info.offset.y > dragCloseThreshold || info.velocity.y > 450) {
       onClose();
     }
   };
@@ -114,60 +90,66 @@ export function BottomSheet({
           aria-label={title}
           dir="rtl"
         >
-          {/* Backdrop */}
+          {/* Backdrop: سبک و بهینه برای جلوگیری از لگ زدن موبایل */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60"
             aria-hidden="true"
           />
 
-          {/* Panel */}
+          {/* پنل شیت با سخت‌افزار شتاب‌یافته خالص (GPU Composited) */}
           <motion.div
             ref={panelRef}
-            initial={{ y: '100%', opacity: 0.5 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '100%', opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{
+              type: 'spring',
+              stiffness: 380,
+              damping: 34,
+              mass: 0.8,
+            }}
             drag={disableDrag ? false : 'y'}
             dragControls={dragControls}
-            dragListener={false} // فقط از دستگیره کشیده شود، نه از محتوا
+            dragListener={false}
             dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.4 }}
+            dragElastic={{ top: 0, bottom: 0.55 }}
             onDragEnd={handleDragEnd}
             className={cn(
-              'relative z-10 flex w-full flex-col overflow-hidden bg-background',
-              // موبایل: bottom sheet
-              'rounded-t-2xl border-t border-border/80 shadow-xl',
-              // دسکتاپ: modal
+              'relative z-10 flex w-full flex-col overflow-hidden bg-card',
+              'transform-gpu will-change-transform select-none',
+              'rounded-t-[1.75rem] border-t border-border/80 shadow-2xl',
               centerOnDesktop && 'sm:rounded-2xl sm:border sm:shadow-2xl',
               SIZE_CLASSES[size],
               maxWidth,
               className
             )}
           >
-            {/* Header + Handle */}
-            <div className="flex w-full shrink-0 flex-col items-center gap-2.5 border-b border-border py-3.5">
+            {/* دستگیره درگ با تاچ‌تارگت وسیع و روان */}
+            <div className="flex w-full shrink-0 flex-col items-center border-b border-border/70 pb-2.5 pt-2">
               {!disableDrag && (
                 <div
                   onPointerDown={(e) => dragControls.start(e)}
-                  className="flex w-full cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+                  className="flex h-7 w-full cursor-grab touch-none items-center justify-center active:cursor-grabbing"
                   aria-hidden="true"
                 >
-                  <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-colors active:bg-muted-foreground/60" />
+                  <div className="h-1.5 w-12 rounded-full bg-muted-foreground/30 transition-all duration-fast active:scale-95 active:bg-muted-foreground/60" />
                 </div>
               )}
-              <span className="px-4 text-center text-base font-bold text-foreground">{title}</span>
+              <span className="px-4 text-center text-xs sm:text-sm font-bold text-foreground">
+                {title}
+              </span>
             </div>
 
-            {/* Body */}
+            {/* بدنه شیت با اسکرول مستقل و بدون پرش ارتفاع */}
             <div
               className={cn(
-                'flex-1 overflow-y-auto overscroll-contain p-5 scrollbar-none',
-                'pb-[max(1.25rem,env(safe-area-inset-bottom))]'
+                'flex flex-1 flex-col min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5 scrollbar-thin',
+                'pb-[max(1.5rem,env(safe-area-inset-bottom))]'
               )}
             >
               {children}

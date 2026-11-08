@@ -43,9 +43,9 @@ export function CheckoutShipmentGroup({
       {/* هدر مرسوله و فروشگاه */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+          {/* <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
             {toPersianDigits(index + 1)}
-          </span>
+          </span> */}
           <span className="text-title-sm">
             مرسوله {toPersianDigits(index + 1)} از {toPersianDigits(totalSubBaskets)}
           </span>

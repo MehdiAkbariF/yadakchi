@@ -1,3 +1,4 @@
+// src/components/sections/Header/Header.tsx
 'use client';
 
 import * as React from 'react';
@@ -18,9 +19,11 @@ import { FlowHeader, FlowStep } from '@/components/features/CheckoutFlow/FlowHea
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
 import { useAppStore } from '@/shared/store/useAppStore';
 import { FlowProgressBar } from '@/components/features/CheckoutFlow';
+import { PAGES_WITHOUT_MOBILE_CITY } from './constants/header.constants';
 
 export interface HeaderProps {
   className?: string;
+  hideMobileCitySelector?: boolean; // امکان مخفی‌سازی دستی
 }
 
 // مسیرهای flow: در موبایل هدر اختصاصی می‌گیرند
@@ -38,7 +41,7 @@ function getFlowStep(pathname: string | null): FlowStep | null {
   return null;
 }
 
-export function Header({ className }: HeaderProps) {
+export function Header({ className, hideMobileCitySelector }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   useAuth();
@@ -48,6 +51,15 @@ export function Header({ className }: HeaderProps) {
 
   const flowStep = getFlowStep(pathname);
   const isFlowPage = !!flowStep;
+
+  // بررسی مخفی بودن انتخاب شهر: یا از طریق پراپ دستی یا بر اساس مسیر صفحه
+  const shouldHideCitySelector = React.useMemo(() => {
+    if (hideMobileCitySelector !== undefined) return hideMobileCitySelector;
+    if (!pathname) return false;
+    return PAGES_WITHOUT_MOBILE_CITY.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`)
+    );
+  }, [hideMobileCitySelector, pathname]);
 
   React.useEffect(() => {
     setIsHeaderMinimized(false);
@@ -154,10 +166,15 @@ export function Header({ className }: HeaderProps) {
         </>
       ) : (
         <>
-          <div className="h-36 w-full lg:hidden" />
+          {/* تنظیم دقیق ارتفاع جای‌گیرنده هدر بر اساس وجود یا عدم وجود انتخاب شهر */}
+          <div className={cn('w-full lg:hidden', shouldHideCitySelector ? 'h-[5.75rem]' : 'h-36')} />
           <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
             <div className="mx-auto max-w-[1400px]">
-              <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
+              <MobileHeader
+                onSearch={handleSearch}
+                isScrolled={isHeaderMinimized}
+                hideCitySelector={shouldHideCitySelector}
+              />
             </div>
           </div>
         </>

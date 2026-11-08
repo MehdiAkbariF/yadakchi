@@ -16,17 +16,11 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-/**
- * استخراج رشته از مقدار searchParams
- */
 function getString(val: string | string[] | undefined): string | null {
   if (Array.isArray(val)) return val[0] ?? null;
   return val ?? null;
 }
 
-/**
- * استخراج عدد از مقدار searchParams
- */
 function getNumber(val: string | string[] | undefined): number {
   const str = getString(val);
   if (!str) return 0;
@@ -37,13 +31,17 @@ function getNumber(val: string | string[] | undefined): number {
 export default async function PaymentResultPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
+  // استخراج امن پارامترها با پشتیبانی از حروف بزرگ و کوچک درگاه
   const payload = {
-    refNum: getString(params.RefNum),
-    status: getString(params.Status),
-    token: getString(params.Token),
-    traceNo: getString(params.TraceNo),
+    refNum: getString(params.RefNum) || getString(params.refNum),
+    status: getString(params.Status) || getString(params.status) || getString(params.State) || getString(params.state),
+    token: getString(params.Token) || getString(params.token),
+    traceNo: getString(params.TraceNo) || getString(params.traceNo),
     affectiveAmount:
-      getNumber(params.AffectiveAmount) || getNumber(params.Amount),
+      getNumber(params.AffectiveAmount) ||
+      getNumber(params.affectiveAmount) ||
+      getNumber(params.Amount) ||
+      getNumber(params.amount),
   };
 
   return <PaymentCallbackContent payload={payload} />;

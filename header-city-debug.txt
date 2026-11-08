@@ -1,0 +1,654 @@
+
+==================== FILE: src\components\sections\Header\Header.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+import { Logo } from './components/Logo/Logo';
+import { SearchBar } from './components/SearchBar/SearchBar';
+import { SellerButton } from './components/SellerButton/SellerButton';
+import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
+import { AuthButton } from './components/AuthButton/AuthButton';
+import { CartButton } from './components/CartButton/CartButton';
+import { DesktopNavigation } from './components/DesktopNavigation/DesktopNavigation';
+import { MobileHeader } from './components/MobileHeader/MobileHeader';
+import { MyCarButton } from './components/MyCarButton/MyCarButton';
+import { CitySelector } from './components/CitySelector/CitySelector';
+import { FlowHeader, FlowStep } from '@/components/features/CheckoutFlow/FlowHeader';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { useAppStore } from '@/shared/store/useAppStore';
+import { FlowProgressBar } from '@/components/features/CheckoutFlow';
+
+export interface HeaderProps {
+  className?: string;
+}
+
+// مسیرهای flow: در موبایل هدر اختصاصی می‌گیرند
+const FLOW_PAGES_MAP: Record<string, FlowStep> = {
+  '/basket': 'basket',
+  '/checkout': 'checkout',
+  '/basket-payment': 'payment',
+};
+
+function getFlowStep(pathname: string | null): FlowStep | null {
+  if (!pathname) return null;
+  for (const [path, step] of Object.entries(FLOW_PAGES_MAP)) {
+    if (pathname === path || pathname.startsWith(`${path}/`)) return step;
+  }
+  return null;
+}
+
+export function Header({ className }: HeaderProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  useAuth();
+  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
+  const setIsHeaderMinimized = useAppStore((state) => state.setIsHeaderMinimized);
+  const { scrollY } = useScroll();
+
+  const flowStep = getFlowStep(pathname);
+  const isFlowPage = !!flowStep;
+
+  React.useEffect(() => {
+    setIsHeaderMinimized(false);
+  }, [pathname, setIsHeaderMinimized]);
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const prev = scrollY.getPrevious() ?? 0;
+    const diff = latest - prev;
+
+    if (latest < 40) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+      return;
+    }
+
+    if (diff < -8) {
+      if (isHeaderMinimized) setIsHeaderMinimized(false);
+    } else if (diff > 10 && latest > 80) {
+      if (!isHeaderMinimized) setIsHeaderMinimized(true);
+    }
+  });
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    }
+  };
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      document.documentElement.style.setProperty(
+        '--header-height',
+        isHeaderMinimized ? '4rem' : '6.75rem'
+      );
+    }
+  }, [isHeaderMinimized]);
+
+  return (
+    <header className={cn('z-40 w-full select-none', className)}>
+      {/* ============ هدر دسکتاپ ============ */}
+      <div className="pointer-events-none relative hidden h-[6.75rem] w-full lg:block">
+        <motion.div
+          className="pointer-events-auto fixed inset-x-0 top-0 z-40 flex w-full flex-col border-b border-border/60 bg-card/95 shadow-xs backdrop-blur-md"
+          initial={false}
+          animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+          variants={{
+            expanded: { height: '6.75rem', transition: { duration: 0.2, ease: 'easeInOut' } },
+            collapsed: { height: '4rem', transition: { duration: 0.2, ease: 'easeInOut' } },
+          }}
+        >
+          <div className="flex h-16 w-full items-center px-4 lg:px-8">
+            <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-4">
+              <Logo className="shrink-0 pt-0" />
+
+              <div className="mx-2 max-w-2xl flex-1 xl:max-w-3xl">
+                <SearchBar
+                  placeholder="جستجوی هوشمند قطعات..."
+                  onSearch={handleSearch}
+                  isMobile={false}
+                />
+              </div>
+
+              <div className="flex shrink-0 items-center gap-3">
+                <SellerButton />
+                <AuthButton />
+                <CartButton />
+                <div className="ms-1 border-s border-border/70 pe-1">
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <motion.div
+            initial={false}
+            animate={isHeaderMinimized ? 'collapsed' : 'expanded'}
+            variants={{
+              expanded: { height: '2.75rem', opacity: 1, transition: { duration: 0.2, ease: 'easeInOut' } },
+              collapsed: { height: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeInOut' } },
+            }}
+            className={cn(
+              'w-full border-t border-border/50 bg-secondary/30',
+              isHeaderMinimized ? 'pointer-events-none overflow-hidden' : 'overflow-visible'
+            )}
+          >
+            <div className="mx-auto max-w-[1400px] px-4 lg:px-8">
+              <div className="flex h-11 items-center justify-between">
+                <DesktopNavigation />
+                <div className="flex items-center gap-4">
+                  <MyCarButton />
+                  <CitySelector />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* ============ هدر موبایل ============ */}
+      {isFlowPage && flowStep ? (
+        <>
+          <div className="h-[5.75rem] w-full lg:hidden" />
+          <FlowHeader step={flowStep} />
+          <FlowProgressBar currentStep={flowStep} />
+        </>
+      ) : (
+        <>
+          <div className="h-36 w-full lg:hidden" />
+          <div className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/60 bg-card/95 px-4 py-2 shadow-xs backdrop-blur-md lg:hidden">
+            <div className="mx-auto max-w-[1400px]">
+              <MobileHeader onSearch={handleSearch} isScrolled={isHeaderMinimized} />
+            </div>
+          </div>
+        </>
+      )}
+    </header>
+  );
+}
+
+==================== FILE: src\components\sections\Header\components\MobileHeader\MobileHeader.tsx ====================
+
+'use client';
+
+import * as React from 'react';
+import { cn } from '@/design-system/utils/cn';
+import { Logo } from '../Logo/Logo';
+import { SellerButton } from '../SellerButton/SellerButton';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { SearchBar } from '../SearchBar/SearchBar';
+import { CitySelector } from '../CitySelector/CitySelector';
+
+export interface MobileHeaderProps {
+  className?: string;
+  onSearch?: (query: string) => void;
+  isScrolled?: boolean;
+}
+
+export function MobileHeader({ className, onSearch, isScrolled = false }: MobileHeaderProps) {
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  return (
+    <div className={cn('flex w-full flex-col transition-transform duration-normal will-change-transform', className)}>
+      {/* ردیف بالای موبایل: لوگو و اکشن‌ها کاملاً هماهنگ با پس‌زمینه سفید کارت */}
+      <div className="relative z-20 flex h-10 w-full items-center justify-between">
+        <Logo className="shrink-0" />
+        <div className="flex shrink-0 items-center gap-2">
+          <SellerButton size="sm" />
+          <ThemeToggle />
+        </div>
+      </div>
+
+      {/* ردیف پایین: سرچ و انتخاب شهر */}
+      <div
+        className={cn(
+          'w-full origin-top transform transition-all duration-slow ease-out',
+          'will-change-[transform,opacity,max-height]',
+          isScrolled
+            ? 'pointer-events-none max-h-0 -translate-y-3 scale-y-90 overflow-hidden opacity-0'
+            : 'max-h-36 translate-y-0 scale-y-100 opacity-100'
+        )}
+      >
+        <div className="flex w-full flex-col pb-1 pt-2">
+          {isMounted ? (
+            <>
+              <SearchBar
+                placeholder="جستجو در یدکچی..."
+                onSearch={onSearch}
+                className="w-full"
+                isMobile
+              />
+
+              <div className="mt-2.5 border-t border-border/60 pt-2">
+                <CitySelector variant="mobile" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="h-9 w-full animate-pulse rounded-md bg-secondary" />
+              <div className="mt-2.5 h-6 w-full animate-pulse rounded-md bg-secondary/70" />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+==================== FILE: src\components\sections\Header\components\CitySelector\CitySelector.tsx ====================
+
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { MapPin, ChevronDown, ChevronLeft, Search, X, MapPinOff, ArrowRight, Loader2 } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { Modal } from '@/components/composites/Modal/Modal';
+import { Input } from '@/components/primitives/Input/Input';
+import { useGetProvinceCitiesTree } from '@/domains/front/reference/city/hooks/city.hooks';
+import { useAppStore } from '@/shared/store/useAppStore';
+
+export interface CitySelectorProps {
+  variant?: 'default' | 'mobile';
+}
+
+export function CitySelector({ variant = 'default' }: CitySelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const storeCity = useAppStore((state) => state.selectedCity);
+  const setStoreCity = useAppStore((state) => state.setSelectedCity);
+
+  const { data: provincesTree = [], isLoading } = useGetProvinceCitiesTree();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeProvinceId, setActiveProvinceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const selectedCity = mounted ? storeCity : null;
+
+  const handleOpenModal = () => {
+    setIsOpen(true);
+    setSearchQuery('');
+    setActiveProvinceId(null);
+  };
+
+  const handleSelectCity = (id: string, name: string) => {
+    setStoreCity({ id, name });
+    setIsOpen(false);
+  };
+
+  const handleClearCity = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setStoreCity(null);
+  };
+
+  const filteredCities = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+
+    const results: Array<{ id: string; name: string; provinceName: string }> = [];
+    provincesTree.forEach((province) => {
+      province.cities.forEach((city) => {
+        if (city.name.includes(searchQuery.trim())) {
+          results.push({
+            id: city.id,
+            name: city.name,
+            provinceName: province.name,
+          });
+        }
+      });
+    });
+    return results;
+  }, [searchQuery, provincesTree]);
+
+  const activeProvince =
+    provincesTree.find((p) => p.id === (activeProvinceId || provincesTree[0]?.id)) || provincesTree[0];
+  const isMobileVariant = variant === 'mobile';
+
+  const renderModalContent = () => (
+    <Modal
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      className="fixed inset-0 z-modal flex h-full max-h-full w-full max-w-none flex-col rounded-none bg-card p-0 md:relative md:h-[34.375rem] md:max-h-[90vh] md:max-w-2xl md:overflow-hidden md:rounded-xl md:border md:border-border md:shadow-lg"
+      overlayClassName="bg-black/40 backdrop-blur-sm"
+    >
+      <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/20 px-4 py-3.5" dir="rtl">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="rounded-full p-1 text-foreground transition-colors hover:bg-muted md:hidden"
+            aria-label="بازگشت به صفحه قبلی"
+            type="button"
+          >
+            <ArrowRight aria-hidden="true" className="h-5 w-5" />
+          </button>
+          <span className="flex items-center gap-1.5 text-xs font-bold sm:text-sm text-foreground">
+            <MapPin aria-hidden="true" className="h-4 w-4 text-primary" />
+            انتخاب شهر یا استان
+          </span>
+        </div>
+        <button
+          onClick={() => setIsOpen(false)}
+          className="hidden rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:flex"
+          aria-label="بستن پنجره"
+          type="button"
+        >
+          <X aria-hidden="true" className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="shrink-0 border-b border-border bg-card p-4" dir="rtl">
+        <label htmlFor="city-search-input" className="sr-only">جستجوی نام شهر</label>
+        <Input
+          id="city-search-input"
+          type="text"
+          placeholder="جستجوی نام شهر..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          leftIcon={<Search aria-hidden="true" className="h-4 w-4 text-muted-foreground" />}
+          rightIcon={
+            searchQuery ? (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-muted"
+                type="button"
+                aria-label="پاک کردن متن جستجو"
+              >
+                <X aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
+              </button>
+            ) : undefined
+          }
+          className="w-full border-border bg-card"
+          dir="rtl"
+        />
+      </div>
+
+      <div className="flex min-h-0 flex-1 overflow-hidden" dir="rtl">
+        {isLoading ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2">
+            <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin text-primary" />
+            <span className="text-xs text-muted-foreground">در حال دریافت لیست شهرها...</span>
+          </div>
+        ) : searchQuery.trim() ? (
+          <div className="flex-1 space-y-2 overflow-y-auto p-4">
+            {filteredCities.length > 0 ? (
+              filteredCities.map((city) => (
+                <button
+                  key={city.id}
+                  type="button"
+                  onClick={() => handleSelectCity(city.id, city.name)}
+                  className="flex w-full items-center justify-between rounded-lg border border-border p-3 transition-colors hover:border-primary/50 hover:bg-accent/40"
+                >
+                  <span className="text-sm font-medium text-foreground">{city.name}</span>
+                  <span className="text-xs text-muted-foreground">استان {city.provinceName}</span>
+                </button>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                <MapPinOff aria-hidden="true" className="h-8 w-8 text-muted-foreground/60" />
+                <span className="text-sm">شهری با این نام یافت نشد.</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-[8.75rem] shrink-0 overflow-y-auto border-l border-border bg-muted/20 py-1 md:w-[12.5rem]">
+              {provincesTree.map((province) => {
+                const isActive = activeProvince?.id === province.id;
+                return (
+                  <button
+                    key={province.id}
+                    type="button"
+                    onClick={() => setActiveProvinceId(province.id)}
+                    className={cn(
+                      'w-full truncate px-4 py-3 text-right text-xs font-medium transition-colors md:text-sm',
+                      isActive
+                        ? 'border-r-2 border-primary bg-card font-bold text-primary'
+                        : 'text-foreground hover:bg-muted/40'
+                    )}
+                  >
+                    {province.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-card p-4">
+              {activeProvince ? (
+                <div className="space-y-3">
+                  <span className="block border-b border-border pb-2 text-2xs font-bold text-muted-foreground">
+                    شهرهای استان {activeProvince.name} ({activeProvince.cities.length} شهر)
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {activeProvince.cities.map((city) => {
+                      const isSelected = selectedCity?.id === city.id;
+                      return (
+                        <button
+                          key={city.id}
+                          type="button"
+                          onClick={() => handleSelectCity(city.id, city.name)}
+                          className={cn(
+                            'truncate rounded-lg border px-3 py-2 text-right text-xs transition-colors md:text-sm',
+                            isSelected
+                              ? 'border-primary bg-primary/10 font-bold text-primary'
+                              : 'border-border text-foreground hover:border-primary/40 hover:bg-muted/40'
+                          )}
+                        >
+                          {city.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-sm text-muted-foreground">
+                  استان مورد نظر را انتخاب کنید.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+
+  if (isMobileVariant) {
+    return (
+      <>
+        <div
+          dir="rtl"
+          className="flex w-full items-center justify-between px-1 py-2 text-xs font-medium text-muted-foreground"
+        >
+          <button
+            type="button"
+            onClick={handleOpenModal}
+            className="flex flex-1 items-center gap-2 text-right focus-visible:outline-none"
+            aria-label="تعیین موقعیت یا انتخاب شهر"
+          >
+            <MapPin aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+            <span className="text-xs font-bold text-foreground">
+              {selectedCity ? `موقعیت: ${selectedCity.name}` : 'انتخاب شهر (تعیین موقعیت)'}
+            </span>
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            {selectedCity ? (
+              <button
+                type="button"
+                onClick={handleClearCity}
+                className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+                aria-label="حذف موقعیت فعلی"
+              >
+                <X aria-hidden="true" className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+            <ChevronLeft aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+        </div>
+
+        {renderModalContent()}
+      </>
+    );
+  }
+
+  // در نسخه دسکتاپ: کادر کلی دیگر button تودرتو نیست
+  return (
+    <>
+      <div
+        dir="rtl"
+        className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:border-border hover:bg-muted/60 shadow-xs xl:text-sm"
+      >
+        <button
+          type="button"
+          onClick={handleOpenModal}
+          className="flex items-center gap-1.5 focus-visible:outline-none"
+          aria-label={selectedCity ? `شهر انتخاب شده: ${selectedCity.name}` : 'انتخاب شهر'}
+          aria-haspopup="dialog"
+        >
+          <MapPin aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-primary xl:h-4 xl:w-4" />
+          <span className="font-medium text-foreground">
+            {selectedCity ? selectedCity.name : 'انتخاب شهر'}
+          </span>
+          {!selectedCity && <ChevronDown aria-hidden="true" className="h-3 w-3 text-muted-foreground" />}
+        </button>
+
+        {selectedCity ? (
+          <button
+            type="button"
+            onClick={handleClearCity}
+            aria-label="حذف شهر انتخاب شده"
+            className="rounded p-0.5 text-muted-foreground hover:text-destructive transition-colors ms-1"
+          >
+            <X aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </div>
+
+      {renderModalContent()}
+    </>
+  );
+}
+
+==================== FILE: src\components\shared\Layouts\MainLayout\MainLayout.tsx ====================
+
+'use client';
+
+import { usePathname } from 'next/navigation';
+import { Header } from '@/components/sections/Header';
+import { Footer } from '@/components/sections/Footer';
+import { BottomNav } from '@/components/sections/BottomNav/BottomNav';
+import { cn } from '@/design-system/utils/cn';
+
+export interface MainLayoutProps {
+  children: React.ReactNode;
+  className?: string;
+  hideHeader?: boolean;
+  hideFooter?: boolean;
+  hideBottomNav?: boolean;
+  /** مخفی کردن هدر اصلی فقط در موبایل (دسکتاپ نمایش داده می‌شود) */
+  hideHeaderOnMobile?: boolean;
+}
+
+const FLOW_PAGES = ['/basket', '/checkout', '/basket-payment'];
+function isFlowPage(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return FLOW_PAGES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+export function MainLayout({
+  children,
+  className,
+  hideHeader = false,
+  hideFooter = false,
+  hideBottomNav = false,
+  hideHeaderOnMobile = false,
+}: MainLayoutProps) {
+  const pathname = usePathname();
+
+  const isProfileSection = pathname.startsWith('/profile');
+  const isProductPage = pathname.startsWith('/product/');
+  const isFlow = isFlowPage(pathname);
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col bg-background">
+      {!hideHeader && (
+        <div
+          className={cn(
+            isProfileSection && 'hidden lg:block',
+            isProductPage && 'hidden lg:block',
+            hideHeaderOnMobile && 'hidden lg:block'
+          )}
+        >
+          <Header />
+        </div>
+      )}
+
+      <main
+        className={cn(
+          'flex-1 w-full max-w-[1400px] mx-auto min-h-[80vh]',
+          isProfileSection
+            ? 'px-0 py-0 pb-16 lg:pb-8 lg:px-6 lg:py-6'
+            : isProductPage
+            ? 'px-0 py-0 pb-0 lg:px-6 lg:py-6'
+            : isFlow
+            ? 'px-4 md:px-6 py-5 pb-44 lg:pb-6'
+            : 'px-4 md:px-6 py-5 pb-20 lg:pb-6',
+          className
+        )}
+      >
+        {children}
+      </main>
+
+      {!hideFooter && (
+        <div
+          className={cn(
+            isProfileSection && 'hidden lg:block',
+            isProductPage && 'hidden lg:block'
+          )}
+        >
+          <Footer />
+        </div>
+      )}
+
+      {/* BottomNav در همه صفحات موبایل (به‌جز product) */}
+      {!hideBottomNav && !isProductPage && <BottomNav />}
+    </div>
+  );
+}
+
+==================== FILE: src\components\sections\Header\constants\header.constants.ts ====================
+
+// src/components/sections/Header/constants/header.constants.ts
+
+import { Grid3x3, Tag, Star, ShoppingCart, Shield } from 'lucide-react';
+
+export const NAV_ITEMS = [
+  { id: 'categories', label: 'دسته بندی قطعات', icon: Grid3x3, href: '/part-category', hasDropdown: true },
+  { id: 'offers', label: 'یدکچی آف', icon: Tag, href: '/offers', hasDropdown: false },
+  { id: 'special', label: 'فروش ویژه', icon: Star, href: '/special', hasDropdown: false },
+  { id: 'bestsellers', label: 'پرفروش ترین ها', icon: ShoppingCart, href: '/bestsellers', hasDropdown: false },
+  { id: 'guarantee', label: 'ضمانت و گارانتی', icon: Shield, href: '/guarantee', hasDropdown: false },
+] as const;
+
+export const CATEGORY_DROPDOWN = [
+  { id: 'engine', label: 'قطعات موتور', href: '/part-category/engine' },
+  { id: 'transmission', label: 'قطعات گیربکس', href: '/part-category/transmission' },
+  { id: 'brake', label: 'قطعات ترمز', href: '/part-category/brake' },
+  { id: 'suspension', label: 'سیستم تعلیق', href: '/categopart-categoryries/suspension' },
+  { id: 'electrical', label: 'سیستم برق', href: '/part-category/electrical' },
+  { id: 'body', label: 'قطعات بدنه', href: '/part-category/body' },
+  { id: 'fluids', label: 'روغن و مایعات', href: '/part-category/fluids' },
+  { id: 'accessories', label: 'لوازم جانبی', href: '/part-category/accessories' },
+] as const;
+
+export const HEADER_CONSTANTS = {
+  SCROLL_THRESHOLD: 50,
+  SEARCH_PLACEHOLDER: 'جستجوی قطعات، برندها، خودرو...',
+  MOBILE_SEARCH_PLACEHOLDER: 'جستجو...',
+} as const;

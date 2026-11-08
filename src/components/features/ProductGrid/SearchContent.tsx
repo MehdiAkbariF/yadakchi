@@ -46,8 +46,8 @@ export function SearchContent() {
   const searchedKeyword = filters.searchTitle?.trim() || '';
 
   return (
-    <div className="relative flex w-full flex-col gap-4 md:gap-5" dir="rtl">
-      {/* هدر چسبان موبایل */}
+    <div className="relative flex w-full flex-col gap-4 sm:gap-6" dir="rtl">
+      {/* هدر چسبان موبایل اختصاصی با دو ردیف هماهنگ */}
       <SearchHeader
         totalCount={isSearching ? 0 : totalCount}
         currentSort={filters.orderType || 'Selected'}
@@ -97,7 +97,7 @@ export function SearchContent() {
 
           {/* ۱. حالت لودینگ: اسکلتون کارت‌ها */}
           {isSearching ? (
-            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {[...Array(8)].map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
@@ -116,7 +116,7 @@ export function SearchContent() {
           ) : productItems.length > 0 ? (
             /* ۳. نمایش نتایج کالاها */
             <>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
+              <div className="grid grid-cols-1 sm:gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
                 {productItems.map((prod) => (
                   <ProductSearchCard key={prod.id} product={prod} />
                 ))}

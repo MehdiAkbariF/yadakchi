@@ -20,7 +20,7 @@ import { Button } from '@/components/primitives/Button/Button';
 import { Select } from '@/components/primitives/Select/Select';
 import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
 import { PageLoading } from '@/components/composites/Loading/PageLoading';
-import { formatToLocalDateString, jalaliToGregorian, getFullUrl, toPersianDigits } from '@/core/utils/formatters';
+import { jalaliToGregorian, getFullUrl, toPersianDigits } from '@/core/utils/formatters';
 import { 
   Car,
   Plus, 
@@ -37,7 +37,23 @@ import { cn } from '@/design-system/utils/cn';
 
 const DEFAULT_CAR_IMAGE = '/car-noimage.png';
 
-// تبدیل ارقام فارسی و عربی به انگلیسی
+// تبدیل تاریخ میلادی ISO به تاریخ شمسی با حروف فارسی
+function formatToJalali(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return 'ثبت نشده';
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return 'ثبت نشده';
+    return new Intl.DateTimeFormat('fa-IR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(d);
+  } catch {
+    return 'ثبت نشده';
+  }
+}
+
+// تبدیل ارقام فارسی به انگلیسی جهت فرم
 function normalizeNumbers(str: string): string {
   const persianDigits = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
   const arabicDigits = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
@@ -60,7 +76,6 @@ function EmptyGarageLottie() {
     const renderLottie = async () => {
       try {
         let animationData: any = null;
-
         const paths = ['/anumations/garage-empty.json', '/animations/garage-empty.json'];
         for (const p of paths) {
           try {
@@ -224,7 +239,6 @@ export default function MyCarPage() {
     const currentMileage = Number(vehicle.mileageRaw || vehicle.mileage) || 0;
     setUpdateOilLimit(limit);
     
-    // استخراج تاریخ شمسی قبلی در صورت وجود، یا پیش‌فرض تاریخ جاری
     let initYear = 1403;
     let initMonth = 1;
     let initDay = 1;
@@ -255,7 +269,7 @@ export default function MyCarPage() {
       title: vehicle.title || '',
       mileage: currentMileage,
       oilKmLimit: limit,
-      lastServiceDate: vehicle.lastServiceDate ? formatToLocalDateString(vehicle.lastServiceDate) : null,
+      lastServiceDate: vehicle.lastServiceDate ? formatToJalali(vehicle.lastServiceDate) : null,
       isDefault: vehicle.isDefault,
     });
 
@@ -310,9 +324,9 @@ export default function MyCarPage() {
       await updateVehicle.mutateAsync({
         id: vehicle.id,
         title: vehicle.title,
-        mileage: vehicle.mileageRaw || vehicle.mileage || 0,
-        oilKmLimit: vehicle.oilKmLimitRaw || vehicle.oilKmLimit || 7000,
-        lastServiceDate: vehicle.lastServiceDate ? formatToLocalDateString(vehicle.lastServiceDate) : null,
+        mileage: Number(vehicle.mileageRaw ?? vehicle.mileage) || 0,
+        oilKmLimit: Number(vehicle.oilKmLimitRaw ?? vehicle.oilKmLimit) || 7000,
+        lastServiceDate: vehicle.lastServiceDate || null,
         isDefault: !vehicle.isDefault,
       });
       await queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
@@ -362,9 +376,35 @@ export default function MyCarPage() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-6 select-none" dir="rtl">
-      {/* هدر صفحه */}
-      <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5 mt-3">
+    <div className="w-full flex flex-col gap-4 sm:gap-6 select-none" dir="rtl">
+      
+      {/* ================= هدر چسبان و کامپکت اختصاصی موبایل (متعادل بدون رنگ جیغ) ================= */}
+      <div className="sticky top-14 z-30 -mx-4 -mt-1 flex w-[calc(100%+2rem)] shrink-0 select-none items-center justify-between border-b border-border/80 bg-card/95 px-3.5 py-2.5 shadow-xs backdrop-blur-md md:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-muted text-foreground p-0.5">
+            <Car className="h-4 w-4" />
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">مدیریت خودروها</span>
+            <span className="mt-0.5 truncate text-xs font-bold text-foreground">
+              گاراژ من ({toPersianDigits(vehicles.length)} از ۱۰)
+            </span>
+          </div>
+        </div>
+
+        {/* دکمه افزودن خودرو به عنوان تنها نقطه عطف در هدر */}
+        <button
+          type="button"
+          onClick={handleAddCarClick}
+          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-2xs font-bold text-primary-foreground shadow-xs active:scale-95 transition-transform"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>افزودن خودرو</span>
+        </button>
+      </div>
+
+      {/* ================= هدر دسکتاپ ================= */}
+      <div className="hidden md:flex w-full flex-row items-center justify-between gap-4 border-b border-border pb-5 mt-2">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2.5">
             <h1 className="text-lg md:text-xl font-bold text-foreground">گاراژ من</h1>
@@ -380,27 +420,45 @@ export default function MyCarPage() {
         <Button
           variant="primary"
           onClick={handleAddCarClick}
-          className="rounded-xl font-bold text-xs h-10 px-5 flex items-center justify-center gap-2 self-start md:self-auto shadow-xs"
+          className="rounded-xl font-bold text-xs h-10 px-5 flex items-center justify-center gap-2 shadow-xs"
         >
           <Plus className="h-4 w-4" />
           <span>افزودن خودرو</span>
         </Button>
       </div>
 
+      {/* ================= لیست خودروهای گاراژ ================= */}
       {vehicles.length > 0 ? (
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col gap-3.5 sm:gap-4 w-full">
           {vehicles.map((vehicle: any) => {
             const rawMileage = vehicle.mileageRaw ?? vehicle.mileage;
-            const rawLimit = vehicle.oilKmLimitRaw ?? vehicle.oilKmLimit ?? 7000;
-            const totalNextServiceMileage = 
-              rawMileage !== undefined && rawMileage !== null
-                ? Number(rawMileage) + Number(rawLimit)
-                : null;
+            const rawLimit = vehicle.oilKmLimitRaw ?? vehicle.oilKmLimit;
 
-            const carAddedDate = vehicle.createDate || vehicle.createdAt || vehicle.registerDate;
-            const formattedAddedDate = carAddedDate 
-              ? formatToLocalDateString(carAddedDate) 
-              : 'ثبت نشده';
+            // بررسی دقیق اعتبارسنجی کارکرد جهت جلوگیری از باگ NaN / «ناعدد»
+            const hasValidMileage =
+              rawMileage !== undefined &&
+              rawMileage !== null &&
+              rawMileage !== '' &&
+              !isNaN(Number(rawMileage)) &&
+              Number(rawMileage) > 0;
+
+            const mileageNumber = hasValidMileage ? Number(rawMileage) : null;
+
+            // محاسبه کیلومتر سرویس بعدی
+            const nextServiceKm =
+              vehicle.nextServiceKM ??
+              (hasValidMileage && rawLimit ? mileageNumber! + Number(rawLimit) : null);
+
+            const hasValidNextService =
+              nextServiceKm !== null &&
+              nextServiceKm !== undefined &&
+              !isNaN(Number(nextServiceKm)) &&
+              Number(nextServiceKm) > 0;
+
+            // تبدیل تاریخ به شمسی با حروف فارسی
+            const formattedAddedDate = formatToJalali(
+              vehicle.createDate || vehicle.createdAt || vehicle.registerDate
+            );
 
             const carCoverImage = vehicle.car?.cover || vehicle.carCover;
             const carDisplayModel = vehicle.car?.model || vehicle.carModel || vehicle.title;
@@ -413,9 +471,9 @@ export default function MyCarPage() {
                   vehicle.isDefault ? "border-foreground/30 bg-muted/10" : "border-border hover:border-border/80"
                 )}
               >
-                <CardBody className="p-4 md:p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5">
-                  <div className="flex items-start md:items-center gap-4 min-w-0 flex-1">
-                    <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0 rounded-xl border border-border/80 bg-muted/20 flex items-center justify-center overflow-hidden p-2">
+                <CardBody className="p-3.5 sm:p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className="relative w-20 h-20 sm:w-28 sm:h-28 shrink-0 rounded-xl border border-border/80 bg-muted/20 flex items-center justify-center overflow-hidden p-1.5">
                       <img 
                         src={carCoverImage ? getFullUrl(carCoverImage) : DEFAULT_CAR_IMAGE} 
                         alt={carDisplayModel} 
@@ -428,44 +486,42 @@ export default function MyCarPage() {
                         onClick={() => handleOpenDeleteModal(vehicle)}
                         disabled={deleteVehicle.isPending}
                         className="absolute bottom-1 right-1 p-1.5 bg-card/90 hover:bg-destructive hover:text-destructive-foreground rounded-lg text-muted-foreground shadow-xs transition-all"
-                        aria-label="حذف"
+                        aria-label="حذف خودرو"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
 
-                    <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-base font-bold text-foreground truncate">
+                        <span className="text-sm sm:text-base font-bold text-foreground truncate">
                           {carDisplayModel}
                         </span>
                         {vehicle.title && (
-                          <span className="text-2xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+                          <span className="text-3xs sm:text-2xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
                             {vehicle.title}
                           </span>
                         )}
                         {vehicle.isDefault && (
                           <span className="text-3xs font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
-                            خودروی اصلی
+                            خودروی پیش‌فرض
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <Gauge className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <span>کارکرد:</span>
                           <span className="font-semibold text-foreground">
-                            {rawMileage !== undefined && rawMileage !== null ? `${toPersianDigits(Number(rawMileage).toLocaleString('fa-IR'))} کیلومتر` : '-'}
+                            {hasValidMileage ? `${toPersianDigits(mileageNumber!.toLocaleString('fa-IR'))} کیلومتر` : 'ثبت نشده'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <Wrench className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <span>سرویس بعدی:</span>
                           <span className="font-semibold text-foreground">
-                            {totalNextServiceMileage 
-                              ? `${toPersianDigits(totalNextServiceMileage.toLocaleString('fa-IR'))} کیلومتر` 
-                              : '-'}
+                            {hasValidNextService ? `${toPersianDigits(Number(nextServiceKm).toLocaleString('fa-IR'))} کیلومتر` : 'نامشخص'}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5">
@@ -477,7 +533,9 @@ export default function MyCarPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between lg:justify-center gap-3 shrink-0 border-t lg:border-t-0 border-border/60 pt-3 lg:pt-0">
+                  {/* بخش دکمه‌ها و اکشن‌های کارت */}
+                  <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between lg:justify-center gap-2.5 sm:gap-3 shrink-0 border-t lg:border-t-0 border-border/60 pt-3 lg:pt-0">
+                    {/* وضعیت پیش‌فرض با رنگ معنایی سبز به جای نارنجی */}
                     <button
                       onClick={() => handleToggleDefault(vehicle)}
                       disabled={updateVehicle.isPending}
@@ -490,7 +548,7 @@ export default function MyCarPage() {
                     >
                       {vehicle.isDefault ? (
                         <>
-                          <Check className="h-3.5 w-3.5 stroke-[2.5] text-primary" />
+                          <Check className="h-3.5 w-3.5 stroke-[2.5] text-success" />
                           <span>خودروی پیش‌فرض</span>
                         </>
                       ) : (
@@ -502,23 +560,23 @@ export default function MyCarPage() {
                     </button>
 
                     <div className="flex items-center gap-2 w-full sm:w-auto">
+                      {/* دکمه ۱: بروزرسانی کارکرد با استایل خنثی کارت */}
                       <button
                         onClick={() => handleOpenUpdateModal(vehicle)}
-                        className="rounded-xl font-medium text-xs h-10 px-4 flex items-center justify-center gap-1.5 border border-border bg-card text-foreground hover:bg-muted transition-all shadow-2xs shrink-0"
+                        className="flex-1 sm:flex-none rounded-xl font-medium text-xs h-9 sm:h-10 px-3.5 flex items-center justify-center gap-1.5 border border-border bg-card text-foreground hover:bg-muted transition-all shadow-2xs shrink-0"
                       >
                         <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
                         <span>بروزرسانی کارکرد</span>
                       </button>
 
-                      <Button
-                        variant="primary"
-                        size="sm"
+                      {/* دکمه ۲: جستجوی قطعات با استایل شیک و های‌کنتراست (بدون نارنجی تکراری) */}
+                      <button
                         onClick={() => handleSearchPartsClick(vehicle)}
-                        className="rounded-xl font-bold text-xs h-10 px-4 flex items-center justify-center gap-1.5 shadow-xs"
+                        className="flex-1 sm:flex-none rounded-xl font-bold text-xs h-9 sm:h-10 px-4 flex items-center justify-center gap-1.5 bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xs"
                       >
                         <Search className="h-3.5 w-3.5" />
                         <span>جستجوی قطعات</span>
-                      </Button>
+                      </button>
                     </div>
                   </div>
                 </CardBody>
@@ -551,7 +609,7 @@ export default function MyCarPage() {
         </div>
       )}
 
-      {/* مودال بروزرسانی کارکرد */}
+      {/* ================= مودال بروزرسانی کارکرد ================= */}
       <Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
           <ModalTitle className="font-bold text-sm text-foreground flex items-center gap-2">
@@ -563,7 +621,6 @@ export default function MyCarPage() {
         <ModalBody className="p-5 pt-4">
           {selectedVehicle && (
             <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full">
-              {/* خلاصه خودرو انتخابی */}
               <div className="flex items-center gap-3 bg-muted/40 p-3 rounded-xl border border-border/80">
                 <div className="w-12 h-12 shrink-0 rounded-lg border border-border bg-card flex items-center justify-center overflow-hidden p-1">
                   <img 
@@ -595,59 +652,55 @@ export default function MyCarPage() {
                 </div>
               </div>
 
-              {/* ورودی کیلومتر اصلاح‌شده با پشتیبانی کیبورد فارسی و کامای جداکننده */}
-          {/* ورودی کیلومتر اصلاح‌شده با حل قطعی تداخل km و ارقام */}
-<div className="w-full flex flex-col gap-1.5">
-  <label className="text-xs font-semibold text-foreground">
-    کیلومتر کارکرد فعلی خودرو *
-  </label>
-  <Controller
-    name="mileage"
-    control={control}
-    render={({ field }) => {
-      const rawValue = field.value !== undefined && field.value !== null ? String(field.value) : '';
-      const displayValue = rawValue ? Number(rawValue).toLocaleString('en-US') : '';
+              {/* ورودی کیلومتر */}
+              <div className="w-full flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-foreground">
+                  کیلومتر کارکرد فعلی خودرو *
+                </label>
+                <Controller
+                  name="mileage"
+                  control={control}
+                  render={({ field }) => {
+                    const rawValue = field.value !== undefined && field.value !== null ? String(field.value) : '';
+                    const displayValue = rawValue ? Number(rawValue).toLocaleString('en-US') : '';
 
-      return (
-        <div className="relative w-full" dir="ltr">
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="125,000"
-            value={displayValue}
-            onChange={(e) => {
-              const normalized = normalizeNumbers(e.target.value).replace(/[^0-9]/g, '');
-              const numericVal = normalized ? Number(normalized) : 0;
-              field.onChange(numericVal);
-            }}
-            className={cn(
-              "w-full h-11 pl-3.5 pr-12 rounded-xl border bg-card text-foreground font-semibold text-sm outline-none transition-all placeholder:text-muted-foreground/40 text-left",
-              errorsUpdate.mileage 
-                ? "border-destructive focus:ring-1 focus:ring-destructive" 
-                : "border-border focus:border-foreground/40 focus:ring-1 focus:ring-foreground/20"
-            )}
-          />
-          <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-2xs font-bold text-muted-foreground select-none">
-            km
-          </span>
-        </div>
-      );
-    }}
-  />
-  
-  {/* نمایش راهنمای خوانای فارسی زیر فیلد */}
-  {watchMileage ? (
-    <span className="text-2xs text-muted-foreground">
-      معادل: {toPersianDigits(Number(watchMileage).toLocaleString('fa-IR'))} کیلومتر
-    </span>
-  ) : null}
-  
-  {errorsUpdate.mileage?.message && (
-    <span className="text-2xs text-destructive font-medium">
-      {String(errorsUpdate.mileage.message)}
-    </span>
-  )}
-</div>
+                    return (
+                      <div className="relative w-full" dir="ltr">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="125,000"
+                          value={displayValue}
+                          onChange={(e) => {
+                            const normalized = normalizeNumbers(e.target.value).replace(/[^0-9]/g, '');
+                            const numericVal = normalized ? Number(normalized) : 0;
+                            field.onChange(numericVal);
+                          }}
+                          className={cn(
+                            "w-full h-11 pl-3.5 pr-12 rounded-xl border bg-card text-foreground font-semibold text-sm outline-none transition-all placeholder:text-muted-foreground/40 text-left",
+                            errorsUpdate.mileage 
+                              ? "border-destructive focus:ring-1 focus:ring-destructive" 
+                              : "border-border focus:border-foreground/40 focus:ring-1 focus:ring-foreground/20"
+                          )}
+                        />
+                        <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-2xs font-bold text-muted-foreground select-none">
+                          km
+                        </span>
+                      </div>
+                    );
+                  }}
+                />
+                {watchMileage ? (
+                  <span className="text-2xs text-muted-foreground">
+                    معادل: {toPersianDigits(Number(watchMileage).toLocaleString('fa-IR'))} کیلومتر
+                  </span>
+                ) : null}
+                {errorsUpdate.mileage?.message && (
+                  <span className="text-2xs text-destructive font-medium">
+                    {String(errorsUpdate.mileage.message)}
+                  </span>
+                )}
+              </div>
 
               {/* تاریخ سرویس */}
               <div className="w-full flex flex-col gap-1.5">
@@ -676,7 +729,7 @@ export default function MyCarPage() {
                 </div>
               </div>
 
-              {/* مسافت مفید روغن */}
+              {/* عمر مفید روغن */}
               <div className="w-full flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-foreground">
                   عمر مفید روغن مصرفی *
@@ -700,7 +753,7 @@ export default function MyCarPage() {
                 </div>
               </div>
 
-              {/* تخمین سرویس بعدی */}
+              {/* پیش‌نمایش سرویس بعدی */}
               <div className="w-full bg-muted/40 border border-border/80 rounded-xl p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-foreground">
                   <Wrench className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -739,7 +792,7 @@ export default function MyCarPage() {
         </div>
       </Modal>
 
-      {/* مودال حذف */}
+      {/* ================= مودال حذف ================= */}
       <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} className="max-w-md w-full">
         <ModalHeader onClose={() => setIsDeleteModalOpen(false)}>
           <ModalTitle className="font-bold text-sm text-destructive flex items-center gap-2">

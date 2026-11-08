@@ -35,6 +35,9 @@ export interface MobileBottomActionProps {
 
   /** محتوای کشویی بالایی که چسبیده به بالای دکمه باز می‌شود */
   topDrawer?: React.ReactNode;
+  
+  /** مدت زمان تایمر پروگرس‌بار به میلی‌ثانیه (پیش‌فرض: ۴۵۰۰ میلی‌ثانیه) */
+  drawerDuration?: number;
 }
 
 export function MobileBottomAction({
@@ -55,6 +58,7 @@ export function MobileBottomAction({
   hasBottomNav = false,
   buttonRadius = '',
   topDrawer,
+  drawerDuration = 4500,
 }: MobileBottomActionProps) {
   const [mounted, setMounted] = React.useState(false);
 
@@ -81,7 +85,7 @@ export function MobileBottomAction({
           : '0px',
       }}
     >
-      {/* کشوی متصل بالایی با انیمیشن باز شدن روان */}
+      {/* کشوی متصل بالایی همراه با انیمیشن روان و پروگرس‌بار تایمر در لبه بالا */}
       <AnimatePresence>
         {topDrawer && (
           <motion.div
@@ -89,9 +93,22 @@ export function MobileBottomAction({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="w-full overflow-hidden border-t border-border bg-card/95 backdrop-blur-md shadow-overlay-top dark:shadow-overlay-top-dark"
+            className="relative w-full overflow-hidden border-t border-border bg-card/95 backdrop-blur-md shadow-overlay-top dark:shadow-overlay-top-dark"
           >
-            {topDrawer}
+            {/* نوار پیشرفت (Progress Bar) متحرک معکوس */}
+            <div className="absolute inset-x-0 top-0 h-1 w-full bg-muted/60 overflow-hidden z-10">
+              <motion.div
+                initial={{ width: '100%' }}
+                animate={{ width: '0%' }}
+                transition={{ duration: drawerDuration / 1000, ease: 'linear' }}
+                className="h-full bg-primary"
+              />
+            </div>
+
+            {/* محتوای دراور */}
+            <div className="pt-1">
+              {topDrawer}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

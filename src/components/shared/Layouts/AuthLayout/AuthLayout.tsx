@@ -45,7 +45,7 @@ export function AuthLayout({ children, title, className }: AuthLayoutProps) {
               priority
             />
           </div>
-          <span className="text-[0.625rem] sm:text-xs text-muted-foreground font-medium tracking-wide">
+          <span className="text-xs sm:text-xs text-muted-foreground font-bold tracking-wide">
             انتخاب هوشمند قطعات خودرو
           </span>
         </div>

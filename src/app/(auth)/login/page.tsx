@@ -127,6 +127,8 @@ function LoginContent() {
               required
               autoFocus
               {...register('phoneNumber')}
+              size={'lg'}
+              
             />
             <Button
               type="submit"

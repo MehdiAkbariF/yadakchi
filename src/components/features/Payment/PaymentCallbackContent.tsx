@@ -1,3 +1,4 @@
+// src/components/features/Payment/PaymentCallbackContent.tsx
 'use client';
 
 import * as React from 'react';
@@ -29,12 +30,12 @@ export function PaymentCallbackContent({ payload }: PaymentCallbackContentProps)
   const traceNo = payload?.traceNo ?? '-';
 
   React.useEffect(() => {
-    // جلوگیری از اجرای دوباره در StrictMode (dev)
+    // جلوگیری از اجرای دوباره در StrictMode
     if (hasRunRef.current) return;
     hasRunRef.current = true;
 
-    // بررسی اولیه‌ی پارامترها
-    if (payload?.status == null || !payload?.token) {
+    // اگر توکن از بانک دریافت نشده باشد مستقیماً ناموفق است
+    if (!payload?.token) {
       setResult('failed');
       return;
     }
@@ -42,10 +43,12 @@ export function PaymentCallbackContent({ payload }: PaymentCallbackContentProps)
     const verify = async () => {
       try {
         await verifyPayment.mutateAsync({
-          refNum: payload.refNum,
-          status: payload.status!,
+          refNum: payload.refNum || '',
+          status: payload.status !== null && payload.status !== undefined ? payload.status : 0,
           token: payload.token!,
         });
+
+     
         setResult('success');
       } catch (err) {
         console.error('[PaymentCallback] Backend verification failed:', err);
@@ -54,8 +57,7 @@ export function PaymentCallbackContent({ payload }: PaymentCallbackContentProps)
     };
 
     verify();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [payload, verifyPayment]);
 
   if (result === 'processing') {
     return (
@@ -63,11 +65,11 @@ export function PaymentCallbackContent({ payload }: PaymentCallbackContentProps)
         className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 px-4 text-center"
         dir="rtl"
       >
-        <Loader2 className="h-10 w-10 animate-spin text-shop" />
-        <p className="text-title-sm">
-          در حال بررسی وضعیت پرداخت...
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-title-sm font-bold text-foreground">
+          در حال بررسی و تایید وضعیت پرداخت...
         </p>
-        <p className="text-base text-muted-foreground">لطفاً صفحه را نبندید</p>
+        <p className="text-xs text-muted-foreground">لطفاً صفحه را نبندید یا رفرش نکنید</p>
       </div>
     );
   }

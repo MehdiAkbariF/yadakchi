@@ -1,3 +1,4 @@
+// src/components/features/Checkout/CheckoutContent.tsx
 'use client';
 
 import * as React from 'react';
@@ -8,7 +9,7 @@ import {
   Truck,
   CreditCard,
   MapPin,
-  Info,
+  Loader2,
 } from 'lucide-react';
 import {
   useGetBasket,
@@ -66,14 +67,6 @@ function ShipmentSkeleton({ count = 2 }: { count?: number }) {
           </div>
         </div>
       ))}
-
-      <div className="flex items-center justify-center gap-2 py-2 text-2xs font-medium text-muted-foreground">
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-shop/40" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-shop" />
-        </span>
-        در حال محاسبه و دریافت شیوه‌های ارسال بر اساس آدرس شما...
-      </div>
     </div>
   );
 }
@@ -116,7 +109,6 @@ export function CheckoutContent() {
   const setBasketLocation = useSetBasketLocationAndPrice();
   const setBasketShipment = useSetBasketShipment();
 
-  // استیت مستقیم برای نگهداری سبد به محض دریافت پاسخ سرور
   const [syncedBasket, setSyncedBasket] = React.useState<any>(null);
 
   const [isAddressModalOpen, setIsAddressModalOpen] = React.useState(false);
@@ -143,7 +135,6 @@ export function CheckoutContent() {
     }
   }, [isAuthenticated, isAuthLoading, router, pathname]);
 
-  // دیتای سبد جاری: اولویت مطلق با پاسخ مستقیم سرور است
   const basket = React.useMemo(() => {
     if (syncedBasket?.subBaskets?.length) {
       return syncedBasket;
@@ -157,7 +148,6 @@ export function CheckoutContent() {
     return (raw?.subBaskets ? raw : raw?.basket || raw?.data?.basket || raw?.data || raw) as any;
   }, [syncedBasket, setBasketLocation.data, rawBasket]);
 
-  // تعیین آدرس فعال کاربر
   const activeAddress = React.useMemo(() => {
     if (!locations || locations.length === 0) return null;
     return (
@@ -167,7 +157,6 @@ export function CheckoutContent() {
     );
   }, [locations, basket?.userLocationId]);
 
-  // اجرای استعلام قیمت در بدو ورود با آدرس فعال
   React.useEffect(() => {
     if (!activeAddress?.id) return;
 
@@ -175,7 +164,6 @@ export function CheckoutContent() {
       requestedAddressIdRef.current = activeAddress.id;
       setBasketLocation.mutate(activeAddress.id, {
         onSuccess: (res: any) => {
-          // استخراج دقیق داده بازگشتی با توجه به ریسپانس ارسال‌شده
           const parsed = res?.subBaskets ? res : res?.basket || res?.data?.basket || res?.data || res;
           if (parsed?.subBaskets) {
             setSyncedBasket(parsed);
@@ -185,7 +173,6 @@ export function CheckoutContent() {
     }
   }, [activeAddress?.id, setBasketLocation]);
 
-  // متدهای انتخابی مرسوله‌ها
   const selectedMethods = React.useMemo(() => {
     const result: Record<string, string> = {};
     if (!basket?.subBaskets) return result;
@@ -217,7 +204,6 @@ export function CheckoutContent() {
     return result;
   }, [basket?.subBaskets, userSelectedMethods]);
 
-  // مجموع هزینه ارسال
   const totalShipment = React.useMemo(() => {
     if (!basket?.subBaskets || !activeAddress) return 0;
     let total = 0;
@@ -234,7 +220,6 @@ export function CheckoutContent() {
     return total;
   }, [basket?.subBaskets, selectedMethods, activeAddress]);
 
-  // قیمت نهایی کالاها
   const productsFinalPrice = React.useMemo(() => {
     if (!basket) return 0;
 
@@ -276,7 +261,6 @@ export function CheckoutContent() {
 
   if (!isAuthenticated || !basket || !basket.subBaskets?.length) return null;
 
-  // وضعیت لودینگ: فقط تا زمان اتمام درخواست استعلام
   const isLocationSyncing = setBasketLocation.isPending;
   const isShipmentLocked = !activeAddress || isLocationSyncing;
 
@@ -398,25 +382,6 @@ export function CheckoutContent() {
         </div>
       </div>
 
-      {/* بنر وضعیت استعلام */}
-      {isShipmentLocked && (
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4">
-          <Info className="h-5 w-5 shrink-0 text-warning" />
-          <div className="flex flex-col">
-            <span className="text-title-sm">
-              {!activeAddress
-                ? 'برای مشاهده شیوه‌های ارسال، ابتدا آدرس خود را انتخاب کنید'
-                : 'در حال استعلام و محاسبه هزینه‌های ارسال بر اساس آدرس شما...'}
-            </span>
-            <span className="mt-0.5 text-xs text-muted-foreground">
-              {!activeAddress
-                ? 'پس از انتخاب آدرس، لیست روش‌های ارسال و هزینه‌های آن به صورت خودکار نمایش داده می‌شود.'
-                : 'لطفاً چند لحظه صبر کنید.'}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* بدنه اصلی */}
       <div className="flex w-full flex-col items-start gap-6 lg:flex-row">
         <div className="flex w-full flex-1 flex-col gap-6">
@@ -427,25 +392,36 @@ export function CheckoutContent() {
           />
 
           <div className="relative">
-            <div className="mb-3 flex items-center gap-2">
-              <div
-                className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded-full text-2xs font-bold',
-                  isShipmentLocked
-                    ? 'bg-secondary text-muted-foreground/60'
-                    : 'bg-primary text-primary-foreground'
-                )}
-              >
-                ۲
+            {/* هدر بخش شیوه ارسال همراه با لودینگ بار مینیمال (جایگزین بنر زرد) */}
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    'flex h-6 w-6 items-center justify-center rounded-full text-2xs font-bold',
+                    isShipmentLocked
+                      ? 'bg-secondary text-muted-foreground/60'
+                      : 'bg-primary text-primary-foreground'
+                  )}
+                >
+                  ۲
+                </div>
+                <span
+                  className={cn(
+                    'text-sm font-bold',
+                    isShipmentLocked ? 'text-muted-foreground/60' : 'text-foreground'
+                  )}
+                >
+                  شیوه ارسال
+                </span>
               </div>
-              <span
-                className={cn(
-                  'text-sm font-bold',
-                  isShipmentLocked ? 'text-muted-foreground/60' : 'text-foreground'
-                )}
-              >
-                شیوه ارسال
-              </span>
+
+              {/* نوار لودینگ مینیمال (خطی) در زمان استعلام */}
+              {isShipmentLocked && (
+                <div className="flex items-center gap-2 text-2xs text-muted-foreground animate-pulse">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  <span>در حال استعلام هزینه‌ها...</span>
+                </div>
+              )}
             </div>
 
             {!activeAddress ? (

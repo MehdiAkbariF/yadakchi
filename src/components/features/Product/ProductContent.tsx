@@ -1,10 +1,27 @@
+// src/components/features/Product/ProductContent.tsx
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronDown, ChevronUp, ShoppingBag, Bell, LineChart, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  ShoppingBag,
+  Bell,
+  LineChart,
+  ArrowLeft,
+  CheckCircle2,
+  Layers,
+  History,
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useGetProductPageData, useGetProductPriceChart, useSubmitProductReport } from '@/domains/front/product/hooks/product.hooks';
+import {
+  useGetProductPageData,
+  useGetProductPriceChart,
+  useSubmitProductReport,
+  useSearchProducts,
+} from '@/domains/front/product/hooks/product.hooks';
 import {
   useGetBasket,
   useAddToBasket,
@@ -12,6 +29,8 @@ import {
 } from '@/domains/front/basket/hooks/basket.hooks';
 import { ThreeDotsLoader } from '@/components/composites/Loading/ThreeDotsLoader';
 import { useGetReportSubjects } from '@/domains/front/shop/hooks/shop.hooks';
+import { useTypedQuery } from '@/lib/react-query/hooks/base.hooks';
+import { ProductMapper } from '@/domains/front/product/mappers/product.mapper';
 import { ProductHeader } from './components/ProductHeader';
 import { ConditionSelector } from './components/ConditionSelector';
 import { SpecHighlights } from './components/SpecHighlights';
@@ -22,6 +41,7 @@ import { ProductInquiriesSection } from './components/ProductInquiriesSection';
 import { ProductSideInvoice } from './components/ProductSideInvoice';
 import { ProductGallery } from './components/ProductGallery';
 import { ProductMinimalHeader } from './components/ProductMinimalHeader';
+import { ProductSlider } from '@/components/features/ProductCard/ProductSlider';
 import { MobileBottomAction } from '@/components/composites/MobileBottomAction/MobileBottomAction';
 import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@/components/composites/Modal/Modal';
 import { Button } from '@/components/primitives/Button/Button';
@@ -199,6 +219,78 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     return () => clearInterval(interval);
   }, [pageData]);
 
+  const product = pageData?.product;
+  const sellersGroup = pageData?.shopProducts || {};
+
+  // ================= 1. استخراج دقیق شناسه دسته‌بندی از برِدکرامب کالا =================
+  const targetCategoryId = React.useMemo(() => {
+    return (
+      product?.breadCrumbs?.[0]?.id ||
+      (product as any)?.partCategoryId ||
+      (product as any)?.categoryId ||
+      ''
+    );
+  }, [product]);
+
+  const targetCategoryTitle = React.useMemo(() => {
+    return product?.breadCrumbs?.[0]?.title || 'این دسته‌بندی';
+  }, [product]);
+
+  const targetCategorySlug = React.useMemo(() => {
+    return product?.breadCrumbs?.[0]?.englishTitle || targetCategoryId;
+  }, [product, targetCategoryId]);
+
+  // واکشی کالاهای مرتبط با این دسته‌بندی از OpenSearch با ارسال دقیق partCategoryIds
+  const {
+    data: categorySearchData,
+    isLoading: isCategoryProductsLoading,
+    isError: isCategoryProductsError,
+  } = useSearchProducts(
+    {
+      partCategoryIds: targetCategoryId ? [targetCategoryId] : undefined,
+      onlyInStock: true,
+      excludeDuplicateProducts: true,
+      pageSize: 24,
+    },
+    {
+      enabled: !!targetCategoryId,
+    }
+  );
+
+  const categoryProducts = React.useMemo(() => {
+    const items = categorySearchData?.items || [];
+    // حذف خود کالای در حال مشاهده از اسلایدر پیشنهادات
+    return items.filter((p: any) => p.code !== productCode && p.id !== product?.id);
+  }, [categorySearchData?.items, productCode, product?.id]);
+
+  // ================= 2. واکشی کالاهای اخیراً بازدید شده کاربر =================
+  const { data: recentViewsRaw = [], isLoading: isRecentViewsLoading } = useTypedQuery<any[]>(
+    ['user', 'recent-shop-product-views'],
+    async () => {
+      try {
+        const client = getHttpClient();
+        const response = await client.get<any[]>('/api/UserPanel/LastShopProductViews');
+        return Array.isArray(response.data) ? response.data : [];
+      } catch {
+        return [];
+      }
+    },
+    {
+      staleTime: 60 * 1000,
+    }
+  );
+
+  const recentProducts = React.useMemo(() => {
+    return recentViewsRaw
+      .filter((p: any) => (p.productCode || p.code) !== productCode)
+      .map((item: any) => {
+        if (item.price && typeof item.price === 'object' && item.price.toman !== undefined) {
+          return item;
+        }
+        return ProductMapper.toView(ProductMapper.toDomain(item));
+      });
+  }, [recentViewsRaw, productCode]);
+
   if (!pageData && isLoading) {
     return (
       <div className="flex w-full min-h-[calc(100vh-10rem)] items-center justify-center">
@@ -207,9 +299,6 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     );
   }
   if (!pageData) return null;
-
-  const product = pageData.product;
-  const sellersGroup = pageData.shopProducts || {};
 
   const getSellersForCondition = () => {
     if (selectedCondition === 'Stock') {
@@ -288,14 +377,12 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
-  // فعال‌سازی پاپ‌آپ رفتن به سبد و تریگر افکت هدر
   const triggerCartSequence = () => {
     setShowCartBanner(true);
     if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
 
     bannerTimerRef.current = setTimeout(() => {
       setShowCartBanner(false);
-      // انیمیشن سبد خرید در هدر به مدت ۲ ثانیه فعال می‌شود
       setIsCartBouncing(true);
       setTimeout(() => setIsCartBouncing(false), 2200);
     }, 4500);
@@ -444,7 +531,7 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     </div>
   ) : null;
 
-const renderBreadcrumb = () => (
+  const renderBreadcrumb = () => (
     <div className="flex w-full select-none items-center gap-2 overflow-x-auto py-2 text-2xs text-muted-foreground scrollbar-none md:text-xs">
       <Link href="/" className="transition-colors hover:text-primary whitespace-nowrap shrink-0">
         خانه
@@ -456,18 +543,14 @@ const renderBreadcrumb = () => (
         let url = `/part-category/${crumb.englishTitle}`;
 
         if (isLast) {
-          // ۱. نام کالا (آیتم انتهایی)
           url = getProductUrl(product.code, product.title);
         } else if (isPart) {
-          // ۲. قطعه (آیتم قبل از نام کالا): هدایت به روت استاندارد /parts/[categorySlug]/[partSlug]
           const parentCategorySlug =
             (idx > 0 ? product.breadCrumbs[idx - 1]?.englishTitle : null) ||
-            product.category?.englishTitle ||
             'category';
 
           url = `/parts/${parentCategorySlug}/${crumb.englishTitle}`;
         } else {
-          // ۳. دسته‌بندی‌ها
           url = `/part-category/${crumb.englishTitle}`;
         }
 
@@ -488,6 +571,7 @@ const renderBreadcrumb = () => (
       })}
     </div>
   );
+
   const tabs = ['intro', 'specs', 'comments', 'inquiries'] as const;
 
   return (
@@ -540,7 +624,7 @@ const renderBreadcrumb = () => (
               productTitle={product.title}
             />
 
-            <div className="sticky top-[4.25rem] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
+            <div className="sticky top-[3.5rem] z-30 flex h-12 w-full items-center gap-6 overflow-x-auto border-b border-border bg-card/95 backdrop-blur-md scrollbar-none">
               {tabs.map((id) => (
                 <button
                   key={id}
@@ -598,6 +682,41 @@ const renderBreadcrumb = () => (
           <div className="w-[20rem] shrink-0 sticky top-[8.25rem] flex flex-col gap-6 xl:w-[21.25rem]">
             <ProductSideInvoice product={product} seller={currentSelectedSeller} sellersCount={allAvailableSellersList.length} />
           </div>
+        </div>
+
+        {/* ================= اسلایدرهای انتهای صفحه در دسکتاپ ================= */}
+        <div className="mt-10 flex w-full flex-col gap-8">
+          {/* ۱. اسلایدر کالاهای مرتبط با دسته‌بندی با شناسه قطعی partCategoryId */}
+          {(isCategoryProductsLoading || categoryProducts.length > 0) && (
+            <ProductSlider
+              title={`کالاهای مرتبط در دسته ${targetCategoryTitle}`}
+              products={categoryProducts}
+              isLoading={isCategoryProductsLoading}
+              isError={isCategoryProductsError}
+              viewAllLink={`/part-category/${targetCategorySlug}`}
+              customIcon={
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Layers className="h-4.5 w-4.5" />
+                </div>
+              }
+            />
+          )}
+
+          {/* ۲. اسلایدر بازدیدهای اخیر کاربر */}
+          {recentProducts.length > 0 && (
+            <ProductSlider
+              title="بازدیدهای اخیر شما"
+              products={recentProducts}
+              isLoading={isRecentViewsLoading}
+              isError={false}
+              viewAllLink="/profile/history"
+              customIcon={
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <History className="h-4.5 w-4.5" />
+                </div>
+              }
+            />
+          )}
         </div>
       </div>
 
@@ -741,14 +860,36 @@ const renderBreadcrumb = () => (
               <div ref={mInquiriesRef} className="pt-4">
                 <ProductInquiriesSection productId={product.id} productTitle={product.title} productImage={product.image} />
               </div>
+
+              {/* ================= اسلایدرهای انتهای صفحه در موبایل ================= */}
+              <div className="mt-6 flex w-full flex-col gap-6">
+                {/* ۱. اسلایدر کالاهای مرتبط با دسته‌بندی */}
+                {(isCategoryProductsLoading || categoryProducts.length > 0) && (
+                  <ProductSlider
+                    title={`کالاهای مرتبط با ${targetCategoryTitle}`}
+                    products={categoryProducts}
+                    isLoading={isCategoryProductsLoading}
+                    isError={isCategoryProductsError}
+                    viewAllLink={`/part-category/${targetCategorySlug}`}
+                  />
+                )}
+
+                {/* ۲. اسلایدر بازدیدهای اخیر کاربر */}
+                {recentProducts.length > 0 && (
+                  <ProductSlider
+                    title="بازدیدهای اخیر شما"
+                    products={recentProducts}
+                    isLoading={isRecentViewsLoading}
+                    isError={false}
+                    viewAllLink="/profile/history"
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-     
-
-        {/* دکمه چسبان پایین موبایل */}
-      {/* دکمه چسبان پایین موبایل با کشوی متصل تمام‌عرض */}
+        {/* دکمه چسبان پایین موبایل با کشوی متصل تمام‌عرض */}
         <MobileBottomAction
           variant={currentSelectedSeller ? 'default' : 'notify'}
           label={currentSelectedSeller ? 'افزودن به سبد خرید' : 'موجود شد خبرم کن'}

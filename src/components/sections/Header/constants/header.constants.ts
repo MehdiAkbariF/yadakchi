@@ -26,3 +26,13 @@ export const HEADER_CONSTANTS = {
   SEARCH_PLACEHOLDER: 'جستجوی قطعات، برندها، خودرو...',
   MOBILE_SEARCH_PLACEHOLDER: 'جستجو...',
 } as const;
+
+
+export const PAGES_WITHOUT_MOBILE_CITY = [
+  '/search',
+  '/part-category',
+  '/parts',
+  '/car-parts',
+  '/car',
+  '/shops',
+] as const;
