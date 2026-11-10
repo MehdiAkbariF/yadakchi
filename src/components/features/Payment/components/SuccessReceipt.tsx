@@ -98,7 +98,7 @@ export function SuccessReceipt({ amount, traceNo }: SuccessReceiptProps) {
 
         <Button
           variant="outline"
-          onClick={() => router.push('/home')}
+          onClick={() => router.push('/')}
           className="mt-6 h-11 rounded-xl border border-shop px-8 text-sm font-bold text-shop hover:bg-shop/5"
         >
           بازگشت به یدکچی

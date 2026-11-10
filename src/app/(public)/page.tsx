@@ -32,13 +32,13 @@ export const metadata: Metadata = {
   description:
     'خرید مستقیم و آنلاین انواع قطعات یدکی، لوازم بدنه، ابزارآلات و تجهیزات خودرو از معتبرترین فروشگاه‌های سراسر کشور با ضمانت اصالت کالا در یدکچی.',
   alternates: {
-    canonical: 'https://yadakchi.com/home',
+    canonical: 'https://yadakchi.com/',
   },
   openGraph: {
     title: 'یدکچی | بازارگاه تخصصی قطعات خودرو و لوازم یدکی',
     description:
       'بزرگ‌ترین بازارگاه تخصصی خودرو و لوازم یدکی در ایران. خرید مستقیم قطعات خودرو از فروشگاه‌های سراسر کشور.',
-    url: 'https://yadakchi.com/home',
+    url: 'https://yadakchi.com/',
     siteName: 'یدکچی',
     locale: 'fa_IR',
     type: 'website',

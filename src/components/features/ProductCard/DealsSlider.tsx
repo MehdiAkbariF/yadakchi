@@ -59,7 +59,7 @@ export function DealsSlider() {
         </div>
 
         <Link
-          href="/special"
+          href="/offers"
           className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-foreground transition-opacity hover:opacity-75"
         >
           <span>مشاهده همه</span>

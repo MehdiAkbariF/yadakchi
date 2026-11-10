@@ -1,24 +1,49 @@
+// src/components/features/Bestsellers/BestsellersContent.tsx
 'use client';
 
 import * as React from 'react';
-import { Award, ShoppingBag, Trophy } from 'lucide-react';
+import { ShoppingBag, Trophy } from 'lucide-react';
 import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
 import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
 import { SearchSidebar } from '@/components/features/ProductGrid/SearchSidebar';
+import { MobileSearchHeader } from '@/components/features/ProductGrid/MobileSearchHeader';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
 import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
 import { Typography } from '@/components/primitives/Typography';
-import { useAppStore } from '@/shared/store/useAppStore';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+const BESTSELLERS_BASE_FILTERS: SearchProductsRequest = {
+  orderType: 'BestSelling',
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
 
 export function BestsellersContent() {
-  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
-
   const { filters, setFilter, clearFilters } = useSearchFilters();
 
-  const currentFilters = { ...filters, orderType: 'BestSelling' as const };
+  const currentFilters: SearchProductsRequest = React.useMemo(() => {
+    return {
+      ...BESTSELLERS_BASE_FILTERS,
+      searchTitle: filters.searchTitle,
+      brandIds: filters.brandIds,
+      carIds: filters.carIds,
+      partCategoryIds: filters.partCategoryIds,
+      partIds: filters.partIds,
+      types: filters.types,
+      fromPrice: filters.fromPrice,
+      toPrice: filters.toPrice,
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+      includeAggregations: true,
+    };
+  }, [filters]);
+
   const { data: productsResponse, isLoading } = useSearchProducts(currentFilters);
 
   const products = productsResponse?.items || [];
@@ -29,40 +54,25 @@ export function BestsellersContent() {
 
   return (
     <div className="flex w-full flex-col gap-6">
-      {/* هدر موبایل */}
-      <div
-        style={{ top: isHeaderMinimized ? '3.5rem' : '122px' }}
-        className="sticky z-40 mt-1 flex w-full shrink-0 select-none flex-col gap-3 border-b border-border bg-card px-4 py-2.5 shadow-xs transition-colors md:hidden"
-      >
-        <div className="flex w-full items-center justify-between">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-warning/20 bg-warning/10 text-warning">
-              <Trophy aria-hidden="true" className="h-4 w-4" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-label-2xs">محبوب‌ترین‌های بازار</span>
-              <span className="mt-0.5 text-label">پرفروش‌ترین‌های یدکچی</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex w-full items-center justify-between gap-3 border-t border-dashed border-border pt-2.5">
-          <button
-            type="button"
-            onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-input bg-card px-3 text-label shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <span className="truncate">فیلترها</span>
-          </button>
-
-          <span className="flex h-9 shrink-0 items-center justify-center rounded-md bg-muted px-2.5 text-label-2xs">
-            {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
+      {/* هدر ماژولار و مشترک موبایل با انیمیشن کشویی در اسکرول */}
+      <MobileSearchHeader
+        icon={<Trophy aria-hidden="true" className="h-4 w-4 text-warning" />}
+        subtitle="محبوب‌ترین‌های بازار"
+        title="پرفروش‌ترین‌های یدکچی"
+        actionElement={
+          <span className="rounded-md bg-warning/10 px-2 py-0.5 text-3xs font-bold text-warning">
+            پرفروش‌ترین
           </span>
-        </div>
-      </div>
+        }
+        totalCount={totalCount}
+        sortValue="BestSelling"
+        onSortChange={() => {}} // در این صفحه سورت همیشه BestSelling است
+        onOpenFilters={() => setIsMobileFiltersOpen(true)}
+      />
 
       <Breadcrumb items={breadcrumbItems} className="hidden px-4 md:flex md:px-0" />
 
+      {/* بنر سربرگ دسکتاپ */}
       <div className="relative flex w-full select-none items-center justify-between overflow-hidden rounded-lg border border-warning/20 bg-gradient-to-r from-warning/10 via-warning/5 to-transparent p-6 px-4 md:px-8 sm:p-8">
         <div className="relative z-10 flex flex-col gap-1.5">
           <div className="flex items-center gap-2 font-bold text-warning">
@@ -138,3 +148,5 @@ export function BestsellersContent() {
     </div>
   );
 }
+
+export default BestsellersContent;

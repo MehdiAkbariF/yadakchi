@@ -10,7 +10,7 @@ interface LogoProps {
 export function Logo({ hideTitle = false, className }: LogoProps) {
   return (
     <Link
-      href="/home"
+      href="/"
       aria-label="صفحه اصلی یدکچی - بازارگاه تخصصی قطعات خودرو"
       className={cn("flex flex-col items-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg", className)}
     >

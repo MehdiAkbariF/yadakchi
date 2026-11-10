@@ -1,0 +1,1503 @@
+--- START OF FILE src\components\features\ProductCard\ProductCard.tsx ---
+export { ProductDealCard as ProductCard } from './ProductDealCard';
+export type { ProductDealCardProps } from './ProductDealCard';
+
+--- END OF FILE src\components\features\ProductCard\ProductCard.tsx ---
+
+--- START OF FILE src\components\features\ProductCard\ProductDealCard.tsx ---
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Star, Hourglass } from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { useImpression } from '@/shared/hooks/useImpression';
+
+export interface ProductDealCardProps {
+  product: any;
+  serverTime?: string | Date;
+  showTimer?: boolean;
+  showRating?: boolean;
+  className?: string;
+}
+
+export function ProductDealCard({
+  product,
+  serverTime,
+  showTimer = true,
+  showRating = true,
+  className,
+}: ProductDealCardProps) {
+  const nominated = product?.nominatedShopProduct || {};
+
+  const title =
+    product?.productTitle ||
+    product?.title ||
+    product?.name?.value ||
+    product?.name ||
+    '';
+
+  const originalPriceRaw =
+    product?.rialRetailPrice ??
+    product?.price?.raw ??
+    product?.price ??
+    nominated?.rialRetailPrice ??
+    nominated?.price ??
+    0;
+
+  const finalPriceRaw =
+    product?.rialFinalPrice ??
+    product?.discountPrice ??
+    nominated?.rialFinalPrice ??
+    nominated?.discountPrice ??
+    originalPriceRaw;
+
+  const originalPriceToman = Math.round(originalPriceRaw / 10);
+  const finalPriceToman = Math.round(finalPriceRaw / 10);
+
+  const hasDiscount =
+    product?.isDiscountApplied !== undefined
+      ? product.isDiscountApplied
+      : originalPriceRaw > finalPriceRaw && finalPriceRaw > 0;
+
+  const discountPercent =
+    product?.discountPercentage ??
+    product?.discount?.percent ??
+    nominated?.discountPercentage ??
+    (hasDiscount && originalPriceRaw > 0
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+      : 0);
+
+  const expirationStr =
+    nominated.discountUntil ||
+    nominated.discountExpiration ||
+    product?.discountExpiration;
+  const hasExpiration = Boolean(expirationStr);
+
+  const [timeLeft, setTimeLeft] = React.useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragStart = React.useRef({ x: 0, y: 0 });
+
+  const shopProductId = product?.shopProductId || nominated?.id || product?.id || null;
+  const impressionRef = useImpression(shopProductId);
+
+  React.useEffect(() => {
+    if (!hasExpiration) return;
+
+    const calculateTime = () => {
+      const serverDate = serverTime ? new Date(serverTime) : new Date();
+      const clientDate = new Date();
+      const timeOffset = serverDate.getTime() - clientDate.getTime();
+      const syncedNow = new Date(Date.now() + timeOffset);
+      const diff = +new Date(expirationStr as string) - +syncedNow;
+
+      if (diff > 0) {
+        setTimeLeft({
+          hours: Math.floor(diff / (1000 * 60 * 60)),
+          minutes: Math.floor((diff / 1000 / 60) % 60),
+          seconds: Math.floor((diff / 1000) % 60),
+        });
+      } else {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [expirationStr, serverTime, hasExpiration]);
+
+  const formatPersianDigits = (num: number) =>
+    new Intl.NumberFormat('fa-IR', { useGrouping: false })
+      .format(num)
+      .padStart(2, '?');
+
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const dx = Math.abs(e.clientX - dragStart.current.x);
+    const dy = Math.abs(e.clientY - dragStart.current.y);
+    if (dx > 6 || dy > 6) setIsDragging(true);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      dragStart.current = { x: touch.clientX, y: touch.clientY };
+      setIsDragging(false);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      const dx = Math.abs(touch.clientX - dragStart.current.x);
+      const dy = Math.abs(touch.clientY - dragStart.current.y);
+      if (dx > 6 || dy > 6) setIsDragging(true);
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  const renderStars = () => {
+    const rating = product?.averageRate || product?.rating?.average || 5;
+    return (
+      <div className="flex select-none items-center gap-1">
+        <Star aria-hidden="true" className="h-3 w-3 shrink-0 fill-warning text-warning" />
+        <span className="text-2xs font-medium text-muted-foreground sm:text-xs">
+          ?????? {toPersianDigits(rating)}
+        </span>
+      </div>
+    );
+  };
+
+  const codeOrId =
+    product?.productCode || product?.code || product?.productId || product?.id;
+  const productCardUrl = getProductUrl(codeOrId, title);
+
+  const imageSource =
+    product?.image ||
+    product?.images?.[0]?.medium ||
+    product?.images?.[0]?.url ||
+    product?.images?.[0] ||
+    null;
+
+  return (
+    <Link
+      href={productCardUrl}
+      prefetch={false}
+      className="block h-full w-full select-none"
+      draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onClick={handleClick}
+    >
+      <div
+        ref={impressionRef}
+        className={cn(
+          'relative flex h-full w-full select-none flex-col items-center rounded-lg border border-border bg-card p-3 transition-all duration-normal sm:p-3.5',
+          'hover:border-primary/40 hover:shadow-sm',
+          className
+        )}
+      >
+        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-md" draggable={false}>
+          <Image
+            src={getFullUrl(imageSource)}
+            alt={product?.imageAlt || title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+            className="select-none rounded-md object-contain"
+            draggable={false}
+          />
+        </div>
+
+        <div className="mb-1 flex min-h-[2.6rem] w-full items-start justify-end select-none">
+          <h4 className="line-clamp-2 w-full text-sm font-semibold leading-relaxed text-foreground">
+            {title}
+          </h4>
+        </div>
+
+        {showRating ? (
+          <div className="mb-3 mt-1.5 flex w-full select-none justify-start">
+            {renderStars()}
+          </div>
+        ) : null}
+
+        <div className="mt-auto flex w-full items-center justify-between pt-2">
+          <div
+            className={cn(
+              'shrink-0 rounded-sm border border-accent bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground transition-opacity duration-fast',
+              hasDiscount && discountPercent > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
+            )}
+          >
+            {toPersianDigits(discountPercent)}%
+          </div>
+
+          <div className="flex min-w-0 flex-col items-end">
+            {hasDiscount && originalPriceToman > finalPriceToman ? (
+              <span className="text-2xs font-medium text-muted-foreground line-through sm:text-xs">
+                {formatPrice(originalPriceToman)}
+              </span>
+            ) : null}
+            <div className="mt-0.5 flex items-center gap-0.5">
+              <span className="text-base font-bold text-foreground sm:text-lg">
+                {formatPrice(finalPriceToman)}
+              </span>
+              <span className="text-2xs text-muted-foreground">?????</span>
+            </div>
+          </div>
+        </div>
+
+        {showTimer && hasExpiration ? (
+          <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border pt-1.5 text-muted-foreground">
+            <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
+              <span className="rounded-sm bg-muted px-1.5 py-0.5 text-2xs">
+                {formatPersianDigits(timeLeft.hours)}
+              </span>
+              <span className="text-muted-foreground">:</span>
+              <span className="rounded-sm bg-muted px-1.5 py-0.5 text-2xs">
+                {formatPersianDigits(timeLeft.minutes)}
+              </span>
+              <span className="text-muted-foreground">:</span>
+              <span className="rounded-sm bg-muted px-1.5 py-0.5 text-2xs">
+                {formatPersianDigits(timeLeft.seconds)}
+              </span>
+            </div>
+            <Hourglass aria-hidden="true" className="h-3.5 w-3.5 shrink-0 animate-spin text-primary" />
+          </div>
+        ) : null}
+      </div>
+    </Link>
+  );
+}
+
+
+--- END OF FILE src\components\features\ProductCard\ProductDealCard.tsx ---
+
+--- START OF FILE src\components\features\ProductCard\ProductStandardCard.tsx ---
+// src/components/features/ProductCard/ProductStandardCard.tsx
+'use client';
+
+import * as React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Star, Store, Package } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/design-system/utils/cn';
+import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { useImpression } from '@/shared/hooks/useImpression';
+import { trackShopProductClick } from '@/core/utils/impression-tracker';
+
+export interface ProductStandardCardProps {
+  product: any;
+  showRating?: boolean;
+  className?: string;
+}
+
+export function ProductStandardCard({
+  product,
+  showRating = true,
+  className,
+}: ProductStandardCardProps) {
+  const [tickerIndex, setTickerIndex] = React.useState(0);
+  const [isMounted, setIsMounted] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragStart = React.useRef({ x: 0, y: 0 });
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const nominated = product?.nominatedShopProduct || {};
+
+  const shopProductId = product?.shopProductId || nominated?.id || product?.id || null;
+  const impressionRef = useImpression(shopProductId);
+
+  const title =
+    product?.productTitle ||
+    product?.title ||
+    product?.name?.value ||
+    product?.name ||
+    '';
+
+  const shopName = product?.shopTitle || nominated?.shopTitle || product?.shop?.name || '';
+  const scoreValue = product?.score ?? nominated?.score ?? product?.averageRate ?? 5;
+  const quantityValue = product?.quantity ?? nominated?.quantity ?? 0;
+
+  const originalPriceRaw = Number(
+    product?.rialRetailPrice ??
+      nominated?.rialRetailPrice ??
+      product?.price?.raw ??
+      (typeof product?.price === 'number' ? product.price : 0) ??
+      nominated?.price ??
+      0
+  );
+
+  const finalPriceRaw = Number(
+    product?.rialFinalPrice ??
+      nominated?.rialFinalPrice ??
+      product?.discount?.discountedPriceRaw ??
+      product?.discountPrice ??
+      nominated?.discountPrice ??
+      product?.price?.raw ??
+      (typeof product?.price === 'number' ? product.price : 0) ??
+      originalPriceRaw
+  );
+
+  const originalPriceToman = Math.round(originalPriceRaw / 10);
+  const finalPriceToman = Math.round(finalPriceRaw / 10);
+
+  const isOutOfStock =
+    finalPriceRaw === 0 || (product?.quantity !== undefined && product.quantity === 0);
+
+  const hasDiscount =
+    product?.isDiscountApplied !== undefined
+      ? product.isDiscountApplied
+      : originalPriceRaw > finalPriceRaw && !isOutOfStock;
+
+  const discountPercent =
+    product?.discountPercentage ??
+    (hasDiscount && originalPriceRaw > 0
+      ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
+      : nominated?.discountPercentage || product?.discount?.percent || 0);
+
+  const tickerItems = React.useMemo(() => {
+    // ? ??? ???? ??????? ????? ??? ????? ???? ?????? ???? ????? ???????
+    if (isOutOfStock) return [];
+
+    const items: { text: string; icon: any; isShop?: boolean }[] = [];
+
+    // ? ??? ??? ??????? ????? ??? ????? ???? ?? ??? ??? ???? ??? �?????� ?? ?? ????? ??????????? ?????
+    const displayShopName = shopName && shopName.trim() !== '' ? shopName : '?????';
+    items.push({
+      text: `???????: ${displayShopName}`,
+      icon: Store,
+      isShop: true,
+    });
+
+    items.push({
+      text: `??????: ${toPersianDigits(scoreValue)} ?? ?`,
+      icon: Star,
+    });
+
+    items.push({
+      text: quantityValue > 0 ? `?????? ?? ?????: ${toPersianDigits(quantityValue)} ???` : '?????: ??????? ?? ?????',
+      icon: Package,
+    });
+
+    return items;
+  }, [shopName, scoreValue, quantityValue, isOutOfStock]);
+
+  const tickerLength = tickerItems.length;
+
+  React.useEffect(() => {
+    if (!isMounted || tickerLength <= 1 || isOutOfStock) return;
+    const interval = setInterval(() => {
+      setTickerIndex((prev) => (prev + 1) % tickerLength);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [tickerLength, isMounted, isOutOfStock]);
+
+  const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const dx = Math.abs(e.clientX - dragStart.current.x);
+    const dy = Math.abs(e.clientY - dragStart.current.y);
+    if (dx > 6 || dy > 6) setIsDragging(true);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      dragStart.current = { x: touch.clientX, y: touch.clientY };
+      setIsDragging(false);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (touch) {
+      const dx = Math.abs(touch.clientX - dragStart.current.x);
+      const dy = Math.abs(touch.clientY - dragStart.current.y);
+      if (dx > 6 || dy > 6) setIsDragging(true);
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (shopProductId) trackShopProductClick(shopProductId);
+  };
+
+  const renderStars = () => {
+    const rating = product?.averageRate || product?.rating?.average || scoreValue;
+    return (
+      <div className="flex select-none items-center gap-1">
+        <Star aria-hidden="true" className="h-3 w-3 shrink-0 fill-warning text-warning" />
+        <span className="text-2xs font-bold text-foreground sm:text-xs">
+          {formatPrice(rating)}
+        </span>
+      </div>
+    );
+  };
+
+  const CurrentTickerIcon = tickerItems[tickerIndex]?.icon || Store;
+  const currentItem = tickerItems[tickerIndex];
+
+  const codeOrId =
+    product?.productCode || product?.code || product?.productId || product?.id;
+  const productCardUrl = getProductUrl(codeOrId, title);
+
+  const imageSource =
+    product?.image ||
+    product?.images?.[0]?.medium ||
+    product?.images?.[0]?.url ||
+    product?.images?.[0] ||
+    null;
+
+  return (
+    <Link
+      href={productCardUrl}
+      prefetch={false}
+      className="block h-full w-full select-none"
+      draggable={false}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onClick={handleClick}
+    >
+      <div
+        ref={impressionRef}
+        className={cn(
+          'relative flex h-full w-full select-none flex-col items-center rounded-lg border border-border bg-card p-3 transition-all duration-normal sm:p-3.5',
+          'hover:border-primary/50 hover:shadow-md',
+          className
+        )}
+      >
+        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-md" draggable={false}>
+          <Image
+            src={getFullUrl(imageSource)}
+            alt={product?.imageAlt || title}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+            className="select-none rounded-md object-contain"
+            draggable={false}
+          />
+
+          {showRating && !isOutOfStock ? (
+            <div className="absolute start-2 top-2 z-10 flex items-center justify-center rounded-md bg-card/90 px-2 py-0.5 shadow-sm backdrop-blur-sm">
+              {renderStars()}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mb-1 mt-2 h-9 w-full">
+          <h4 className="line-clamp-2 w-full text-sm font-semibold leading-relaxed text-foreground">
+            {title}
+          </h4>
+        </div>
+
+        {/* ??? ???? ???????: ??? ??????? ???? ??? ??????? ???? ?????? */}
+        <div className="flex w-full select-none flex-col items-stretch">
+          {isMounted && tickerLength > 0 && !isOutOfStock ? (
+            <div className="relative mt-0.5 flex h-6 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground sm:text-xs">
+              <div className="relative hidden h-full w-full md:block">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`standard-desktop-ticker-${tickerIndex}`}
+                    initial={{ y: 15, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -15, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                    className="absolute inset-x-0 bottom-0 top-0 flex h-full items-center justify-start gap-1.5 truncate py-1"
+                  >
+                    <CurrentTickerIcon
+                      aria-hidden="true"
+                      className={cn(
+                        'h-3.5 w-3.5 shrink-0',
+                        currentItem?.isShop ? 'text-shop' : 'text-primary'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'truncate font-medium',
+                        currentItem?.isShop ? 'text-shop font-semibold' : 'text-foreground'
+                      )}
+                    >
+                      {currentItem?.text}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              <div className="relative flex h-full w-full items-center justify-start gap-1.5 truncate md:hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`standard-mobile-ticker-${tickerIndex}`}
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -10, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    className="absolute inset-x-0 bottom-0 top-0 flex h-full items-center justify-start gap-1.5 truncate"
+                  >
+                    <CurrentTickerIcon
+                      aria-hidden="true"
+                      className={cn(
+                        'h-3 w-3 shrink-0',
+                        currentItem?.isShop ? 'text-shop' : 'text-primary'
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        'truncate text-2xs font-medium',
+                        currentItem?.isShop ? 'text-shop font-semibold' : 'text-foreground'
+                      )}
+                    >
+                      {currentItem?.text}
+                    </span>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-0.5 h-6 w-full shrink-0 flex items-center text-2xs text-muted-foreground">
+              {isOutOfStock ? '?????: ??????? ?? ?????' : ''}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-auto flex w-full items-center justify-between pt-2">
+          <div
+            className={cn(
+              'shrink-0 rounded-md px-2 py-0.5 text-xs font-bold transition-opacity duration-fast',
+              'bg-destructive text-destructive-foreground',
+              hasDiscount && discountPercent > 0 && !isOutOfStock ? 'opacity-100' : 'pointer-events-none opacity-0'
+            )}
+          >
+            {toPersianDigits(discountPercent)}%
+          </div>
+
+          <div className="flex min-w-0 flex-col items-end">
+            {hasDiscount && originalPriceToman > finalPriceToman && !isOutOfStock ? (
+              <span className="text-xs font-medium text-muted-foreground/90 line-through">
+                {formatPrice(originalPriceToman)}
+              </span>
+            ) : null}
+            <div className="mt-0.5 flex items-center gap-1">
+              {isOutOfStock ? (
+                <span className="text-sm font-bold text-destructive sm:text-base">???????</span>
+              ) : (
+                <>
+                  <span className="text-base font-extrabold text-foreground sm:text-lg">
+                    {formatPrice(finalPriceToman)}
+                  </span>
+                  <span className="text-2xs font-medium text-muted-foreground">?????</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+--- END OF FILE src\components\features\ProductCard\ProductStandardCard.tsx ---
+
+--- START OF FILE src\components\features\Product\components\ProductGallery.tsx ---
+'use client';
+
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import Image from 'next/image';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import {
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  ImageOff,
+  Ticket,
+} from 'lucide-react';
+import { cn } from '@/design-system/utils/cn';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+
+export interface ProductGalleryProps {
+  images: any[];
+  title: string;
+  hasDiscount?: boolean;
+  discountPercent?: number;
+  hasTimedDiscount?: boolean;
+  discountExpiration?: string | null;
+  onDragVertical?: (deltaY: number) => void;
+}
+
+function useCountdown(expiration?: string | null) {
+  const [remain, setRemain] = React.useState<{ h: number; m: number; s: number } | null>(null);
+
+  React.useEffect(() => {
+    if (!expiration) {
+      setRemain(null);
+      return;
+    }
+    const calc = () => {
+      const diff = +new Date(expiration) - Date.now();
+      if (diff <= 0) {
+        setRemain({ h: 0, m: 0, s: 0 });
+        return;
+      }
+      setRemain({
+        h: Math.floor(diff / (1000 * 60 * 60)),
+        m: Math.floor((diff / 1000 / 60) % 60),
+        s: Math.floor((diff / 1000) % 60),
+      });
+    };
+    calc();
+    const iv = setInterval(calc, 1000);
+    return () => clearInterval(iv);
+  }, [expiration]);
+
+  return remain;
+}
+
+/* -------------------------------------------------------------------------- */
+/*              نوار اسکرابر مقطعی هوشمند (دسکتاپ، موبایل و فول‌اسکرین)         */
+/* -------------------------------------------------------------------------- */
+interface GalleryScrubberProps {
+  total: number;
+  current: number;
+  onChange: (index: number) => void;
+  isDark?: boolean;
+  align?: 'start' | 'center';
+}
+
+function GalleryScrubber({
+  total,
+  current,
+  onChange,
+  isDark = false,
+  align = 'center',
+}: GalleryScrubberProps) {
+  if (total <= 1) return null;
+
+  return (
+    <div
+      className={cn(
+        'flex select-none items-center gap-2 w-full max-w-[15rem]',
+        align === 'start' ? 'justify-start' : 'justify-center mx-auto'
+      )}
+    >
+      {/* تراک مقطعی کپسولی */}
+      <div
+        className={cn(
+          'flex items-center gap-1.5 flex-1 p-1 rounded-full backdrop-blur-md transition-colors',
+          isDark ? 'bg-white/10 border border-white/10' : 'bg-muted/80 border border-border'
+        )}
+      >
+        {Array.from({ length: total }).map((_, idx) => {
+          const isActive = idx === current;
+          const isPassed = idx < current;
+
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onChange(idx)}
+              aria-label={`رفتن به تصویر شماره ${idx + 1}`}
+              className="relative flex-1 h-1.5 rounded-full overflow-hidden transition-all duration-200 focus:outline-none"
+            >
+              <div
+                className={cn(
+                  'absolute inset-0 rounded-full transition-colors',
+                  isDark ? 'bg-white/20' : 'bg-muted-foreground/20'
+                )}
+              />
+              <div
+                className={cn(
+                  'h-full rounded-full transition-all duration-300',
+                  isActive
+                    ? 'bg-primary shadow-xs'
+                    : isPassed
+                    ? isDark ? 'bg-white/50' : 'bg-primary/40'
+                    : 'w-0'
+                )}
+                style={{ width: isActive || isPassed ? '100%' : '0%' }}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* شماره عکس به فارسی */}
+      <div
+        className={cn(
+          'flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full tabular-nums shrink-0',
+          isDark ? 'bg-white/10 text-white' : 'bg-card text-foreground border border-border/70 shadow-xs'
+        )}
+      >
+        <span className="text-primary font-black">{toPersianDigits(current + 1)}</span>
+        <span className="opacity-40">/</span>
+        <span>{toPersianDigits(total)}</span>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                           کامپوننت اصلی گالری                              */
+/* -------------------------------------------------------------------------- */
+export function ProductGallery({
+  images = [],
+  title,
+  hasDiscount,
+  discountPercent,
+  hasTimedDiscount,
+  discountExpiration,
+  onDragVertical,
+}: ProductGalleryProps) {
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [direction, setDirection] = React.useState(0);
+  const [isFullscreenOpen, setIsFullscreenOpen] = React.useState(false);
+  const [zoomScale, setZoomScale] = React.useState(1);
+  const [panOffset, setPanOffset] = React.useState({ x: 0, y: 0 });
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  const mobileCarouselRef = React.useRef<HTMLDivElement>(null);
+  const touchStartRef = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const countdown = useCountdown(hasTimedDiscount ? discountExpiration : null);
+  const validImages = React.useMemo(() => (images || []).filter(Boolean), [images]);
+  const safeIndex = activeIndex < validImages.length ? activeIndex : 0;
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const resolveImageUrl = (item: any): string => {
+    if (!item) return '';
+    const rawPath = typeof item === 'string' ? item : item.url || item.image || '';
+    if (!rawPath) return '';
+    if (rawPath.startsWith('http')) return rawPath;
+    try {
+      return getFullUrl(rawPath);
+    } catch {
+      const cleanPath = rawPath.startsWith('/') ? rawPath : `/${rawPath}`;
+      return `https://api.yadakchi.local${cleanPath}`;
+    }
+  };
+
+  const handleNext = React.useCallback(() => {
+    if (validImages.length <= 1) return;
+    setDirection(1);
+    setActiveIndex((prev) => (prev + 1) % validImages.length);
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  }, [validImages.length]);
+
+  const handlePrev = React.useCallback(() => {
+    if (validImages.length <= 1) return;
+    setDirection(-1);
+    setActiveIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+  }, [validImages.length]);
+
+  const goToSlide = (idx: number) => {
+    if (idx === safeIndex) return;
+    setDirection(idx > safeIndex ? 1 : -1);
+    setActiveIndex(idx);
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+
+    if (mobileCarouselRef.current) {
+      const width = mobileCarouselRef.current.clientWidth;
+      mobileCarouselRef.current.scrollTo({
+        left: -idx * width,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const closeFullscreen = React.useCallback(() => {
+    setZoomScale(1);
+    setPanOffset({ x: 0, y: 0 });
+    setIsFullscreenOpen(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isFullscreenOpen) return;
+    window.history.pushState({ modal: 'product-gallery-fullscreen' }, '');
+    const handlePopState = () => closeFullscreen();
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.modal === 'product-gallery-fullscreen') {
+        window.history.back();
+      }
+    };
+  }, [isFullscreenOpen, closeFullscreen]);
+
+  React.useEffect(() => {
+    if (!isFullscreenOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeFullscreen();
+      else if (e.key === 'ArrowLeft') handleNext();
+      else if (e.key === 'ArrowRight') handlePrev();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreenOpen, closeFullscreen, handleNext, handlePrev]);
+
+  // رهگیری دقیق اسکرول لمسی کاروسل موبایل
+  const handleMobileScroll = () => {
+    if (!mobileCarouselRef.current) return;
+    const { scrollLeft, clientWidth } = mobileCarouselRef.current;
+    const index = Math.round(Math.abs(scrollLeft) / clientWidth);
+    if (index !== activeIndex && index < validImages.length) {
+      setActiveIndex(index);
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const deltaX = Math.abs(e.touches[0].clientX - touchStartRef.current.x);
+    const deltaY = e.touches[0].clientY - touchStartRef.current.y;
+    if (Math.abs(deltaY) > deltaX && onDragVertical) {
+      onDragVertical(deltaY);
+      touchStartRef.current.y = e.touches[0].clientY;
+    }
+  };
+
+  const handleFullscreenDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
+    if (zoomScale > 1) return;
+    const swipeThreshold = 40;
+    if (info.offset.x < -swipeThreshold) handlePrev();
+    else if (info.offset.x > swipeThreshold) handleNext();
+  };
+
+  const handleDoubleTap = () => {
+    if (zoomScale > 1) {
+      setZoomScale(1);
+      setPanOffset({ x: 0, y: 0 });
+    } else {
+      setZoomScale(2.5);
+    }
+  };
+
+  if (validImages.length === 0) {
+    return (
+      <div className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-6 text-muted-foreground">
+        <ImageOff aria-hidden="true" className="h-12 w-12 opacity-30" />
+        <span className="text-xs font-bold">تصویری برای این کالا ثبت نشده است</span>
+      </div>
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                      مودال تمام‌صفحه تصاویر کالا                          */
+  /* -------------------------------------------------------------------------- */
+  const fullscreenModalContent = (
+    <AnimatePresence>
+      {isFullscreenOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="نمایش تمام‌صفحه تصاویر کالا"
+          className="fixed inset-0 z-modal flex h-[100dvh] w-screen flex-col bg-black select-none touch-none transform-gpu"
+          dir="rtl"
+        >
+          <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-black px-4 py-3 sm:px-6 z-20">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="truncate text-xs sm:text-sm font-bold text-white max-w-[12.5rem] sm:max-w-xl">
+                {title}
+              </span>
+              <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-2xs font-bold text-white/90">
+                {toPersianDigits(safeIndex + 1)} از {toPersianDigits(validImages.length)}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={closeFullscreen}
+              aria-label="بستن تمام‌صفحه"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-destructive transition-colors active:scale-95"
+            >
+              <X aria-hidden="true" className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="relative min-h-0 w-full flex-1 overflow-hidden flex items-center justify-center bg-black p-2 sm:p-6">
+            {validImages.length > 1 && (
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="عکس قبلی"
+                className="hidden sm:flex absolute start-6 z-20 h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 transition-all active:scale-95"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            )}
+
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              <motion.div
+                key={safeIndex}
+                custom={direction}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.18 }}
+                className="h-full w-full flex items-center justify-center"
+              >
+                <motion.img
+                  src={resolveImageUrl(validImages[safeIndex])}
+                  alt={`${title} - تصویر ${safeIndex + 1}`}
+                  onDoubleClick={handleDoubleTap}
+                  drag={zoomScale > 1 ? true : 'x'}
+                  dragConstraints={
+                    zoomScale > 1
+                      ? { left: -300, right: 300, top: -300, bottom: 300 }
+                      : { left: 0, right: 0 }
+                  }
+                  dragElastic={zoomScale > 1 ? 0.2 : 0.4}
+                  onDragEnd={handleFullscreenDragEnd}
+                  animate={{
+                    scale: zoomScale,
+                    x: zoomScale > 1 ? panOffset.x : 0,
+                    y: zoomScale > 1 ? panOffset.y : 0,
+                  }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  className={cn(
+                    'max-h-full max-w-full select-none object-contain',
+                    zoomScale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'
+                  )}
+                />
+              </motion.div>
+            </AnimatePresence>
+
+            {validImages.length > 1 && (
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="عکس بعدی"
+                className="hidden sm:flex absolute end-6 z-20 h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 transition-all active:scale-95"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center justify-center border-t border-white/10 bg-black p-3 sm:py-4 z-20">
+            <GalleryScrubber
+              total={validImages.length}
+              current={safeIndex}
+              onChange={goToSlide}
+              isDark
+              align="center"
+            />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <section
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={`گالری تصاویر ${title}`}
+      className="w-full select-none"
+      dir="rtl"
+    >
+      <div className="sr-only" aria-live="polite">
+        تصویر {safeIndex + 1} از {validImages.length}
+      </div>
+
+      {/* ================= نسخه دسکتاپ ================= */}
+      <div className="hidden lg:flex w-full flex-col items-start gap-3.5 text-right pt-1">
+        <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xs">
+          {hasTimedDiscount ? (
+            <div className="absolute end-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
+              <Ticket aria-hidden="true" className="h-3.5 w-3.5" />
+              <span>تخفیف {toPersianDigits(discountPercent || 0)}٪</span>
+              {countdown && (
+                <span className="rounded bg-black/20 px-1 py-0.5 text-3xs font-bold" dir="ltr">
+                  {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:
+                  {String(countdown.s).padStart(2, '0')}
+                </span>
+              )}
+            </div>
+          ) : hasDiscount && discountPercent ? (
+            <div className="absolute end-3 top-3 z-10 rounded-lg bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
+              تخفیف {toPersianDigits(discountPercent)}٪
+            </div>
+          ) : null}
+
+          <div 
+            onClick={() => setIsFullscreenOpen(true)}
+            className="relative h-full w-full cursor-zoom-in flex items-center justify-center"
+          >
+            <Image
+              src={resolveImageUrl(validImages[safeIndex])}
+              alt={`${title} - عکس ${safeIndex + 1}`}
+              fill
+              priority={safeIndex === 0}
+              sizes="(max-width: 1400px) 40vw, 450px"
+              className="object-contain p-2 transition-transform duration-normal group-hover:scale-105"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsFullscreenOpen(true)}
+            aria-label="مشاهده تمام‌صفحه تصویر"
+            className="absolute bottom-3 start-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-xs hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all"
+          >
+            <Maximize2 aria-hidden="true" className="h-4 w-4" />
+          </button>
+
+          {validImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={handlePrev}
+                aria-label="عکس قبلی"
+                className="absolute start-3 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                aria-label="عکس بعدی"
+                className="absolute end-3 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* لیست تصاویر بندانگشتی دسکتاپ */}
+        {validImages.length > 1 && (
+          <div className="w-full flex flex-col items-start gap-2.5">
+            <div className="w-full overflow-x-auto scrollbar-thin py-1">
+              <div className="flex items-center gap-2.5 w-max justify-start px-0.5">
+                {validImages.map((img, idx) => {
+                  const thumbUrl = resolveImageUrl(img);
+                  if (!thumbUrl) return null;
+                  const isSelected = idx === safeIndex;
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => goToSlide(idx)}
+                      aria-label={`انتخاب عکس شماره ${idx + 1}`}
+                      className={cn(
+                        'relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border bg-card p-1 outline-none transition-all',
+                        isSelected
+                          ? 'border-primary ring-2 ring-primary/20 scale-105 shadow-xs'
+                          : 'border-border/80 opacity-60 hover:opacity-100 hover:border-primary/40'
+                      )}
+                    >
+                      <Image
+                        src={thumbUrl}
+                        alt=""
+                        fill
+                        sizes="56px"
+                        className="object-contain p-0.5"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <GalleryScrubber
+              total={validImages.length}
+              current={safeIndex}
+              onChange={goToSlide}
+              align="start"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ================= نسخه موبایل با نوار اسکرابر و شمارشگر ================= */}
+      <div
+        className="lg:hidden relative w-full flex flex-col items-center pt-2 gap-2.5"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+      >
+        {/* کاروسل اصلی تصاویر */}
+        <div
+          ref={mobileCarouselRef}
+          onScroll={handleMobileScroll}
+          className="flex w-full snap-x snap-mandatory overflow-x-auto scrollbar-none items-center"
+          style={{ scrollSnapType: 'x mandatory' }}
+        >
+          {validImages.map((img, idx) => {
+            const currentUrl = resolveImageUrl(img);
+            return (
+              <div key={idx} className="w-full shrink-0 snap-center px-4">
+                <div
+                  onClick={() => setIsFullscreenOpen(true)}
+                  className="relative h-[15.5rem] w-full flex items-center justify-center cursor-zoom-in overflow-hidden rounded-2xl bg-card border border-border shadow-xs"
+                >
+                  <Image
+                    src={currentUrl}
+                    alt={`${title} - تصویر ${idx + 1}`}
+                    fill
+                    priority={idx === 0}
+                    sizes="100vw"
+                    className="object-contain p-3"
+                  />
+
+                  {/* بچ شناور شمارشگر کالا روی تصویر: ۱ از ۴ */}
+                  {validImages.length > 1 && (
+                    <div className="absolute top-2.5 start-2.5 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-2xs font-bold text-white backdrop-blur-md tabular-nums shadow-xs">
+                      <span>{toPersianDigits(safeIndex + 1)}</span>
+                      <span className="opacity-50">از</span>
+                      <span>{toPersianDigits(validImages.length)}</span>
+                    </div>
+                  )}
+
+                  {/* دکمه تمام صفحه */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsFullscreenOpen(true);
+                    }}
+                    aria-label="مشاهده تمام‌صفحه تصویر"
+                    className="absolute bottom-2.5 start-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card/90 text-foreground shadow-xs active:scale-95"
+                  >
+                    <Maximize2 aria-hidden="true" className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* نوار اسکرابر کپسولی مقطعی زیر تصویر در موبایل */}
+        {validImages.length > 1 && (
+          <div className="w-full px-6 flex justify-center">
+            <GalleryScrubber
+              total={validImages.length}
+              current={safeIndex}
+              onChange={goToSlide}
+              align="center"
+            />
+          </div>
+        )}
+      </div>
+
+      {isMounted && createPortal(fullscreenModalContent, document.body)}
+    </section>
+  );
+}
+
+export default ProductGallery;
+
+--- END OF FILE src\components\features\Product\components\ProductGallery.tsx ---
+
+--- START OF FILE src\domains\front\product\types\view.types.ts ---
+export interface ProductViewModel {
+  id: string;
+  shopProductId?: string;
+  code: number;
+  name: string;
+  englishTitle: string;
+  description: string;
+  price: {
+    raw: number;
+    formatted: string;
+    toman: number;
+    formattedToman: string;
+  };
+  discount: {
+    hasDiscount: boolean;
+    percent: number;
+    originalPrice: string;
+    discountedPrice: string;
+    expirationDate: string | null;
+    isActive: boolean;
+  };
+  images: {
+    thumbnail: string;
+    medium: string;
+    large: string;
+    alt: string;
+  }[];
+  category: {
+    id: string;
+    name: string;
+    englishTitle: string;
+  };
+  brand: {
+    id: string;
+    name: string;
+    englishTitle: string;
+  };
+  shop: {
+    id: string;
+    name: string;
+    rating: number;
+    ratingStars: number;
+  };
+  inventory: {
+    isInStock: boolean;
+    count: number;
+    status: 'AVAILABLE' | 'LIMITED' | 'OUT_OF_STOCK';
+    statusText: string;
+  };
+  type: {
+    value: 'NEW' | 'STOCK' | 'TAKEOFF';
+    label: string;
+    badge: 'success' | 'warning' | 'info';
+  };
+  metadata: {
+    createdAt: string;
+    updatedAt: string;
+    isNew: boolean;
+    isRecentlyUpdated: boolean;
+  };
+  rating: {
+    average: number;
+    count: number;
+    stars: number;
+    percentage: number;
+  };
+  statistics: {
+    views: number;
+    viewsFormatted: string;
+    commentCount: number;
+    inquiryCount: number;
+    popularity: 'HIGH' | 'MEDIUM' | 'LOW';
+    popularityText: string;
+  };
+  isFavorite: boolean;
+}
+
+export interface SearchProductsRequest {
+  // فیلدهای OpenSearch
+  searchTitle?: string;
+  brandIds?: string[];
+  partIds?: string[];
+  partCategoryIds?: string[];
+  carIds?: string[];
+  shopIds?: string[];
+  productCode?: number;
+  types?: Array<number | 'New' | 'Stock' | 'TakeOff'>;
+  fromPrice?: number;
+  toPrice?: number;
+  onlyInStock?: boolean;
+  onlyDiscounted?: boolean;
+  onlyDirectShipping?: boolean;
+  onlyNominated?: boolean;             // ✅ اضافه شد (مطابق سواگر)
+  excludeDuplicateProducts?: boolean;  // ✅ اضافه شد (مطابق سواگر)
+  sortBy?: string;
+  sortDesc?: boolean;
+  includeAggregations?: boolean;
+
+  // فیلدهای قبلی جهت سازگاری کامل صفحات
+  isProductInStock?: boolean;
+  isSellerInUserCity?: boolean;
+  partCategoryEnglishTitle?: string;
+  partEnglishTitle?: string;
+  carModel?: string;
+  shopId?: string;
+  cityId?: string;
+  hasDiscount?: boolean;
+  hasDiscountWithExpiration?: boolean;
+  orderType?: 'Selected' | 'MostVisited' | 'Newest' | 'BestSelling' | 'Cheapest' | 'MostExpensive' | 'HighestRated';
+  productDetails?: string;
+  samePartByProductCode?: number;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface ProductPriceChartViewModel {
+  dates: string[];
+  prices: number[];
+  averagePrice: number;
+  minPrice: number;
+  maxPrice: number;
+}
+
+export interface BrandViewModel {
+  id: string;
+  name: string;
+  englishTitle: string;
+  logo: string | null;
+}
+
+export interface CarViewModel {
+  id: string;
+  model: string;
+  englishTitle: string;
+  cover: string | null;
+}
+
+export interface ProductSpecViewModel {
+  name: string;
+  value: string;
+  isMain: boolean;
+}
+
+export interface ProductSpecGroupViewModel {
+  name: string;
+  specs: ProductSpecViewModel[];
+}
+
+export interface BreadCrumbViewModel {
+  id: string;
+  title: string;
+  englishTitle: string;
+  url: string;
+}
+
+export interface ProductDetailsViewModel {
+  id: string;
+  code: number;
+  title: string;
+  image: string;
+  imageAlt: string;
+  description: string;
+  partNumber: string | null;
+  averageRate: number;
+  rateCount: number;
+  views: string;
+  salesCount: string;
+  brand: BrandViewModel;
+  cars: CarViewModel[];
+  gallery: string[];
+  specGroups: ProductSpecGroupViewModel[];
+  seo: {
+    title: string;
+    description: string;
+  };
+  breadCrumbs: BreadCrumbViewModel[];
+}
+
+export interface ShopDetailsViewModel {
+  id: string;
+  title: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  phone: string | null;
+  averageRate: number;
+  logo: string | null;
+}
+
+export interface ShopProductViewModel {
+  id: string;
+  quantity: number;
+  retailPrice: string;
+  finalPrice: string;
+  retailPriceRaw: number;
+  finalPriceRaw: number;
+  discountPercentage: number;
+  hasDiscount: boolean;
+  type: 'New' | 'Stock' | 'TakeOff';
+  typeLabel: string;
+  isAdvertised: boolean;
+  isLocalSale: boolean;
+  isTipaxShipping: boolean;
+  isDirectShipping: boolean;
+  dayOfDelivery: number;
+  dayOfDeliveryLabel: string;
+  shop: ShopDetailsViewModel;
+  warrantyTitle: string;
+}
+
+export interface ShopProductsGroupViewModel {
+  newNominated: ShopProductViewModel | null;
+  newOnline: ShopProductViewModel[];
+  newLocal: ShopProductViewModel[];
+  takeOffNominated: ShopProductViewModel | null;
+  takeOffOnline: ShopProductViewModel[];
+  takeOffLocal: ShopProductViewModel[];
+  stockNominated: ShopProductViewModel | null;
+  stockOnline: ShopProductViewModel[];
+  stockLocal: ShopProductViewModel[];
+}
+
+export interface ProductPageViewModel {
+  product: ProductDetailsViewModel;
+  shopProducts: ShopProductsGroupViewModel;
+}
+
+export interface PriceChartViewModel {
+  dates: string[];
+  prices: number[];
+  averagePrice: string;
+  minPrice: string;
+  maxPrice: string;
+}
+
+export interface CommentsAverageViewModel {
+  averageRate: number;
+  allRatesCount: number;
+  allCommentsCount: number;
+  allInquiriesCount: number;
+  starPercentages: {
+    five: number;
+    four: number;
+    three: number;
+    two: number;
+    one: number;
+  };
+}
+
+export interface CommentItemViewModel {
+  id: string;
+  comment: string;
+  rate: number;
+  creator: string;
+  likes: number;
+  dislikes: number;
+  repliesCount: number;
+  createDateFormatted: string;
+  isSellerComment: boolean;
+  isBuyerUser: boolean;
+  isYourComment: boolean;
+  userBoughtFrom: string | null;
+  userLiked: boolean;
+  userDisLiked: boolean;
+}
+
+export interface InquiryItemViewModel {
+  id: string;
+  comment: string;
+  creator: string;
+  replyCount: number;
+  likes: number;
+  dislikes: number;
+  isSellerComment: boolean;
+  isBuyerUser: boolean;
+  isYourComment: boolean;
+  createDateFormatted: string;
+  userLiked: boolean;
+  userDisLiked: boolean;
+  bestReply: InquiryItemViewModel | null;
+}
+
+--- END OF FILE src\domains\front\product\types\view.types.ts ---
+

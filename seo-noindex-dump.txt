@@ -1,0 +1,3674 @@
+﻿====================================================================================================
+# FILE: src\app\layout.tsx
+====================================================================================================
+import type { Metadata, Viewport } from 'next';
+import { Suspense } from 'react';
+import localFont from 'next/font/local';
+import { RootProvider } from '@/providers/root.provider';
+import { GlobalNavigationLoader } from '@/shared/Transitions/GlobalNavigationLoader';
+import './globals.css';
+
+// لود بهینه و بومی فونت ایران‌یکان با Zero Layout Shift (CLS = 0)
+const iranYekan = localFont({
+  src: [
+    {
+      path: '../../public/Font/IranYekan/woff2/IRANYekanXFaNum-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../../public/Font/IranYekan/woff2/IRANYekanWebFn-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../../public/Font/IranYekan/woff2/IRANYekanXFaNum-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-sans',
+  display: 'swap',
+  preload: true,
+});
+
+export const viewport: Viewport = {
+  themeColor: '#CE3E04',
+  width: 'device-width',
+  initialScale: 1,
+  // اصلاح شد: userScalable و maximumScale حذف شدند تا خطای بحرانی دسترسی‌پذیری گوگل برطرف شود
+  viewportFit: 'cover',
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com'
+  ),
+  title: {
+    default: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+    template: '%s | یدکچی',
+  },
+  description: 'بزرگ‌ترین بازارگاه تخصصی لوازم یدکی و قطعات خودرو در ایران با تضمین اصالت و بهترین قیمت',
+  applicationName: 'یدکچی',
+  authors: [{ name: 'Yadakchi' }],
+  creator: 'Yadakchi',
+  publisher: 'Yadakchi',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'یدکچی',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/icon-192x192.png',
+  },
+  alternates: {
+    canonical: '/',
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html
+      lang="fa"
+      dir="rtl"
+      className={iranYekan.variable}
+      suppressHydrationWarning
+    >
+      <body className="font-sans antialiased">
+        <RootProvider>
+          <Suspense fallback={null}>
+            <GlobalNavigationLoader />
+          </Suspense>
+
+          {children}
+        </RootProvider>
+      </body>
+    </html>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\robots.ts
+====================================================================================================
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com';
+
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: [
+          '/profile/',
+          '/profile/*',
+          '/basket',
+          '/checkout',
+          '/basket-payment',
+          '/payment/*',
+          '/api/',
+          '/proxy-api/',
+        ],
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+        disallow: [
+          '/profile/',
+          '/basket',
+          '/checkout',
+          '/basket-payment',
+          '/payment/',
+        ],
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+  };
+}
+
+====================================================================================================
+# FILE: src\app\manifest.ts
+====================================================================================================
+import { MetadataRoute } from 'next';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
+    short_name: 'یدکچی',
+    description: 'بزرگ‌ترین مارکت‌پلیس قطعات خودرو و لوازم یدکی در ایران',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#FFFFFF',
+    theme_color: '#CE3E04', // اصلاح شد: مطابق با رنگ برند جدید
+    orientation: 'portrait',
+    icons: [
+      {
+        src: '/icon-192x192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+    ],
+  };
+}
+
+====================================================================================================
+# FILE: src\app\(public)\layout.tsx
+====================================================================================================
+// src/app/(public)/layout.tsx
+
+import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+
+interface PublicLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function PublicLayout({ children }: PublicLayoutProps) {
+
+  return <MainLayout>{children}</MainLayout>;
+}
+
+====================================================================================================
+# FILE: src\app\(auth)\layout.tsx
+====================================================================================================
+// src/app/(auth)/layout.tsx
+
+interface AuthLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function AuthLayout({ children }: AuthLayoutProps) {
+  return (
+    <div className="min-h-screen bg-background w-full flex flex-col" dir="rtl">
+      {children}
+    </div>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(profile)\profile\layout.tsx
+====================================================================================================
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { MainLayout } from '@/components/shared/Layouts/MainLayout';
+import { getAuthService } from '@/domains/auth/services/auth.service';
+import { ProfileDesktopNav } from '@/components/features/Profile/components/navigation/ProfileDesktopNav';
+import { ProfileHeader } from '@/components/features/Profile/components/navigation/ProfileHeader';
+
+interface ProfileLayoutProps {
+  children: React.ReactNode;
+}
+
+export default async function ProfileLayout({ children }: ProfileLayoutProps) {
+  const cookieStore = cookies();
+  const cookieHeader = cookieStore.toString();
+
+  const authService = getAuthService();
+  const currentUser = await authService.getCurrentUser({ cookie: cookieHeader });
+
+  if (!currentUser) {
+    redirect('/login?redirect=/profile');
+  }
+
+  return (
+    <MainLayout>
+      <div className="w-full" dir="rtl">
+        {/* هدر مخصوص اپلیکیشن در موبایل به همراه کشوی دسترسی سریع */}
+        <ProfileHeader />
+
+        {/* افزایش عرض دسکتاپ به 1680px برای مانیتورهای عریض و استفاده حداکثری از فضا */}
+        <div className="mx-auto w-full max-w-[105rem] px-3 sm:px-6 lg:px-8 xl:px-10 py-4 lg:py-8">
+          <div className="flex items-start gap-8">
+            {/* منوی ثابت سایدبار در دسکتاپ (عرض 300px عریض و خوانا) */}
+            <div className="hidden lg:block w-[18.125rem] xl:w-[20rem] shrink-0">
+              <ProfileDesktopNav />
+            </div>
+
+            {/* بخش اصلی محتوای داشبورد */}
+            <main className="flex-1 min-w-0">
+              {children}
+            </main>
+          </div>
+        </div>
+      </div>
+    </MainLayout>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\not-found.tsx
+====================================================================================================
+// c:\Users\Raven\final-projects\yadakchi-front\yadakchi\src\app\not-found.tsx
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { Home, Search, ArrowRight, Clock, ShoppingBag } from 'lucide-react';
+import { Button } from '@/components/primitives/Button/Button';
+import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
+import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
+import { useGetVisitedProducts, useGetNominatedProducts } from '@/domains/front/product/hooks/product.hooks';
+
+// =============================================================================
+// کامپوننت پخش انیمیشن لوتی به صورت Standalone (بدون نیاز به نصب lottie-web)
+// =============================================================================
+function LottiePlayer({ animationPath }: { animationPath: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    let animInstance: any = null;
+    let isMounted = true;
+
+    const startAnimation = () => {
+      const lottie = (window as any).lottie;
+      if (lottie && containerRef.current && isMounted) {
+        animInstance = lottie.loadAnimation({
+          container: containerRef.current,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: animationPath,
+        });
+        setIsReady(true);
+      }
+    };
+
+    if ((window as any).lottie) {
+      startAnimation();
+    } else {
+      const existingScript = document.getElementById('lottie-cdn-player');
+      if (existingScript) {
+        existingScript.addEventListener('load', startAnimation);
+      } else {
+        const script = document.createElement('script');
+        script.id = 'lottie-cdn-player';
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+        script.async = true;
+        script.onload = () => {
+          if (isMounted) startAnimation();
+        };
+        document.body.appendChild(script);
+      }
+    }
+
+    return () => {
+      isMounted = false;
+      animInstance?.destroy?.();
+    };
+  }, [animationPath]);
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center">
+      <div ref={containerRef} className="w-full h-full max-w-[21.25rem] max-h-[21.25rem]" />
+      {!isReady && (
+        <span className="sr-only">404 Not Found</span>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// صفحه اصلی 404
+// =============================================================================
+export default function NotFoundPage() {
+  // دریافت بازدیدهای اخیر یا فال‌بک محصولات منتخب از بک‌اند
+  const { data: visitedData, isLoading: isVisitedLoading } = useGetVisitedProducts();
+  const { data: nominatedData, isLoading: isNominatedLoading } = useGetNominatedProducts();
+
+  // استخراج محصولات
+  const visitedList = Array.isArray(visitedData) ? visitedData : visitedData?.items || [];
+  const nominatedList = Array.isArray(nominatedData) ? nominatedData : nominatedData?.items || [];
+  
+  const displayProducts = visitedList.length > 0 ? visitedList : nominatedList;
+  const isLoading = isVisitedLoading || (displayProducts.length === 0 && isNominatedLoading);
+
+  return (
+    <div className="w-full min-h-[85vh] flex flex-col items-center justify-start py-8 md:py-12 px-4 select-none" dir="rtl">
+      
+      {/* ۱. سکشن انیمیشن لوتی ارسالی و متون تیکت */}
+      <div className="w-full max-w-2xl flex flex-col items-center text-center mx-auto">
+        
+        {/* انیمیشن 404 ارسالی در پوشه public */}
+        <div className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 flex items-center justify-center overflow-hidden">
+          <LottiePlayer animationPath="/anumations/404.json" />
+        </div>
+
+        {/* متون دقیق QA */}
+        <div className="space-y-3 mt-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-foreground">
+            صفحه‌ای که دنبالش بودید پیدا نشد!
+          </h1>
+          <p className="text-base sm:text-base text-muted-foreground leading-relaxed max-w-lg mx-auto">
+            چیز جدیدی جستجو کن یا به کالاهای زیر نگاهی بنداز یا برو به صفحه اصلی
+          </p>
+        </div>
+
+        {/* اکشن‌های بازگشت */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+          <Link href="/">
+            <Button
+              variant="primary"
+              className="rounded-xl font-bold text-xs sm:text-sm h-11 px-6 flex items-center gap-2 shadow-md shadow-primary/20"
+            >
+              <Home className="h-4 w-4" />
+              <span>رفتن به صفحه اصلی</span>
+            </Button>
+          </Link>
+
+          <Link href="/search">
+            <Button
+              variant="outline"
+              className="rounded-xl font-bold text-xs sm:text-sm h-11 px-6 flex items-center gap-2 border-border hover:border-primary/40"
+            >
+              <Search className="h-4 w-4 text-primary" />
+              <span>جستجوی قطعات</span>
+            </Button>
+          </Link>
+        </div>
+
+      </div>
+
+      {/* ۲. سکشن کالاهای بازدید اخیر کاربر */}
+      <div className="w-full max-w-7xl mt-16 sm:mt-20 border-t pt-10">
+        
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col">
+              <h2 className="text-base sm:text-lg font-black text-foreground">
+                بازدیدهای اخیر شما
+              </h2>
+              <span className="text-[0.6875rem] text-muted-foreground">
+                کالاهایی که اخیراً در یدکچی بررسی کرده‌اید
+              </span>
+            </div>
+          </div>
+
+          <Link 
+            href="/search" 
+            className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+          >
+            <span>مشاهده همه کالاها</span>
+            <ArrowRight className="h-3.5 w-3.5 rotate-180" />
+          </Link>
+        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {[...Array(5)].map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : displayProducts.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {displayProducts.slice(0, 10).map((product: any) => (
+              <ProductSearchCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="w-full py-12 px-4 rounded-2xl border border-dashed bg-muted/20 flex flex-col items-center justify-center text-center gap-2">
+            <ShoppingBag className="h-8 w-8 text-muted-foreground/50 stroke-[1.5]" />
+            <span className="text-label-muted">
+              هنوز کالایی را مشاهده نکرده‌اید.
+            </span>
+            <Link href="/search" className="mt-2">
+              <Button variant="outline" size="sm" className="rounded-xl text-sm font-bold h-9 px-4">
+                شروع جستجو و بررسی قطعات
+              </Button>
+            </Link>
+          </div>
+        )}
+
+      </div>
+
+    </div>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\page\[slug]\page.tsx
+====================================================================================================
+// src/app/(public)/page/[slug]/page.tsx
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { getStaticService } from '@/domains/front/static/services/static.service';
+import { StaticPageContent } from '@/components/features/Static/StaticPageContent';
+
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const page = await getStaticService().getStaticPage(slug);
+
+  if (!page) {
+    return { title: 'صفحه یافت نشد' };
+  }
+
+  const meta: Metadata = {
+    title: page.seo?.metaTitle || page.title,
+    description: page.seo?.metaDescription || undefined,
+    keywords: page.seo?.metaKeywords || undefined,
+    alternates: page.seo?.canonicalUrl
+      ? { canonical: page.seo.canonicalUrl }
+      : undefined,
+  };
+
+  if (page.noIndex) {
+    meta.robots = { index: false, follow: false };
+  }
+
+  return meta;
+}
+
+export default async function Page({ params }: PageProps) {
+  const { slug } = await params;
+  const page = await getStaticService().getStaticPage(slug);
+
+  if (!page) {
+    notFound();
+  }
+
+  return <StaticPageContent slug={slug} initialPage={page} />;
+}
+
+====================================================================================================
+# FILE: src\app\(public)\page\[slug]\not-found.tsx
+====================================================================================================
+// src/app/(public)/page/[slug]/not-found.tsx
+
+import Link from 'next/link';
+import { Button } from '@/components/primitives/Button/Button';
+import { FileQuestion } from 'lucide-react';
+
+export default function StaticPageNotFound() {
+  return (
+    <div
+      className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4"
+      dir="rtl"
+    >
+      <div className="p-4 bg-muted rounded-full">
+        <FileQuestion className="h-10 w-10 text-muted-foreground" />
+      </div>
+
+      <h1 className="text-lg md:text-xl font-black text-foreground">
+        صفحه مورد نظر یافت نشد
+      </h1>
+
+      <p className="text-base md:text-base text-muted-foreground max-w-md leading-relaxed">
+        صفحه‌ای که به دنبال آن هستید حذف شده یا آدرس آن تغییر کرده است.
+      </p>
+
+      <Link href="/" className="mt-2">
+        <Button
+          variant="primary"
+          className="rounded-xl font-bold text-xs h-10 px-6"
+        >
+          بازگشت به صفحه اصلی
+        </Button>
+      </Link>
+    </div>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\product\[...slug]\page.tsx
+====================================================================================================
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { cache } from 'react';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { ProductContent } from '@/components/features/Product/ProductContent';
+import { getFullUrl } from '@/core/utils/formatters';
+
+interface ProductPageProps {
+  params: Promise<{ slug: string[] }> | { slug: string[] };
+}
+
+// بازتولید هوشمند کش سروری صفحه هر ۱۲۰ ثانیه (ISR برای سرعت رعدآسا)
+export const revalidate = 120;
+
+// ایزوله‌سازی و کش درخواست واکشی اطلاعات محصول در طول رندر سرور
+const getCachedProductData = cache(async (productCode: number) => {
+  const productService = getProductService();
+  try {
+    const data = await productService.getProductPageData(productCode);
+    return data;
+  } catch (error: any) {
+    console.error(`❌ [ProductPage Error] Failed to load productCode ${productCode}:`, error?.message || error);
+    return null;
+  }
+});
+
+// استخراج ایمن کد عددی کالا از اسلاگ فارسی/انگلیسی
+async function extractProductCode(paramsPromise: ProductPageProps['params']): Promise<number> {
+  const resolvedParams = await Promise.resolve(paramsPromise);
+  const slugSegment = resolvedParams?.slug?.[0] || '';
+  const cleanCode = slugSegment.replace('ykp-', '').replace(/\D/g, '');
+  return parseInt(cleanCode, 10);
+}
+
+// انکود امن داده‌های اسکیما برای جلوگیری از باگ‌های XSS
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Metadata Generator                            */
+/* -------------------------------------------------------------------------- */
+
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const productCode = await extractProductCode(params);
+  if (!productCode || isNaN(productCode)) return { title: 'محصول | یدکچی' };
+
+  try {
+    const pageData = await getCachedProductData(productCode);
+    if (!pageData?.product) return { title: 'محصول یافت نشد | یدکچی' };
+
+    const product = pageData.product;
+    const cleanDesc = (product.seo?.description || product.description || '')
+      .replace(/<[^>]*>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const resolvedParams = await Promise.resolve(params);
+    const safeSlugPath = (resolvedParams.slug || []).map((s) => encodeURIComponent(s)).join('/');
+    
+    // یکپارچه‌سازی دامنه بدون www با بقیه بخش‌های سایت
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com';
+    const canonicalUrl = `${baseUrl}/product/${safeSlugPath}`;
+    const ogImage = product.image ? getFullUrl(product.image) : `${baseUrl}/Logo.svg`;
+
+    const title = `${product.title} | یدکچی`;
+    const description = cleanDesc.slice(0, 160) || `خرید اینترنتی ${product.title} با تضمین اصالت و بهترین قیمت در یدکچی`;
+
+    return {
+      title,
+      description,
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      robots: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+      openGraph: {
+        title,
+        description,
+        url: canonicalUrl,
+        siteName: 'یدکچی',
+        locale: 'fa_IR',
+        type: 'website',
+        images: [
+          {
+            url: ogImage,
+            width: 800,
+            height: 800,
+            alt: product.title,
+          },
+        ],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [ogImage],
+      },
+    };
+  } catch {
+    return { title: 'یدکچی | بازارگاه تخصصی قطعات خودرو' };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                  Main Page                                 */
+/* -------------------------------------------------------------------------- */
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const productCode = await extractProductCode(params);
+
+  if (!productCode || isNaN(productCode)) {
+    notFound();
+  }
+
+  const pageData = await getCachedProductData(productCode);
+
+  if (!pageData || !pageData.product) {
+    notFound();
+  }
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  queryClient.setQueryData(['front', 'products', 'page-data', productCode], pageData);
+
+  const product = pageData.product;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com';
+  const defaultImage = `${baseUrl}/Logo.svg`;
+
+  // گردآوری تمام فروشندگان و استوک‌ها
+  const sellers = [
+    ...(pageData.shopProducts?.newOnline || []),
+    ...(pageData.shopProducts?.newLocal || []),
+    ...(pageData.shopProducts?.stockOnline || []),
+    ...(pageData.shopProducts?.stockLocal || []),
+    ...(pageData.shopProducts?.takeOffOnline || []),
+    ...(pageData.shopProducts?.takeOffLocal || []),
+  ];
+
+  // محاسبه کمترین و بیشترین قیمت معتبر
+  const validPrices = sellers
+    .map((s: any) => s.finalPriceRaw || s.price || 0)
+    .filter((p: number) => p > 0);
+
+  const lowPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
+  const highPrice = validPrices.length > 0 ? Math.max(...validPrices) : lowPrice;
+
+  // ساخت لیست تصاویر معتبر با فال‌بک مطمئن (الزام گوگل)
+  const productImages =
+    product.gallery?.length > 0
+      ? product.gallery.map((img: string) => getFullUrl(img))
+      : product.image
+      ? [getFullUrl(product.image)]
+      : [defaultImage];
+
+  // ساخت آفرها با تضمین عدم بروز خطا در گوگل حتی در کالاهای ناموجود
+  const offersData =
+    sellers.length > 0
+      ? {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'IRR',
+          lowPrice: lowPrice,
+          highPrice: highPrice,
+          offerCount: sellers.length,
+          offers: sellers.map((s: any) => ({
+            '@type': 'Offer',
+            price: s.finalPriceRaw || s.price || lowPrice,
+            priceCurrency: 'IRR',
+            itemCondition:
+              s.type === 'New'
+                ? 'https://schema.org/NewCondition'
+                : 'https://schema.org/UsedCondition',
+            availability:
+              s.quantity > 0
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            seller: {
+              '@type': 'Store',
+              name: s.shop?.title || s.shop?.shopTitle || 'یدکچی',
+            },
+          })),
+        }
+      : {
+          '@type': 'Offer',
+          price: 0,
+          priceCurrency: 'IRR',
+          availability: 'https://schema.org/OutOfStock',
+          itemCondition: 'https://schema.org/NewCondition',
+        };
+
+  // اسکیمای جامع و رسمی Google Rich Snippet
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Product',
+        name: product.title,
+        image: productImages,
+        description: product.description
+          ? product.description.replace(/<[^>]*>/g, '').trim()
+          : `خرید آنلاین ${product.title} در بازارگاه یدکچی`,
+        sku: String(product.partNumber || product.code || productCode),
+        mpn: String(product.partNumber || product.code || productCode),
+        brand: {
+          '@type': 'Brand',
+          name: product.brand?.name || 'یدکچی',
+        },
+        ...(product.rateCount > 0
+          ? {
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: Number(product.averageRate || 5).toFixed(1),
+                reviewCount: product.rateCount,
+                bestRating: '5',
+                worstRating: '1',
+              },
+            }
+          : {}),
+        offers: offersData,
+      },
+      // اسکیمای BreadcrumbList جهت نمایش شاخه ناوبری در نتایج سرچ گوگل
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'صفحه اصلی',
+            item: baseUrl,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'قطعات خودرو',
+            item: `${baseUrl}/categories`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: product.title,
+            item: `${baseUrl}/product/ykp-${productCode}`,
+          },
+        ],
+      },
+    ],
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {/* تزریق اسکریپت رسمی داده‌های ساختاریافته گوگل */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <ProductContent productCode={productCode} initialData={pageData} />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\part-category\[slug]\page.tsx
+====================================================================================================
+// src/app/(public)/part-category/[slug]/page.tsx
+
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { cache } from 'react';
+import { getHttpClient } from '@/core/http/client';
+import { getPartService } from '@/domains/front/part/services/part.service';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { PartCategoryContent } from '@/components/features/Part/PartCategoryContent';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+interface PartCategoryPageProps {
+  params: Promise<{ slug: string }> | { slug: string };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
+}
+
+// کش سروری مقاوم: هیچ خطایی (حتی ۵۰۰ سرور) کل صفحه Next.js را متوقف نمی‌کند
+const getCachedCategoryData = cache(async (slug: string) => {
+  const partService = getPartService();
+  try {
+    const data = await partService.getPartCategoryPage(slug);
+    return data;
+  } catch (error: any) {
+    console.error(`❌ [PartCategory Error] Failed to load slug "${slug}":`, error?.message || error);
+    return null;
+  }
+});
+
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                سئو و متادیتا                                */
+/* -------------------------------------------------------------------------- */
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> | { slug: string } }): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(params);
+  const slug = decodeURIComponent(resolvedParams.slug || '').trim();
+
+  try {
+    const categoryData = await getCachedCategoryData(slug);
+    if (!categoryData) return { title: 'دسته‌بندی قطعات خودرو | یدکچی' };
+
+    const category = categoryData.category || categoryData;
+    const seo = categoryData.seoInformation || category?.seoInformation || {};
+    const title = seo.title || category.name ? `${category.name} | یدکچی` : 'دسته‌بندی قطعات خودرو | یدکچی';
+    const description = (seo.description || category.description || `خرید و قیمت قطعات ${category.name || ''} با ضمانت اصالت در یدکچی`).trim();
+    const canonicalUrl = `https://yadakchi.com/part-category/${slug}`;
+
+    return {
+      title,
+      description: description.slice(0, 160),
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      openGraph: {
+        title,
+        description: description.slice(0, 160),
+        url: canonicalUrl,
+        siteName: 'یدکچی',
+        locale: 'fa_IR',
+        type: 'website',
+        images: [
+          {
+            url: 'https://api.yadakchi.com/Logo.svg',
+            width: 1200,
+            height: 630,
+            alt: title,
+          },
+        ],
+      },
+    };
+  } catch {
+    return { title: 'دسته‌بندی قطعات خودرو | یدکچی' };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                صفحه اصلی                                   */
+/* -------------------------------------------------------------------------- */
+
+export default async function PartCategoryPage({ params, searchParams }: PartCategoryPageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const slug = decodeURIComponent(resolvedParams.slug || '').trim();
+
+  if (!slug) {
+    notFound();
+  }
+
+  // دریافت دیتای کش‌شده (با قابلیت Fallback در صورت خطای ۵۰۰ بک‌اند)
+  const categoryData = await getCachedCategoryData(slug);
+
+  if (!categoryData) {
+    notFound();
+  }
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+
+  queryClient.setQueryData(['front', 'parts', 'category-page', slug], categoryData);
+
+  const fromPrice = resolvedSearchParams.fromPrice ? Number(resolvedSearchParams.fromPrice) : undefined;
+  const toPrice = resolvedSearchParams.toPrice ? Number(resolvedSearchParams.toPrice) : undefined;
+  const pageNumber = resolvedSearchParams.page ? Math.max(1, Number(resolvedSearchParams.page)) : 1;
+  const pageSize = resolvedSearchParams.pageSize ? Math.max(1, Number(resolvedSearchParams.pageSize)) : 30;
+
+  const filters: SearchProductsRequest = {
+    partCategoryEnglishTitle: slug,
+    onlyInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
+    onlyDiscounted: resolvedSearchParams.discount === 'true' ? true : undefined,
+    onlyDirectShipping: resolvedSearchParams.directShipping === 'true' ? true : undefined,
+    onlyNominated: resolvedSearchParams.nominated === 'true' ? true : undefined,
+    fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
+    toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
+    orderType: (resolvedSearchParams.sort as any) || 'Selected',
+    pageNumber: !isNaN(pageNumber) ? pageNumber : 1,
+    pageSize: !isNaN(pageSize) ? pageSize : 30,
+    brandIds: typeof resolvedSearchParams.brandIds === 'string' ? [resolvedSearchParams.brandIds] : Array.isArray(resolvedSearchParams.brandIds) ? resolvedSearchParams.brandIds : undefined,
+    carIds: typeof resolvedSearchParams.carIds === 'string' ? [resolvedSearchParams.carIds] : Array.isArray(resolvedSearchParams.carIds) ? resolvedSearchParams.carIds : undefined,
+    partIds: typeof resolvedSearchParams.partIds === 'string' ? [resolvedSearchParams.partIds] : Array.isArray(resolvedSearchParams.partIds) ? resolvedSearchParams.partIds : undefined,
+    types: typeof resolvedSearchParams.types === 'string' ? [resolvedSearchParams.types] as any : Array.isArray(resolvedSearchParams.types) ? resolvedSearchParams.types : undefined,
+    includeAggregations: true, // ✅ حتماً فعال باشد
+  };
+
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'products', 'search', filters],
+      queryFn: () => productService.searchProducts(filters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const client = getHttpClient();
+        const response = await client.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  const category = categoryData.category || categoryData;
+
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `https://yadakchi.com/part-category/${slug}/#webpage`,
+    url: `https://yadakchi.com/part-category/${slug}`,
+    name: category?.name || 'دسته‌بندی قطعات خودرو',
+    description: category?.description ? category.description.replace(/<[^>]*>/g, '').trim() : '',
+    isPartOf: {
+      '@id': 'https://yadakchi.com/#website',
+    },
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <PartCategoryContent slug={slug} />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\parts\[categorySlug]\[partSlug]\page.tsx
+====================================================================================================
+// src/app/(public)/parts/[categorySlug]/[partSlug]/page.tsx
+
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { cache } from 'react';
+import { getHttpClient } from '@/core/http/client';
+import { getPartService } from '@/domains/front/part/services/part.service';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { PartDetailsContent } from '@/components/features/Part/PartDetailsContent';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+interface PartPageProps {
+  params: Promise<{ categorySlug: string; partSlug: string }> | { categorySlug: string; partSlug: string };
+  searchParams:
+    | Promise<{ [key: string]: string | string[] | undefined }>
+    | { [key: string]: string | string[] | undefined };
+}
+
+/**
+ * کش کردن درخواست GetPartPage برای جلوگیری از ۲ بار صدا زدن API در SSR
+ */
+const getCachedPartData = cache(async (partSlug: string) => {
+  const partService = getPartService();
+  try {
+    const cleanSlug = decodeURIComponent(partSlug || '');
+    return await partService.getPartPage(cleanSlug);
+  } catch (error: any) {
+    const status = error?.status ?? error?.response?.status;
+    if (status === 404) return null;
+    throw error;
+  }
+});
+
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                سئو و متادیتا                               */
+/* -------------------------------------------------------------------------- */
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categorySlug: string; partSlug: string }> | { categorySlug: string; partSlug: string };
+}): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(params);
+  const { categorySlug, partSlug: rawPartSlug } = resolvedParams;
+
+  if (!rawPartSlug) return { title: 'قطعه یدکی | یدک‌چی' };
+
+  try {
+    const partSlug = decodeURIComponent(rawPartSlug);
+    const partData = await getCachedPartData(partSlug);
+    if (!partData) return { title: 'قطعه یدکی | یدک‌چی' };
+
+    const seo = partData.seoInformation || {};
+    const title = seo.title && seo.title !== 'no seo' ? seo.title : `${partData.name || 'قطعه یدکی'} | یدک‌چی`;
+    const description =
+      seo.description && seo.description !== 'no seo'
+        ? seo.description
+        : partData.description
+          ? partData.description.replace(/<[^>]*>/g, '').slice(0, 160)
+          : 'خرید آنلاین قطعات یدکی خودرو در یدک‌چی';
+    const canonicalUrl = `https://www.yadakchi.com/parts/${categorySlug}/${encodeURIComponent(partSlug)}`;
+
+    return {
+      title,
+      description,
+      alternates: { canonical: canonicalUrl },
+    };
+  } catch {
+    return { title: 'قطعه یدکی | یدک‌چی' };
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 صفحه اصلی                                  */
+/* -------------------------------------------------------------------------- */
+
+export default async function PartPage({ params, searchParams }: PartPageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const { categorySlug, partSlug: rawPartSlug } = resolvedParams;
+
+  if (!rawPartSlug) {
+    notFound();
+  }
+
+  const partSlug = decodeURIComponent(rawPartSlug);
+  const partData = await getCachedPartData(partSlug);
+
+  if (!partData) {
+    notFound();
+  }
+
+  // استخراج categoryId
+  const isCategorySlugUuid = /^[0-9a-fA-F-]{36}$/.test(categorySlug);
+  const categoryId: string | undefined = partData.category?.id || (isCategorySlugUuid ? categorySlug : undefined);
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+
+  queryClient.setQueryData(['front', 'parts', 'page', partSlug, undefined], partData);
+
+  const fromPrice = resolvedSearchParams.fromPrice ? Number(resolvedSearchParams.fromPrice) : undefined;
+  const toPrice = resolvedSearchParams.toPrice ? Number(resolvedSearchParams.toPrice) : undefined;
+  const pageNumber = resolvedSearchParams.page ? Math.max(1, Number(resolvedSearchParams.page)) : 1;
+  const pageSize = resolvedSearchParams.pageSize ? Math.max(1, Number(resolvedSearchParams.pageSize)) : 30;
+
+  // فیلترها کاملاً منطبق با سواگر و شامل includeAggregations
+  const filters: SearchProductsRequest = {
+    partIds: partData?.id ? [partData.id] : undefined,
+    partCategoryIds: categoryId ? [categoryId] : undefined,
+    onlyInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
+    onlyDiscounted: resolvedSearchParams.discount === 'true' ? true : undefined,
+    onlyDirectShipping: resolvedSearchParams.directShipping === 'true' ? true : undefined,
+    onlyNominated: resolvedSearchParams.nominated === 'true' ? true : undefined,
+    fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
+    toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
+    orderType: (resolvedSearchParams.sort as any) || 'Selected',
+    pageNumber: !isNaN(pageNumber) ? pageNumber : 1,
+    pageSize: !isNaN(pageSize) ? pageSize : 30,
+    brandIds:
+      typeof resolvedSearchParams.brandIds === 'string'
+        ? [resolvedSearchParams.brandIds]
+        : Array.isArray(resolvedSearchParams.brandIds)
+          ? resolvedSearchParams.brandIds
+          : undefined,
+    carIds:
+      typeof resolvedSearchParams.carIds === 'string'
+        ? [resolvedSearchParams.carIds]
+        : Array.isArray(resolvedSearchParams.carIds)
+          ? resolvedSearchParams.carIds
+          : undefined,
+    types:
+      typeof resolvedSearchParams.types === 'string'
+        ? ([resolvedSearchParams.types] as any)
+        : Array.isArray(resolvedSearchParams.types)
+          ? (resolvedSearchParams.types as any)
+          : undefined,
+    includeAggregations: true, // ✅ فعال‌سازی تجمیع برای صفحه قطعه
+  };
+
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(filters), // کلید استاندارد کش
+      queryFn: () => productService.searchProducts(filters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const client = getHttpClient();
+        const response = await client.get<any[]>('/api/Front/PartCategories');
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `https://www.yadakchi.com/parts/${categorySlug}/${encodeURIComponent(partSlug)}/#webpage`,
+    url: `https://www.yadakchi.com/parts/${categorySlug}/${encodeURIComponent(partSlug)}`,
+    name: partData.name,
+    description: partData.description ? partData.description.replace(/<[^>]*>/g, '').slice(0, 200) : '',
+    isPartOf: { '@id': 'https://www.yadakchi.com/#website' },
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <PartDetailsContent
+        categorySlug={categorySlug}
+        partSlug={partSlug}
+        partId={partData.id}
+        categoryId={categoryId}
+      />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\car\[slug]\page.tsx
+====================================================================================================
+import { Metadata } from 'next';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { CarDetailsContent } from '@/components/features/Car/CarDetailsContent';
+import { getFullUrl } from '@/core/utils/formatters';
+
+interface CarPageProps {
+  params: { slug: string };
+}
+
+export async function generateMetadata({ params }: CarPageProps): Promise<Metadata> {
+  const decodedCarModel = decodeURIComponent(params.slug).replace(/-/g, ' ');
+  const carService = getCarService();
+  const carData = await carService.getCarPage(decodedCarModel);
+
+  if (!carData) {
+    return {
+      title: 'قطعات خودرو | یدکچی',
+    };
+  }
+
+  const cleanDesc = carData.description || '';
+
+  return {
+    title: `خرید لوازم یدکی و قطعات ${carData.model} | یدکچی`,
+    description: cleanDesc.slice(0, 160) || `خرید جدیدترین قطعات یدکی، لوازم بدنه و ابزارآلات تخصصی خودروی ${carData.model} با ضمانت اصالت کالا و ارسال سریع از فروشگاه‌های معتبر سراسر کشور.`,
+    alternates: {
+      canonical: `https://www.yadakchi.com/car/${params.slug}`,
+    },
+    openGraph: {
+      title: `خرید لوازم یدکی و قطعات ${carData.model} | یدکچی`,
+      description: cleanDesc.slice(0, 160) || `خرید قطعات خودروی ${carData.model} در بازارگاه تخصصی یدکچی`,
+      url: `https://www.yadakchi.com/car/${params.slug}`,
+      siteName: 'یدکچی',
+      locale: 'fa_IR',
+      type: 'website',
+      images: [
+        {
+          url: getFullUrl(carData.cover),
+          width: 800,
+          height: 600,
+          alt: carData.model,
+        },
+      ],
+    },
+  };
+}
+
+export default async function CarPage({ params }: CarPageProps) {
+  const queryClient = new QueryClient();
+  const carService = getCarService();
+  const decodedCarModel = decodeURIComponent(params.slug).replace(/-/g, ' ');
+
+  const carData = await carService.getCarPage(decodedCarModel);
+
+  if (carData) {
+    queryClient.setQueryData(['reference', 'cars', 'page', decodedCarModel], carData);
+  }
+
+  const schemaJson = carData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "Car",
+        "name": carData.model,
+        "image": getFullUrl(carData.cover),
+        "description": carData.description ? carData.description.replace(/<[^>]*>/g, '') : '',
+        "brand": {
+          "@type": "Brand",
+          "name": carData.manufacturer.name,
+        },
+        "manufacturer": {
+          "@type": "Organization",
+          "name": carData.manufacturer.name,
+        },
+        "vehicleModelDate": carData.year ? String(carData.year) : undefined,
+      }
+    : null;
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {schemaJson && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+        />
+      )}
+      <CarDetailsContent slug={params.slug} />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\car-parts\[partSlug]\[carSlug]\page.tsx
+====================================================================================================
+import { Metadata } from 'next';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { getPartService } from '@/domains/front/part/services/part.service';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getHttpClient } from '@/core/http/client';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { CarPartsContent } from '@/components/features/CarParts/CarPartsContent';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+
+interface CarPartsPageProps {
+  params: { partSlug: string; carSlug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export async function generateMetadata({ params }: CarPartsPageProps): Promise<Metadata> {
+  const decodedCarModel = decodeURIComponent(params.carSlug).replace(/-/g, ' ');
+  const carService = getCarService();
+  const partService = getPartService();
+
+  try {
+    const [carData, categoryData] = await Promise.all([
+      carService.getCarPage(decodedCarModel),
+      partService.getPartCategoryPage(params.partSlug)
+    ]);
+
+    const carName = carData?.model || decodedCarModel;
+    const partName = categoryData?.category?.name || params.partSlug;
+
+    return {
+      title: `خرید لوازم یدکی و قطعات ${partName} ${carName} | یدکچی`,
+      description: `خرید، مقایسه قیمت و سفارش آنلاین قطعات گروه ${partName} مخصوص خودروی ${carName} با ضمانت اصالت کالا و ارسال سریع در یدکچی.`,
+      alternates: {
+        canonical: `https://www.yadakchi.com/car-parts/${params.partSlug}/${params.carSlug}`,
+      },
+    };
+  } catch {
+    return { title: 'یدکچی' };
+  }
+}
+
+export default async function CarPartsPage({ params, searchParams }: CarPartsPageProps) {
+  const queryClient = new QueryClient();
+  const carService = getCarService();
+  const partService = getPartService();
+  const productService = getProductService();
+  const brandService = getBrandService();
+
+  const decodedCarModel = decodeURIComponent(params.carSlug).replace(/-/g, ' ');
+
+  const [carData, categoryData] = await Promise.all([
+    carService.getCarPage(decodedCarModel).catch(() => null),
+    partService.getPartCategoryPage(params.partSlug).catch(() => null)
+  ]);
+
+  if (carData) {
+    queryClient.setQueryData(['reference', 'cars', 'page', decodedCarModel], carData);
+  }
+  if (categoryData) {
+    queryClient.setQueryData(['front', 'parts', 'category-page', params.partSlug], categoryData);
+  }
+
+  const filters: SearchProductsRequest = {
+    carModel: decodedCarModel,
+    partCategoryEnglishTitle: params.partSlug,
+    isProductInStock: searchParams.inStock === 'true' ? true : undefined,
+    isSellerInUserCity: searchParams.userCity === 'true' ? true : undefined,
+    fromPrice: searchParams.fromPrice ? Number(searchParams.fromPrice) : undefined,
+    toPrice: searchParams.toPrice ? Number(searchParams.toPrice) : undefined,
+    orderType: (searchParams.sort as any) || 'Selected',
+    pageNumber: searchParams.page ? Number(searchParams.page) : 1,
+    pageSize: searchParams.pageSize ? Number(searchParams.pageSize) : 30,
+    brandIds: typeof searchParams.brandIds === 'string' ? [searchParams.brandIds] : Array.isArray(searchParams.brandIds) ? searchParams.brandIds : undefined,
+    carIds: typeof searchParams.carIds === 'string' ? [searchParams.carIds] : Array.isArray(searchParams.carIds) ? searchParams.carIds : undefined,
+    types: typeof searchParams.types === 'string' ? [searchParams.types] as any : Array.isArray(searchParams.types) ? searchParams.types : undefined,
+  };
+
+  try {
+    await Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'products', 'search', filters],
+        queryFn: () => productService.searchProducts(filters),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['reference', 'brands', 'names', {}],
+        queryFn: () => brandService.getBrandsName({}),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+        queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['front', 'parts', 'categories-flat', 'all'],
+        queryFn: async () => {
+          const client = getHttpClient();
+          const response = await client.get<any[]>('/api/Front/PartCategories', {
+            params: { CarId: '' }
+          });
+          return Array.isArray(response.data) ? response.data : [];
+        },
+      }),
+    ]);
+  } catch (error) {}
+
+  const schemaJson = carData && categoryData
+    ? {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "@id": `https://www.yadakchi.com/car-parts/${params.partSlug}/${params.carSlug}/#webpage`,
+        "url": `https://www.yadakchi.com/car-parts/${params.partSlug}/${params.carSlug}`,
+        "name": `خرید قطعات ${categoryData.category.name} ${carData.model}`,
+        "description": `آرشیو کامل و لیست قیمت قطعات گروه ${categoryData.category.name} مخصوص خودروی ${carData.model}`,
+        "isPartOf": {
+          "@id": "https://www.yadakchi.com/#website"
+        }
+      }
+    : null;
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {schemaJson && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+        />
+      )}
+      <CarPartsContent 
+        partSlug={params.partSlug} 
+        carSlug={params.carSlug} 
+      />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\blog\page.tsx
+====================================================================================================
+// src/app/(public)/blog/page.tsx
+
+import type { Metadata } from 'next';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getBlogService } from '@/domains/blog/services/blog.service';
+import { BlogListContent } from '@/components/features/Blog/BlogListContent';
+
+export const metadata: Metadata = {
+  title: 'مجله تخصصی خودرو و قطعات یدکی | یدکچی',
+  description: 'دانشنامه و مقالات تخصصی معرفی، نگهداری، عیب‌یابی و راهنمای خرید انواع قطعات خودرو و لوازم یدکی در یدکچی.',
+  alternates: {
+    canonical: 'https://www.yadakchi.com/blog',
+  },
+  openGraph: {
+    title: 'مجله تخصصی خودرو و قطعات یدکی | یدکچی',
+    description: 'راهنمای جامع و مقالات تخصصی دنیای خودرو و لوازم یدکی در ایران',
+    url: 'https://www.yadakchi.com/blog',
+    siteName: 'یدکچی',
+    locale: 'fa_IR',
+    type: 'website',
+  },
+};
+
+export const revalidate = 120; // بازتولید افزایشی هر ۲ دقیقه
+
+interface BlogPageProps {
+  searchParams: {
+    category?: string;
+    q?: string;
+    page?: string;
+    carTypeIds?: string | string[];
+    partIds?: string | string[];
+  };
+}
+
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  const queryClient = new QueryClient();
+  const blogService = getBlogService();
+
+  const category = searchParams.category;
+  const q = searchParams.q;
+  const page = searchParams.page ? Number(searchParams.page) : 1;
+  const carTypeIds = Array.isArray(searchParams.carTypeIds)
+    ? searchParams.carTypeIds
+    : searchParams.carTypeIds ? [searchParams.carTypeIds] : undefined;
+  const partIds = Array.isArray(searchParams.partIds)
+    ? searchParams.partIds
+    : searchParams.partIds ? [searchParams.partIds] : undefined;
+
+  const filters = {
+    title: q,
+    blogCategoryId: category,
+    carTypeIds,
+    partIds,
+    pageNumber: page,
+    pageSize: 12,
+  };
+
+  try {
+    await Promise.all([
+      queryClient.prefetchQuery({
+        queryKey: ['blog', 'categories'],
+        queryFn: () => blogService.getCategories(),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['blog', 'filters', { blogCategoryId: category, carTypeIds, partIds }],
+        queryFn: () => blogService.getFilters({ blogCategoryId: category, carTypeIds, partIds }),
+      }),
+      queryClient.prefetchQuery({
+        queryKey: ['blog', 'posts', filters],
+        queryFn: () => blogService.getPosts(filters),
+      }),
+    ]);
+  } catch (error) {}
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <BlogListContent />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\blog\[slug]\page.tsx
+====================================================================================================
+// src/app/(public)/blog/[slug]/page.tsx
+
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getBlogService } from '@/domains/blog/services/blog.service';
+import { BlogPostContent } from '@/components/features/Blog/BlogPostContent';
+import { getFullUrl } from '@/core/utils/formatters';
+
+interface BlogPostPageProps {
+  params: {
+    slug: string;
+  };
+}
+
+export const revalidate = 300; // بازتولید کش دوره‌ای ۵ دقیقه
+
+export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
+  const blogService = getBlogService();
+  const decodedSlug = decodeURIComponent(params.slug);
+
+  try {
+    const post = await blogService.getPostDetail(decodedSlug);
+    if (!post) return { title: 'مطلب یافت نشد | یدکچی' };
+
+    const title = post.seo?.title || post.title;
+    const description = post.seo?.description || post.summary || post.title;
+    const canonical = post.seo?.canonicalUrl || `https://www.yadakchi.com/blog/${encodeURIComponent(post.englishTitle)}`;
+
+    return {
+      title: `${title} | مجله یدکچی`,
+      description,
+      alternates: {
+        canonical,
+      },
+      openGraph: {
+        title,
+        description,
+        url: canonical,
+        type: 'article',
+        images: post.imageUrl ? [{ url: getFullUrl(post.imageUrl) }] : [],
+      },
+    };
+  } catch {
+    return { title: 'مقاله یدکچی' };
+  }
+}
+
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const queryClient = new QueryClient();
+  const blogService = getBlogService();
+  const decodedSlug = decodeURIComponent(params.slug);
+
+  let postDetail = null;
+
+  try {
+    postDetail = await blogService.getPostDetail(decodedSlug);
+    if (postDetail) {
+      queryClient.setQueryData(['blog', 'post', decodedSlug], postDetail);
+    }
+  } catch (error) {
+    notFound();
+  }
+
+  if (!postDetail) {
+    notFound();
+  }
+
+  const schemaJson = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": postDetail.title,
+    "image": postDetail.imageUrl ? [getFullUrl(postDetail.imageUrl)] : [],
+    "author": {
+      "@type": "Person",
+      "name": postDetail.author.fullName
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "یدکچی",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://api.yadakchi.com/Logo.svg"
+      }
+    },
+    "description": postDetail.seo?.description || postDetail.summary || postDetail.title,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://www.yadakchi.com/blog/${encodeURIComponent(postDetail.englishTitle)}`
+    }
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+      />
+      <BlogPostContent post={postDetail} />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\shops\[id]\page.tsx
+====================================================================================================
+// src/app/(public)/shops/[id]/page.tsx
+
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { cache } from 'react';
+import { getHttpClient } from '@/core/http/client';
+import { getShopService } from '@/domains/front/shop/services/shop.service';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { ShopDetailsContent } from '@/components/features/Shop/ShopDetailsContent';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { getFullUrl } from '@/core/utils/formatters';
+import { logger } from '@/core/utils/logger';
+
+interface ShopPageProps {
+  params: Promise<{ id: string }> | { id: string };
+  searchParams:
+    | Promise<{ [key: string]: string | string[] | undefined }>
+    | { [key: string]: string | string[] | undefined };
+}
+
+const getCachedShopData = cache(async (shopId: string) => {
+  const shopService = getShopService();
+  try {
+    return await shopService.getShopPage(shopId);
+  } catch (error: any) {
+    const status = error?.status ?? error?.response?.status;
+    logger.error('[ShopPage] getShopPage failed', { shopId, status, error });
+
+    if (
+      status === 404 ||
+      status === 400 ||
+      status >= 500 ||
+      (typeof error?.message === 'string' &&
+        error.message.includes('returned HTML instead of JSON'))
+    ) {
+      return null;
+    }
+
+    return null;
+  }
+});
+
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }> | { id: string };
+}): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(params);
+  const shopId = resolvedParams.id;
+
+  try {
+    const shopData = await getCachedShopData(shopId);
+    if (!shopData) return { title: 'فروشگاه قطعات | یدکچی' };
+
+    const seo = shopData.seoInformation || {};
+    const title = seo.title || `فروشگاه لوازم یدکی ${shopData.shopTitle || 'یدکچی'}`;
+    const description = (
+      seo.description ||
+      `خرید مستقیم قطعات و لوازم یدکی خودرو از فروشگاه ${shopData.shopTitle} با ضمانت در یدکچی`
+    ).trim();
+    const canonicalUrl = `https://www.yadakchi.com/shops/${shopId}`;
+    const ogImage = shopData.logo
+      ? getFullUrl(shopData.logo)
+      : 'https://api.yadakchi.com/Logo.svg';
+
+    return {
+      title: `${title} | یدکچی`,
+      description: description.slice(0, 160),
+      alternates: { canonical: canonicalUrl },
+      openGraph: {
+        title: `${title} | یدکچی`,
+        description: description.slice(0, 160),
+        url: canonicalUrl,
+        siteName: 'یدکچی',
+        locale: 'fa_IR',
+        type: 'website',
+        images: [
+          {
+            url: ogImage,
+            width: 800,
+            height: 600,
+            alt: shopData.shopTitle,
+          },
+        ],
+      },
+    };
+  } catch {
+    return { title: 'فروشگاه لوازم یدکی | یدکچی' };
+  }
+}
+
+export default async function ShopPage({ params, searchParams }: ShopPageProps) {
+  const resolvedParams = await Promise.resolve(params);
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  const shopId = resolvedParams.id;
+
+  if (!shopId) {
+    notFound();
+  }
+
+  const shopData = await getCachedShopData(shopId);
+
+  if (!shopData) {
+    notFound();
+  }
+
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+
+  queryClient.setQueryData(['front', 'shop', 'page', shopId], shopData);
+
+  const fromPrice = resolvedSearchParams.fromPrice
+    ? Number(resolvedSearchParams.fromPrice)
+    : undefined;
+  const toPrice = resolvedSearchParams.toPrice
+    ? Number(resolvedSearchParams.toPrice)
+    : undefined;
+  const pageNumber = resolvedSearchParams.page
+    ? Math.max(1, Number(resolvedSearchParams.page))
+    : 1;
+  const pageSize = resolvedSearchParams.pageSize
+    ? Math.max(1, Number(resolvedSearchParams.pageSize))
+    : 30;
+
+  // فیلترهای استاندارد منطبق بر سواگر OpenSearch
+  const filters: SearchProductsRequest = {
+    shopId,
+    onlyInStock: resolvedSearchParams.inStock === 'true' ? true : undefined,
+    onlyDiscounted: resolvedSearchParams.discount === 'true' ? true : undefined,
+    onlyDirectShipping: resolvedSearchParams.directShipping === 'true' ? true : undefined,
+    onlyNominated: resolvedSearchParams.nominated === 'true' ? true : undefined,
+    fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
+    toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
+    orderType: (resolvedSearchParams.sort as any) || 'Selected',
+    pageNumber: !isNaN(pageNumber) ? pageNumber : 1,
+    pageSize: !isNaN(pageSize) ? pageSize : 30,
+    brandIds:
+      typeof resolvedSearchParams.brandIds === 'string'
+        ? [resolvedSearchParams.brandIds]
+        : Array.isArray(resolvedSearchParams.brandIds)
+        ? resolvedSearchParams.brandIds
+        : undefined,
+    carIds:
+      typeof resolvedSearchParams.carIds === 'string'
+        ? [resolvedSearchParams.carIds]
+        : Array.isArray(resolvedSearchParams.carIds)
+        ? resolvedSearchParams.carIds
+        : undefined,
+    partIds:
+      typeof resolvedSearchParams.partIds === 'string'
+        ? [resolvedSearchParams.partIds]
+        : Array.isArray(resolvedSearchParams.partIds)
+        ? resolvedSearchParams.partIds
+        : undefined,
+    types:
+      typeof resolvedSearchParams.types === 'string'
+        ? ([resolvedSearchParams.types] as any)
+        : Array.isArray(resolvedSearchParams.types)
+        ? resolvedSearchParams.types
+        : undefined,
+    includeAggregations: true, // ✅ فعال‌سازی تجمیع برای صفحه فروشگاه
+  };
+
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(filters), // کلید استاندارد کش
+      queryFn: () => productService.searchProducts(filters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const client = getHttpClient();
+        const response = await client.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@type': 'AutoPartsStore',
+    '@id': `https://www.yadakchi.com/shops/${shopId}/#organization`,
+    name: shopData.shopTitle || 'فروشگاه لوازم یدکی',
+    image: shopData.logo
+      ? getFullUrl(shopData.logo)
+      : 'https://api.yadakchi.com/Logo.svg',
+    url: `https://www.yadakchi.com/shops/${shopId}`,
+    address: shopData.address
+      ? {
+          '@type': 'PostalAddress',
+          streetAddress: shopData.address,
+          addressCountry: 'IR',
+        }
+      : undefined,
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <ShopDetailsContent id={shopId} />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\seller\register\page.tsx
+====================================================================================================
+import type { Metadata } from 'next';
+import { SellerRegisterContent } from '@/components/features/SellerRegister/SellerRegisterContent';
+
+export const metadata: Metadata = {
+  title: 'فروشنده شو | راه‌اندازی فروشگاه آنلاین قطعات خودرو در یدکچی',
+  description: 'در بزرگ‌ترین بازارگاه تخصصی لوازم یدکی خودرو در ایران، فروشگاه آنلاین خود را بدون هزینه راه‌اندازی کنید و به خریداران سراسر کشور بفروشید.',
+  alternates: {
+    canonical: 'https://www.yadakchi.com/seller/register',
+  },
+  openGraph: {
+    title: 'فروشنده شو | راه‌اندازی فروشگاه آنلاین قطعات خودرو در یدکچی',
+    description: 'بدون نیاز به داشتن وب‌سایت، در یدکچی قطعات خودرو را به سراسر کشور آنلاین بفروشید.',
+    url: 'https://www.yadakchi.com/seller/register',
+    siteName: 'یدکچی',
+    locale: 'fa_IR',
+    type: 'website',
+    images: [
+      {
+        url: 'https://api.yadakchi.com/Logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'فروشنده شو در یدکچی',
+      },
+    ],
+  },
+};
+
+export default async function SellerRegisterPage() {
+  return <SellerRegisterContent />;
+}
+
+====================================================================================================
+# FILE: src\app\(public)\offers\page.tsx
+====================================================================================================
+// src/app/(public)/offers/page.tsx
+
+import type { Metadata } from 'next';
+import { getServerCurrentUser } from '@/domains/auth/server.auth';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { getHttpClient } from '@/core/http/client';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { OffersContent } from '@/components/features/Offers/OffersContent';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+/* -------------------------------------------------------------------------- */
+/*                                  Metadata                                  */
+/* -------------------------------------------------------------------------- */
+
+export const metadata: Metadata = {
+  title: 'یدکچی آف | تخفیف‌ها و جشنواره‌های ویژه قطعات خودرو',
+  description:
+    'خرید قطعات یدکی، ابزارآلات و لوازم خودرو با تخفیف‌های شگفت‌انگیز، فرصت‌های محدود و قیمت‌های طلایی از فروشگاه‌های سراسر کشور در جشنواره یدکچی آف.',
+  alternates: {
+    canonical: 'https://www.yadakchi.com/offers',
+  },
+  openGraph: {
+    title: 'یدکچی آف | تخفیف‌ها و جشنواره‌های ویژه قطعات خودرو',
+    description:
+      'خرید انواع قطعات خودرو با نازل‌ترین قیمت‌ها و تخفیف‌های طلایی در بازارگاه تخصصی یدکچی',
+    url: 'https://www.yadakchi.com/offers',
+    siteName: 'یدکچی',
+    locale: 'fa_IR',
+    type: 'website',
+    images: [
+      {
+        url: 'https://api.yadakchi.com/Logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'یدکچی آف',
+      },
+    ],
+  },
+};
+
+// بازسازی خودکار در پس‌زمینه سرور هر ۱ دقیقه (ISR)
+export const revalidate = 60;
+
+// پاک‌سازی امنیتی کاراکترهای خطرناک برای اسکریپت‌های JSON-LD
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          فیلتر پایه صفحه تخفیف‌ها                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * ⚠️ مهم: این فیلتر باید دقیقاً با فیلتر کلاینت در OffersContent یکسان باشد
+ * تا queryKey سرور و کلاینت برابر شود و Hydration به‌درستی کار کند.
+ *
+ * پارامترهای درست مطابق سواگر /api/Search/Products:
+ *   - onlyDiscounted:          فقط کالاهای تخفیف‌دار
+ *   - hasDiscountWithExpiration: فقط تخفیف‌های دارای تاریخ انقضا (تایمر)
+ *   - onlyInStock:             فقط موجود در انبار
+ *   - excludeDuplicateProducts: جلوگیری از تکرار کالا از فروشندگان مختلف
+ *   - sortBy / sortDescending: جدیدترین تخفیف‌ها
+ *   - includeAggregations:     برای سایدبار فیلترها
+ */
+const OFFERS_BASE_FILTERS: SearchProductsRequest = {
+  onlyDiscounted: true,
+  hasDiscountWithExpiration: true,
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  sortBy: 'CreationDate',
+  sortDesc: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
+
+/**
+ * ساخت فیلترهای صفحه offers بر اساس filters پایه + filters خوانده‌شده از URL.
+ * از آنجایی که URL در صفحه سرور در دسترس نیست، خروجی این تابع دقیقاً برابر
+ * خروجی معادل کلاینت در OffersContent (وقتی URL پارامتر sort ندارد) خواهد بود.
+ */
+function buildOffersFilters(base: SearchProductsRequest): SearchProductsRequest {
+  return { ...base };
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 صفحه اصلی                                  */
+/* -------------------------------------------------------------------------- */
+
+export default async function OffersPage() {
+  // ✅ حل باگ Cache Miss: تنظیم staleTime تا کلاینت فوراً داده‌ها را دور نریزد
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // ۱ دقیقه کش پایدار در کلاینت
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const user = await getServerCurrentUser();
+  if (user) {
+    queryClient.setQueryData(queryKeys.auth.user, user);
+  }
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+  const httpClient = getHttpClient();
+
+  // ✅ فیلتر سرور دقیقاً همان چیزی است که کلاینت در اولین رندر می‌سازد
+  const initialFilters = buildOffersFilters(OFFERS_BASE_FILTERS);
+
+  // ✅ استفاده از Promise.allSettled تا خطای یک سرویس فرعی، کل صفحه را مسدود نکند
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(initialFilters),
+      queryFn: () => productService.searchProducts(initialFilters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const response = await httpClient.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': 'https://www.yadakchi.com/offers/#webpage',
+    url: 'https://www.yadakchi.com/offers',
+    name: 'یدکچی آف | تخفیف‌های طلایی قطعات خودرو',
+    description:
+      'لیست کامل قطعات یدکی و لوازم خودرو دارای تخفیف‌های شگفت‌انگیز و ویژه از فروشگاه‌های سراسر کشور',
+    isPartOf: {
+      '@id': 'https://www.yadakchi.com/#website',
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'قطعات خودرو تخفیف‌دار',
+    },
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {/* اسکریپت امن و سئو شده برای اسکیما گوگل */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <OffersContent />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\special\page.tsx
+====================================================================================================
+// src/app/(public)/special/page.tsx
+
+import type { Metadata } from 'next';
+import { getServerCurrentUser } from '@/domains/auth/server.auth';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { getStaticService } from '@/domains/front/static/services/static.service';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { SpecialContent } from '@/components/features/Special/SpecialContent';
+import { getHttpClient } from '@/core/http/client';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+/* -------------------------------------------------------------------------- */
+/*                                  Metadata                                  */
+/* -------------------------------------------------------------------------- */
+
+export const metadata: Metadata = {
+  title: 'فروش ویژه | جشنواره آفرها و قطعات شگفت‌انگیز خودرو',
+  description:
+    'خرید انواع قطعات یدکی، لوازم بدنه و تجهیزات جانبی خودرو در جشنواره فروش ویژه یدکچی با تخفیف‌های زمان‌دار و فرصت محدود با ضمانت اصالت کالا.',
+  alternates: {
+    canonical: 'https://www.yadakchi.com/special',
+  },
+  openGraph: {
+    title: 'فروش ویژه | جشنواره آفرها و قطعات شگفت‌انگیز خودرو',
+    description: 'تخفیف‌های زمان‌دار شگفت‌انگیز قطعات خودرو در جشنواره فروش ویژه یدکچی',
+    url: 'https://www.yadakchi.com/special',
+    siteName: 'یدکچی',
+    locale: 'fa_IR',
+    type: 'website',
+    images: [
+      {
+        url: 'https://api.yadakchi.com/Logo.svg',
+        width: 1200,
+        height: 630,
+        alt: 'فروش ویژه یدکچی',
+      },
+    ],
+  },
+};
+
+// بازسازی خودکار در پس‌زمینه سرور هر ۱ دقیقه (ISR)
+export const revalidate = 60;
+
+// پاک‌سازی امنیتی کاراکترهای خطرناک برای اسکریپت‌های JSON-LD
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                    فیلتر پایه صفحه فروش ویژه (زمان‌دار)                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * ⚠️ مهم: این ثابت باید دقیقاً با SPECIAL_BASE_FILTERS در
+ * src/components/features/Special/SpecialContent.tsx یکسان باشد
+ * تا queryKey سرور و کلاینت برابر و Hydration بدون refetch کار کند.
+ *
+ * مطابق سواگر /api/Search/Products:
+ *   - onlyDiscounted:            تضمین تخفیف‌دار بودن
+ *   - hasDiscountWithExpiration: فقط تخفیف‌های دارای تاریخ انقضا (ثانیه‌شمار)
+ *   - onlyInStock:               فقط موجود در انبار
+ *   - excludeDuplicateProducts:  جلوگیری از تکرار کالا از فروشندگان مختلف
+ *   - sortBy: CreationDate + sortDesc: جدیدترین آفرها اول
+ *   - includeAggregations:       برای سایدبار فیلترها
+ */
+const SPECIAL_BASE_FILTERS: SearchProductsRequest = {
+  onlyDiscounted: true,
+  hasDiscountWithExpiration: true,
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  sortBy: 'CreationDate',
+  sortDesc: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
+
+/* -------------------------------------------------------------------------- */
+/*                                 صفحه اصلی                                  */
+/* -------------------------------------------------------------------------- */
+
+export default async function SpecialPage() {
+  // ✅ حل باگ Cache Miss: ست کردن staleTime تا کلاینت فوراً ۵ ریکوئست تکراری نزند
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // ۱ دقیقه کش پایدار در کلاینت
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const user = await getServerCurrentUser();
+  if (user) {
+    queryClient.setQueryData(queryKeys.auth.user, user);
+  }
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+  const staticService = getStaticService();
+  const httpClient = getHttpClient();
+
+  // ✅ فیلتر سرور دقیقاً همان چیزی است که کلاینت در اولین رندر می‌سازد
+  const initialFilters: SearchProductsRequest = { ...SPECIAL_BASE_FILTERS };
+
+  // ✅ استفاده از Promise.allSettled جهت مقاومت در برابر خطای شبکه
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(initialFilters),
+      queryFn: () => productService.searchProducts(initialFilters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'current-time'],
+      queryFn: () => staticService.getCurrentTime(),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const response = await httpClient.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': 'https://www.yadakchi.com/special/#webpage',
+    url: 'https://www.yadakchi.com/special',
+    name: 'فروش ویژه یدکچی | آفرهای شگفت‌انگیز و زمان‌دار',
+    description: 'جشنواره قطعات یدکی و لوازم خودرو دارای تخفیف‌های زمان‌دار و فرصت خرید محدود در سراسر کشور',
+    isPartOf: {
+      '@id': 'https://www.yadakchi.com/#website',
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'فروش شگفت‌انگیز لوازم خودرو',
+    },
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {/* اسکریپت امن و سئو شده برای اسکیما گوگل */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <SpecialContent />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\bestsellers\page.tsx
+====================================================================================================
+// src/app/(public)/bestsellers/page.tsx
+
+import { getServerCurrentUser } from '@/domains/auth/server.auth';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { getHttpClient } from '@/core/http/client';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { BestsellersContent } from '@/components/features/Bestsellers/BestsellersContent';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+export const revalidate = 60;
+
+/**
+ * ⚠️ مهم: این ثابت باید دقیقاً با BESTSELLERS_BASE_FILTERS در
+ * src/components/features/Bestsellers/BestsellersContent.tsx یکسان باشد
+ * تا Hydration بدون refetch اضافی کار کند.
+ *
+ * مطابق سواگر /api/Search/Products:
+ *   - orderType: BestSelling → در مپر به sortBy=SalesCount + sortDescending=true
+ *   - onlyInStock:             فقط کالاهای موجود
+ *   - excludeDuplicateProducts: جلوگیری از تکرار کالا از فروشندگان مختلف
+ *   - includeAggregations:     برای سایدبار فیلترها
+ */
+const BESTSELLERS_BASE_FILTERS: SearchProductsRequest = {
+  orderType: 'BestSelling',
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
+
+export default async function BestsellersPage() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const user = await getServerCurrentUser();
+  if (user) {
+    queryClient.setQueryData(queryKeys.auth.user, user);
+  }
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+  const httpClient = getHttpClient();
+
+  const initialFilters: SearchProductsRequest = { ...BESTSELLERS_BASE_FILTERS };
+
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(initialFilters),
+      queryFn: () => productService.searchProducts(initialFilters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const response = await httpClient.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <BestsellersContent />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\search\page.tsx
+====================================================================================================
+import type { Metadata } from 'next';
+import { getServerCurrentUser } from '@/domains/auth/server.auth';
+import { getProductService } from '@/domains/front/product/services/product.service';
+import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
+import { getCarService } from '@/domains/front/reference/car/services/car.service';
+import { getPartService } from '@/domains/front/part/services/part.service';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { SearchContent } from '@/components/features/ProductGrid/SearchContent';
+import { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+import { getHttpClient } from '@/core/http';
+
+interface SearchPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> | { [key: string]: string | string[] | undefined };
+}
+
+// جلوگیری از باگ‌های امنیتی XSS در اسکریپت‌های ساختاریافته
+function serializeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/* -------------------------------------------------------------------------- */
+/*                 سئوی داینامیک متناسب با عبارت جستجو شده                    */
+/* -------------------------------------------------------------------------- */
+
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const resolvedParams = await Promise.resolve(searchParams);
+  const query = typeof resolvedParams.q === 'string' ? resolvedParams.q.trim() : '';
+  const carModel = typeof resolvedParams.carModel === 'string' ? resolvedParams.carModel.trim() : '';
+  const category = typeof resolvedParams.category === 'string' ? resolvedParams.category.trim() : '';
+
+  let pageTitle = 'جستجوی قطعات یدکی و لوازم خودرو';
+
+  if (query && carModel) {
+    pageTitle = `خرید و قیمت ${query} برای ${carModel}`;
+  } else if (query) {
+    pageTitle = `قیمت و خرید ${query}`;
+  } else if (carModel) {
+    pageTitle = `لوازم یدکی و قطعات ${carModel}`;
+  } else if (category) {
+    pageTitle = `قطعات دسته ${category}`;
+  }
+
+  const canonicalUrl = 'https://www.yadakchi.com/search';
+
+  return {
+    title: `${pageTitle} | یدکچی`,
+    description: `جستجو، مقایسه قیمت و خرید آنلاین ${query || 'قطعات یدکی'} از معتبرترین فروشگاه‌های قطعات کشور با ضمانت اصالت در یدکچی.`,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title: `${pageTitle} | یدکچی`,
+      description: 'بازارگاه تخصصی و جامع خرید آنلاین انواع قطعات و لوازم یدکی خودرو در ایران',
+      url: canonicalUrl,
+      siteName: 'یدکچی',
+      locale: 'fa_IR',
+      type: 'website',
+      images: [
+        {
+          url: 'https://api.yadakchi.com/Logo.svg',
+          width: 1200,
+          height: 630,
+          alt: pageTitle,
+        },
+      ],
+    },
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                صفحه اصلی سرچ                               */
+/* -------------------------------------------------------------------------- */
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  // ✅ حل باگ Next.js 15: حل ناهمگام searchParams
+  const resolvedParams = await Promise.resolve(searchParams);
+
+  // ✅ حل باگ Cache Miss: ست کردن staleTime تا در کلاینت فورا دوباره درخواست ارسال نشود
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000, // ۱ دقیقه کش پایدار در کلاینت بدون رفرش ناخواسته
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
+
+  const user = await getServerCurrentUser();
+  if (user) {
+    queryClient.setQueryData(queryKeys.auth.user, user);
+  }
+
+  const productService = getProductService();
+  const brandService = getBrandService();
+  const carService = getCarService();
+  const partService = getPartService();
+
+  // نرمال‌سازی ایمن فیلترها
+  const fromPrice = resolvedParams.fromPrice ? Number(resolvedParams.fromPrice) : undefined;
+  const toPrice = resolvedParams.toPrice ? Number(resolvedParams.toPrice) : undefined;
+  const pageNumber = resolvedParams.page ? Math.max(1, Number(resolvedParams.page)) : 1;
+  const pageSize = resolvedParams.pageSize ? Math.max(1, Number(resolvedParams.pageSize)) : 30;
+
+  const filters: SearchProductsRequest = {
+    searchTitle: typeof resolvedParams.q === 'string' ? resolvedParams.q : undefined,
+    isProductInStock: resolvedParams.inStock === 'true' ? true : undefined,
+    isSellerInUserCity: resolvedParams.userCity === 'true' ? true : undefined,
+    partCategoryEnglishTitle: typeof resolvedParams.category === 'string' ? resolvedParams.category : undefined,
+    partEnglishTitle: typeof resolvedParams.part === 'string' ? resolvedParams.part : undefined,
+    carModel: typeof resolvedParams.carModel === 'string' ? resolvedParams.carModel : undefined,
+    shopId: typeof resolvedParams.shopId === 'string' ? resolvedParams.shopId : undefined,
+    cityId: typeof resolvedParams.cityId === 'string' ? resolvedParams.cityId : undefined,
+    hasDiscount: resolvedParams.discount === 'true' ? true : undefined,
+    hasDiscountWithExpiration: resolvedParams.discountExp === 'true' ? true : undefined,
+    fromPrice: !isNaN(fromPrice as number) ? fromPrice : undefined,
+    toPrice: !isNaN(toPrice as number) ? toPrice : undefined,
+    orderType: (resolvedParams.sort as any) || 'Selected',
+    pageNumber: !isNaN(pageNumber) ? pageNumber : 1,
+    pageSize: !isNaN(pageSize) ? pageSize : 30,
+    brandIds: typeof resolvedParams.brandIds === 'string' ? [resolvedParams.brandIds] : Array.isArray(resolvedParams.brandIds) ? resolvedParams.brandIds : undefined,
+    carIds: typeof resolvedParams.carIds === 'string' ? [resolvedParams.carIds] : Array.isArray(resolvedParams.carIds) ? resolvedParams.carIds : undefined,
+    partCategoryIds: typeof resolvedParams.partCategoryIds === 'string' ? [resolvedParams.partCategoryIds] : Array.isArray(resolvedParams.partCategoryIds) ? resolvedParams.partCategoryIds : undefined,
+  };
+
+  // ✅ استفاده از Promise.allSettled تا در صورت خطای یک سرویس فرعی، کل صفحه مسدود نشود
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(filters),
+      queryFn: () => productService.searchProducts(filters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+ queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const client = getHttpClient();
+        const response = await client.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
+
+  const schemaJson = {
+    '@context': 'https://schema.org',
+    '@type': 'SearchResultsPage',
+    '@id': 'https://www.yadakchi.com/search/#webpage',
+    url: 'https://www.yadakchi.com/search',
+    name: 'نتایج جستجوی قطعات یدکی خودرو | یدکچی',
+    description: 'صفحه نمایش نتایج جستجو و فیلترینگ قطعات خودرو بر اساس برند، مدل خودرو و دسته‌بندی قطعه',
+    isPartOf: {
+      '@id': 'https://www.yadakchi.com/#website',
+    },
+  };
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(schemaJson) }}
+      />
+      <SearchContent />
+    </HydrationBoundary>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\categories\page.tsx
+====================================================================================================
+<< FILE NOT FOUND >>
+
+====================================================================================================
+# FILE: src\app\(public)\compare\page.tsx
+====================================================================================================
+// src/app/(public)/compare/page.tsx
+
+import type { Metadata } from 'next';
+import { Suspense } from 'react';
+import { CompareContent } from '@/components/features/Compare/CompareContent';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+
+export const metadata: Metadata = {
+  title: 'مقایسه تخصصی قطعات خودرو | یدکچی',
+  description: 'مقایسه فنی، قیمت و مشخصات قطعات یدکی خودرو در بازارگاه یدکچی',
+};
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={<PageLoading label="در حال بارگذاری صفحه مقایسه..." />}>
+      <CompareContent />
+    </Suspense>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\checkout\page.tsx
+====================================================================================================
+
+import dynamic from 'next/dynamic';
+
+const CheckoutContent = dynamic(
+  () => import('@/components/features/Checkout/CheckoutContent'),
+  { ssr: false }
+);
+
+export default async function CheckoutPage() {
+  return (
+    
+      <CheckoutContent />
+    
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\basket\page.tsx
+====================================================================================================
+import dynamic from 'next/dynamic';
+
+const BasketSummary = dynamic(
+  () => import('@/components/features/BasketSummary/BasketSummary'),
+  { ssr: false }
+);
+
+export default async function BasketPage() {
+  return <BasketSummary />;
+}
+
+====================================================================================================
+# FILE: src\app\(public)\basket-payment\page.tsx
+====================================================================================================
+
+import dynamic from 'next/dynamic';
+
+const BasketPaymentContent = dynamic(
+  () => import('@/components/features/BasketPayment/BasketPaymentContent'),
+  { ssr: false }
+);
+
+export default async function BasketPaymentPage() {
+  return (
+ 
+      <BasketPaymentContent />
+
+  );
+}
+
+====================================================================================================
+# FILE: src\app\(public)\my-car\page.tsx
+====================================================================================================
+// src/app/(public)/my-car/page.tsx
+'use client';
+
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { 
+  useGetUserVehicles, 
+  useUpdateUserVehicle, 
+  useDeleteUserVehicle 
+} from '@/domains/userpanel/hooks/userpanel.hooks';
+import { useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
+import { userPanelValidators } from '@/domains/userpanel/validation/userpanel.validation';
+import { Card, CardBody } from '@/components/composites/Card';
+import { Button } from '@/components/primitives/Button/Button';
+import { Select } from '@/components/primitives/Select/Select';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { PageLoading } from '@/components/composites/Loading/PageLoading';
+import { jalaliToGregorian, getFullUrl, toPersianDigits } from '@/core/utils/formatters';
+import { 
+  Car,
+  Plus, 
+  Trash2, 
+  Wrench, 
+  Gauge, 
+  Calendar, 
+  Check, 
+  Search,
+  AlertCircle
+} from 'lucide-react';
+import { showToast } from '@/core/utils/toast';
+import { cn } from '@/design-system/utils/cn';
+
+const DEFAULT_CAR_IMAGE = '/car-noimage.png';
+
+// تبدیل تاریخ میلادی ISO به تاریخ شمسی با حروف فارسی
+function formatToJalali(dateInput: string | Date | null | undefined): string {
+  if (!dateInput) return 'ثبت نشده';
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return 'ثبت نشده';
+    return new Intl.DateTimeFormat('fa-IR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(d);
+  } catch {
+    return 'ثبت نشده';
+  }
+}
+
+// تبدیل ارقام فارسی به انگلیسی جهت فرم
+function normalizeNumbers(str: string): string {
+  const persianDigits = [/۰/g, /۱/g, /۲/g, /۳/g, /۴/g, /۵/g, /۶/g, /۷/g, /۸/g, /۹/g];
+  const arabicDigits = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
+  
+  let result = str;
+  for (let i = 0; i < 10; i++) {
+    result = result.replace(persianDigits[i], String(i)).replace(arabicDigits[i], String(i));
+  }
+  return result;
+}
+
+function EmptyGarageLottie() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const renderLottie = async () => {
+      try {
+        let animationData: any = null;
+        const paths = ['/anumations/garage-empty.json', '/animations/garage-empty.json'];
+        for (const p of paths) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+
+        if (!animationData || !isMounted || !containerRef.current) {
+          if (!animationData) setHasError(true);
+          return;
+        }
+
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch (err) {
+        if (isMounted) setHasError(true);
+      }
+    };
+
+    renderLottie();
+
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="w-32 h-32 flex items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Car className="w-16 h-16" />
+      </div>
+    );
+  }
+
+  return <div ref={containerRef} className="w-64 h-64 max-w-full mx-auto flex items-center justify-center" />;
+}
+
+interface UpdateVehicleFormValues {
+  id: string;
+  title: string;
+  mileage: number;
+  oilKmLimit: number;
+  lastServiceDate: string | null;
+  isDefault: boolean;
+}
+
+export default function MyCarPage() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
+  
+  const { data: rawVehicles = [], isLoading: isVehiclesLoading } = useGetUserVehicles();
+  const { data: carsReferenceList = [] } = useGetCarListFlat(1, 300);
+
+  const updateVehicle = useUpdateUserVehicle();
+  const deleteVehicle = useDeleteUserVehicle();
+
+  const vehicles = useMemo(() => {
+    return [...rawVehicles].sort((a, b) => {
+      if (a.isDefault && !b.isDefault) return -1;
+      if (!a.isDefault && b.isDefault) return 1;
+      return 0;
+    });
+  }, [rawVehicles]);
+
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<any | null>(null);
+
+  const [updateOilLimit, setUpdateOilLimit] = useState<number>(7000);
+  const [updateDay, setUpdateDay] = useState<number>(1);
+  const [updateMonth, setUpdateMonth] = useState<number>(1);
+  const [updateYear, setUpdateYear] = useState<number>(1403);
+
+  const [initialFormValues, setInitialFormValues] = useState<{
+    mileage: number;
+    oilLimit: number;
+    day: number;
+    month: number;
+    year: number;
+  } | null>(null);
+
+  const { 
+    control,
+    handleSubmit: handleSubmitUpdate, 
+    watch: watchUpdate, 
+    reset: resetUpdate, 
+    formState: { errors: errorsUpdate } 
+  } = useForm<UpdateVehicleFormValues>({
+    resolver: zodResolver(userPanelValidators.updateVehicle.getSchema() as any),
+    defaultValues: {
+      id: '',
+      title: '',
+      mileage: 0,
+      oilKmLimit: 7000,
+      lastServiceDate: '',
+      isDefault: false
+    }
+  });
+
+  const watchMileage = watchUpdate('mileage');
+
+  const isFormUnchanged = useMemo(() => {
+    if (!initialFormValues) return true;
+    const currentMileage = Number(watchMileage) || 0;
+    return (
+      currentMileage === initialFormValues.mileage &&
+      updateOilLimit === initialFormValues.oilLimit &&
+      updateDay === initialFormValues.day &&
+      updateMonth === initialFormValues.month &&
+      updateYear === initialFormValues.year
+    );
+  }, [initialFormValues, watchMileage, updateOilLimit, updateDay, updateMonth, updateYear]);
+
+  const months = [
+    { value: '1', label: 'فروردین' },
+    { value: '2', label: 'اردیبهشت' },
+    { value: '3', label: 'خرداد' },
+    { value: '4', label: 'تیر' },
+    { value: '5', label: 'مرداد' },
+    { value: '6', label: 'شهریور' },
+    { value: '7', label: 'مهر' },
+    { value: '8', label: 'آبان' },
+    { value: '9', label: 'آذر' },
+    { value: '10', label: 'دی' },
+    { value: '11', label: 'بهمن' },
+    { value: '12', label: 'اسفند' },
+  ];
+
+  const days = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }));
+  const years = Array.from({ length: 5 }, (_, i) => ({ value: String(1401 + i), label: String(1401 + i) }));
+
+  const handleAddCarClick = () => {
+    if (!isAuthenticated) {
+      showToast.error('برای ثبت خودرو ابتدا وارد حساب کاربری خود شوید');
+      router.push('/login?redirect=/my-car/add');
+      return;
+    }
+    router.push('/my-car/add');
+  };
+
+  const handleOpenUpdateModal = (vehicle: any) => {
+    setSelectedVehicle(vehicle);
+    const limit = Number(vehicle.oilKmLimitRaw || vehicle.oilKmLimit) || 7000;
+    const currentMileage = Number(vehicle.mileageRaw || vehicle.mileage) || 0;
+    setUpdateOilLimit(limit);
+    
+    let initYear = 1403;
+    let initMonth = 1;
+    let initDay = 1;
+
+    if (vehicle.lastServiceDate) {
+      try {
+        const d = new Date(vehicle.lastServiceDate);
+        const faDateStr = new Intl.DateTimeFormat('fa-IR-u-nu-latn', {
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric'
+        }).format(d);
+        const [y, m, day] = faDateStr.split('/').map(Number);
+        if (y && m && day) {
+          initYear = y;
+          initMonth = m;
+          initDay = day;
+        }
+      } catch {}
+    }
+
+    setUpdateDay(initDay);
+    setUpdateMonth(initMonth);
+    setUpdateYear(initYear);
+
+    resetUpdate({
+      id: vehicle.id,
+      title: vehicle.title || '',
+      mileage: currentMileage,
+      oilKmLimit: limit,
+      lastServiceDate: vehicle.lastServiceDate ? formatToJalali(vehicle.lastServiceDate) : null,
+      isDefault: vehicle.isDefault,
+    });
+
+    setInitialFormValues({
+      mileage: currentMileage,
+      oilLimit: limit,
+      day: initDay,
+      month: initMonth,
+      year: initYear
+    });
+
+    setIsUpdateModalOpen(true);
+  };
+
+  const onUpdateSubmit = async (data: UpdateVehicleFormValues) => {
+    if (isFormUnchanged) return;
+
+    try {
+      const isoServiceDate = jalaliToGregorian(updateYear, updateMonth, updateDay);
+      await updateVehicle.mutateAsync({
+        id: data.id,
+        title: data.title,
+        mileage: Number(data.mileage) || 0,
+        oilKmLimit: updateOilLimit,
+        lastServiceDate: isoServiceDate,
+        isDefault: data.isDefault,
+      });
+      showToast.success('کارکرد خودرو با موفقیت بروزرسانی شد');
+      await queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      setIsUpdateModalOpen(false);
+    } catch (error) {}
+  };
+
+  const handleOpenDeleteModal = (vehicle: any) => {
+    setVehicleToDelete(vehicle);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteVehicle = async () => {
+    if (!vehicleToDelete) return;
+    try {
+      await deleteVehicle.mutateAsync(vehicleToDelete.id);
+      showToast.success('خودرو با موفقیت از گاراژ حذف شد');
+      await queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      setIsDeleteModalOpen(false);
+      setVehicleToDelete(null);
+    } catch (error) {}
+  };
+
+  const handleToggleDefault = async (vehicle: any) => {
+    try {
+      await updateVehicle.mutateAsync({
+        id: vehicle.id,
+        title: vehicle.title,
+        mileage: Number(vehicle.mileageRaw ?? vehicle.mileage) || 0,
+        oilKmLimit: Number(vehicle.oilKmLimitRaw ?? vehicle.oilKmLimit) || 7000,
+        lastServiceDate: vehicle.lastServiceDate || null,
+        isDefault: !vehicle.isDefault,
+      });
+      await queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      if (!vehicle.isDefault) {
+        showToast.success('خودرو به عنوان پیش‌فرض انتخاب شد');
+      } else {
+        showToast.success('خودرو از حالت پیش‌فرض خارج شد');
+      }
+    } catch (error) {}
+  };
+
+  const handleSearchPartsClick = (vehicle: any) => {
+    const directEnglish = vehicle.car?.englishTitle || vehicle.carEnglishTitle || vehicle.englishTitle;
+    
+    if (directEnglish && typeof directEnglish === 'string' && directEnglish.trim()) {
+      const slug = directEnglish.trim().replace(/\s+/g, '-');
+      router.push(`/car/${encodeURIComponent(slug)}`);
+      return;
+    }
+
+    const targetCarId = vehicle.car?.id || vehicle.carId;
+    const targetModel = vehicle.car?.model || vehicle.carModel;
+
+    if (carsReferenceList.length > 0) {
+      const matchedCar = carsReferenceList.find(
+        (c: any) => (targetCarId && c.id === targetCarId) || (targetModel && c.model === targetModel)
+      );
+
+      if (matchedCar?.englishTitle) {
+        const slug = matchedCar.englishTitle.trim().replace(/\s+/g, '-');
+        router.push(`/car/${encodeURIComponent(slug)}`);
+        return;
+      }
+    }
+
+    if (targetModel) {
+      const slug = targetModel.trim().replace(/\s+/g, '-');
+      router.push(`/car/${encodeURIComponent(slug)}`);
+      return;
+    }
+
+    router.push(`/search?carIds=${targetCarId || vehicle.id}`);
+  };
+
+  if (isVehiclesLoading) {
+    return <PageLoading message="در حال دریافت اطلاعات گاراژ..." />;
+  }
+
+  return (
+    <div className="w-full flex flex-col gap-4 sm:gap-6 select-none" dir="rtl">
+      
+      {/* ================= هدر چسبان و کامپکت اختصاصی موبایل (متعادل بدون رنگ جیغ) ================= */}
+      <div className="sticky top-14 z-30 -mx-4 -mt-1 flex w-[calc(100%+2rem)] shrink-0 select-none items-center justify-between border-b border-border/80 bg-card/95 px-3.5 py-2.5 shadow-xs backdrop-blur-md md:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-muted text-foreground p-0.5">
+            <Car className="h-4 w-4" />
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">مدیریت خودروها</span>
+            <span className="mt-0.5 truncate text-xs font-bold text-foreground">
+              گاراژ من ({toPersianDigits(vehicles.length)} از ۱۰)
+            </span>
+          </div>
+        </div>
+
+        {/* دکمه افزودن خودرو به عنوان تنها نقطه عطف در هدر */}
+        <button
+          type="button"
+          onClick={handleAddCarClick}
+          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-2xs font-bold text-primary-foreground shadow-xs active:scale-95 transition-transform"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          <span>افزودن خودرو</span>
+        </button>
+      </div>
+
+      {/* ================= هدر دسکتاپ ================= */}
+      <div className="hidden md:flex w-full flex-row items-center justify-between gap-4 border-b border-border pb-5 mt-2">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-lg md:text-xl font-bold text-foreground">گاراژ من</h1>
+            <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-0.5 rounded-md">
+              {toPersianDigits(vehicles.length)} خودرو از ۱۰ خودرو
+            </span>
+          </div>
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+            با وارد کردن کیلومتر کارکرد، زمان سرویس دوره‌ای و تعویض روغن به شما یادآوری می‌شود.
+          </p>
+        </div>
+
+        <Button
+          variant="primary"
+          onClick={handleAddCarClick}
+          className="rounded-xl font-bold text-xs h-10 px-5 flex items-center justify-center gap-2 shadow-xs"
+        >
+          <Plus className="h-4 w-4" />
+          <span>افزودن خودرو</span>
+        </Button>
+      </div>
+
+      {/* ================= لیست خودروهای گاراژ ================= */}
+      {vehicles.length > 0 ? (
+        <div className="flex flex-col gap-3.5 sm:gap-4 w-full">
+          {vehicles.map((vehicle: any) => {
+            const rawMileage = vehicle.mileageRaw ?? vehicle.mileage;
+            const rawLimit = vehicle.oilKmLimitRaw ?? vehicle.oilKmLimit;
+
+            // بررسی دقیق اعتبارسنجی کارکرد جهت جلوگیری از باگ NaN / «ناعدد»
+            const hasValidMileage =
+              rawMileage !== undefined &&
+              rawMileage !== null &&
+              rawMileage !== '' &&
+              !isNaN(Number(rawMileage)) &&
+              Number(rawMileage) > 0;
+
+            const mileageNumber = hasValidMileage ? Number(rawMileage) : null;
+
+            // محاسبه کیلومتر سرویس بعدی
+            const nextServiceKm =
+              vehicle.nextServiceKM ??
+              (hasValidMileage && rawLimit ? mileageNumber! + Number(rawLimit) : null);
+
+            const hasValidNextService =
+              nextServiceKm !== null &&
+              nextServiceKm !== undefined &&
+              !isNaN(Number(nextServiceKm)) &&
+              Number(nextServiceKm) > 0;
+
+            // تبدیل تاریخ به شمسی با حروف فارسی
+            const formattedAddedDate = formatToJalali(
+              vehicle.createDate || vehicle.createdAt || vehicle.registerDate
+            );
+
+            const carCoverImage = vehicle.car?.cover || vehicle.carCover;
+            const carDisplayModel = vehicle.car?.model || vehicle.carModel || vehicle.title;
+
+            return (
+              <Card 
+                key={vehicle.id} 
+                className={cn(
+                  "w-full border rounded-2xl bg-card shadow-xs transition-all overflow-hidden",
+                  vehicle.isDefault ? "border-foreground/30 bg-muted/10" : "border-border hover:border-border/80"
+                )}
+              >
+                <CardBody className="p-3.5 sm:p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 sm:gap-5">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div className="relative w-20 h-20 sm:w-28 sm:h-28 shrink-0 rounded-xl border border-border/80 bg-muted/20 flex items-center justify-center overflow-hidden p-1.5">
+                      <img 
+                        src={carCoverImage ? getFullUrl(carCoverImage) : DEFAULT_CAR_IMAGE} 
+                        alt={carDisplayModel} 
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.src = DEFAULT_CAR_IMAGE;
+                        }}
+                      />
+                      <button
+                        onClick={() => handleOpenDeleteModal(vehicle)}
+                        disabled={deleteVehicle.isPending}
+                        className="absolute bottom-1 right-1 p-1.5 bg-card/90 hover:bg-destructive hover:text-destructive-foreground rounded-lg text-muted-foreground shadow-xs transition-all"
+                        aria-label="حذف خودرو"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm sm:text-base font-bold text-foreground truncate">
+                          {carDisplayModel}
+                        </span>
+                        {vehicle.title && (
+                          <span className="text-3xs sm:text-2xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+                            {vehicle.title}
+                          </span>
+                        )}
+                        {vehicle.isDefault && (
+                          <span className="text-3xs font-bold text-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
+                            خودروی پیش‌فرض
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Gauge className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>کارکرد:</span>
+                          <span className="font-semibold text-foreground">
+                            {hasValidMileage ? `${toPersianDigits(mileageNumber!.toLocaleString('fa-IR'))} کیلومتر` : 'ثبت نشده'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Wrench className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>سرویس بعدی:</span>
+                          <span className="font-semibold text-foreground">
+                            {hasValidNextService ? `${toPersianDigits(Number(nextServiceKm).toLocaleString('fa-IR'))} کیلومتر` : 'نامشخص'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span>ثبت:</span>
+                          <span className="font-medium text-foreground">{formattedAddedDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* بخش دکمه‌ها و اکشن‌های کارت */}
+                  <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between lg:justify-center gap-2.5 sm:gap-3 shrink-0 border-t lg:border-t-0 border-border/60 pt-3 lg:pt-0">
+                    {/* وضعیت پیش‌فرض با رنگ معنایی سبز به جای نارنجی */}
+                    <button
+                      onClick={() => handleToggleDefault(vehicle)}
+                      disabled={updateVehicle.isPending}
+                      className={cn(
+                        "rounded-lg text-xs font-medium px-2.5 py-1.5 flex items-center justify-center gap-1.5 self-start sm:self-auto transition-all outline-none border",
+                        vehicle.isDefault 
+                          ? "bg-foreground/5 text-foreground border-foreground/20 font-bold" 
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      {vehicle.isDefault ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 stroke-[2.5] text-success" />
+                          <span>خودروی پیش‌فرض</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="h-3.5 w-3.5 rounded-full border border-muted-foreground shrink-0" />
+                          <span>انتخاب به عنوان پیش‌فرض</span>
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      {/* دکمه ۱: بروزرسانی کارکرد با استایل خنثی کارت */}
+                      <button
+                        onClick={() => handleOpenUpdateModal(vehicle)}
+                        className="flex-1 sm:flex-none rounded-xl font-medium text-xs h-9 sm:h-10 px-3.5 flex items-center justify-center gap-1.5 border border-border bg-card text-foreground hover:bg-muted transition-all shadow-2xs shrink-0"
+                      >
+                        <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>بروزرسانی کارکرد</span>
+                      </button>
+
+                      {/* دکمه ۲: جستجوی قطعات با استایل شیک و های‌کنتراست (بدون نارنجی تکراری) */}
+                      <button
+                        onClick={() => handleSearchPartsClick(vehicle)}
+                        className="flex-1 sm:flex-none rounded-xl font-bold text-xs h-9 sm:h-10 px-4 flex items-center justify-center gap-1.5 bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xs"
+                      >
+                        <Search className="h-3.5 w-3.5" />
+                        <span>جستجوی قطعات</span>
+                      </button>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="w-full py-12 px-4 text-center rounded-2xl bg-card border border-border flex flex-col items-center justify-center gap-4">
+          <div className="w-56 h-56 max-w-full flex items-center justify-center">
+            <EmptyGarageLottie />
+          </div>
+          
+          <div className="flex flex-col items-center gap-1.5 max-w-md">
+            <h2 className="text-base md:text-lg font-bold text-foreground">
+              گاراژ شما خالی است
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+              با افزودن خودرو، قطعات سازگار و یادآور تعویض روغن را به راحتی مدیریت کنید.
+            </p>
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={handleAddCarClick}
+            className="rounded-xl font-bold text-xs h-10 px-6 flex items-center justify-center gap-2 mt-2 shadow-xs"
+          >
+            <span>افزودن اولین خودرو</span>
+          </Button>
+        </div>
+      )}
+
+      {/* ================= مودال بروزرسانی کارکرد ================= */}
+      <Modal isOpen={isUpdateModalOpen} onClose={() => setIsUpdateModalOpen(false)} className="max-w-md w-full">
+        <ModalHeader onClose={() => setIsUpdateModalOpen(false)}>
+          <ModalTitle className="font-bold text-sm text-foreground flex items-center gap-2">
+            <Gauge className="h-4 w-4 text-muted-foreground" />
+            بروزرسانی کارکرد خودرو
+          </ModalTitle>
+        </ModalHeader>
+        
+        <ModalBody className="p-5 pt-4">
+          {selectedVehicle && (
+            <form onSubmit={handleSubmitUpdate(onUpdateSubmit)} className="flex flex-col gap-4 w-full">
+              <div className="flex items-center gap-3 bg-muted/40 p-3 rounded-xl border border-border/80">
+                <div className="w-12 h-12 shrink-0 rounded-lg border border-border bg-card flex items-center justify-center overflow-hidden p-1">
+                  <img 
+                    src={(selectedVehicle.car?.cover || selectedVehicle.carCover) ? getFullUrl(selectedVehicle.car?.cover || selectedVehicle.carCover) : DEFAULT_CAR_IMAGE} 
+                    className="w-full h-full object-contain" 
+                    alt={selectedVehicle.car?.model || selectedVehicle.carModel || ''} 
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_CAR_IMAGE;
+                    }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1 text-2xs text-muted-foreground">
+                    <span>کمپانی:</span>
+                    <span className="font-medium text-foreground">
+                      {selectedVehicle.car?.carManufacturer?.name || selectedVehicle.carManufacturerName || '-'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs font-bold text-foreground">
+                      {selectedVehicle.car?.model || selectedVehicle.carModel}
+                    </span>
+                    {selectedVehicle.title && (
+                      <span className="text-3xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        {selectedVehicle.title}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ورودی کیلومتر */}
+              <div className="w-full flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-foreground">
+                  کیلومتر کارکرد فعلی خودرو *
+                </label>
+                <Controller
+                  name="mileage"
+                  control={control}
+                  render={({ field }) => {
+                    const rawValue = field.value !== undefined && field.value !== null ? String(field.value) : '';
+                    const displayValue = rawValue ? Number(rawValue).toLocaleString('en-US') : '';
+
+                    return (
+                      <div className="relative w-full" dir="ltr">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="125,000"
+                          value={displayValue}
+                          onChange={(e) => {
+                            const normalized = normalizeNumbers(e.target.value).replace(/[^0-9]/g, '');
+                            const numericVal = normalized ? Number(normalized) : 0;
+                            field.onChange(numericVal);
+                          }}
+                          className={cn(
+                            "w-full h-11 pl-3.5 pr-12 rounded-xl border bg-card text-foreground font-semibold text-sm outline-none transition-all placeholder:text-muted-foreground/40 text-left",
+                            errorsUpdate.mileage 
+                              ? "border-destructive focus:ring-1 focus:ring-destructive" 
+                              : "border-border focus:border-foreground/40 focus:ring-1 focus:ring-foreground/20"
+                          )}
+                        />
+                        <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-2xs font-bold text-muted-foreground select-none">
+                          km
+                        </span>
+                      </div>
+                    );
+                  }}
+                />
+                {watchMileage ? (
+                  <span className="text-2xs text-muted-foreground">
+                    معادل: {toPersianDigits(Number(watchMileage).toLocaleString('fa-IR'))} کیلومتر
+                  </span>
+                ) : null}
+                {errorsUpdate.mileage?.message && (
+                  <span className="text-2xs text-destructive font-medium">
+                    {String(errorsUpdate.mileage.message)}
+                  </span>
+                )}
+              </div>
+
+              {/* تاریخ سرویس */}
+              <div className="w-full flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-foreground">
+                  تاریخ سرویس اخیر (تعویض روغن یا فیلتر) *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Select
+                    placeholder="روز"
+                    value={String(updateDay)}
+                    onChange={(e) => setUpdateDay(Number(e.target.value))}
+                    options={days}
+                  />
+                  <Select
+                    placeholder="ماه"
+                    value={String(updateMonth)}
+                    onChange={(e) => setUpdateMonth(Number(e.target.value))}
+                    options={months}
+                  />
+                  <Select
+                    placeholder="سال"
+                    value={String(updateYear)}
+                    onChange={(e) => setUpdateYear(Number(e.target.value))}
+                    options={years}
+                  />
+                </div>
+              </div>
+
+              {/* عمر مفید روغن */}
+              <div className="w-full flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-foreground">
+                  عمر مفید روغن مصرفی *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[5000, 7000, 10000].map((limit) => (
+                    <button
+                      key={limit}
+                      type="button"
+                      onClick={() => setUpdateOilLimit(limit)}
+                      className={cn(
+                        "py-2 rounded-xl border text-xs font-semibold transition-all outline-none",
+                        updateOilLimit === limit
+                          ? "border-foreground bg-muted font-bold text-foreground"
+                          : "bg-card text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
+                      )}
+                    >
+                      {toPersianDigits(limit.toLocaleString('fa-IR'))} km
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* پیش‌نمایش سرویس بعدی */}
+              <div className="w-full bg-muted/40 border border-border/80 rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-foreground">
+                  <Wrench className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="text-xs font-medium">سرویس بعدی شما:</span>
+                </div>
+                <div className="flex items-center gap-1 font-bold text-foreground text-sm" dir="ltr">
+                  <span>
+                    {toPersianDigits(((Number(watchMileage) || 0) + updateOilLimit).toLocaleString('fa-IR'))}
+                  </span>
+                  <span className="text-2xs font-semibold text-muted-foreground">کیلومتر</span>
+                </div>
+              </div>
+            </form>
+          )}
+        </ModalBody>
+
+        <div className="flex flex-row gap-2.5 p-5 pt-3 border-t border-border w-full shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsUpdateModalOpen(false)}
+            className="flex-1 rounded-xl text-xs h-10 font-medium border-border"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isFormUnchanged || updateVehicle.isPending}
+            isLoading={updateVehicle.isPending}
+            className="flex-1 rounded-xl text-xs h-10 font-bold disabled:opacity-50"
+            onClick={handleSubmitUpdate(onUpdateSubmit)}
+          >
+            ثبت تغییرات
+          </Button>
+        </div>
+      </Modal>
+
+      {/* ================= مودال حذف ================= */}
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} className="max-w-md w-full">
+        <ModalHeader onClose={() => setIsDeleteModalOpen(false)}>
+          <ModalTitle className="font-bold text-sm text-destructive flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            حذف خودرو از گاراژ
+          </ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="p-5 flex flex-col gap-2">
+          <p className="text-xs font-bold leading-relaxed text-foreground">
+            آیا از حذف «{vehicleToDelete?.car?.model || vehicleToDelete?.carModel || vehicleToDelete?.title}» مطمئن هستید؟
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            با حذف این خودرو، یادآورهای سرویس دوره‌ای و لیست قطعات سازگار با آن پاک خواهند شد.
+          </p>
+        </ModalBody>
+
+        <div className="flex flex-row gap-2.5 p-5 pt-2 border-t border-border w-full shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsDeleteModalOpen(false)}
+            className="flex-1 rounded-xl text-xs h-10 font-medium border-border"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            isLoading={deleteVehicle.isPending}
+            onClick={confirmDeleteVehicle}
+            className="flex-1 rounded-xl text-xs h-10 font-bold"
+          >
+            بله، حذف شود
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\maintenance\page.tsx
+====================================================================================================
+'use client';
+
+import { Settings, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/primitives/Button/Button';
+
+export default function MaintenancePage() {
+  const handleRetry = () => {
+    if (typeof window !== 'undefined') {
+      // بازگشت خودکار به آخرین مسیر کاربر یا رفرش صفحه جهت استعلام مجدد وضعیت ورود و سرور
+      window.location.href = '/profile';
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center select-none bg-background text-foreground" dir="rtl">
+      
+      {/* آیکون چرخ‌دنده انیمیشنی چرخنده جهت القای حس بروزرسانی فنی زنده */}
+      <div 
+        className="p-4 bg-primary/10 text-primary border border-primary/20 rounded-full mb-4 animate-spin shrink-0"
+        style={{ animationDuration: '6s' }}
+      >
+        <Settings className="h-10 w-10" />
+      </div>
+      
+      <h1 className="text-xl md:text-2xl font-bold mb-2">یدکچی در حال بروزرسانی است</h1>
+      
+      <p className="text-base md:text-base text-muted-foreground font-iran-sans max-w-sm leading-relaxed mb-6">
+        ما در حال بهبود بخش فنی یدکچی برای ارائه خدمات سریع‌تر، پایدارتر و امن‌تر هستیم. این فرآیند معمولاً چند دقیقه بیشتر طول نمی‌کشد. از صبر و همراهی صمیمانه شما سپاسگزاریم.
+      </p>
+
+      {/* دکمه بررسی مجدد برای بازگشت مستقیم به پنل بدون نیاز به وارد کردن دوباره کلمه عبور یا پیامک */}
+      <Button
+        variant="primary"
+        size="md"
+        onClick={handleRetry}
+        className="rounded-xl font-iran-sans font-bold text-xs h-10 px-6 shadow-md shadow-primary/10 flex items-center justify-center gap-1.5"
+      >
+        <RotateCcw className="h-4 w-4" />
+        <span>بررسی مجدد وضعیت شبکه</span>
+      </Button>
+    </div>
+  );
+}
+
+====================================================================================================
+# FILE: src\app\offline\page.tsx
+====================================================================================================
+'use client';
+
+import { WifiOff, RotateCcw } from 'lucide-react';
+import { Button } from '@/components/primitives/Button/Button';
+
+export default function OfflinePage() {
+  const handleReload = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center select-none bg-background text-foreground" dir="rtl">
+      {/* آیکون هشدار قطع اینترنت منطبق بر تم سیستم دیزاین */}
+      <div className="p-4 bg-destructive/10 text-destructive border border-destructive/20 rounded-full mb-4 animate-pulse">
+        <WifiOff className="h-10 w-10" />
+      </div>
+      
+      <h1 className="text-xl md:text-2xl font-bold mb-2">ارتباط شما با اینترنت قطع شده است</h1>
+      
+      <p className="text-base md:text-base text-muted-foreground font-iran-sans max-w-xs leading-relaxed mb-6">
+        برای استفاده از امکانات یدکچی نیاز به اتصال فعال شبکه دارید. لطفا اتصال دیتا یا وای‌فای گوشی خود را بررسی کنید.
+      </p>
+
+      {/* دکمه تلاش مجدد پنهان روی باکس */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleReload}
+        className="rounded-xl font-iran-sans font-bold text-xs h-10 px-5 border-border hover:bg-muted text-foreground flex items-center justify-center gap-1.5 shadow-sm"
+      >
+        <RotateCcw className="h-4 w-4" />
+        <span>تلاش مجدد</span>
+      </Button>
+    </div>
+  );
+}
+
+====================================================================================================
+# FILE: next.config.js
+====================================================================================================
+// next.config.js
+
+/** @type {import('next').NextConfig} */
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  publicExcludes: [
+    '!Font/**/*',
+    '!font/**/*',
+    '!images/**/*',
+    '!image/**/*',
+    '!banners/**/*',
+    '!banner/**/*',
+    '!**/*.{png,jpg,jpeg,gif,webp,svg,mp4,webm,pdf,ico}',
+  ],
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+const nextConfig = {
+  reactStrictMode: true,
+  compress: true, // فشرده‌سازی خودکار Gzip / Brotli
+
+  // بهینه‌سازی چشمگیر ایمپورت آیکون‌های لوسید و کاهش زمان بلاک جاوااسکریپت (TBT)
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
+
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+images: {
+    unoptimized: false,
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1400],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    remotePatterns: [
+      { protocol: 'http', hostname: 'api.yadakchi.local' },   // دامنه جدید API
+      { protocol: 'https', hostname: 'api.yadakchi.local' },  // حالت امن احتمالی
+      { protocol: 'http', hostname: 'yadakchi.local' },       // دامنه اصلی بدون زیردامنه
+      { protocol: 'https', hostname: 'query.yadakchi.local' },
+      { protocol: 'https', hostname: 'api.yadakchi.com' },
+      { protocol: 'https', hostname: 'cdn.yadakchi.com' },
+      { protocol: 'http', hostname: '51.158.252.139' },
+      { protocol: 'http', hostname: '172.92.92.237' },
+      { protocol: 'http', hostname: 'localhost' },
+    ],
+  },
+
+  // هدرهای امنیتی مطابق الزامات Best Practices گوگل و رفع خطاهای COOP و HSTS
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+        ],
+      },
+      {
+        // کش قدرتمند و بدون تغییر برای فونت‌ها
+        source: '/Font/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
+
+  env: {
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_MEDIA_BASE_URL:
+      process.env.NEXT_PUBLIC_MEDIA_BASE_URL || '/proxy-api',
+    NEXT_PUBLIC_SEARCH_API_BASE_URL:
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local',
+    NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
+    NEXT_PUBLIC_ENABLE_LOGGING: process.env.NEXT_PUBLIC_ENABLE_LOGGING,
+    NEXT_PUBLIC_ENABLE_DEV_TOOLS: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+    NEXT_PUBLIC_DEFAULT_PAGE_SIZE: process.env.NEXT_PUBLIC_DEFAULT_PAGE_SIZE,
+    NEXT_PUBLIC_MAX_PAGE_SIZE: process.env.NEXT_PUBLIC_MAX_PAGE_SIZE,
+  },
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  async rewrites() {
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.local';
+    const searchApiBaseUrl =
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local';
+
+    return [
+      {
+        source: '/proxy-api/api/Search/:path*',
+        destination: `${searchApiBaseUrl}/api/Search/:path*`,
+        basePath: false,
+      },
+      {
+        source: '/proxy-api/:path*',
+        destination: `${apiBaseUrl}/:path*`,
+        basePath: false,
+      },
+    ];
+  },
+
+
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+};
+
+module.exports = withPWA(nextConfig);
+
+

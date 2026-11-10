@@ -501,7 +501,7 @@ export default function BasketPaymentContent() {
           </div>
 
           <PaymentMethodCard />
-          <DiscountCard />
+          {/* <DiscountCard /> */}
           <ReferralCard />
           <ItemsSummaryCard onOpenTracking={() => setIsTrackingModalOpen(true)} />
         </div>

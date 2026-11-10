@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
     short_name: 'یدکچی',
     description: 'بزرگ‌ترین مارکت‌پلیس قطعات خودرو و لوازم یدکی در ایران',
-    start_url: '/home',
+    start_url: '/',
     display: 'standalone',
     background_color: '#FFFFFF',
     theme_color: '#CE3E04', // اصلاح شد: مطابق با رنگ برند جدید

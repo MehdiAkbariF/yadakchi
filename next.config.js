@@ -22,9 +22,8 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 
 const nextConfig = {
   reactStrictMode: true,
-  compress: true, // فشرده‌سازی خودکار Gzip / Brotli
+  compress: true,
 
-  // بهینه‌سازی چشمگیر ایمپورت آیکون‌های لوسید و کاهش زمان بلاک جاوااسکریپت (TBT)
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
@@ -40,11 +39,14 @@ const nextConfig = {
   images: {
     unoptimized: false,
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // ۳۰ روز کش در مرورگر برای تصاویر
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     deviceSizes: [640, 750, 828, 1080, 1200, 1400],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
+      { protocol: 'http', hostname: 'api.yadakchi.local' },
       { protocol: 'https', hostname: 'api.yadakchi.local' },
+      { protocol: 'http', hostname: 'yadakchi.local' },
+      { protocol: 'https', hostname: 'query.yadakchi.local' },
       { protocol: 'https', hostname: 'api.yadakchi.com' },
       { protocol: 'https', hostname: 'cdn.yadakchi.com' },
       { protocol: 'http', hostname: '51.158.252.139' },
@@ -53,12 +55,16 @@ const nextConfig = {
     ],
   },
 
-  // هدرهای امنیتی مطابق الزامات Best Practices گوگل و رفع خطاهای COOP و HSTS
   async headers() {
     return [
       {
+        // ✅ noindex در سطح HTTP برای همه مسیرها (قوی‌ترین لایه)
         source: '/(.*)',
         headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive, nosnippet, noimageindex',
+          },
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
@@ -82,7 +88,16 @@ const nextConfig = {
         ],
       },
       {
-        // کش قدرتمند و بدون تغییر برای فونت‌ها
+        // هدر noindex برای فایل‌های استاتیک هم اعمال شود
+        source: '/:path*.(svg|png|jpg|jpeg|gif|webp|ico|json|xml|txt)',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow',
+          },
+        ],
+      },
+      {
         source: '/Font/:path*',
         headers: [
           {
@@ -97,10 +112,9 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_MEDIA_BASE_URL:
-      process.env.NEXT_PUBLIC_MEDIA_BASE_URL || '/proxy-api',
+      process.env.NEXT_PUBLIC_MEDIA_BASE_URL ,
     NEXT_PUBLIC_SEARCH_API_BASE_URL:
-      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
-      'https://query.yadakchi.local',
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ,
     NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
     NEXT_PUBLIC_ENABLE_LOGGING: process.env.NEXT_PUBLIC_ENABLE_LOGGING,
     NEXT_PUBLIC_ENABLE_DEV_TOOLS: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
@@ -116,10 +130,9 @@ const nextConfig = {
 
   async rewrites() {
     const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.local';
+      process.env.NEXT_PUBLIC_API_BASE_URL ;
     const searchApiBaseUrl =
-      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
-      'https://query.yadakchi.local';
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ;
 
     return [
       {
@@ -131,16 +144,6 @@ const nextConfig = {
         source: '/proxy-api/:path*',
         destination: `${apiBaseUrl}/:path*`,
         basePath: false,
-      },
-    ];
-  },
-
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/home',
-        permanent: true,
       },
     ];
   },

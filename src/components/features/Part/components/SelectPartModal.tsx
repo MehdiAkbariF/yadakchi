@@ -1,3 +1,4 @@
+// src/components/features/Part/components/SelectPartModal.tsx
 'use client';
 
 import * as React from 'react';
@@ -14,9 +15,13 @@ import { getFullUrl } from '@/core/utils/formatters';
 export interface SelectPartModalProps {
   isOpen: boolean;
   onClose: () => void;
-  slug: string; // PartCategoryEnglishTitle یا PartCategoryId
+  slug?: string;
   categoryName: string;
   carSlug?: string;
+  /** شناسه دقیق خودرو جهت ارسال به عنوان CarId در API */
+  carId?: string;
+  /** مدل خودرو به صورت متنی (اختیاری جهت پشتیبانی از صفحات قدیمی) */
+  carModel?: string;
   categoryId?: string;
 }
 
@@ -26,25 +31,29 @@ export function SelectPartModal({
   slug,
   categoryName,
   carSlug,
+  carId,
+  carModel,
   categoryId,
 }: SelectPartModalProps) {
   const router = useRouter();
   const [partSearch, setPartSearch] = React.useState('');
   const debouncedSearch = useDebounce(partSearch, 300);
 
-  // تشخیص هوشمند شناسه (GUID) یا عنوان انگلیسی اسلاگ
+  const hasCarId = Boolean(carId && carId.trim());
+  const hasCarModel = Boolean(carModel && carModel.trim());
+
+  // تشخیص شناسه (GUID) یا عنوان انگلیسی اسلاگ
   const isGuid = /^[0-9a-fA-F-]{36}$/.test(slug || '');
   const resolvedCategoryId = categoryId || (isGuid ? slug : undefined);
   const resolvedCategorySlug = !isGuid && slug ? slug : undefined;
 
-  // بازنشانی مقدار اینپوت سرچ با باز شدن مجدد مودال
+  // پاکسازی ورودی سرچ با باز شدن مجدد مودال
   React.useEffect(() => {
     if (isOpen) {
       setPartSearch('');
     }
   }, [isOpen]);
 
-  // ✅ استفاده از useInfiniteQuery پایدار: مشکل خالی شدن در دفعات بعدی را ۱۰۰٪ حل می‌کند
   const {
     data,
     fetchNextPage,
@@ -56,8 +65,11 @@ export function SelectPartModal({
       'front',
       'parts',
       'by-category-infinite',
-      resolvedCategoryId,
-      resolvedCategorySlug,
+      hasCarId ? 'by-car-id' : hasCarModel ? 'by-car-model' : 'by-category',
+      carId ?? null,
+      carModel ?? null,
+      resolvedCategoryId ?? null,
+      resolvedCategorySlug ?? null,
       debouncedSearch,
     ],
     queryFn: async ({ pageParam = 1 }) => {
@@ -68,11 +80,19 @@ export function SelectPartModal({
         PageSize: 30,
       };
 
-      if (resolvedCategoryId) {
-        params.PartCategoryId = resolvedCategoryId;
-      }
-      if (resolvedCategorySlug) {
-        params.PartCategoryEnglishTitle = resolvedCategorySlug;
+      // اولویت ۱: ارسال CarId دقیق
+      if (hasCarId) {
+        params.CarId = carId!.trim();
+      } else if (hasCarModel) {
+        params.CarModel = carModel!.trim();
+      } else {
+        // فیلتر بر اساس دسته‌بندی قطعات
+        if (resolvedCategoryId) {
+          params.PartCategoryId = resolvedCategoryId;
+        }
+        if (resolvedCategorySlug) {
+          params.PartCategoryEnglishTitle = resolvedCategorySlug;
+        }
       }
 
       const response = await client.get<any>('/api/Front/PartList', { params });
@@ -84,20 +104,21 @@ export function SelectPartModal({
       return nextPage <= totalPages ? nextPage : undefined;
     },
     initialPageParam: 1,
-    enabled: isOpen && !!(resolvedCategoryId || resolvedCategorySlug),
-    staleTime: 5 * 60 * 1000, // ۵ دقیقه کش پایدار در مرورگر
+    enabled:
+      isOpen &&
+      !!(hasCarId || hasCarModel || resolvedCategoryId || resolvedCategorySlug),
+    staleTime: 5 * 60 * 1000,
   });
 
-  // تجمیع مستقیم آیتم‌ها از کش بدون وابستگی به useEffect
   const allParts = React.useMemo(() => {
     return data?.pages?.flatMap((page) => page.items || []) || [];
   }, [data]);
 
-  // اسکرول بی‌نهایت برای لود صفحات بعدی
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (!hasNextPage || isFetchingNextPage || isLoading) return;
     const target = e.currentTarget;
-    const isAtBottom = target.scrollHeight - target.scrollTop - target.clientHeight <= 40;
+    const isAtBottom =
+      target.scrollHeight - target.scrollTop - target.clientHeight <= 40;
     if (isAtBottom) {
       fetchNextPage();
     }
@@ -121,7 +142,6 @@ export function SelectPartModal({
       return;
     }
 
-    // هدایت مستقیم و تمیز به صفحه خود قطعه
     const targetCategorySlug =
       resolvedCategorySlug ||
       part.categoryEnglishTitle ||

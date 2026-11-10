@@ -66,7 +66,7 @@ export function MobileMenu({ isOpen, isAuthenticated, onClose }: MobileMenuProps
           onClick={onClose}
         >
           <Car aria-hidden="true" className="h-4 w-4 text-primary" />
-          <span>ماشین من</span>
+          <span>گاراژ من</span>
         </Link>
       </div>
 

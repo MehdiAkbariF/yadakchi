@@ -44,15 +44,23 @@ export class ProductMapper {
     const hasDiscount = dto.isDiscountApplied !== undefined 
       ? dto.isDiscountApplied 
       : (rawPrice > rawFinalPrice);
-
-    let discount: Discount | null = null;
+let discount: Discount | null = null;
     if (hasDiscount && rawPrice > 0) {
       const calculatedPercent = Math.round(((rawPrice - rawFinalPrice) / rawPrice) * 100);
+      
+      // ✅ خواندن تاریخ انقضا از تمام حالت‌های ممکن (اوپن‌سرچ، نومینیتد و API اصلی)
+      const rawExpDate =
+        dto.discountUntil ||
+        nominated.discountUntil ||
+        dto.discountExpiration ||
+        nominated.discountExpiration ||
+        null;
+
       discount = {
         percent: dto.discountPercentage !== undefined && dto.discountPercentage > 0 
           ? dto.discountPercentage 
           : calculatedPercent,
-        expirationDate: nominated.discountUntil || dto.discountExpiration ? new Date(nominated.discountUntil || dto.discountExpiration) : null,
+        expirationDate: rawExpDate ? new Date(rawExpDate) : null,
         originalPrice: price,
       };
     }
@@ -128,11 +136,13 @@ export class ProductMapper {
     };
   }
 
-  static toView(domain: Product): ProductViewModel {
+  static toView(domain: Product): ProductViewModel & { discountUntil?: string | null } {
     const priceInToman = domain.price.amount / 10;
     const discountedPrice = domain.discount 
       ? (domain.price.amount * (1 - domain.discount.percent / 100)) / 10
       : priceInToman;
+
+    const expirationDateStr = domain.discount?.expirationDate?.toISOString() || null;
 
     return {
       id: domain.id,
@@ -141,6 +151,8 @@ export class ProductMapper {
       name: domain.name.value,
       englishTitle: domain.name.english,
       description: domain.description,
+      // ✅ ارسال مستقیم به سطح اول کالا
+      discountUntil: expirationDateStr,
       price: {
         raw: domain.price.amount,
         formatted: this.formatNumber(domain.price.amount),
@@ -152,7 +164,7 @@ export class ProductMapper {
         percent: domain.discount?.percent || 0,
         originalPrice: domain.discount ? this.formatNumber(domain.discount.originalPrice.amount / 10) + ' تومان' : '',
         discountedPrice: domain.discount ? this.formatNumber(discountedPrice) + ' تومان' : '',
-        expirationDate: domain.discount?.expirationDate?.toISOString() || null,
+        expirationDate: expirationDateStr,
         isActive: domain.discount?.expirationDate ? domain.discount.expirationDate > new Date() : true,
       },
       images: domain.images.map(img => ({
@@ -398,7 +410,7 @@ export class ProductMapper {
     };
   }
 
-  static toViewShopProduct(dto: ShopProductDto): ShopProductViewModel {
+static toViewShopProduct(dto: ShopProductDto): ShopProductViewModel {
     const isDiscountActive = dto.rialRetailPrice > dto.finalRialPrice;
     return {
       id: dto.id,
@@ -408,6 +420,7 @@ export class ProductMapper {
       retailPriceRaw: dto.rialRetailPrice,
       finalPriceRaw: dto.finalRialPrice,
       discountPercentage: dto.discountPercentage,
+      discountUntil: dto.discountUntil || null, // ✅ اضافه شد
       hasDiscount: isDiscountActive,
       type: dto.type,
       typeLabel: dto.type === 'New' ? 'قطعه نو' : dto.type === 'Stock' ? 'قطعه استوک' : 'قطعه زیرصفری',
@@ -484,8 +497,7 @@ export class ProductMapper {
       bestReply: dto.bestReply ? this.toViewInquiryItem(dto.bestReply) : null
     };
   }
-
-  static toViewSearchHit(dto: SearchProductHitDto): ShopProductViewModel {
+static toViewSearchHit(dto: SearchProductHitDto): ShopProductViewModel {
     const isDiscountActive =
       dto.isDiscountApplied || dto.rialRetailPrice > dto.rialFinalPrice;
 
@@ -504,6 +516,7 @@ export class ProductMapper {
       retailPriceRaw: dto.rialRetailPrice,
       finalPriceRaw: dto.rialFinalPrice,
       discountPercentage: dto.discountPercentage,
+      discountUntil: dto.discountUntil || null, // ✅ اضافه شد
       hasDiscount: isDiscountActive,
       type: dto.type as 'New' | 'Stock' | 'TakeOff',
       typeLabel,

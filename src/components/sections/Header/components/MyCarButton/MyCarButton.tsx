@@ -9,7 +9,7 @@ export function MyCarButton() {
       className="flex items-center gap-1.5 text-xs xl:text-sm font-medium text-foreground/90 hover:text-primary transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md px-1 py-0.5"
     >
       <Car aria-hidden="true" className="h-4 w-4 text-primary" />
-      <span>ماشین من</span>
+      <span>گاراژ من</span>
     </Link>
   );
 }

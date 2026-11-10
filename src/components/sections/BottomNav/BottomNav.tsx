@@ -30,10 +30,10 @@ export function BottomNav() {
   const profileHref = isAuthenticated ? '/profile' : '/login';
 
   const navItems = [
-    { id: 'home', label: 'خانه', icon: Home, href: '/home' },
+    { id: 'home', label: 'خانه', icon: Home, href: '/' },
     { id: 'categories', label: 'دسته‌بندی', icon: LayoutGrid, href: '/categories' },
     { id: 'basket', label: 'سبد خرید', icon: ShoppingBag, href: '/basket', badge: cartCount },
-    { id: 'my-car', label: 'ماشین من', icon: Car, href: '/my-car' },
+    { id: 'my-car', label: 'گاراژ من', icon: Car, href: '/my-car' },
     { id: 'profile', label: profileLabel, icon: User, href: profileHref },
   ];
 

@@ -73,12 +73,19 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       alternates: {
         canonical: canonicalUrl,
       },
-      robots: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-      },
+        robots: {
+        index: false,
+        follow: false,
+        nocache: true,
+        googleBot: {
+          index: false,
+          follow: false,
+          noimageindex: true,
+          'max-snippet': -1,
+          'max-image-preview': 'none',
+          'max-video-preview': -1,
+        },
+         },
       openGraph: {
         title,
         description,

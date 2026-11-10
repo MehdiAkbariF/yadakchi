@@ -377,15 +377,25 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     }
   };
 
-  const triggerCartSequence = () => {
+const triggerCartSequence = () => {
     setShowCartBanner(true);
     if (bannerTimerRef.current) clearTimeout(bannerTimerRef.current);
 
-    bannerTimerRef.current = setTimeout(() => {
-      setShowCartBanner(false);
-      setIsCartBouncing(true);
-      setTimeout(() => setIsCartBouncing(false), 2200);
-    }, 4500);
+    const DURATION = 4500;
+    const startTime = Date.now();
+
+    const checkTimer = () => {
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= DURATION) {
+        setShowCartBanner(false);
+        setIsCartBouncing(true);
+        setTimeout(() => setIsCartBouncing(false), 2200);
+      } else {
+        bannerTimerRef.current = setTimeout(checkTimer, Math.min(200, DURATION - elapsed));
+      }
+    };
+
+    bannerTimerRef.current = setTimeout(checkTimer, DURATION);
   };
 
   const handleMobileAddToBasket = async () => {
@@ -510,17 +520,27 @@ export function ProductContent({ productCode, initialData }: ProductContentProps
     `${toPersianDigits(product.salesCount || 0)} خرید موفق`,
   ];
 
-  const leftPriceContent = currentSelectedSeller ? (
-    <div className="flex h-10 w-36 max-w-[9.375rem] select-none flex-col justify-between">
-      <div className="relative h-4 w-full overflow-hidden">
-        <span className="absolute block w-full truncate text-2xs font-bold leading-none text-muted-foreground">
-          {metaItems[metaIndex]}
-        </span>
+const leftPriceContent = currentSelectedSeller ? (
+    <div className="flex h-11 w-36 max-w-[9.375rem] select-none flex-col justify-between py-0.5">
+      {/* باکس نمایش چرخشی اطلاعات با ارتفاع کافی و انیمیشن روان بدون بریده شدن حروف فارسی */}
+      <div className="relative h-5 w-full overflow-hidden flex items-center">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={metaIndex}
+            initial={{ y: 8, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -8, opacity: 0 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
+            className="absolute inset-x-0 block truncate text-2xs font-semibold leading-normal text-muted-foreground"
+          >
+            {metaItems[metaIndex]}
+          </motion.span>
+        </AnimatePresence>
       </div>
 
       <div className="flex flex-col">
         {currentSelectedSeller.hasDiscount ? (
-          <span className="mb-1 text-2xs leading-none text-muted-foreground line-through">
+          <span className="mb-0.5 text-2xs leading-none text-muted-foreground line-through">
             {currentSelectedSeller.retailPrice}
           </span>
         ) : null}

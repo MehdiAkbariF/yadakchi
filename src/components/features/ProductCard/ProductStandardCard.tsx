@@ -4,12 +4,13 @@
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Store, Package } from 'lucide-react';
+import { Star, Store, Package, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { useImpression } from '@/shared/hooks/useImpression';
 import { trackShopProductClick } from '@/core/utils/impression-tracker';
+import { useDiscountCountdown } from '@/shared/hooks/useDiscountCountdown';
 
 export interface ProductStandardCardProps {
   product: any;
@@ -84,13 +85,24 @@ export function ProductStandardCard({
       ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
       : nominated?.discountPercentage || product?.discount?.percent || 0);
 
+  // استخراج تاریخ انقضای تخفیف
+  const expirationStr =
+    product?.discountUntil ||
+    nominated?.discountUntil ||
+    product?.discountExpiration ||
+    nominated?.discountExpiration ||
+    product?.discount?.expirationDate ||
+    null;
+
+  const { isExpired, formattedPersian } = useDiscountCountdown(
+    hasDiscount && !isOutOfStock ? expirationStr : null
+  );
+  const isTimerVisible = Boolean(expirationStr && !isExpired && !isOutOfStock && hasDiscount);
+
   const tickerItems = React.useMemo(() => {
-    // ✅ اگر کالا ناموجود باشد، هیچ آیتمی برای اسلاید تیکر ساخته نمی‌شود
     if (isOutOfStock) return [];
 
     const items: { text: string; icon: any; isShop?: boolean }[] = [];
-
-    // ✅ اگر نام فروشگاه موجود بود نمایش بده، در غیر این صورت نام «یدکچی» را به عنوان تامین‌کننده بنویس
     const displayShopName = shopName && shopName.trim() !== '' ? shopName : 'یدکچی';
     items.push({
       text: `فروشگاه: ${displayShopName}`,
@@ -201,35 +213,35 @@ export function ProductStandardCard({
       <div
         ref={impressionRef}
         className={cn(
-          'relative flex h-full w-full select-none flex-col items-center rounded-lg border border-border bg-card p-3 transition-all duration-normal sm:p-3.5',
+          'relative flex h-full w-full select-none flex-col items-center rounded-xl border border-border bg-card p-3 transition-all duration-normal sm:p-3.5',
           'hover:border-primary/50 hover:shadow-md',
           className
         )}
       >
-        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-md" draggable={false}>
+        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-lg" draggable={false}>
           <Image
             src={getFullUrl(imageSource)}
             alt={product?.imageAlt || title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
-            className="select-none rounded-md object-contain"
+            className="select-none rounded-lg object-contain"
             draggable={false}
           />
 
           {showRating && !isOutOfStock ? (
-            <div className="absolute start-2 top-2 z-10 flex items-center justify-center rounded-md bg-card/90 px-2 py-0.5 shadow-sm backdrop-blur-sm">
+            <div className="absolute start-2 top-2 z-10 flex items-center justify-center rounded-md bg-card/90 px-2 py-0.5 shadow-2xs backdrop-blur-sm border border-border/60">
               {renderStars()}
             </div>
           ) : null}
         </div>
 
         <div className="mb-1 mt-2 h-9 w-full">
-          <h4 className="line-clamp-2 w-full text-sm font-semibold leading-relaxed text-foreground">
+          <h4 className="line-clamp-2 w-full text-xs sm:text-sm font-semibold leading-relaxed text-foreground">
             {title}
           </h4>
         </div>
 
-        {/* بخش تیکر اطلاعات: اگر ناموجود باشد هیچ اسلایدی نشان نمداهد */}
+        {/* بخش تیکر اطلاعات */}
         <div className="flex w-full select-none flex-col items-stretch">
           {isMounted && tickerLength > 0 && !isOutOfStock ? (
             <div className="relative mt-0.5 flex h-6 w-full shrink-0 select-none items-center justify-start overflow-hidden text-2xs text-muted-foreground sm:text-xs">
@@ -329,7 +341,32 @@ export function ProductStandardCard({
             </div>
           </div>
         </div>
+
+        {/* ردیف تایمر تخفیف زمان‌دار مینیمال */}
+        {isTimerVisible ? (
+          <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border/80 pt-2 text-muted-foreground">
+            <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.hours}
+              </span>
+              <span className="text-muted-foreground/60 leading-none">:</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.minutes}
+              </span>
+              <span className="text-muted-foreground/60 leading-none">:</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.seconds}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-primary">
+              <Timer aria-hidden="true" className="h-3.5 w-3.5" />
+              <span className="text-3xs font-bold hidden">فرصت تخفیف</span>
+            </div>
+          </div>
+        ) : null}
       </div>
     </Link>
   );
 }
+
+export default ProductStandardCard;

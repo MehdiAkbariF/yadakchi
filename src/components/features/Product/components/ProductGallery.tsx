@@ -1,3 +1,4 @@
+// src/components/features/Product/components/ProductGallery.tsx
 'use client';
 
 import * as React from 'react';
@@ -5,18 +6,17 @@ import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import {
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
   X,
   ChevronLeft,
   ChevronRight,
   Maximize2,
   ImageOff,
-  Ticket,
+  Timer,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { useDiscountCountdown } from '@/shared/hooks/useDiscountCountdown';
 
 export interface ProductGalleryProps {
   images: any[];
@@ -24,36 +24,8 @@ export interface ProductGalleryProps {
   hasDiscount?: boolean;
   discountPercent?: number;
   hasTimedDiscount?: boolean;
-  discountExpiration?: string | null;
+  discountExpiration?: string | Date | null;
   onDragVertical?: (deltaY: number) => void;
-}
-
-function useCountdown(expiration?: string | null) {
-  const [remain, setRemain] = React.useState<{ h: number; m: number; s: number } | null>(null);
-
-  React.useEffect(() => {
-    if (!expiration) {
-      setRemain(null);
-      return;
-    }
-    const calc = () => {
-      const diff = +new Date(expiration) - Date.now();
-      if (diff <= 0) {
-        setRemain({ h: 0, m: 0, s: 0 });
-        return;
-      }
-      setRemain({
-        h: Math.floor(diff / (1000 * 60 * 60)),
-        m: Math.floor((diff / 1000 / 60) % 60),
-        s: Math.floor((diff / 1000) % 60),
-      });
-    };
-    calc();
-    const iv = setInterval(calc, 1000);
-    return () => clearInterval(iv);
-  }, [expiration]);
-
-  return remain;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -83,7 +55,6 @@ function GalleryScrubber({
         align === 'start' ? 'justify-start' : 'justify-center mx-auto'
       )}
     >
-      {/* تراک مقطعی کپسولی */}
       <div
         className={cn(
           'flex items-center gap-1.5 flex-1 p-1 rounded-full backdrop-blur-md transition-colors',
@@ -124,7 +95,6 @@ function GalleryScrubber({
         })}
       </div>
 
-      {/* شماره عکس به فارسی */}
       <div
         className={cn(
           'flex items-center gap-1 text-2xs font-bold px-2 py-0.5 rounded-full tabular-nums shrink-0',
@@ -160,7 +130,13 @@ export function ProductGallery({
 
   const mobileCarouselRef = React.useRef<HTMLDivElement>(null);
   const touchStartRef = React.useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  const countdown = useCountdown(hasTimedDiscount ? discountExpiration : null);
+
+  // همگام با زمان سرور
+  const { isExpired, formattedPersian } = useDiscountCountdown(
+    hasTimedDiscount ? discountExpiration : null
+  );
+  const isTimerActive = Boolean(hasTimedDiscount && discountExpiration && !isExpired);
+
   const validImages = React.useMemo(() => (images || []).filter(Boolean), [images]);
   const safeIndex = activeIndex < validImages.length ? activeIndex : 0;
 
@@ -243,7 +219,6 @@ export function ProductGallery({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreenOpen, closeFullscreen, handleNext, handlePrev]);
 
-  // رهگیری دقیق اسکرول لمسی کاروسل موبایل
   const handleMobileScroll = () => {
     if (!mobileCarouselRef.current) return;
     const { scrollLeft, clientWidth } = mobileCarouselRef.current;
@@ -419,20 +394,25 @@ export function ProductGallery({
       {/* ================= نسخه دسکتاپ ================= */}
       <div className="hidden lg:flex w-full flex-col items-start gap-3.5 text-right pt-1">
         <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-xs">
-          {hasTimedDiscount ? (
-            <div className="absolute end-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
-              <Ticket aria-hidden="true" className="h-3.5 w-3.5" />
-              <span>تخفیف {toPersianDigits(discountPercent || 0)}٪</span>
-              {countdown && (
-                <span className="rounded bg-black/20 px-1 py-0.5 text-3xs font-bold" dir="ltr">
-                  {String(countdown.h).padStart(2, '0')}:{String(countdown.m).padStart(2, '0')}:
-                  {String(countdown.s).padStart(2, '0')}
+          {/* نشانگر تخفیف و تایمر مینیمال و شکیل دسکتاپ */}
+          {isTimerActive ? (
+            <div className="absolute end-3 top-3 z-10 flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-2.5 py-1 text-destructive shadow-2xs backdrop-blur-md">
+              <div className="flex items-center gap-1 font-extrabold text-2xs">
+                <span>تخفیف</span>
+                <span>{toPersianDigits(discountPercent || 0)}٪</span>
+              </div>
+              <span className="h-3 w-px bg-destructive/30" />
+              <div className="flex items-center gap-1 text-2xs font-bold tabular-nums" dir="ltr">
+                <Timer className="h-3.5 w-3.5 shrink-0" />
+                <span>
+                  {formattedPersian.hours}:{formattedPersian.minutes}:{formattedPersian.seconds}
                 </span>
-              )}
+              </div>
             </div>
           ) : hasDiscount && discountPercent ? (
-            <div className="absolute end-3 top-3 z-10 rounded-lg bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-xs">
-              تخفیف {toPersianDigits(discountPercent)}٪
+            <div className="absolute end-3 top-3 z-10 flex items-center gap-1 rounded-xl bg-destructive px-2.5 py-1 text-2xs font-bold text-destructive-foreground shadow-2xs">
+              <Percent className="h-3 w-3" />
+              <span>تخفیف {toPersianDigits(discountPercent)}٪</span>
             </div>
           ) : null}
 
@@ -481,7 +461,7 @@ export function ProductGallery({
           )}
         </div>
 
-        {/* لیست تصاویر بندانگشتی دسکتاپ */}
+        {/* بندانگشتی‌های دسکتاپ */}
         {validImages.length > 1 && (
           <div className="w-full flex flex-col items-start gap-2.5">
             <div className="w-full overflow-x-auto scrollbar-thin py-1">
@@ -527,13 +507,12 @@ export function ProductGallery({
         )}
       </div>
 
-      {/* ================= نسخه موبایل با نوار اسکرابر و شمارشگر ================= */}
+      {/* ================= نسخه موبایل ================= */}
       <div
         className="lg:hidden relative w-full flex flex-col items-center pt-2 gap-2.5"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
       >
-        {/* کاروسل اصلی تصاویر */}
         <div
           ref={mobileCarouselRef}
           onScroll={handleMobileScroll}
@@ -557,7 +536,25 @@ export function ProductGallery({
                     className="object-contain p-3"
                   />
 
-                  {/* بچ شناور شمارشگر کالا روی تصویر: ۱ از ۴ */}
+                  {/* نشانگر تخفیف زمان‌دار شناور در موبایل */}
+                  {isTimerActive ? (
+                    <div className="absolute top-2.5 end-2.5 z-10 flex items-center gap-1.5 rounded-full border border-destructive/20 bg-destructive/15 px-2.5 py-0.5 text-destructive backdrop-blur-md shadow-2xs">
+                      <span className="text-3xs font-extrabold">{toPersianDigits(discountPercent || 0)}٪</span>
+                      <span className="h-2.5 w-px bg-destructive/30" />
+                      <div className="flex items-center gap-0.5 text-3xs font-bold tabular-nums" dir="ltr">
+                        <Timer className="h-3 w-3" />
+                        <span>
+                          {formattedPersian.hours}:{formattedPersian.minutes}:{formattedPersian.seconds}
+                        </span>
+                      </div>
+                    </div>
+                  ) : hasDiscount && discountPercent ? (
+                    <div className="absolute top-2.5 end-2.5 z-10 rounded-full bg-destructive px-2 py-0.5 text-3xs font-bold text-destructive-foreground shadow-2xs">
+                      تخفیف {toPersianDigits(discountPercent)}٪
+                    </div>
+                  ) : null}
+
+                  {/* شمارشگر عکس در موبایل: ۱ از ۴ */}
                   {validImages.length > 1 && (
                     <div className="absolute top-2.5 start-2.5 z-10 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 text-2xs font-bold text-white backdrop-blur-md tabular-nums shadow-xs">
                       <span>{toPersianDigits(safeIndex + 1)}</span>
@@ -584,7 +581,6 @@ export function ProductGallery({
           })}
         </div>
 
-        {/* نوار اسکرابر کپسولی مقطعی زیر تصویر در موبایل */}
         {validImages.length > 1 && (
           <div className="w-full px-6 flex justify-center">
             <GalleryScrubber

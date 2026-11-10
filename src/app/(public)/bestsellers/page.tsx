@@ -1,19 +1,36 @@
 // src/app/(public)/bestsellers/page.tsx
 
-import { MainLayout } from '@/components/shared/Layouts/MainLayout';
 import { getServerCurrentUser } from '@/domains/auth/server.auth';
 import { getProductService } from '@/domains/front/product/services/product.service';
 import { getBrandService } from '@/domains/front/reference/brand/services/brand.service';
 import { getCarService } from '@/domains/front/reference/car/services/car.service';
-import { getPartService } from '@/domains/front/part/services/part.service';
+import { getHttpClient } from '@/core/http/client';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { BestsellersContent } from '@/components/features/Bestsellers/BestsellersContent';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 
 export const revalidate = 60;
 
+
+const BESTSELLERS_BASE_FILTERS: SearchProductsRequest = {
+  orderType: 'BestSelling',
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
+
 export default async function BestsellersPage() {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        gcTime: 5 * 60 * 1000,
+      },
+    },
+  });
 
   const user = await getServerCurrentUser();
   if (user) {
@@ -23,45 +40,37 @@ export default async function BestsellersPage() {
   const productService = getProductService();
   const brandService = getBrandService();
   const carService = getCarService();
-  const partService = getPartService();
+  const httpClient = getHttpClient();
 
-  // فیلتر اولیه جهت پیش‌دانلود کالاها روی سرور بر اساس اولویت پرفروش‌ترین‌ها
-  const initialFilters = {
-    orderType: 'BestSelling' as const,
-    pageNumber: 1,
-    pageSize: 30,
-  };
+  const initialFilters: SearchProductsRequest = { ...BESTSELLERS_BASE_FILTERS };
 
-  try {
-    await Promise.all([
-      // ۱. پرفچ کالاها بر اساس فیلتر پرفروش‌ترین‌ها
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.front.products.search(initialFilters),
-        queryFn: () => productService.searchProducts(initialFilters),
-      }),
-      // ۲. پرفچ برندها
-      queryClient.prefetchQuery({
-        queryKey: ['reference', 'brands', 'names', {}],
-        queryFn: () => brandService.getBrandsName({}),
-      }),
-      // ۳. پرفچ خودروها
-      queryClient.prefetchQuery({
-        queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
-        queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
-      }),
-      // ۴. پرفچ دسته‌بندی‌ها
-      queryClient.prefetchQuery({
-        queryKey: ['front', 'parts', 'categories-flat', 'all'],
-        queryFn: () => partService.getPartCategories(''),
-      }),
-    ]);
-  } catch (error) {}
+  await Promise.allSettled([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.front.products.search(initialFilters),
+      queryFn: () => productService.searchProducts(initialFilters),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'brands', 'names', {}],
+      queryFn: () => brandService.getBrandsName({}),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['reference', 'cars', 'names', { pageNumber: 1, pageSize: 50 }],
+      queryFn: () => carService.getCarsName({ pageNumber: 1, pageSize: 50 }),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ['front', 'parts', 'categories-flat', 'all'],
+      queryFn: async () => {
+        const response = await httpClient.get<any[]>('/api/Front/PartCategories', {
+          params: { CarId: '' },
+        });
+        return Array.isArray(response.data) ? response.data : [];
+      },
+    }),
+  ]);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-     
-        <BestsellersContent />
-      
+      <BestsellersContent />
     </HydrationBoundary>
   );
 }

@@ -129,12 +129,13 @@ export function CarHeaderCard({ slug, carName, carCover }: CarHeaderCardProps) {
         </ModalBody>
       </Modal>
 
+      {/* ✅ اصلاح‌شده: به جای slug ثابت، CarModel ارسال می‌شود */}
       <SelectPartModal
         isOpen={isSelectPartOpen}
         onClose={() => setIsSelectPartOpen(false)}
-        slug="Fuel-System"
-        categoryName={carName}
+        carModel={carName}
         carSlug={slug}
+        categoryName={carName}
       />
     </div>
   );

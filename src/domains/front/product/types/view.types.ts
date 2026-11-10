@@ -187,6 +187,7 @@ export interface ShopDetailsViewModel {
   logo: string | null;
 }
 
+// در src/domains/front/product/types/view.types.ts
 export interface ShopProductViewModel {
   id: string;
   quantity: number;
@@ -195,6 +196,7 @@ export interface ShopProductViewModel {
   retailPriceRaw: number;
   finalPriceRaw: number;
   discountPercentage: number;
+  discountUntil?: string | null; // ✅ فیلد انقضای تخفیف فروشنده اضافه شد
   hasDiscount: boolean;
   type: 'New' | 'Stock' | 'TakeOff';
   typeLabel: string;

@@ -7,6 +7,7 @@ import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
 import { useGetPartCategoryPage } from '@/domains/front/part/hooks/part.hooks';
 import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
 import { SearchSidebar } from '@/components/features/ProductGrid/SearchSidebar';
+import { MobileSearchHeader } from '@/components/features/ProductGrid/MobileSearchHeader';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
 import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
@@ -14,7 +15,6 @@ import { PageDescription } from '@/components/composites/PageDescription/PageDes
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
 import { PartCategoryHeaderCard } from '@/components/features/Part/components/PartCategoryHeaderCard';
 import { Typography } from '@/components/primitives/Typography';
-import { useAppStore } from '@/shared/store/useAppStore';
 import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
 import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner';
 import { ChangeCategoryModal } from './components/ChangeCategoryModal';
@@ -26,7 +26,6 @@ export interface PartCategoryContentProps {
 }
 
 export function PartCategoryContent({ slug }: PartCategoryContentProps) {
-  const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
   const [isChangeCatOpen, setIsChangeCatOpen] = React.useState(false);
   const [isSelectPartOpen, setIsSelectPartOpen] = React.useState(false);
@@ -58,32 +57,22 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
   ];
 
   return (
-    <div className="flex w-full flex-col gap-4  sm:gap-6" dir="rtl">
-
-      <div
-        className="sticky top-14 z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0
-         select-none flex-col gap-1 border-b border-border/80 bg-card/95 px-3 py-2 shadow-xs backdrop-blur-md transition-all 
-         duration-normal md:hidden"
-      >
-        
-        <div className="flex w-full items-center justify-between mt-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-muted/40 p-0.5">
-              <img
-                src={getFullUrl(categoryData?.category?.thumbnail)}
-                className="h-full w-full object-contain filter dark:invert"
-                alt=""
-              />
-            </div>
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">گروه قطعات</span>
-              <span className="mt-0.5 truncate text-xs font-bold text-foreground">
-                {categoryData?.category?.name || 'قطعات یدکی'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1.5">
+    <div className="flex w-full flex-col gap-4 sm:gap-6" dir="rtl">
+      {/* هدر ماژولار و مشترک موبایل با انیمیشن کشویی در اسکرول */}
+      <MobileSearchHeader
+        icon={
+          categoryData?.category?.thumbnail ? (
+            <img
+              src={getFullUrl(categoryData.category.thumbnail)}
+              className="h-full w-full object-contain filter dark:invert"
+              alt=""
+            />
+          ) : null
+        }
+        subtitle="گروه قطعات"
+        title={categoryData?.category?.name || 'قطعات یدکی'}
+        actionElement={
+          <>
             <button
               type="button"
               onClick={() => setIsChangeCatOpen(true)}
@@ -98,30 +87,13 @@ export function PartCategoryContent({ slug }: PartCategoryContentProps) {
             >
               انتخاب قطعه
             </button>
-          </div>
-        </div>
-
-        {/* ردیف دوم: فیلترها و مرتب‌سازی کامپکت */}
-        <div className="flex w-full items-center justify-between gap-2 border-t border-dashed border-border/60 pt-1.5">
-          <button
-            type="button"
-            onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-input bg-card px-2.5 text-2xs font-bold shadow-2xs active:scale-95 transition-transform"
-          >
-            <span>فیلترها</span>
-          </button>
-
-          <SortSelector
-            value={filters.orderType || 'Selected'}
-            onChange={(val) => setFilter('sort', val)}
-            variant="trigger"
-          />
-
-          <span className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-3xs font-bold text-muted-foreground">
-            {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
-          </span>
-        </div>
-      </div>
+          </>
+        }
+        totalCount={totalCount}
+        sortValue={filters.orderType || 'Selected'}
+        onSortChange={(val) => setFilter('sort', val)}
+        onOpenFilters={() => setIsMobileFiltersOpen(true)}
+      />
 
       <Breadcrumb items={breadcrumbItems} className="hidden px-4 md:flex md:px-0" />
 

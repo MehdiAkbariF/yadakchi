@@ -1,16 +1,17 @@
-﻿'use client';
+﻿// src/components/features/ProductCard/ProductDealCard.tsx
+'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Hourglass } from 'lucide-react';
+import { Star, Timer } from 'lucide-react';
 import { cn } from '@/design-system/utils/cn';
 import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { useImpression } from '@/shared/hooks/useImpression';
+import { useDiscountCountdown } from '@/shared/hooks/useDiscountCountdown';
 
 export interface ProductDealCardProps {
   product: any;
-  serverTime?: string | Date;
   showTimer?: boolean;
   showRating?: boolean;
   className?: string;
@@ -18,7 +19,6 @@ export interface ProductDealCardProps {
 
 export function ProductDealCard({
   product,
-  serverTime,
   showTimer = true,
   showRating = true,
   className,
@@ -63,49 +63,25 @@ export function ProductDealCard({
       ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
       : 0);
 
+  // استخراج تاریخ انقضای تخفیف
   const expirationStr =
-    nominated.discountUntil ||
-    nominated.discountExpiration ||
-    product?.discountExpiration;
-  const hasExpiration = Boolean(expirationStr);
+    product?.discountUntil ||
+    nominated?.discountUntil ||
+    product?.discountExpiration ||
+    nominated?.discountExpiration ||
+    product?.discount?.expirationDate ||
+    null;
 
-  const [timeLeft, setTimeLeft] = React.useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  // اتصال به هوک شمارش معکوس همگام با ساعت سرور
+  const { isExpired, formattedPersian } = useDiscountCountdown(expirationStr);
+  const isTimerVisible = showTimer && Boolean(expirationStr) && !isExpired;
+
   const [isDragging, setIsDragging] = React.useState(false);
   const dragStart = React.useRef({ x: 0, y: 0 });
 
   const shopProductId = product?.shopProductId || nominated?.id || product?.id || null;
   const impressionRef = useImpression(shopProductId);
-
-  React.useEffect(() => {
-    if (!hasExpiration) return;
-
-    const calculateTime = () => {
-      const serverDate = serverTime ? new Date(serverTime) : new Date();
-      const clientDate = new Date();
-      const timeOffset = serverDate.getTime() - clientDate.getTime();
-      const syncedNow = new Date(Date.now() + timeOffset);
-      const diff = +new Date(expirationStr as string) - +syncedNow;
-
-      if (diff > 0) {
-        setTimeLeft({
-          hours: Math.floor(diff / (1000 * 60 * 60)),
-          minutes: Math.floor((diff / 1000 / 60) % 60),
-          seconds: Math.floor((diff / 1000) % 60),
-        });
-      } else {
-        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-      }
-    };
-
-    calculateTime();
-    const interval = setInterval(calculateTime, 1000);
-    return () => clearInterval(interval);
-  }, [expirationStr, serverTime, hasExpiration]);
-
-  const formatPersianDigits = (num: number) =>
-    new Intl.NumberFormat('fa-IR', { useGrouping: false })
-      .format(num)
-      .padStart(2, '۰');
 
   const formatPrice = (value: number) => new Intl.NumberFormat('fa-IR').format(value);
 
@@ -149,15 +125,14 @@ export function ProductDealCard({
     return (
       <div className="flex select-none items-center gap-1">
         <Star aria-hidden="true" className="h-3 w-3 shrink-0 fill-warning text-warning" />
-        <span className="text-2xs font-medium text-muted-foreground sm:text-xs">
-          امتیاز {toPersianDigits(rating)}
+        <span className="text-2xs font-bold text-foreground sm:text-xs">
+          {toPersianDigits(rating)}
         </span>
       </div>
     );
   };
 
-  const codeOrId =
-    product?.productCode || product?.code || product?.productId || product?.id;
+  const codeOrId = product?.productCode || product?.code || product?.productId || product?.id;
   const productCardUrl = getProductUrl(codeOrId, title);
 
   const imageSource =
@@ -182,47 +157,47 @@ export function ProductDealCard({
       <div
         ref={impressionRef}
         className={cn(
-          'relative flex h-full w-full select-none flex-col items-center rounded-lg border border-border bg-card p-3 transition-all duration-normal sm:p-3.5',
+          'relative flex h-full w-full select-none flex-col items-center rounded-xl border border-border bg-card p-3 transition-all duration-normal sm:p-3.5',
           'hover:border-primary/40 hover:shadow-sm',
           className
         )}
       >
-        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-md" draggable={false}>
+        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-lg" draggable={false}>
           <Image
             src={getFullUrl(imageSource)}
             alt={product?.imageAlt || title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
-            className="select-none rounded-md object-contain"
+            className="select-none rounded-lg object-contain"
             draggable={false}
           />
+
+          {showRating ? (
+            <div className="absolute start-2 top-2 z-10 flex items-center justify-center rounded-md bg-card/90 px-1.5 py-0.5 shadow-2xs backdrop-blur-sm border border-border/60">
+              {renderStars()}
+            </div>
+          ) : null}
         </div>
 
         <div className="mb-1 flex min-h-[2.6rem] w-full items-start justify-end select-none">
-          <h4 className="line-clamp-2 w-full text-sm font-semibold leading-relaxed text-foreground">
+          <h4 className="line-clamp-2 w-full text-xs sm:text-sm font-semibold leading-relaxed text-foreground">
             {title}
           </h4>
         </div>
 
-        {showRating ? (
-          <div className="mb-3 mt-1.5 flex w-full select-none justify-start">
-            {renderStars()}
-          </div>
-        ) : null}
-
         <div className="mt-auto flex w-full items-center justify-between pt-2">
           <div
             className={cn(
-              'shrink-0 rounded-sm border border-accent bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground transition-opacity duration-fast',
+              'shrink-0 rounded-md bg-destructive text-destructive-foreground px-2 py-0.5 text-xs font-bold transition-opacity duration-fast',
               hasDiscount && discountPercent > 0 ? 'opacity-100' : 'pointer-events-none opacity-0'
             )}
           >
-            {toPersianDigits(discountPercent)}٪
+            {toPersianDigits(discountPercent)}%
           </div>
 
           <div className="flex min-w-0 flex-col items-end">
             {hasDiscount && originalPriceToman > finalPriceToman ? (
-              <span className="text-2xs font-medium text-muted-foreground line-through sm:text-xs">
+              <span className="text-2xs font-medium text-muted-foreground/80 line-through sm:text-xs">
                 {formatPrice(originalPriceToman)}
               </span>
             ) : null}
@@ -235,22 +210,26 @@ export function ProductDealCard({
           </div>
         </div>
 
-        {showTimer && hasExpiration ? (
-          <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border pt-1.5 text-muted-foreground">
+        {/* تایمر مینیمال و زنده همگام با سرور */}
+        {isTimerVisible ? (
+          <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border/80 pt-2 text-muted-foreground">
             <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
-              <span className="rounded-sm bg-muted px-1.5 py-0.5 text-2xs">
-                {formatPersianDigits(timeLeft.hours)}
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.hours}
               </span>
-              <span className="text-muted-foreground">:</span>
-              <span className="rounded-sm bg-muted px-1.5 py-0.5 text-2xs">
-                {formatPersianDigits(timeLeft.minutes)}
+              <span className="text-muted-foreground/60 leading-none">:</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.minutes}
               </span>
-              <span className="text-muted-foreground">:</span>
-              <span className="rounded-sm bg-muted px-1.5 py-0.5 text-2xs">
-                {formatPersianDigits(timeLeft.seconds)}
+              <span className="text-muted-foreground/60 leading-none">:</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.seconds}
               </span>
             </div>
-            <Hourglass aria-hidden="true" className="h-3.5 w-3.5 shrink-0 animate-spin text-primary" />
+            <div className="flex items-center gap-1 text-primary">
+              <Timer aria-hidden="true" className="h-3.5 w-3.5" />
+              <span className="text-3xs font-bold hidden">فرصت تخفیف</span>
+            </div>
           </div>
         ) : null}
       </div>

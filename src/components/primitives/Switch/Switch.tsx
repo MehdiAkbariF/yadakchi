@@ -1,4 +1,8 @@
+// src/components/primitives/Switch/Switch.tsx
+'use client';
+
 import * as React from 'react';
+import { motion } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 
 export interface SwitchProps {
@@ -11,7 +15,7 @@ export interface SwitchProps {
 }
 
 export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
-  ({ checked, onChange, className, disabled, id, 'aria-label': ariaLabel }, ref) => {
+  ({ checked, onChange, className, disabled = false, id, 'aria-label': ariaLabel }, ref) => {
     return (
       <button
         ref={ref}
@@ -23,21 +27,23 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={cn(
-          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-1',
-          'transition-colors duration-fast ease-in-out',
+          'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5',
+          'transition-colors duration-200 ease-in-out',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           'disabled:cursor-not-allowed disabled:opacity-50',
-          checked ? 'bg-primary' : 'bg-input',
+          // استفاده از Flex جهت تراز کردن کاملاً مستقل از راست‌به‌چپ یا چپ‌به‌راست بودن
+          checked ? 'justify-start bg-primary' : 'justify-end bg-input',
           className
         )}
       >
-        <span
-          aria-hidden="true"
-          className={cn(
-            'pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow-sm',
-            'transition-transform duration-fast ease-in-out',
-            checked ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0'
-          )}
+        <motion.span
+          layout
+          transition={{
+            type: 'spring',
+            stiffness: 600,
+            damping: 35,
+          }}
+          className="pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md"
         />
       </button>
     );

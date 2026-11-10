@@ -1,0 +1,1559 @@
+--- START OF FILE src\components\features\Product\components\ProductCommentsSection.tsx ---
+'use client';
+
+import * as React from 'react';
+import { Star, ThumbsUp, ThumbsDown, User, MessageSquare, ArrowLeft, Clock, Package } from 'lucide-react';
+import { useGetProductComments, useGetProductCommentsAverage } from '@/domains/front/product/hooks/product.hooks';
+import { useCreateComment, useLikeComment, useUnlikeComment } from '@/domains/front/comment/hooks/comment.hooks';
+import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+
+function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: { path: string; className?: string; loop?: boolean }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    let anim: any = null;
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const altPath = path.includes('/anumations/')
+          ? path.replace('/anumations/', '/animations/')
+          : path.replace('/animations/', '/anumations/');
+        let animationData: any = null;
+        for (const p of [path, altPath]) {
+          try {
+            const res = await fetch(p);
+            if (res.ok) {
+              animationData = await res.json();
+              break;
+            }
+          } catch {}
+        }
+        if (!animationData || !isMounted || !containerRef.current) return;
+        const lottieModule = await import('lottie-web');
+        const lottie = lottieModule.default || lottieModule;
+        if (containerRef.current && isMounted) {
+          anim = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay: true,
+            animationData,
+          });
+        }
+      } catch {}
+    };
+
+    init();
+    return () => {
+      isMounted = false;
+      anim?.destroy();
+    };
+  }, [path, loop]);
+
+  return <div ref={containerRef} className={className} />;
+}
+
+export interface ProductCommentsSectionProps {
+  productId: string;
+  productTitle?: string;
+  productImage?: string | null;
+}
+
+export function ProductCommentsSection({
+  productId,
+  productTitle = 'قطعه انتخابی',
+  productImage,
+}: ProductCommentsSectionProps) {
+  const [orderBy, setOrderBy] = React.useState('Newest');
+  const [page, setPage] = React.useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = React.useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = React.useState(false);
+
+  const { user } = useAuth();
+  const userName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'کاربر';
+
+  const [rate, setRate] = React.useState(0);
+  const [hoverRate, setHoverRate] = React.useState(0);
+  const [commentText, setCommentText] = React.useState('');
+  const [isIncognito, setIsIncognito] = React.useState(false);
+
+  const { data: average } = useGetProductCommentsAverage(productId);
+  const { data: commentsResponse, isLoading } = useGetProductComments(productId, orderBy, page);
+  const createComment = useCreateComment();
+  const likeComment = useLikeComment();
+  const unlikeComment = useUnlikeComment();
+
+  // استیت محلی برای آپدیت ۱۰۰٪ درجا و آنی لایک و دیس‌لایک
+  const [localComments, setLocalComments] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (commentsResponse?.items) {
+      setLocalComments(commentsResponse.items);
+    }
+  }, [commentsResponse]);
+
+  const handleCommentSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (rate === 0) {
+      showToast.error('لطفاً امتیاز خود به این کالا را انتخاب فرمایید');
+      return;
+    }
+    if (commentText.trim().length < 10) {
+      showToast.error('متن نظر شما باید حداقل ۱۰ کاراکتر باشد');
+      return;
+    }
+    try {
+      await createComment.mutateAsync({ productId, comment: commentText.trim(), rate, isIncognito });
+      setRate(0);
+      setCommentText('');
+      setIsIncognito(false);
+      setIsWriteModalOpen(false);
+      setIsSuccessModalOpen(true);
+    } catch (error: any) {
+      showToast.error(error?.userMessage || 'خطا در ثبت دیدگاه شما');
+    }
+  };
+
+  // لایک درجا و بدون تاخیر
+  const handleLike = (comment: any) => {
+    const prev = [...localComments];
+    const isLiked = !!comment.userLiked;
+    const isDisliked = !!comment.userDisLiked;
+
+    setLocalComments((list) =>
+      list.map((c) => {
+        if (c.id !== comment.id) return c;
+        const curLikes = typeof c.likes === 'object' ? c.likes?.likes : c.likes || 0;
+        const curDislikes = typeof c.likes === 'object' ? c.likes?.dislikes : c.dislikes || 0;
+
+        if (isLiked) {
+          return { ...c, userLiked: false, likes: Math.max(0, curLikes - 1) };
+        } else {
+          return {
+            ...c,
+            userLiked: true,
+            userDisLiked: false,
+            likes: curLikes + 1,
+            dislikes: isDisliked ? Math.max(0, curDislikes - 1) : curDislikes,
+          };
+        }
+      })
+    );
+
+    if (isLiked) {
+      unlikeComment.mutate(comment.id, {
+        onError: () => setLocalComments(prev),
+      });
+    } else {
+      likeComment.mutate(
+        { productCommentId: comment.id, likeStatus: 'Like' },
+        { onError: () => setLocalComments(prev) }
+      );
+    }
+  };
+
+  // دیس‌لایک درجا و بدون تاخیر
+  const handleDislike = (comment: any) => {
+    const prev = [...localComments];
+    const isLiked = !!comment.userLiked;
+    const isDisliked = !!comment.userDisLiked;
+
+    setLocalComments((list) =>
+      list.map((c) => {
+        if (c.id !== comment.id) return c;
+        const curLikes = typeof c.likes === 'object' ? c.likes?.likes : c.likes || 0;
+        const curDislikes = typeof c.likes === 'object' ? c.likes?.dislikes : c.dislikes || 0;
+
+        if (isDisliked) {
+          return { ...c, userDisLiked: false, dislikes: Math.max(0, curDislikes - 1) };
+        } else {
+          return {
+            ...c,
+            userDisLiked: true,
+            userLiked: false,
+            dislikes: curDislikes + 1,
+            likes: isLiked ? Math.max(0, curLikes - 1) : curLikes,
+          };
+        }
+      })
+    );
+
+    if (isDisliked) {
+      unlikeComment.mutate(comment.id, {
+        onError: () => setLocalComments(prev),
+      });
+    } else {
+      likeComment.mutate(
+        { productCommentId: comment.id, likeStatus: 'Dislike' },
+        { onError: () => setLocalComments(prev) }
+      );
+    }
+  };
+
+  return (
+    <div className="mt-6 flex w-full flex-col gap-6">
+      <h3 className="text-title-sm md:text-base">امتیاز و نظرات کاربران</h3>
+
+      <div className="grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-10">
+        {/* سایدبار میانگین امتیاز */}
+        <div className="flex w-full flex-col gap-5 rounded-2xl border border-border bg-card p-5 shadow-xs lg:sticky lg:top-[12.25rem] lg:col-span-3">
+          {average ? (
+            <div className="flex w-full flex-col items-center gap-5">
+              <div className="flex flex-col items-center justify-center gap-2 text-center">
+                <span className="text-4xl font-bold text-foreground tabular-nums">
+                  {toPersianDigits(average.averageRate.toFixed(1))}
+                </span>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      aria-hidden="true"
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        i < Math.round(average.averageRate)
+                          ? 'fill-warning text-warning'
+                          : 'text-border'
+                      )}
+                    />
+                  ))}
+                </div>
+                <span className="mt-1 text-label-2xs">
+                  از {toPersianDigits(average.allRatesCount)} امتیاز ثبت شده
+                </span>
+              </div>
+
+              <div className="flex w-full flex-col gap-3 border-t border-dashed border-border pt-4">
+                {[
+                  { label: '۵ ستاره', value: average.starPercentages?.five || 0 },
+                  { label: '۴ ستاره', value: average.starPercentages?.four || 0 },
+                  { label: '۳ ستاره', value: average.starPercentages?.three || 0 },
+                  { label: '۲ ستاره', value: average.starPercentages?.two || 0 },
+                  { label: '۱ ستاره', value: average.starPercentages?.one || 0 },
+                ].map((star, idx) => (
+                  <div key={idx} className="flex w-full items-center gap-3 text-xs text-muted-foreground">
+                    <span className="w-12 shrink-0 font-bold">{star.label}</span>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        style={{ width: `${star.value}%` }}
+                        className="absolute inset-y-0 end-0 rounded-full bg-warning"
+                      />
+                    </div>
+                    <span className="w-8 shrink-0 font-bold text-left tabular-nums">{toPersianDigits(star.value)}%</span>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsWriteModalOpen(true)}
+                className="mt-2 flex h-10 w-full items-center gap-2 border-shop/40 text-xs font-bold text-shop hover:bg-shop/5"
+              >
+                <MessageSquare aria-hidden="true" className="h-4 w-4" />
+                <span>دیدگاه خود را بنویسید</span>
+              </Button>
+            </div>
+          ) : null}
+        </div>
+
+        {/* لیست نظرات کاربران */}
+        <div className="flex w-full flex-col gap-4 lg:col-span-7">
+          <div className="flex items-center gap-4 overflow-x-auto border-b border-dashed border-border pb-3 py-1 scrollbar-none">
+            <span className="shrink-0 text-label-muted">نمایش بر اساس:</span>
+            {[
+              { value: 'Newest', label: 'جدیدترین‌ها' },
+              { value: 'Oldest', label: 'قدیمی‌ترین‌ها' },
+              { value: 'MostLike', label: 'مفیدترین‌ها' },
+              { value: 'LeastLike', label: 'کمترین امتیاز' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  setOrderBy(opt.value);
+                  setPage(1);
+                }}
+                className={cn(
+                  'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none',
+                  orderBy === opt.value
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {isLoading ? (
+              <span className="text-xs text-muted-foreground">در حال بارگذاری دیدگاه‌ها...</span>
+            ) : localComments.length > 0 ? (
+              localComments.map((comment: any) => {
+                const authorName = comment.creator || comment.userName || comment.user?.displayName || 'کاربر یدکچی';
+                const commentContent = comment.comment || comment.content || '';
+                const likesCount = typeof comment.likes === 'object' ? comment.likes?.likes : comment.likes || 0;
+                const dislikesCount = typeof comment.likes === 'object' ? comment.likes?.dislikes : comment.dislikes || 0;
+                const displayDate = comment.createDateFormatted || comment.metadata?.timeAgo || '';
+
+                return (
+                  <div key={comment.id} className="flex gap-4 rounded-2xl border border-border bg-card p-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                      <User aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-label">{authorName}</span>
+                          {comment.isConfirmed === false && (
+                            <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-2xs font-bold text-warning">
+                              <Clock aria-hidden="true" className="h-3 w-3" />
+                              در حال بررسی
+                            </span>
+                          )}
+                        </div>
+                        {displayDate && (
+                          <span className="text-2xs text-muted-foreground">
+                            {toPersianDigits(displayDate)}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-1 flex items-center gap-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            aria-hidden="true"
+                            className={cn(
+                              'h-3 w-3 shrink-0',
+                              i < (comment.rate || 0) ? 'fill-warning text-warning' : 'text-border'
+                            )}
+                          />
+                        ))}
+                      </div>
+
+                      <p className="mt-3 text-base leading-relaxed text-muted-foreground">{commentContent}</p>
+
+                      {comment.userBoughtFrom && (
+                        <span className="mt-3 inline-block rounded-full bg-success/10 px-3 py-1 text-2xs font-bold text-success">
+                          خریدار این کالا از فروشگاه {comment.userBoughtFrom}
+                        </span>
+                      )}
+
+                      <div className="mt-4 flex items-center justify-end gap-4 border-t border-dashed border-border pt-3">
+                        <button
+                          type="button"
+                          onClick={() => handleLike(comment)}
+                          className={cn(
+                            'flex items-center gap-1 text-2xs font-bold transition-all active:scale-90',
+                            comment.userLiked ? 'text-success' : 'text-muted-foreground hover:text-success'
+                          )}
+                        >
+                          <ThumbsUp aria-hidden="true" className="h-4 w-4" />
+                          <span>({toPersianDigits(likesCount)})</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDislike(comment)}
+                          className={cn(
+                            'flex items-center gap-1 text-2xs font-bold transition-all active:scale-90',
+                            comment.userDisLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
+                          )}
+                        >
+                          <ThumbsDown aria-hidden="true" className="h-4 w-4" />
+                          <span>({toPersianDigits(dislikesCount)})</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <span className="text-xs text-muted-foreground">
+                  هیچ دیدگاهی برای این کالا ثبت نشده است. اولین نفری باشید که نظر خود را ثبت می‌کند!
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsWriteModalOpen(true)}
+                  className="flex shrink-0 items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+                >
+                  <span>ثبت دیدگاه</span>
+                  <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ================= مودال ثبت دیدگاه جدید با تصویر بزرگتر و نام کامل ================= */}
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="text-title-sm">ثبت دیدگاه جدید</ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="p-5 pt-4">
+          <form onSubmit={handleCommentSubmit} className="flex w-full flex-col gap-4">
+            {/* سربرگ مشخصات محصول با عکس بزرگتر */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border">
+              <div className="w-20 h-20 rounded-xl border border-border bg-card p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                {productImage ? (
+                  <img
+                    src={getFullUrl(productImage)}
+                    alt={productTitle}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Package className="w-8 h-8 text-muted-foreground" />
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="text-label-2xs">نام کالا:</span>
+                <h4 className="text-xs sm:text-title-sm leading-snug line-clamp-2">
+                  {productTitle}
+                </h4>
+              </div>
+            </div>
+
+            {/* امتیازدهی ستاره‌ای */}
+            <div className="flex w-full flex-col items-center justify-center gap-2 border-b border-dashed border-border py-2 text-center">
+              <span className="text-label-muted">امتیاز شما به این کالا *</span>
+              <div className="mt-1 flex items-center gap-2" dir="ltr">
+                {[1, 2, 3, 4, 5].map((starValue) => {
+                  const isHighlighted = (hoverRate || rate) >= starValue;
+                  return (
+                    <button
+                      key={starValue}
+                      type="button"
+                      onMouseEnter={() => setHoverRate(starValue)}
+                      onMouseLeave={() => setHoverRate(0)}
+                      onClick={() => setRate(starValue)}
+                      aria-label={`${starValue} ستاره`}
+                      className="p-1 outline-none transition-transform hover:scale-110 active:scale-95"
+                    >
+                      <Star
+                        aria-hidden="true"
+                        className={cn(
+                          'h-7 w-7 shrink-0',
+                          isHighlighted ? 'fill-warning text-warning' : 'text-border'
+                        )}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* متن دیدگاه */}
+            <TextArea
+              label="متن نظر *"
+              placeholder="تجربه و نظر خود درباره کیفیت، انطباق فنی، اصالت یا بسته‌بندی این کالا را بنویسید..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="h-28 text-xs leading-relaxed"
+              required
+            />
+
+            {/* ارسال ناشناس */}
+            <div className="mt-1 flex w-full items-start gap-3 border-t border-dashed border-border pt-4 select-none">
+              <Checkbox checked={isIncognito} onChange={(checked) => setIsIncognito(checked)} />
+              <div>
+                <span className="block text-label">ارسال به صورت ناشناس</span>
+                <span className="mt-1 block text-2xs text-muted-foreground">
+                  در صورت فعال‌سازی، نام شما به سایر کاربران نمایش داده نخواهد شد.
+                </span>
+              </div>
+            </div>
+          </form>
+        </ModalBody>
+
+        <div className="flex w-full shrink-0 flex-row gap-3 border-t border-border p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsWriteModalOpen(false)}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            isLoading={createComment.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+            onClick={() => handleCommentSubmit()}
+          >
+            ثبت نظر نهایی
+          </Button>
+        </div>
+      </Modal>
+
+      {/* مودال موفقیت */}
+      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} className="w-full max-w-md">
+        <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <LottiePlayer path="/anumations/Rate-cong.json" className="mx-auto h-72 w-72 max-w-full" loop={false} />
+
+          <h4 className="text-base font-bold leading-relaxed text-foreground">
+            {userName} عزیز، از ارسال نظر شما ممنونیم
+          </h4>
+
+          <p className="text-base font-medium text-shop">دیدگاه شما به سایر خریداران کمک شایانی خواهد کرد</p>
+
+          <p className="mx-auto max-w-xs text-base leading-relaxed text-muted-foreground">
+            دیدگاه شما پس از بررسی توسط تیم پشتیبانی، در صفحه محصول منتشر خواهد شد.
+          </p>
+
+          <Button
+            variant="primary"
+            onClick={() => setIsSuccessModalOpen(false)}
+            className="mt-3 h-9 px-6 text-xs font-bold shadow-xs"
+          >
+            متوجه شدم
+          </Button>
+        </ModalBody>
+      </Modal>
+    </div>
+  );
+}
+
+--- END OF FILE src\components\features\Product\components\ProductCommentsSection.tsx ---
+
+--- START OF FILE src\components\features\Product\components\ProductInquiriesSection.tsx ---
+'use client';
+
+import * as React from 'react';
+import { User, MessageSquare, ThumbsUp, ThumbsDown, HelpCircle, ArrowLeft, Clock, Package } from 'lucide-react';
+import { useGetProductInquiries } from '@/domains/front/product/hooks/product.hooks';
+import { useCreateInquiry, useLikeInquiry, useUnlikeInquiry } from '@/domains/front/inquiry/hooks/inquiry.hooks';
+import { Button } from '@/components/primitives/Button/Button';
+import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { TextArea } from '@/components/primitives/TextArea/TextArea';
+import { cn } from '@/design-system/utils/cn';
+import { showToast } from '@/core/utils/toast';
+import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
+
+export interface ProductInquiriesSectionProps {
+  productId: string;
+  productTitle?: string;
+  productImage?: string | null;
+}
+
+export function ProductInquiriesSection({
+  productId,
+  productTitle = 'قطعه انتخابی',
+  productImage,
+}: ProductInquiriesSectionProps) {
+  const [orderBy, setOrderBy] = React.useState('Latest');
+  const [page, setPage] = React.useState(1);
+  const [isWriteModalOpen, setIsWriteModalOpen] = React.useState(false);
+  const [inquiryText, setInquiryText] = React.useState('');
+
+  const { data: inquiriesResponse, isLoading } = useGetProductInquiries(productId, orderBy, page);
+  const createInquiry = useCreateInquiry();
+  const likeInquiry = useLikeInquiry();
+  const unlikeInquiry = useUnlikeInquiry();
+
+  // استیت محلی برای لایک آنی
+  const [localInquiries, setLocalInquiries] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (inquiriesResponse?.items) {
+      setLocalInquiries(inquiriesResponse.items);
+    }
+  }, [inquiriesResponse]);
+
+  const handleInquirySubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (inquiryText.trim().length < 5) {
+      showToast.error('متن پرسش شما باید حداقل ۵ کاراکتر باشد');
+      return;
+    }
+    try {
+      await createInquiry.mutateAsync({ productId, comment: inquiryText.trim() });
+      showToast.success('پرسش شما ثبت شد و پس از بررسی منتشر خواهد شد');
+      setInquiryText('');
+      setIsWriteModalOpen(false);
+    } catch (error: any) {
+      showToast.error(error?.userMessage || 'خطا در ثبت پرسش شما');
+    }
+  };
+
+  // لایک آنی پرسش
+  const handleLike = (inquiry: any) => {
+    const prev = [...localInquiries];
+    const isLiked = !!inquiry.userLiked;
+    const isDisliked = !!inquiry.userDisLiked;
+
+    setLocalInquiries((list) =>
+      list.map((q) => {
+        if (q.id !== inquiry.id) return q;
+        const curLikes = typeof q.likes === 'object' ? q.likes?.likes : q.likes || 0;
+        const curDislikes = typeof q.likes === 'object' ? q.likes?.dislikes : q.dislikes || 0;
+
+        if (isLiked) {
+          return { ...q, userLiked: false, likes: Math.max(0, curLikes - 1) };
+        } else {
+          return {
+            ...q,
+            userLiked: true,
+            userDisLiked: false,
+            likes: curLikes + 1,
+            dislikes: isDisliked ? Math.max(0, curDislikes - 1) : curDislikes,
+          };
+        }
+      })
+    );
+
+    if (isLiked) {
+      unlikeInquiry.mutate(inquiry.id, {
+        onError: () => setLocalInquiries(prev),
+      });
+    } else {
+      likeInquiry.mutate(
+        { productInquiryId: inquiry.id, likeStatus: 'Like' },
+        { onError: () => setLocalInquiries(prev) }
+      );
+    }
+  };
+
+  // دیس‌لایک آنی پرسش
+  const handleDislike = (inquiry: any) => {
+    const prev = [...localInquiries];
+    const isLiked = !!inquiry.userLiked;
+    const isDisliked = !!inquiry.userDisLiked;
+
+    setLocalInquiries((list) =>
+      list.map((q) => {
+        if (q.id !== inquiry.id) return q;
+        const curLikes = typeof q.likes === 'object' ? q.likes?.likes : q.likes || 0;
+        const curDislikes = typeof q.likes === 'object' ? q.likes?.dislikes : q.dislikes || 0;
+
+        if (isDisliked) {
+          return { ...q, userDisLiked: false, dislikes: Math.max(0, curDislikes - 1) };
+        } else {
+          return {
+            ...q,
+            userDisLiked: true,
+            userLiked: false,
+            dislikes: curDislikes + 1,
+            likes: isLiked ? Math.max(0, curLikes - 1) : curLikes,
+          };
+        }
+      })
+    );
+
+    if (isDisliked) {
+      unlikeInquiry.mutate(inquiry.id, {
+        onError: () => setLocalInquiries(prev),
+      });
+    } else {
+      likeInquiry.mutate(
+        { productInquiryId: inquiry.id, likeStatus: 'Dislike' },
+        { onError: () => setLocalInquiries(prev) }
+      );
+    }
+  };
+
+  return (
+    <div className="mt-6 flex w-full flex-col gap-6 pb-12">
+      <h3 className="text-title-sm md:text-base">پرسش‌ها و پاسخ‌ها</h3>
+
+      <div className="flex flex-col items-center justify-between gap-4 border-b border-border pb-3 md:flex-row">
+        <div className="flex items-center gap-4 overflow-x-auto py-1 scrollbar-none">
+          <span className="shrink-0 text-label-muted">نمایش بر اساس:</span>
+          {[
+            { value: 'Latest', label: 'جدیدترین' },
+            { value: 'Oldest', label: 'قدیمی‌ترین' },
+            { value: 'MostPopular', label: 'مفیدترین' },
+            { value: 'MostReplied', label: 'بیشترین پاسخ' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setOrderBy(opt.value);
+                setPage(1);
+              }}
+              className={cn(
+                'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none',
+                orderBy === opt.value
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground'
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsWriteModalOpen(true)}
+          className="flex h-9 shrink-0 items-center gap-2 border-shop/40 text-xs font-bold text-shop hover:bg-shop/5"
+        >
+          <MessageSquare aria-hidden="true" className="h-4 w-4" />
+          <span>شما هم سوال خود را بپرسید</span>
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-5">
+        {isLoading ? (
+          <span className="text-xs text-muted-foreground">در حال بارگذاری پرسش‌ها...</span>
+        ) : localInquiries.length > 0 ? (
+          localInquiries.map((inquiry: any) => {
+            const author = inquiry.creator || inquiry.userName || inquiry.user?.displayName || 'کاربر یدکچی';
+            const inquiryContent = inquiry.comment || inquiry.content || '';
+            const likesCount = typeof inquiry.likes === 'object' ? inquiry.likes?.likes : inquiry.likes || 0;
+            const dislikesCount = typeof inquiry.likes === 'object' ? inquiry.likes?.dislikes : inquiry.dislikes || 0;
+            const displayDate = inquiry.createDateFormatted || inquiry.metadata?.timeAgo || '';
+
+            return (
+              <div key={inquiry.id} className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4">
+                <div className="flex w-full items-start gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
+                    <User aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-label">{author}</span>
+                        {inquiry.isConfirmed === false && (
+                          <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-2xs font-bold text-warning">
+                            <Clock aria-hidden="true" className="h-3 w-3" />
+                            در حال بررسی
+                          </span>
+                        )}
+                      </div>
+                      {displayDate && (
+                        <span className="text-2xs text-muted-foreground">{toPersianDigits(displayDate)}</span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-base leading-relaxed text-foreground">{inquiryContent}</p>
+                  </div>
+                </div>
+
+                {inquiry.bestReply && (
+                  <div className="me-6 flex gap-3 rounded-e-xl border-s-2 border-primary bg-accent/50 p-4 md:me-10">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-accent">
+                      <User aria-hidden="true" className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-xs font-bold text-primary">
+                          {inquiry.bestReply.creator || inquiry.bestReply.userName || 'پشتیبان'} (پاسخ برتر)
+                        </span>
+                        <span className="text-2xs text-muted-foreground">
+                          {inquiry.bestReply.createDateFormatted || ''}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-base leading-relaxed text-muted-foreground">
+                        {inquiry.bestReply.comment || inquiry.bestReply.content}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-4 border-t border-dashed border-border pt-3">
+                  <button
+                    type="button"
+                    onClick={() => handleLike(inquiry)}
+                    className={cn(
+                      'flex items-center gap-1.5 text-2xs font-bold transition-all active:scale-90',
+                      inquiry.userLiked ? 'text-success' : 'text-muted-foreground hover:text-success'
+                    )}
+                  >
+                    <ThumbsUp aria-hidden="true" className="h-4 w-4" />
+                    <span>({toPersianDigits(likesCount)})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDislike(inquiry)}
+                    className={cn(
+                      'flex items-center gap-1.5 text-2xs font-bold transition-all active:scale-90',
+                      inquiry.userDisLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
+                    )}
+                  >
+                    <ThumbsDown aria-hidden="true" className="h-4 w-4" />
+                    <span>({toPersianDigits(dislikesCount)})</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <span className="text-xs text-muted-foreground">
+              هیچ پرسشی برای این کالا ثبت نشده است. اولین سوال خود را بپرسید!
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsWriteModalOpen(true)}
+              className="flex shrink-0 items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
+            >
+              <span>ثبت پرسش</span>
+              <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* مودال ثبت سوال با نمایش مشخصات محصول */}
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
+        <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
+          <ModalTitle className="flex items-center gap-2 text-title-sm">
+            <HelpCircle aria-hidden="true" className="h-4 w-4 text-primary" />
+            شما هم سوال خودتون رو بپرسید
+          </ModalTitle>
+        </ModalHeader>
+
+        <ModalBody className="p-5 pt-4">
+          <form onSubmit={handleInquirySubmit} className="flex w-full flex-col gap-4">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border">
+              <div className="w-16 h-16 rounded-xl border border-border bg-card p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+                {productImage ? (
+                  <img
+                    src={getFullUrl(productImage)}
+                    alt={productTitle}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Package className="w-7 h-7 text-muted-foreground" />
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1 min-w-0">
+                <span className="text-label-2xs">پرسش درباره کالا:</span>
+                <h4 className="text-xs sm:text-title-sm leading-snug line-clamp-2">
+                  {productTitle}
+                </h4>
+              </div>
+            </div>
+
+            <TextArea
+              label="متن پرسش شما *"
+              placeholder="پرسش خود را درباره تطابق با خودرو، کارکرد یا مشخصات قطعه بنویسید..."
+              value={inquiryText}
+              onChange={(e) => setInquiryText(e.target.value)}
+              className="h-28 text-xs leading-relaxed"
+              required
+            />
+          </form>
+        </ModalBody>
+
+        <div className="flex w-full shrink-0 flex-row gap-3 border-t border-border p-5 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsWriteModalOpen(false)}
+            className="h-10 flex-1 text-xs font-bold"
+          >
+            انصراف
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            isLoading={createInquiry.isPending}
+            className="h-10 flex-1 text-xs font-bold"
+            onClick={() => handleInquirySubmit()}
+          >
+            ثبت پرسش نهایی
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+--- END OF FILE src\components\features\Product\components\ProductInquiriesSection.tsx ---
+
+--- START OF FILE src\domains\auth\hooks\auth.hooks.ts ---
+// src/domains/auth/hooks/auth.hooks.ts
+
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/react-query/query-keys';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { getAuthService } from '../services/auth.service';
+import { LoginRequest, ConfirmLoginRequest } from '../validation/auth.validation';
+
+const authService = getAuthService();
+
+export function useRequestLogin() {
+  return useTypedMutation(
+    (credentials: LoginRequest) => authService.requestLogin(credentials)
+  );
+}
+
+export function useConfirmLogin() {
+  const queryClient = useQueryClient();
+
+  return useTypedMutation(
+    (credentials: ConfirmLoginRequest) => authService.confirmLogin(credentials),
+    {
+      onSuccess: (user) => {
+        queryClient.setQueryData(queryKeys.auth.user, user);
+      },
+    }
+  );
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+
+  return useTypedMutation<void, void>(
+    () => authService.logout(),
+    {
+      onSettled: () => {
+        // ۱. پاکسازی کامل تمام کش‌های ری‌اکت کوئری
+        queryClient.setQueryData(queryKeys.auth.user, null);
+        queryClient.removeQueries({
+          queryKey: queryKeys.auth.user,
+        });
+        queryClient.clear();
+
+        // ۲. ریدایرکت سخت کلاینت (تخلیه Router Cache نکس و اجرای مجدد لایوت سرور)
+        if (typeof window !== 'undefined') {
+          const pathname = window.location.pathname;
+          const isProtected = pathname.startsWith('/profile') || pathname.startsWith('/checkout');
+
+          if (isProtected) {
+            window.location.href = `/login?redirect=${encodeURIComponent(pathname)}`;
+          } else {
+            // در صفحات عمومی صفحه مجدداً لود می‌شود تا وضعیت هدر به‌روزرسانی شود
+            window.location.reload();
+          }
+        }
+      },
+    }
+  );
+}
+
+export function useCurrentUser() {
+  return useTypedQuery(
+    queryKeys.auth.user,
+    () => authService.getCurrentUser(),
+    {
+      staleTime: 5 * 60 * 1000,
+      retry: (failureCount, error) => {
+        if (error instanceof Error && 'status' in error && (error as any).status === 401) {
+          return false;
+        }
+        return failureCount < 1;
+      },
+    }
+  );
+}
+
+export function useIsAuthenticated() {
+  const { data: user, isLoading } = useCurrentUser();
+  return {
+    isAuthenticated: !!user,
+    user,
+    isLoading,
+  };
+}
+
+export function useAuth() {
+  const { data: user, isLoading, error } = useCurrentUser();
+  const logoutMutation = useLogout();
+
+  return {
+    user: user || null,
+    isLoading,
+    error,
+    isAuthenticated: !!user,
+    logout: logoutMutation.mutate,
+    isLoggingOut: logoutMutation.isPending,
+  };
+}
+
+--- END OF FILE src\domains\auth\hooks\auth.hooks.ts ---
+
+--- START OF FILE src\domains\userpanel\hooks\userpanel.hooks.ts ---
+'use client';
+
+import { useQueryClient } from '@tanstack/react-query';
+import { useTypedQuery, useTypedMutation } from '@/lib/react-query/hooks/base.hooks';
+import { getUserPanelService } from '../services/userpanel.service';
+import { OrderListItemViewModel, WalletViewModel, TransactionViewModel, UserVehicleViewModel, NotificationItemViewModel, WithdrawRequestItemViewModel } from '../types/view.types';
+import { PaginatedResult } from '@/shared/types/common.types';
+import { OrderDetailsDto, BankAccountDto, OrderReceiptDto } from '../types/dto.types';
+export interface NotificationFiltersPayload {
+  pageNumber?: number;
+  pageSize?: number;
+  channel?: string;
+  priority?: string;
+  timePeriod?: string;
+  isRead?: boolean;
+  orderBy?: 'Latest' | 'Oldest';
+}
+
+const userPanelService = getUserPanelService();
+
+export function usePostShopRequest() {
+  return useTypedMutation(
+    () => userPanelService.postShopRequest()
+  );
+}
+
+export function useGetOrderDetails(orderId: string) {
+  return useTypedQuery<OrderDetailsDto>(
+    ['user', 'orders', 'details', orderId],
+    () => userPanelService.getOrder(orderId),
+    { enabled: !!orderId }
+  );
+}
+
+export function useGetOrders(status?: string, searchedValue?: string, orderBy?: string, pageNumber: number = 1) {
+  return useTypedQuery<PaginatedResult<OrderListItemViewModel>>(
+    ['user', 'orders', 'list', { status, searchedValue, orderBy, pageNumber }],
+    () => userPanelService.getOrders(status, searchedValue, orderBy, pageNumber, 10),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetOrderReceipt(orderId: string) {
+  return useTypedQuery<OrderReceiptDto>(
+    ['user', 'orders', 'receipt', orderId],
+    () => userPanelService.getOrderReceipt(orderId),
+    { enabled: !!orderId }
+  );
+}
+
+// اصلاح هوک پرداخت مجدد برای قبول و ارسال پاسخ حاوی لینک درگاه بانکی برگشت داده شده از سرویس
+export function useRetryOrderPayment() {
+  return useTypedMutation(
+    (orderId: string) => userPanelService.retryOrderPayment(orderId)
+  );
+}
+
+export function useGetSubOrderCancelReasons() {
+  return useTypedQuery<any[]>(
+    ['user', 'orders', 'cancel-reasons'],
+    () => userPanelService.getSubOrderCancelReasons(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useCancelOrder() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ orderId, cancelationReasonId, userCancelationDescription }: { orderId: string; cancelationReasonId: string; userCancelationDescription: string }) =>
+      userPanelService.cancelOrder(orderId, cancelationReasonId, userCancelationDescription),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useMarkSubOrderReceived() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (subOrderId: string) => userPanelService.markSubOrderReceived(subOrderId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useMarkSubOrderNotReceived() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (subOrderId: string) => userPanelService.markSubOrderNotReceived(subOrderId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useSubmitSubOrderItemFeedback() {
+  return useTypedMutation(
+    (payload: any) => userPanelService.submitSubOrderItemFeedback(payload)
+  );
+}
+
+export function useGetReturnRequestReasons() {
+  return useTypedQuery<any[]>(
+    ['user', 'return-requests', 'reasons'],
+    () => userPanelService.getReturnRequestReasons(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useSubmitReturnRequest() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ subOrderId, items, files }: { subOrderId: string; items: any[]; files?: File[] }) =>
+      userPanelService.submitReturnRequest(subOrderId, items, files),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'return-requests'] });
+        queryClient.invalidateQueries({ queryKey: ['user', 'orders'] });
+      }
+    }
+  );
+}
+
+export function useGetReturnRequestDetails(id: string) {
+  return useTypedQuery<any>(
+    ['user', 'return-requests', 'details', id],
+    () => userPanelService.getReturnRequestDetails(id),
+    { enabled: !!id }
+  );
+}
+
+export function useGetReturnRequests(pageNumber: number = 1, status?: string, subOrderId?: string) {
+  return useTypedQuery<PaginatedResult<any>>(
+    ['user', 'return-requests', 'list', { pageNumber, status, subOrderId }],
+    () => userPanelService.getReturnRequests(pageNumber, 10, status, subOrderId),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useSubmitReturnShipmentReceipt() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ id, method, traceNumber, file }: { id: string; method: string; traceNumber: string; file: File }) =>
+      userPanelService.submitReturnShipmentReceipt(id, method, traceNumber, file),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'return-requests'] });
+      }
+    }
+  );
+}
+
+export function useGetWalletBalances() {
+  return useTypedQuery<WalletViewModel>(
+    ['user', 'wallet', 'balances'],
+    () => userPanelService.getWalletBalances(),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetTransactions(pageNumber: number = 1) {
+  return useTypedQuery<PaginatedResult<TransactionViewModel>>(
+    ['user', 'wallet', 'transactions', pageNumber],
+    () => userPanelService.getTransactions(pageNumber, 10),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetBankAccounts() {
+  return useTypedQuery<BankAccountDto[]>(
+    ['user', 'bank-accounts', 'list'],
+    () => userPanelService.getBankAccounts(),
+    { staleTime: 5 * 60 * 1000 }
+  );
+}
+
+export function useCreateBankAccount() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ cardNumber, shebaNumber }: { cardNumber: string; shebaNumber: string }) =>
+      userPanelService.createBankAccount(cardNumber, shebaNumber),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'bank-accounts'] });
+      }
+    }
+  );
+}
+
+export function useSetDefaultBankAccount() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (bankAccountId: string) => userPanelService.setDefaultBankAccount(bankAccountId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'bank-accounts'] });
+      }
+    }
+  );
+}
+
+export function useGetUserVehicles() {
+  return useTypedQuery<UserVehicleViewModel[]>(
+    ['user', 'vehicles', 'list'],
+    () => userPanelService.getUserVehicles(),
+    { staleTime: 5 * 60 * 1000 }
+  );
+}
+
+export function useCreateUserVehicle() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ carId, title, isDefault }: { carId: string; title: string; isDefault: boolean }) =>
+      userPanelService.createUserVehicle(carId, title, isDefault),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      }
+    }
+  );
+}
+
+export function useUpdateUserVehicle() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ id, title, mileage, oilKmLimit, lastServiceDate, isDefault }: { id: string; title: string; mileage: number | null; oilKmLimit: number | null; lastServiceDate: string | null; isDefault: boolean }) =>
+      userPanelService.updateUserVehicle(id, title, mileage, oilKmLimit, lastServiceDate, isDefault),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      }
+    }
+  );
+}
+
+export function useDeleteUserVehicle() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (id: string) => userPanelService.deleteUserVehicle(id),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'vehicles'] });
+      }
+    }
+  );
+}
+
+export function useGetUserNotifications(filters: NotificationFiltersPayload = {}) {
+  return useTypedQuery<PaginatedResult<NotificationItemViewModel>>(
+    ['user', 'notifications', 'list', filters],
+    () => userPanelService.getUserNotifications(filters),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetNotificationDetails(id: string) {
+  return useTypedQuery<any>(
+    ['user', 'notifications', 'details', id],
+    () => userPanelService.getNotificationDetails(id),
+    { enabled: !!id }
+  );
+}
+
+export function useGetShopAdvantages() {
+  return useTypedQuery<any[]>(
+    ['user', 'shop-feedback', 'advantages'],
+    () => userPanelService.getShopAdvantages(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useGetShopDisadvantages() {
+  return useTypedQuery<any[]>(
+    ['user', 'shop-feedback', 'disadvantages'],
+    () => userPanelService.getShopDisadvantages(),
+    { staleTime: 10 * 60 * 1000 }
+  );
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    (formData: FormData) => userPanelService.updateProfile(formData),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      }
+    }
+  );
+}
+
+export function useGetWithdrawRequests(pageNumber: number = 1, status?: string) {
+  return useTypedQuery<PaginatedResult<WithdrawRequestItemViewModel>>(
+    ['user', 'wallet', 'withdraw-requests', { pageNumber, status }],
+    () => userPanelService.getWithdrawRequests(pageNumber, 10, status),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useSubmitWithdrawRequest() {
+  const queryClient = useQueryClient();
+  return useTypedMutation(
+    ({ amount, bankAccountId }: { amount: number; bankAccountId: string }) =>
+      userPanelService.submitWithdrawRequest(amount, bankAccountId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['user', 'wallet'] });
+      }
+    }
+  );
+}
+
+export function useGetFavoriteProducts(pageNumber: number = 1, order: string = 'Latest') {
+  return useTypedQuery<PaginatedResult<any>>(
+    ['user', 'favorites', 'list', { pageNumber, order }],
+    () => userPanelService.getFavoriteProducts(pageNumber, 30, order),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useGetRecentlyViewedProducts() {
+  return useTypedQuery<any[]>(
+    ['user', 'recent-views', 'list'],
+    () => userPanelService.getRecentlyViewedProducts(),
+    { staleTime: 30 * 1000 }
+  );
+}
+
+export function useRequestUpdatePhoneNumber() {
+  return useTypedMutation(
+    (phoneNumber: string) => userPanelService.requestUpdatePhoneNumber(phoneNumber)
+  );
+}
+
+export function useConfirmCurrentPhoneOTP() {
+  return useTypedMutation(
+    (otpCode: string) => userPanelService.confirmCurrentPhoneOTP(otpCode)
+  );
+}
+
+export function useConfirmNewPhoneOTP() {
+  return useTypedMutation(
+    (otpCode: string) => userPanelService.confirmNewPhoneOTP(otpCode)
+  );
+}
+
+--- END OF FILE src\domains\userpanel\hooks\userpanel.hooks.ts ---
+
+--- START OF FILE src\app\(auth)\login\page.tsx ---
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AuthLayout } from '@/components/shared/Layouts/AuthLayout';
+import { Input } from '@/components/primitives/Input';
+import { OtpInput } from '@/components/primitives/OtpInput';
+import { Button } from '@/components/primitives/Button';
+import { Typography } from '@/components/primitives/Typography';
+import { useRequestLogin, useConfirmLogin, useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { authValidators, LoginRequest } from '@/domains/auth/validation/auth.validation';
+import { Phone, RotateCcw, PencilLine } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { showToast } from '@/core/utils/toast';
+
+function LoginContent() {
+  const { isAuthenticated } = useAuth();
+  const searchParams = useSearchParams();
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpArray, setOtpArray] = useState<string[]>(Array(5).fill(''));
+  const [countdown, setCountdown] = useState(120);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+
+  const requestLogin = useRequestLogin();
+  const confirmLogin = useConfirmLogin();
+
+  // خواندن مسیر بازگشتی (Redirect URL) از پارامتر آدرس
+  const redirectUrl = searchParams ? (searchParams.get('redirect') || '/') : '/';
+
+  const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginRequest>({
+    resolver: zodResolver(authValidators.login.getSchema() as any),
+    defaultValues: {
+      phoneNumber: ''
+    }
+  });
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = redirectUrl;
+    }
+  }, [isAuthenticated, redirectUrl]);
+
+  useEffect(() => {
+    if (isTimerActive && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0) {
+      setIsTimerActive(false);
+    }
+  }, [countdown, isTimerActive]);
+
+  const startTimer = () => {
+    setCountdown(120);
+    setIsTimerActive(true);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleRequestOTP = async (data: LoginRequest) => {
+    try {
+      await requestLogin.mutateAsync({ phoneNumber: data.phoneNumber });
+      setPhoneNumber(data.phoneNumber);
+      setStep('otp');
+      setOtpArray(Array(5).fill(''));
+      startTimer();
+      showToast.success('کد تایید با موفقیت ارسال شد');
+    } catch (err: any) {
+      const errMsg = err.userMessage || 'خطا در ارسال کد تایید. مجدداً تلاش کنید.';
+      setError('phoneNumber', { message: errMsg });
+      showToast.error(errMsg);
+    }
+  };
+
+  const handleConfirmOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otpArray.join('');
+
+    const validation = authValidators.confirmLogin.safeParse({ phoneNumber, code });
+    if (!validation.success) {
+      showToast.error('کد تایید باید ۵ رقم کامل باشد');
+      return;
+    }
+
+    try {
+      await confirmLogin.mutateAsync({ phoneNumber, code });
+      showToast.success('خوش آمدید! در حال انتقال...');
+      window.location.href = redirectUrl;
+    } catch (err: any) {
+      const errMsg = err.userMessage || 'کد ورود معتبر نیست یا منقضی شده است';
+      showToast.error(errMsg);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (isTimerActive) return;
+
+    try {
+      await requestLogin.mutateAsync({ phoneNumber });
+      setOtpArray(Array(5).fill(''));
+      startTimer();
+      showToast.success('کد تایید مجدداً ارسال شد');
+    } catch (err: any) {
+      const errMsg = err.userMessage || 'خطا در ارسال مجدد کد تایید';
+      showToast.error(errMsg);
+    }
+  };
+
+  return (
+    <AuthLayout title={step === 'phone' ? 'ورود | ثبت‌نام' : 'کد تایید را وارد کنید'}>
+      {step === 'phone' ? (
+        <div className="space-y-5" dir="rtl">
+          <form onSubmit={handleSubmit(handleRequestOTP)} className="space-y-4">
+            <Input
+              type="tel"
+              placeholder="شماره موبایل خود را وارد کنید"
+              error={errors.phoneNumber?.message}
+              leftIcon={<Phone className="h-4 w-4 text-muted-foreground" />}
+              required
+              autoFocus
+              {...register('phoneNumber')}
+              size={'lg'}
+              
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              isLoading={requestLogin.isPending}
+            >
+              دریافت کد تایید
+            </Button>
+          </form>
+
+          <Typography variant="small" color="muted" className="text-center text-[0.625rem] leading-relaxed text-muted-foreground/80 px-2 block">
+            ورود | ثبت نام شما به معنای پذیرش{' '}
+            <Link href="/terms" className="text-primary hover:underline font-bold">قوانین و مقررات</Link>{' '}
+            و{' '}
+            <Link href="/privacy" className="text-primary hover:underline font-bold">حریم خصوصی</Link>{' '}
+            کاربران یدکچی است.
+          </Typography>
+        </div>
+      ) : (
+        <div className="space-y-6" dir="rtl">
+          <Typography variant="small" color="muted" className="text-center block">
+            کد ارسال شده به شماره <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{phoneNumber}</span> را وارد کنید
+          </Typography>
+
+          <form onSubmit={handleConfirmOTP} className="space-y-6">
+            <OtpInput 
+              length={5} 
+              value={otpArray} 
+              onChange={(val) => setOtpArray(val)} 
+            />
+
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              fullWidth
+              isLoading={confirmLogin.isPending}
+            >
+              تایید و ورود
+            </Button>
+          </form>
+
+          <div className="flex flex-col items-center gap-3 pt-2">
+            {isTimerActive ? (
+              <Typography variant="small" color="muted" className="flex items-center gap-2 ">
+                <RotateCcw className="h-3.5 w-3.5 text-muted-foreground/70" />
+                دریافت مجدد کد از طریق پیامک
+                <span className="font-bold text-foreground ltr:inline-block" dir="ltr">{formatTime(countdown)}</span>
+              </Typography>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResendOTP}
+                disabled={requestLogin.isPending}
+                className="flex items-center gap-2 text-xs text-primary font-bold hover:underline transition-all "
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                دریافت مجدد کد از طریق پیامک
+              </button>
+            )}
+          </div>
+
+          <div className="flex justify-center border-t border-border pt-4">
+            <button 
+              onClick={() => setStep('phone')}
+              className="flex items-center gap-1.5 text-label-muted hover:text-primary transition-colors group"
+            >
+              <PencilLine className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+              ویرایش شماره &gt;
+            </button>
+          </div>
+
+        </div>
+      )}
+    </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+--- END OF FILE src\app\(auth)\login\page.tsx ---
+

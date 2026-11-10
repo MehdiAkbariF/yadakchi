@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, Store, Package, Plus, Minus, Loader2 } from 'lucide-react';
+import { Star, Store, Package, Plus, Minus, Loader2, Timer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/design-system/utils/cn';
 import { Button } from '@/components/primitives/Button/Button';
@@ -13,6 +13,7 @@ import { showToast } from '@/core/utils/toast';
 import { getProductUrl, toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { useImpression } from '@/shared/hooks/useImpression';
 import { trackShopProductClick } from '@/core/utils/impression-tracker';
+import { useDiscountCountdown } from '@/shared/hooks/useDiscountCountdown';
 
 export interface ProductSearchCardProps {
   product: any;
@@ -96,6 +97,20 @@ export function ProductSearchCard({
       ? Math.round(((originalPriceRaw - finalPriceRaw) / originalPriceRaw) * 100)
       : nominated?.discountPercentage || product?.discount?.percent || 0);
 
+// استخراج قطعی تاریخ انقضا از تمامی ساختارها (Domain View, OpenSearch Hit, Nominated)
+  const expirationStr =
+    product?.discountUntil ||
+    product?.discount?.expirationDate ||
+    nominated?.discountUntil ||
+    product?.discountExpiration ||
+    nominated?.discountExpiration ||
+    null;
+
+  const { isExpired, formattedPersian } = useDiscountCountdown(
+    hasDiscount && !isOutOfStock ? expirationStr : null
+  );
+  const isTimerVisible = Boolean(expirationStr && !isExpired && !isOutOfStock && hasDiscount);
+
   const basketItem = React.useMemo(() => {
     if (!basket || basket.isEmpty || !shopProductId) return null;
     for (const sub of basket.subBaskets) {
@@ -114,12 +129,10 @@ export function ProductSearchCard({
     nominated?.quantity ||
     10;
 
-  // ✅ ساخت اسلایدر فاقد موارد تیکر در صورت ناموجود بودن کالا
   const tickerItems = React.useMemo(() => {
     if (isOutOfStock) return [];
 
     const items: { text: string; icon: any; isShop?: boolean }[] = [];
-
     const displayShopName = shopName && shopName.trim() !== '' ? shopName : 'یدکچی';
     items.push({
       text: `فروشگاه: ${displayShopName}`,
@@ -224,24 +237,24 @@ export function ProductSearchCard({
         prefetch={false}
         onClick={handleCardClick}
         className={cn(
-          'relative hidden h-full w-full select-none flex-col rounded-lg border border-border bg-card p-3 transition-all duration-normal sm:p-3.5 md:flex',
+          'relative hidden h-full w-full select-none flex-col rounded-xl border border-border bg-card p-3 transition-all duration-normal sm:p-3.5 md:flex',
           'hover:border-primary/40 hover:shadow-sm'
         )}
         draggable={false}
       >
-        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-md" draggable={false}>
+        <div className="relative mb-2 aspect-[4/3] w-full select-none overflow-hidden rounded-lg" draggable={false}>
           <Image
             src={getFullUrl(imageSource)}
             alt={product?.imageAlt || title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
-            className="select-none rounded-md object-contain"
+            className="select-none rounded-lg object-contain"
             draggable={false}
           />
         </div>
 
         <div className="mb-1 mt-2 h-9 w-full">
-          <h4 className="line-clamp-2 text-sm font-semibold leading-relaxed text-foreground">
+          <h4 className="line-clamp-2 text-xs sm:text-sm font-semibold leading-relaxed text-foreground">
             {title}
           </h4>
         </div>
@@ -307,7 +320,7 @@ export function ProductSearchCard({
         >
           <div
             className={cn(
-              'shrink-0 rounded-sm border border-accent bg-accent px-2.5 py-1 text-xs font-bold text-accent-foreground transition-opacity duration-fast',
+              'shrink-0 rounded-md bg-destructive text-destructive-foreground px-2 py-0.5 text-xs font-bold transition-opacity duration-fast',
               hasDiscount && discountPercent > 0 && !isOutOfStock ? 'opacity-100' : 'pointer-events-none opacity-0'
             )}
           >
@@ -334,6 +347,29 @@ export function ProductSearchCard({
             </div>
           </div>
         </div>
+
+        {/* ردیف تایمر تخفیف در نسخه دسکتاپ */}
+        {isTimerVisible && (
+          <div className="mt-2.5 flex w-full items-center justify-between border-t border-dashed border-border/80 pt-2 text-muted-foreground">
+            <div className="flex items-center gap-1 font-bold text-foreground" dir="ltr">
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.hours}
+              </span>
+              <span className="text-muted-foreground/60 leading-none">:</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.minutes}
+              </span>
+              <span className="text-muted-foreground/60 leading-none">:</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-2xs font-bold tabular-nums">
+                {formattedPersian.seconds}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-primary">
+              <Timer aria-hidden="true" className="h-3.5 w-3.5" />
+              <span className="text-3xs font-bold hidden">فرصت تخفیف</span>
+            </div>
+          </div>
+        )}
 
         {showAddToBasket && !isOutOfStock ? (
           <div className="mt-3 h-9 w-full shrink-0">
@@ -457,15 +493,27 @@ export function ProductSearchCard({
             </div>
 
             <div className="mt-2 flex w-full min-w-0 items-end justify-between pt-1">
-              <div
-                className={cn(
-                  'rounded-sm border border-accent bg-accent px-2 py-0.5 text-2xs font-bold text-accent-foreground shrink-0',
-                  hasDiscount && discountPercent > 0 && !isOutOfStock
-                    ? 'opacity-100'
-                    : 'pointer-events-none opacity-0'
+              <div className="flex items-center gap-1.5 shrink-0">
+                <div
+                  className={cn(
+                    'rounded-md bg-destructive text-destructive-foreground px-1.5 py-0.5 text-3xs font-bold shrink-0',
+                    hasDiscount && discountPercent > 0 && !isOutOfStock
+                      ? 'opacity-100'
+                      : 'pointer-events-none opacity-0'
+                  )}
+                >
+                  {toPersianDigits(discountPercent)}٪
+                </div>
+
+                {/* تایمر زمان‌دار کامپکت در موبایل */}
+                {isTimerVisible && (
+                  <div className="flex items-center gap-0.5 rounded-md bg-muted px-1.5 py-0.5 text-3xs font-bold text-destructive tabular-nums" dir="ltr">
+                    <Timer className="h-3 w-3 shrink-0" />
+                    <span>
+                      {formattedPersian.hours}:{formattedPersian.minutes}:{formattedPersian.seconds}
+                    </span>
+                  </div>
                 )}
-              >
-                {toPersianDigits(discountPercent)}٪
               </div>
 
               <div className="flex min-w-0 flex-col items-end">
@@ -538,3 +586,5 @@ export function ProductSearchCard({
     </div>
   );
 }
+
+export default ProductSearchCard;

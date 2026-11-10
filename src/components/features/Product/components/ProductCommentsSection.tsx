@@ -1,64 +1,30 @@
+// src/components/features/Product/components/ProductCommentsSection.tsx
 'use client';
 
 import * as React from 'react';
-import { Star, ThumbsUp, ThumbsDown, User, MessageSquare, ArrowLeft, Clock, Package } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import {
+  Star,
+  ThumbsUp,
+  ThumbsDown,
+  User,
+  MessageSquare,
+  ArrowLeft,
+  Clock,
+  Package,
+  ChevronLeft,
+} from 'lucide-react';
 import { useGetProductComments, useGetProductCommentsAverage } from '@/domains/front/product/hooks/product.hooks';
 import { useCreateComment, useLikeComment, useUnlikeComment } from '@/domains/front/comment/hooks/comment.hooks';
 import { useAuth } from '@/domains/auth/hooks/auth.hooks';
+import { useRequireAuth } from '@/domains/auth/hooks/useRequireAuth';
 import { Button } from '@/components/primitives/Button/Button';
-import { Modal, ModalHeader, ModalTitle, ModalBody } from '@/components/composites/Modal/Modal';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalFooter } from '@/components/composites/Modal/Modal';
 import { TextArea } from '@/components/primitives/TextArea/TextArea';
 import { Checkbox } from '@/components/primitives/Checkbox/Checkbox';
 import { toPersianDigits, getFullUrl } from '@/core/utils/formatters';
 import { cn } from '@/design-system/utils/cn';
 import { showToast } from '@/core/utils/toast';
-
-function LottiePlayer({ path, className = 'w-48 h-48', loop = true }: { path: string; className?: string; loop?: boolean }) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
-    let anim: any = null;
-    let isMounted = true;
-
-    const init = async () => {
-      try {
-        const altPath = path.includes('/anumations/')
-          ? path.replace('/anumations/', '/animations/')
-          : path.replace('/animations/', '/anumations/');
-        let animationData: any = null;
-        for (const p of [path, altPath]) {
-          try {
-            const res = await fetch(p);
-            if (res.ok) {
-              animationData = await res.json();
-              break;
-            }
-          } catch {}
-        }
-        if (!animationData || !isMounted || !containerRef.current) return;
-        const lottieModule = await import('lottie-web');
-        const lottie = lottieModule.default || lottieModule;
-        if (containerRef.current && isMounted) {
-          anim = lottie.loadAnimation({
-            container: containerRef.current,
-            renderer: 'svg',
-            loop,
-            autoplay: true,
-            animationData,
-          });
-        }
-      } catch {}
-    };
-
-    init();
-    return () => {
-      isMounted = false;
-      anim?.destroy();
-    };
-  }, [path, loop]);
-
-  return <div ref={containerRef} className={className} />;
-}
 
 export interface ProductCommentsSectionProps {
   productId: string;
@@ -71,9 +37,13 @@ export function ProductCommentsSection({
   productTitle = 'قطعه انتخابی',
   productImage,
 }: ProductCommentsSectionProps) {
+  const searchParams = useSearchParams();
+  const { checkAuthAndRun, isCheckingAuth } = useRequireAuth();
+
   const [orderBy, setOrderBy] = React.useState('Newest');
   const [page, setPage] = React.useState(1);
   const [isWriteModalOpen, setIsWriteModalOpen] = React.useState(false);
+  const [isAllCommentsModalOpen, setIsAllCommentsModalOpen] = React.useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = React.useState(false);
 
   const { user } = useAuth();
@@ -90,7 +60,6 @@ export function ProductCommentsSection({
   const likeComment = useLikeComment();
   const unlikeComment = useUnlikeComment();
 
-  // استیت محلی برای آپدیت ۱۰۰٪ درجا و آنی لایک و دیس‌لایک
   const [localComments, setLocalComments] = React.useState<any[]>([]);
 
   React.useEffect(() => {
@@ -98,6 +67,23 @@ export function ProductCommentsSection({
       setLocalComments(commentsResponse.items);
     }
   }, [commentsResponse]);
+
+  React.useEffect(() => {
+    if (searchParams?.get('action') === 'write-comment') {
+      setIsWriteModalOpen(true);
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('action');
+        window.history.replaceState(null, '', url.pathname + url.search);
+      }
+    }
+  }, [searchParams]);
+
+  const handleOpenWriteModal = () => {
+    checkAuthAndRun(() => {
+      setIsWriteModalOpen(true);
+    }, 'write-comment');
+  };
 
   const handleCommentSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -121,7 +107,6 @@ export function ProductCommentsSection({
     }
   };
 
-  // لایک درجا و بدون تاخیر
   const handleLike = (comment: any) => {
     const prev = [...localComments];
     const isLiked = !!comment.userLiked;
@@ -148,9 +133,7 @@ export function ProductCommentsSection({
     );
 
     if (isLiked) {
-      unlikeComment.mutate(comment.id, {
-        onError: () => setLocalComments(prev),
-      });
+      unlikeComment.mutate(comment.id, { onError: () => setLocalComments(prev) });
     } else {
       likeComment.mutate(
         { productCommentId: comment.id, likeStatus: 'Like' },
@@ -159,7 +142,6 @@ export function ProductCommentsSection({
     }
   };
 
-  // دیس‌لایک درجا و بدون تاخیر
   const handleDislike = (comment: any) => {
     const prev = [...localComments];
     const isLiked = !!comment.userLiked;
@@ -186,9 +168,7 @@ export function ProductCommentsSection({
     );
 
     if (isDisliked) {
-      unlikeComment.mutate(comment.id, {
-        onError: () => setLocalComments(prev),
-      });
+      unlikeComment.mutate(comment.id, { onError: () => setLocalComments(prev) });
     } else {
       likeComment.mutate(
         { productCommentId: comment.id, likeStatus: 'Dislike' },
@@ -197,12 +177,104 @@ export function ProductCommentsSection({
     }
   };
 
+  // کارت نظر مینیمال بدون بردرهای ضخیم و رنگ‌های زائد
+  const renderMinimalCommentCard = (comment: any) => {
+    const authorName = comment.creator || comment.userName || 'کاربر یدکچی';
+    const commentContent = comment.comment || comment.content || '';
+    const likesCount = typeof comment.likes === 'object' ? comment.likes?.likes : comment.likes || 0;
+    const dislikesCount = typeof comment.likes === 'object' ? comment.likes?.dislikes : comment.dislikes || 0;
+    const displayDate = comment.createDateFormatted || comment.metadata?.timeAgo || '';
+
+    return (
+      <div key={comment.id} className="flex flex-col gap-2.5 py-4 border-b border-border/70 last:border-b-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <User className="h-3 w-3" />
+            </div>
+            <span className="text-xs font-semibold text-foreground">{authorName}</span>
+            {comment.isConfirmed === false && (
+              <span className="flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-3xs text-muted-foreground">
+                <Clock className="h-2.5 w-2.5" />
+                در حال بررسی
+              </span>
+            )}
+          </div>
+          {displayDate && (
+            <span className="text-3xs text-muted-foreground">{toPersianDigits(displayDate)}</span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1" dir="ltr">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              className={cn(
+                'h-3 w-3',
+                i < (comment.rate || 0)
+                  ? 'fill-warning text-warning'
+                  : 'text-border'
+              )}
+            />
+          ))}
+        </div>
+
+        <p className="text-xs leading-relaxed text-foreground/90 text-justify">{commentContent}</p>
+
+        {comment.userBoughtFrom && (
+          <div className="inline-flex items-center gap-1 text-3xs text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+            <span>خریدار این کالا از فروشگاه {comment.userBoughtFrom}</span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-end gap-3 pt-1">
+          <button
+            type="button"
+            onClick={() => handleLike(comment)}
+            className={cn(
+              'flex items-center gap-1 text-3xs font-medium transition-colors',
+              comment.userLiked ? 'text-success font-bold' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <ThumbsUp className="h-3.5 w-3.5" />
+            <span>{toPersianDigits(likesCount)}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDislike(comment)}
+            className={cn(
+              'flex items-center gap-1 text-3xs font-medium transition-colors',
+              comment.userDisLiked ? 'text-destructive font-bold' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <ThumbsDown className="h-3.5 w-3.5" />
+            <span>{toPersianDigits(dislikesCount)}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="mt-6 flex w-full flex-col gap-6">
-      <h3 className="text-title-sm md:text-base">امتیاز و نظرات کاربران</h3>
+      {/* هدر بخش با عنوان و مشاهده همه */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-title-sm md:text-base font-bold">امتیاز و نظرات کاربران</h3>
+        {localComments.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsAllCommentsModalOpen(true)}
+            className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span>مشاهده همه ({toPersianDigits(localComments.length)})</span>
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
       <div className="grid w-full grid-cols-1 items-start gap-8 lg:grid-cols-10">
-        {/* سایدبار میانگین امتیاز */}
+        {/* استایل کامل و اصلی سایدبار امتیاز و ستاره‌ها (بدون تغییر) */}
         <div className="flex w-full flex-col gap-5 rounded-2xl border border-border bg-card p-5 shadow-xs lg:sticky lg:top-[12.25rem] lg:col-span-3">
           {average ? (
             <div className="flex w-full flex-col items-center gap-5">
@@ -253,7 +325,8 @@ export function ProductCommentsSection({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsWriteModalOpen(true)}
+                isLoading={isCheckingAuth}
+                onClick={handleOpenWriteModal}
                 className="mt-2 flex h-10 w-full items-center gap-2 border-shop/40 text-xs font-bold text-shop hover:bg-shop/5"
               >
                 <MessageSquare aria-hidden="true" className="h-4 w-4" />
@@ -263,9 +336,9 @@ export function ProductCommentsSection({
           ) : null}
         </div>
 
-        {/* لیست نظرات کاربران */}
+        {/* لیست مینیمال نظرات کاربران */}
         <div className="flex w-full flex-col gap-4 lg:col-span-7">
-          <div className="flex items-center gap-4 overflow-x-auto border-b border-dashed border-border pb-3 py-1 scrollbar-none">
+          <div className="flex items-center gap-4 overflow-x-auto border-b border-border/80 pb-3 py-1 scrollbar-none">
             <span className="shrink-0 text-label-muted">نمایش بر اساس:</span>
             {[
               { value: 'Newest', label: 'جدیدترین‌ها' },
@@ -281,7 +354,7 @@ export function ProductCommentsSection({
                   setPage(1);
                 }}
                 className={cn(
-                  'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none',
+                  'shrink-0 border-b-2 pb-1 text-xs font-bold outline-none transition-colors',
                   orderBy === opt.value
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground'
@@ -292,97 +365,20 @@ export function ProductCommentsSection({
             ))}
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col">
             {isLoading ? (
-              <span className="text-xs text-muted-foreground">در حال بارگذاری دیدگاه‌ها...</span>
+              <span className="text-xs text-muted-foreground py-6">در حال بارگذاری دیدگاه‌ها...</span>
             ) : localComments.length > 0 ? (
-              localComments.map((comment: any) => {
-                const authorName = comment.creator || comment.userName || comment.user?.displayName || 'کاربر یدکچی';
-                const commentContent = comment.comment || comment.content || '';
-                const likesCount = typeof comment.likes === 'object' ? comment.likes?.likes : comment.likes || 0;
-                const dislikesCount = typeof comment.likes === 'object' ? comment.likes?.dislikes : comment.dislikes || 0;
-                const displayDate = comment.createDateFormatted || comment.metadata?.timeAgo || '';
-
-                return (
-                  <div key={comment.id} className="flex gap-4 rounded-2xl border border-border bg-card p-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted">
-                      <User aria-hidden="true" className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-label">{authorName}</span>
-                          {comment.isConfirmed === false && (
-                            <span className="flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-2xs font-bold text-warning">
-                              <Clock aria-hidden="true" className="h-3 w-3" />
-                              در حال بررسی
-                            </span>
-                          )}
-                        </div>
-                        {displayDate && (
-                          <span className="text-2xs text-muted-foreground">
-                            {toPersianDigits(displayDate)}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-1 flex items-center gap-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            aria-hidden="true"
-                            className={cn(
-                              'h-3 w-3 shrink-0',
-                              i < (comment.rate || 0) ? 'fill-warning text-warning' : 'text-border'
-                            )}
-                          />
-                        ))}
-                      </div>
-
-                      <p className="mt-3 text-base leading-relaxed text-muted-foreground">{commentContent}</p>
-
-                      {comment.userBoughtFrom && (
-                        <span className="mt-3 inline-block rounded-full bg-success/10 px-3 py-1 text-2xs font-bold text-success">
-                          خریدار این کالا از فروشگاه {comment.userBoughtFrom}
-                        </span>
-                      )}
-
-                      <div className="mt-4 flex items-center justify-end gap-4 border-t border-dashed border-border pt-3">
-                        <button
-                          type="button"
-                          onClick={() => handleLike(comment)}
-                          className={cn(
-                            'flex items-center gap-1 text-2xs font-bold transition-all active:scale-90',
-                            comment.userLiked ? 'text-success' : 'text-muted-foreground hover:text-success'
-                          )}
-                        >
-                          <ThumbsUp aria-hidden="true" className="h-4 w-4" />
-                          <span>({toPersianDigits(likesCount)})</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDislike(comment)}
-                          className={cn(
-                            'flex items-center gap-1 text-2xs font-bold transition-all active:scale-90',
-                            comment.userDisLiked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
-                          )}
-                        >
-                          <ThumbsDown aria-hidden="true" className="h-4 w-4" />
-                          <span>({toPersianDigits(dislikesCount)})</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+              localComments.slice(0, 4).map((comment) => renderMinimalCommentCard(comment))
             ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 py-6">
                 <span className="text-xs text-muted-foreground">
                   هیچ دیدگاهی برای این کالا ثبت نشده است. اولین نفری باشید که نظر خود را ثبت می‌کند!
                 </span>
                 <button
                   type="button"
-                  onClick={() => setIsWriteModalOpen(true)}
+                  onClick={handleOpenWriteModal}
+                  disabled={isCheckingAuth}
                   className="flex shrink-0 items-center gap-1 text-xs font-bold text-shop outline-none hover:underline"
                 >
                   <span>ثبت دیدگاه</span>
@@ -394,40 +390,47 @@ export function ProductCommentsSection({
         </div>
       </div>
 
-      {/* ================= مودال ثبت دیدگاه جدید با تصویر بزرگتر و نام کامل ================= */}
-      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} className="w-full max-w-md">
+      {/* ================= مودال مینیمال مشاهده تمام نظرات ================= */}
+      <Modal
+        isOpen={isAllCommentsModalOpen}
+        onClose={() => setIsAllCommentsModalOpen(false)}
+        size="lg"
+      >
+        <ModalHeader onClose={() => setIsAllCommentsModalOpen(false)}>
+          <ModalTitle>تمام نظرات کاربران ({toPersianDigits(localComments.length)})</ModalTitle>
+        </ModalHeader>
+        <ModalBody className="p-4 md:p-6 divide-y divide-border/60">
+          {localComments.map((comment) => renderMinimalCommentCard(comment))}
+        </ModalBody>
+      </Modal>
+
+      {/* ================= مودال مینیمال ثبت دیدگاه جدید ================= */}
+      <Modal isOpen={isWriteModalOpen} onClose={() => setIsWriteModalOpen(false)} size="sm">
         <ModalHeader onClose={() => setIsWriteModalOpen(false)}>
-          <ModalTitle className="text-title-sm">ثبت دیدگاه جدید</ModalTitle>
+          <ModalTitle>ثبت دیدگاه جدید</ModalTitle>
         </ModalHeader>
 
-        <ModalBody className="p-5 pt-4">
-          <form onSubmit={handleCommentSubmit} className="flex w-full flex-col gap-4">
-            {/* سربرگ مشخصات محصول با عکس بزرگتر */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border">
-              <div className="w-20 h-20 rounded-xl border border-border bg-card p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
+        <ModalBody className="p-4 md:p-5">
+          <form id="comment-form" onSubmit={handleCommentSubmit} className="flex w-full flex-col gap-4">
+            {/* پیش‌نمایش مینیمال کالا */}
+            <div className="flex items-center gap-3 p-2.5 rounded-xl border border-border bg-muted/20">
+              <div className="w-12 h-12 rounded-lg border border-border bg-card p-1 flex items-center justify-center shrink-0">
                 {productImage ? (
-                  <img
-                    src={getFullUrl(productImage)}
-                    alt={productTitle}
-                    className="w-full h-full object-contain"
-                  />
+                  <img src={getFullUrl(productImage)} alt={productTitle} className="w-full h-full object-contain" />
                 ) : (
-                  <Package className="w-8 h-8 text-muted-foreground" />
+                  <Package className="w-5 h-5 text-muted-foreground" />
                 )}
               </div>
-
-              <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-label-2xs">نام کالا:</span>
-                <h4 className="text-xs sm:text-title-sm leading-snug line-clamp-2">
-                  {productTitle}
-                </h4>
+              <div className="flex flex-col min-w-0">
+                <span className="text-3xs text-muted-foreground">کالای انتخابی</span>
+                <span className="text-xs font-semibold text-foreground truncate">{productTitle}</span>
               </div>
             </div>
 
-            {/* امتیازدهی ستاره‌ای */}
-            <div className="flex w-full flex-col items-center justify-center gap-2 border-b border-dashed border-border py-2 text-center">
-              <span className="text-label-muted">امتیاز شما به این کالا *</span>
-              <div className="mt-1 flex items-center gap-2" dir="ltr">
+            {/* ستاره‌ها */}
+            <div className="flex flex-col items-center justify-center gap-1 py-1 text-center">
+              <span className="text-xs font-medium text-muted-foreground">امتیاز شما به کالا *</span>
+              <div className="flex items-center gap-2" dir="ltr">
                 {[1, 2, 3, 4, 5].map((starValue) => {
                   const isHighlighted = (hoverRate || rate) >= starValue;
                   return (
@@ -437,13 +440,11 @@ export function ProductCommentsSection({
                       onMouseEnter={() => setHoverRate(starValue)}
                       onMouseLeave={() => setHoverRate(0)}
                       onClick={() => setRate(starValue)}
-                      aria-label={`${starValue} ستاره`}
-                      className="p-1 outline-none transition-transform hover:scale-110 active:scale-95"
+                      className="p-1 transition-transform hover:scale-110 active:scale-95"
                     >
                       <Star
-                        aria-hidden="true"
                         className={cn(
-                          'h-7 w-7 shrink-0',
+                          'h-6 w-6',
                           isHighlighted ? 'fill-warning text-warning' : 'text-border'
                         )}
                       />
@@ -455,8 +456,8 @@ export function ProductCommentsSection({
 
             {/* متن دیدگاه */}
             <TextArea
-              label="متن نظر *"
-              placeholder="تجربه و نظر خود درباره کیفیت، انطباق فنی، اصالت یا بسته‌بندی این کالا را بنویسید..."
+              label="متن دیدگاه *"
+              placeholder="تجربه و نظر خود درباره کیفیت، اصالت یا بسته‌بندی این کالا را بنویسید..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="h-28 text-xs leading-relaxed"
@@ -464,58 +465,51 @@ export function ProductCommentsSection({
             />
 
             {/* ارسال ناشناس */}
-            <div className="mt-1 flex w-full items-start gap-3 border-t border-dashed border-border pt-4 select-none">
+            <div className="flex items-start gap-2.5 pt-1 select-none">
               <Checkbox checked={isIncognito} onChange={(checked) => setIsIncognito(checked)} />
               <div>
-                <span className="block text-label">ارسال به صورت ناشناس</span>
-                <span className="mt-1 block text-2xs text-muted-foreground">
-                  در صورت فعال‌سازی، نام شما به سایر کاربران نمایش داده نخواهد شد.
-                </span>
+                <span className="block text-xs font-medium text-foreground">ارسال به صورت ناشناس</span>
+                <span className="text-3xs text-muted-foreground">نام شما در صفحه کالا نمایش داده نخواهد شد.</span>
               </div>
             </div>
           </form>
         </ModalBody>
 
-        <div className="flex w-full shrink-0 flex-row gap-3 border-t border-border p-5 pt-4">
+        <ModalFooter>
           <Button
             type="button"
             variant="outline"
             onClick={() => setIsWriteModalOpen(false)}
-            className="h-10 flex-1 text-xs font-bold"
+            className="h-10 flex-1 text-xs font-bold rounded-lg"
           >
             انصراف
           </Button>
           <Button
-            type="button"
+            type="submit"
+            form="comment-form"
             variant="primary"
             isLoading={createComment.isPending}
-            className="h-10 flex-1 text-xs font-bold"
-            onClick={() => handleCommentSubmit()}
+            className="h-10 flex-1 text-xs font-bold rounded-lg"
           >
-            ثبت نظر نهایی
+            ثبت دیدگاه
           </Button>
-        </div>
+        </ModalFooter>
       </Modal>
 
-      {/* مودال موفقیت */}
-      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} className="w-full max-w-md">
+      {/* مودال مینیمال موفقیت */}
+      <Modal isOpen={isSuccessModalOpen} onClose={() => setIsSuccessModalOpen(false)} size="xs">
         <ModalBody className="flex flex-col items-center justify-center gap-3 p-6 text-center">
-          <LottiePlayer path="/anumations/Rate-cong.json" className="mx-auto h-72 w-72 max-w-full" loop={false} />
-
-          <h4 className="text-base font-bold leading-relaxed text-foreground">
-            {userName} عزیز، از ارسال نظر شما ممنونیم
-          </h4>
-
-          <p className="text-base font-medium text-shop">دیدگاه شما به سایر خریداران کمک شایانی خواهد کرد</p>
-
-          <p className="mx-auto max-w-xs text-base leading-relaxed text-muted-foreground">
-            دیدگاه شما پس از بررسی توسط تیم پشتیبانی، در صفحه محصول منتشر خواهد شد.
+          <div className="h-12 w-12 rounded-full border border-border flex items-center justify-center bg-muted text-foreground">
+            <Star className="h-6 w-6 fill-warning text-warning" />
+          </div>
+          <h4 className="text-sm font-bold text-foreground">{userName} عزیز، نظر شما ثبت شد</h4>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            دیدگاه شما پس از بررسی پشتیبانی در این بخش نمایش داده خواهد شد.
           </p>
-
           <Button
             variant="primary"
             onClick={() => setIsSuccessModalOpen(false)}
-            className="mt-3 h-9 px-6 text-xs font-bold shadow-xs"
+            className="mt-2 h-9 px-6 text-xs font-bold rounded-lg"
           >
             متوجه شدم
           </Button>

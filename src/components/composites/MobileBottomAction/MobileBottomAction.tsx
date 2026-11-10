@@ -35,7 +35,7 @@ export interface MobileBottomActionProps {
 
   /** محتوای کشویی بالایی که چسبیده به بالای دکمه باز می‌شود */
   topDrawer?: React.ReactNode;
-  
+
   /** مدت زمان تایمر پروگرس‌بار به میلی‌ثانیه (پیش‌فرض: ۴۵۰۰ میلی‌ثانیه) */
   drawerDuration?: number;
 }
@@ -76,7 +76,7 @@ export function MobileBottomAction({
     <div
       dir="rtl"
       className={cn(
-        'lg:hidden fixed inset-x-0 z-50 w-full transform-gpu flex flex-col select-none',
+        'lg:hidden fixed inset-x-0 z-40 w-full flex flex-col select-none pointer-events-none',
         className
       )}
       style={{
@@ -85,30 +85,61 @@ export function MobileBottomAction({
           : '0px',
       }}
     >
-      {/* کشوی متصل بالایی همراه با انیمیشن روان و پروگرس‌بار تایمر در لبه بالا */}
+      {/* استایل پیشرفته پروگرس‌بار با گرادیان نئونی و افکت شاین متحرک */}
+      <style>{`
+        @keyframes drawerCountdown {
+          from {
+            transform: scaleX(1);
+          }
+          to {
+            transform: scaleX(0);
+          }
+        }
+        @keyframes shimmerGlow {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+        .drawer-progress-bar {
+          transform-origin: right center;
+          animation: drawerCountdown ${drawerDuration}ms linear forwards;
+          will-change: transform;
+          background: linear-gradient(
+            90deg,
+            #3b82f6 0%,
+            #8b5cf6 25%,
+            #ec4899 50%,
+            #3b82f6 75%,
+            #10b981 100%
+          );
+          background-size: 200% 100%;
+          animation: 
+            drawerCountdown ${drawerDuration}ms linear forwards,
+            shimmerGlow 2.5s linear infinite;
+          box-shadow: 0 0 10px rgba(139, 92, 246, 0.5), 0 0 4px rgba(59, 130, 246, 0.4);
+        }
+      `}</style>
+
+      {/* کشوی متصل بالایی همراه با انیمیشن روان و پروگرس‌بار نئونی در لبه بالا */}
       <AnimatePresence>
         {topDrawer && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="relative w-full overflow-hidden border-t border-border bg-card/95 backdrop-blur-md shadow-overlay-top dark:shadow-overlay-top-dark"
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="pointer-events-auto relative w-full overflow-hidden border-t border-border bg-card/95 backdrop-blur-md shadow-overlay-top dark:shadow-overlay-top-dark"
           >
-            {/* نوار پیشرفت (Progress Bar) متحرک معکوس */}
-            <div className="absolute inset-x-0 top-0 h-1 w-full bg-muted/60 overflow-hidden z-10">
-              <motion.div
-                initial={{ width: '100%' }}
-                animate={{ width: '0%' }}
-                transition={{ duration: drawerDuration / 1000, ease: 'linear' }}
-                className="h-full bg-primary"
-              />
+            {/* نوار پیشرفت گرادیانی با افکت نوری */}
+            <div className="absolute inset-x-0 top-0 h-[3px] w-full bg-muted/40 overflow-hidden z-10">
+              <div className="h-full w-full drawer-progress-bar" />
             </div>
 
-            {/* محتوای دراور */}
-            <div className="pt-1">
-              {topDrawer}
-            </div>
+            {/* محتوای دراور با پدینگ استاندارد بالا برای فاصله مناسب از خط پروگرس */}
+            <div className="pt-1.5">{topDrawer}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -116,7 +147,7 @@ export function MobileBottomAction({
       {/* نوار اصلی اکشن دکمه‌ها */}
       <div
         className={cn(
-          'w-full bg-card border-t border-border px-4 py-3 flex items-center justify-between gap-3',
+          'pointer-events-auto w-full bg-card border-t border-border px-4 py-3 flex items-center justify-between gap-3',
           !topDrawer && 'shadow-overlay-top dark:shadow-overlay-top-dark'
         )}
         style={{

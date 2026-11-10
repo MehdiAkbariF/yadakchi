@@ -2,32 +2,20 @@
 'use client';
 
 import * as React from 'react';
+import { Search, Loader2, AlertCircle, Sparkles, X } from 'lucide-react';
 import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
 import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
 import { SearchHeader } from './SearchHeader';
 import { SearchSidebar } from './SearchSidebar';
+import { MobileSearchHeader } from './MobileSearchHeader';
 import { ProductSearchCard } from '../ProductCard/ProductSearchCard';
 import { ProductCardSkeleton } from '../ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
-import { BottomSheet } from '@/components/composites/BottomSheet/BottomSheet';
 import { Typography } from '@/components/primitives/Typography';
-import { Button } from '@/components/primitives/Button/Button';
 import { LottiePlayer } from '@/components/shared/Lottie/LottiePlayer';
-import { Check, Loader2, AlertCircle, Sparkles, RotateCcw } from 'lucide-react';
-import { cn } from '@/design-system/utils/cn';
-
-const SORT_OPTIONS = [
-  { value: 'Selected', label: 'منتخب' },
-  { value: 'MostVisited', label: 'پربازدیدترین' },
-  { value: 'Newest', label: 'جدیدترین' },
-  { value: 'BestSelling', label: 'پرفروش‌ترین' },
-  { value: 'Cheapest', label: 'ارزان‌ترین' },
-  { value: 'MostExpensive', label: 'گران‌ترین' },
-];
 
 export function SearchContent() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = React.useState(false);
-  const [isMobileSortOpen, setIsMobileSortOpen] = React.useState(false);
   const { filters, setFilter, removeFilter, clearFilters } = useSearchFilters();
 
   const { data, isLoading, isFetching, isError } = useSearchProducts(filters);
@@ -38,31 +26,35 @@ export function SearchContent() {
   const totalPages = data?.totalPages || 1;
   const aggregations = (data as any)?.aggregations || null;
 
-  const handleMobileSortSelect = (value: string) => {
-    setFilter('sort', value);
-    setIsMobileSortOpen(false);
-  };
-
   const searchedKeyword = filters.searchTitle?.trim() || '';
 
   return (
     <div className="relative flex w-full flex-col gap-4 sm:gap-6" dir="rtl">
-      {/* هدر چسبان موبایل اختصاصی با دو ردیف هماهنگ */}
-      <SearchHeader
-        totalCount={isSearching ? 0 : totalCount}
-        currentSort={filters.orderType || 'Selected'}
-        onSortChange={(sort) => setFilter('sort', sort)}
-        filters={filters}
-        onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
-        onOpenMobileSort={() => setIsMobileSortOpen(true)}
-        onRemoveFilter={removeFilter}
-        onClearAll={clearFilters}
-        searchTitle={filters.searchTitle}
-        isMobileSticky={true}
+
+      <MobileSearchHeader
+        icon={<Search aria-hidden="true" className="h-4 w-4 text-primary" />}
+        subtitle={searchedKeyword ? 'نتایج جستجو برای:' : 'جستجوی قطعات'}
+        title={searchedKeyword || 'همه کالاها'}
+        actionElement={
+          searchedKeyword ? (
+            <button
+              type="button"
+              onClick={() => removeFilter('q')} // تغییر از searchTitle به q
+              className="flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-3xs font-bold text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+            >
+              <span>حذف جستجو</span>
+              <X className="h-3 w-3" />
+            </button>
+          ) : null
+        }
+        totalCount={totalCount}
+        sortValue={filters.orderType || 'Selected'}
+        onSortChange={(val) => setFilter('sort', val)}
+        onOpenFilters={() => setIsMobileFiltersOpen(true)}
       />
 
       <div className="flex w-full items-start gap-6 lg:gap-7">
-        {/* سایدبار چسبان دسکتاپ به همراه داده‌های تجمیعی (Aggregations) */}
+        {/* سایدبار فیلترها (دسکتاپ و دراور موبایل) */}
         <SearchSidebar
           filters={filters}
           aggregations={aggregations}
@@ -72,8 +64,9 @@ export function SearchContent() {
           onClose={() => setIsMobileFiltersOpen(false)}
         />
 
-        {/* بخش اصلی نتایج */}
+        {/* بخش اصلی نمایش نتایج */}
         <div className="flex flex-1 min-w-0 flex-col items-stretch gap-5">
+          {/* هدر پیشرفته مخصوص دسکتاپ با چیپ‌های فیلتر و تب‌های مرتب‌سازی */}
           <div className="hidden md:block">
             <SearchHeader
               totalCount={isSearching ? 0 : totalCount}
@@ -87,7 +80,7 @@ export function SearchContent() {
             />
           </div>
 
-          {/* نشانگر بارگذاری نتایج جدید */}
+          {/* نشانگر در حال دریافت نتایج */}
           {isSearching && (
             <div className="flex animate-pulse items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-bold text-primary">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -95,7 +88,7 @@ export function SearchContent() {
             </div>
           )}
 
-          {/* ۱. حالت لودینگ: اسکلتون کارت‌ها */}
+          {/* ۱. لودینگ اسکلتون */}
           {isSearching ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4">
               {[...Array(8)].map((_, i) => (
@@ -161,57 +154,19 @@ export function SearchContent() {
                   <span className="text-2xs text-muted-foreground">
                     مثال: «لنت ترمز پژو ۲۰۶»
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setFilter('searchTitle', 'لنت ترمز پژو ۲۰۶')}
-                    className="cursor-pointer text-2xs font-bold text-primary transition-colors hover:underline shrink-0"
-                  >
-                    جستجوی این نمونه
-                  </button>
+              <button
+  type="button"
+  onClick={() => setFilter('q', 'لنت ترمز پژو ۲۰۶')} // تغییر searchTitle به q
+  className="cursor-pointer text-2xs font-bold text-primary transition-colors hover:underline shrink-0"
+>
+  جستجوی این نمونه
+</button>
                 </div>
-              </div>
-
-              <div className="mt-6 flex items-center gap-2.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="flex h-10 items-center gap-1.5 rounded-xl px-5 text-xs font-bold shadow-xs border-border"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  <span>پاک کردن فیلترها</span>
-                </Button>
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* باتم‌شیت مرتب‌سازی در موبایل */}
-      <BottomSheet
-        isOpen={isMobileSortOpen}
-        onClose={() => setIsMobileSortOpen(false)}
-        title="مرتب‌سازی بر اساس"
-      >
-        <div className="flex w-full flex-col divide-y divide-border/60" dir="rtl">
-          {SORT_OPTIONS.map((opt) => {
-            const isActive = (filters.orderType || 'Selected') === opt.value;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => handleMobileSortSelect(opt.value)}
-                className={cn(
-                  'flex w-full items-center justify-between py-3.5 text-xs font-bold transition-colors outline-none',
-                  isActive ? 'text-primary' : 'text-foreground hover:bg-muted/30'
-                )}
-              >
-                <span>{opt.label}</span>
-                {isActive && <Check className="h-4 w-4 text-primary stroke-[2.5]" />}
-              </button>
-            );
-          })}
-        </div>
-      </BottomSheet>
     </div>
   );
 }

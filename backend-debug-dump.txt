@@ -1,0 +1,605 @@
+================================================
+FILE: .env.local
+================================================
+# .env.local
+NEXT_PUBLIC_API_BASE_URL=https://api.ydkchbot.ir
+NEXT_PUBLIC_MEDIA_BASE_URL=/proxy-api
+NEXT_PUBLIC_SEARCH_API_BASE_URL=https://query.ydkchbot.ir
+NEXT_PUBLIC_API_TIMEOUT=30000
+NEXT_PUBLIC_SITE_URL=https://user.ydkchbot.ir
+
+
+
+================================================
+FILE: next.config.js
+================================================
+// next.config.js
+
+/** @type {import('next').NextConfig} */
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  publicExcludes: [
+    '!Font/**/*',
+    '!font/**/*',
+    '!images/**/*',
+    '!image/**/*',
+    '!banners/**/*',
+    '!banner/**/*',
+    '!**/*.{png,jpg,jpeg,gif,webp,svg,mp4,webm,pdf,ico}',
+  ],
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+const nextConfig = {
+  reactStrictMode: true,
+  compress: true, // فشرده‌سازی خودکار Gzip / Brotli
+
+  // بهینه‌سازی چشمگیر ایمپورت آیکون‌های لوسید و کاهش زمان بلاک جاوااسکریپت (TBT)
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
+
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  images: {
+    unoptimized: false,
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // ۳۰ روز کش در مرورگر برای تصاویر
+    deviceSizes: [640, 750, 828, 1080, 1200, 1400],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'api.yadakchi.local' },
+      { protocol: 'https', hostname: 'api.yadakchi.com' },
+      { protocol: 'https', hostname: 'cdn.yadakchi.com' },
+      { protocol: 'http', hostname: '51.158.252.139' },
+      { protocol: 'http', hostname: '172.92.92.237' },
+      { protocol: 'http', hostname: 'localhost' },
+    ],
+  },
+
+  // هدرهای امنیتی مطابق الزامات Best Practices گوگل و رفع خطاهای COOP و HSTS
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+        ],
+      },
+      {
+        // کش قدرتمند و بدون تغییر برای فونت‌ها
+        source: '/Font/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
+
+  env: {
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_MEDIA_BASE_URL:
+      process.env.NEXT_PUBLIC_MEDIA_BASE_URL || '/proxy-api',
+    NEXT_PUBLIC_SEARCH_API_BASE_URL:
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local',
+    NEXT_PUBLIC_API_TIMEOUT: process.env.NEXT_PUBLIC_API_TIMEOUT,
+    NEXT_PUBLIC_ENABLE_LOGGING: process.env.NEXT_PUBLIC_ENABLE_LOGGING,
+    NEXT_PUBLIC_ENABLE_DEV_TOOLS: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
+    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+    NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+    NEXT_PUBLIC_DEFAULT_PAGE_SIZE: process.env.NEXT_PUBLIC_DEFAULT_PAGE_SIZE,
+    NEXT_PUBLIC_MAX_PAGE_SIZE: process.env.NEXT_PUBLIC_MAX_PAGE_SIZE,
+  },
+
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  async rewrites() {
+    const apiBaseUrl =
+      process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.yadakchi.local';
+    const searchApiBaseUrl =
+      process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL ||
+      'https://query.yadakchi.local';
+
+    return [
+      {
+        source: '/proxy-api/api/Search/:path*',
+        destination: `${searchApiBaseUrl}/api/Search/:path*`,
+        basePath: false,
+      },
+      {
+        source: '/proxy-api/:path*',
+        destination: `${apiBaseUrl}/:path*`,
+        basePath: false,
+      },
+    ];
+  },
+
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/home',
+        permanent: true,
+      },
+    ];
+  },
+
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+  },
+};
+
+module.exports = withPWA(nextConfig);
+
+
+
+================================================
+FILE: src\core\config\env.ts
+================================================
+// src/core/config/env.ts
+
+export const env = {
+  // API Configuration - در صورت خالی بودن از مسیرهای نسبی استفاده می‌شود
+  apiBaseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || '',
+  apiTimeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10),
+  
+  // Environment
+  isDevelopment: process.env.NODE_ENV === 'development',
+  isProduction: process.env.NODE_ENV === 'production',
+  isTest: process.env.NODE_ENV === 'test',
+  
+  // Features
+  enableLogging: process.env.NEXT_PUBLIC_ENABLE_LOGGING === 'true',
+  enableDevTools: process.env.NEXT_PUBLIC_ENABLE_DEV_TOOLS === 'true',
+  
+  // App Configuration
+  appName: process.env.NEXT_PUBLIC_APP_NAME || 'Yadakchi Marketplace',
+  appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+  
+  // Pagination Defaults
+  defaultPageSize: parseInt(process.env.NEXT_PUBLIC_DEFAULT_PAGE_SIZE || '30', 10),
+  maxPageSize: parseInt(process.env.NEXT_PUBLIC_MAX_PAGE_SIZE || '100', 10),
+} as const;
+
+
+
+================================================
+FILE: src\core\config\constants.ts
+================================================
+export const constants = {
+  httpStatus: {
+    OK: 200,
+    CREATED: 201,
+    BAD_REQUEST: 400,
+    UNAUTHORIZED: 401,
+    FORBIDDEN: 403,
+    NOT_FOUND: 404,
+    CONFLICT: 409,
+    UNPROCESSABLE_ENTITY: 422,
+    RATE_LIMIT: 429,
+    SERVER_ERROR: 500,
+    SERVICE_UNAVAILABLE: 503,
+  } as const,
+  timeout: {
+    SHORT: 5000,
+    MEDIUM: 15000,
+    LONG: 30000,
+    EXTRA_LONG: 60000,
+  } as const,
+  cacheTime: {
+    SHORT: 60,
+    MEDIUM: 300,
+    LONG: 900,
+    EXTRA_LONG: 3600,
+  } as const,
+  pagination: {
+    DEFAULT_PAGE: 1,
+    DEFAULT_PAGE_SIZE: 30,
+    MAX_PAGE_SIZE: 100,
+  } as const,
+  retry: {
+    MAX_ATTEMPTS: 3,
+    BASE_DELAY: 1000,
+    MAX_DELAY: 10000,
+  } as const,
+  auth: {
+    SESSION_COOKIE: 'session',
+    REFRESH_COOKIE: 'refresh',
+  } as const,
+  patterns: {
+    PHONE_NUMBER: /^09[0-9]{9}$/,
+    NATIONAL_CODE: /^[0-9]{10}$/,
+    POSTAL_CODE: /^[0-9]{9,10}$/,
+    EMAIL: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+    BANK_CARD: /^[0-9]{16}$/,
+    SHEBA: /^IR[0-9]{22}$/,
+    PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])/,
+  } as const,
+} as const;
+
+
+
+================================================
+FILE: src\core\http\client.ts
+================================================
+// src/core/http/client.ts
+
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { env } from '../config/env';
+import { logger } from '../utils/logger';
+import { errorManager } from '../errors/error-manager';
+import { ApiError } from '../errors/api-error';
+import { HttpResponse, RequestOptions, HttpMethod } from './types';
+import http from 'http';
+import https from 'https';
+
+const keepAliveHttpAgent = typeof window === 'undefined'
+  ? new http.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 10, timeout: 60000 })
+  : null;
+
+const keepAliveHttpsAgent = typeof window === 'undefined'
+  ? new https.Agent({ keepAlive: true, maxSockets: 100, maxFreeSockets: 10, timeout: 60000 })
+  : null;
+
+// جلوگیری از حملات Open Redirect: مسیر فقط باید نسبی و داخلی باشد
+function getSafeRedirectUrl(targetPath: string): string {
+  if (!targetPath || !targetPath.startsWith('/') || targetPath.startsWith('//') || targetPath.includes('\\')) {
+    return '/profile';
+  }
+  return targetPath;
+}
+
+// سانسور دیتای حساس قبل از ثبت در لاگ‌ها (جلوگیری از لو رفتن OTP و شماره کاربر)
+function sanitizeLogData(data: any): any {
+  if (!data || typeof data !== 'object') return data;
+  const sanitized = { ...data };
+  const sensitiveKeys = ['code', 'password', 'token', 'refreshToken', 'nationalCode'];
+  for (const key of Object.keys(sanitized)) {
+    if (sensitiveKeys.includes(key)) {
+      sanitized[key] = '***REDACTED***';
+    }
+  }
+  return sanitized;
+}
+
+export class HttpClient {
+  private readonly axiosInstance: AxiosInstance;
+  private abortControllers: Map<string, AbortController> = new Map();
+  private serverRequestConfig: Record<string, any> = {};
+  private isRefreshing = false;
+  private failedQueue: { resolve: (value: any) => void; reject: (reason: any) => void }[] = [];
+
+  constructor() {
+    const baseURL = typeof window === 'undefined'
+      ? (env.apiBaseUrl || 'https://api.yadakchi.local')
+      : '/proxy-api';
+    
+    this.axiosInstance = axios.create({
+      baseURL,
+      timeout: env.apiTimeout,
+      withCredentials: true, // استفاده ایمن از HttpOnly Cookies
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-App-Version': env.appVersion,
+      },
+      httpAgent: keepAliveHttpAgent,
+      httpsAgent: keepAliveHttpsAgent,
+    });
+
+    this.setupInterceptors();
+  }
+
+  setServerConfig(config: Record<string, any>) {
+    this.serverRequestConfig = config;
+  }
+
+  private setupInterceptors(): void {
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        if (typeof window === 'undefined' && this.serverRequestConfig?.headers) {
+          config.headers = {
+            ...config.headers,
+            ...this.serverRequestConfig.headers,
+          };
+        }
+
+        if (env.enableLogging && env.isDevelopment) {
+          logger.debug(`[HTTP] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
+            params: config.params,
+            data: sanitizeLogData(config.data),
+          });
+        }
+
+        const requestId = this.generateRequestId();
+        config.headers['X-Request-ID'] = requestId;
+
+        return config;
+      },
+      (error) => {
+        logger.error('[HTTP] Request error', error);
+        return Promise.reject(error);
+      }
+    );
+
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        if (env.enableLogging && env.isDevelopment) {
+          logger.debug(`[HTTP] Response ${response.status} ${response.config.url}`, {
+            status: response.status,
+          });
+        }
+        return response;
+      },
+      async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const requestUrl = originalRequest.url || '';
+
+          if (currentPath === '/login') {
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          const isPassiveAuthCheck = 
+            requestUrl.includes('/User') || 
+            requestUrl.includes('/Refresh') || 
+            requestUrl.includes('/get-user') ||
+            requestUrl.includes('/GetFrontBasket') ||
+            requestUrl.includes('/IsUserFavoriteProduct') ||
+            requestUrl.includes('/UserVehicle');
+
+          if (isPassiveAuthCheck) {
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          const safeRedirect = getSafeRedirectUrl(currentPath);
+
+          if (originalRequest._retry) {
+            window.location.href = `/login?redirect=${encodeURIComponent(safeRedirect)}`;
+            return Promise.reject(errorManager.normalize(error));
+          }
+
+          if (this.isRefreshing) {
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then(() => this.axiosInstance(originalRequest))
+              .catch((err) => Promise.reject(err));
+          }
+
+          originalRequest._retry = true;
+          this.isRefreshing = true;
+
+          return new Promise((resolve, reject) => {
+            this.axiosInstance.post('/api/Login/Refresh')
+              .then(() => {
+                this.failedQueue.forEach((prom) => prom.resolve(null));
+                this.failedQueue = [];
+                resolve(this.axiosInstance(originalRequest));
+              })
+              .catch((refreshError) => {
+                this.failedQueue.forEach((prom) => prom.reject(refreshError));
+                this.failedQueue = [];
+                window.location.href = `/login?redirect=${encodeURIComponent(safeRedirect)}`;
+                reject(refreshError);
+              })
+              .finally(() => {
+                this.isRefreshing = false;
+              });
+          });
+        }
+
+        const apiError = errorManager.normalize(error);
+        return Promise.reject(apiError);
+      }
+    );
+  }
+
+  private generateRequestId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  private async makeRequest<T = unknown>(
+    method: HttpMethod,
+    url: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<HttpResponse<T>> {
+    const startTime = Date.now();
+    const requestId = this.generateRequestId();
+
+    let signal = options?.signal;
+    let controller: AbortController | undefined;
+
+    if (!signal) {
+      controller = new AbortController();
+      signal = controller.signal;
+      this.abortControllers.set(requestId, controller);
+    }
+
+    try {
+      let requestBaseURL = this.axiosInstance.defaults.baseURL;
+      if (url.startsWith('/api/Search') && typeof window === 'undefined') {
+        requestBaseURL = process.env.NEXT_PUBLIC_SEARCH_API_BASE_URL || 'http://172.92.92.237:7104';
+      }
+
+      const config: AxiosRequestConfig = {
+        method,
+        url,
+        baseURL: requestBaseURL,
+        params: options?.params,
+        headers: options?.headers,
+        timeout: options?.timeout ?? env.apiTimeout,
+        signal,
+        withCredentials: true, 
+      };
+
+      if (data !== undefined) {
+        config.data = data;
+      }
+
+      const response = await this.axiosInstance.request<T>(config);
+
+      if (controller) {
+        this.abortControllers.delete(requestId);
+      }
+
+      const duration = Date.now() - startTime;
+
+      return {
+        data: response.data,
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers as Record<string, string>,
+        config: {
+          url: response.config.url || '',
+          method: response.config.method as HttpMethod,
+          data: response.config.data,
+          params: response.config.params,
+          headers: response.config.headers as Record<string, string>,
+        },
+        duration,
+      };
+    } catch (error) {
+      if (controller) {
+        this.abortControllers.delete(requestId);
+      }
+
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
+      const apiError = errorManager.normalize(error);
+      throw apiError;
+    }
+  }
+
+  async get<T = unknown>(url: string, options?: RequestOptions): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('GET', url, undefined, options);
+  }
+
+  async post<T = unknown>(
+    url: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('POST', url, data, options);
+  }
+
+  async put<T = unknown>(
+    url: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('PUT', url, data, options);
+  }
+
+  async delete<T = unknown>(url: string, data?: unknown, options?: RequestOptions): Promise<HttpResponse<T>> {
+    return this.makeRequest<T>('DELETE', url, data, options);
+  }
+
+  async cancelRequest(requestId: string): Promise<void> {
+    const controller = this.abortControllers.get(requestId);
+    if (controller) {
+      controller.abort();
+      this.abortControllers.delete(requestId);
+    }
+  }
+
+  cancelAllRequests(): void {
+    this.abortControllers.forEach((controller) => controller.abort());
+    this.abortControllers.clear();
+  }
+
+  setBaseURL(url: string): void {
+    this.axiosInstance.defaults.baseURL = url;
+  }
+
+  setDefaultTimeout(timeout: number): void {
+    this.axiosInstance.defaults.timeout = timeout;
+  }
+}
+
+let httpClientInstance: HttpClient | null = null;
+
+export function getHttpClient(): HttpClient {
+  if (typeof window === 'undefined') {
+    return new HttpClient();
+  }
+  if (!httpClientInstance) {
+    httpClientInstance = new HttpClient();
+  }
+  return httpClientInstance;
+}
+
+
+
+================================================
+FILE: src\core\http\server-http.ts
+================================================
+// src/core/http/server-http.ts
+
+import { headers } from 'next/headers';
+import { getHttpClient } from './client';
+
+export function getServerHttpClient() {
+  const client = getHttpClient();
+  
+  // گرفتن هدرهای درخواست فعلی در سمت سرور (Next.js)
+  const headersList = headers();
+  
+  // استخراج کوکی‌ها
+  const cookie = headersList.get('cookie') || '';
+  
+  // تزریق کوکی‌ها به HttpClient
+  client.setServerConfig({
+    headers: {
+      Cookie: cookie,
+    },
+  });
+
+  return client;
+}
+
+
+

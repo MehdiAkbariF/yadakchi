@@ -9,6 +9,7 @@ import { getHttpClient } from '@/core/http/client';
 import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { OffersContent } from '@/components/features/Offers/OffersContent';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 
 /* -------------------------------------------------------------------------- */
 /*                                  Metadata                                  */
@@ -49,6 +50,43 @@ function serializeJsonLd(data: unknown): string {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                          فیلتر پایه صفحه تخفیف‌ها                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * ⚠️ مهم: این فیلتر باید دقیقاً با فیلتر کلاینت در OffersContent یکسان باشد
+ * تا queryKey سرور و کلاینت برابر شود و Hydration به‌درستی کار کند.
+ *
+ * پارامترهای درست مطابق سواگر /api/Search/Products:
+ *   - onlyDiscounted:          فقط کالاهای تخفیف‌دار
+ *   - hasDiscountWithExpiration: فقط تخفیف‌های دارای تاریخ انقضا (تایمر)
+ *   - onlyInStock:             فقط موجود در انبار
+ *   - excludeDuplicateProducts: جلوگیری از تکرار کالا از فروشندگان مختلف
+ *   - sortBy / sortDescending: جدیدترین تخفیف‌ها
+ *   - includeAggregations:     برای سایدبار فیلترها
+ */
+const OFFERS_BASE_FILTERS: SearchProductsRequest = {
+  onlyDiscounted: true,
+  hasDiscountWithExpiration: true,
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  sortBy: 'CreationDate',
+  sortDesc: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
+
+/**
+ * ساخت فیلترهای صفحه offers بر اساس filters پایه + filters خوانده‌شده از URL.
+ * از آنجایی که URL در صفحه سرور در دسترس نیست، خروجی این تابع دقیقاً برابر
+ * خروجی معادل کلاینت در OffersContent (وقتی URL پارامتر sort ندارد) خواهد بود.
+ */
+function buildOffersFilters(base: SearchProductsRequest): SearchProductsRequest {
+  return { ...base };
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                 صفحه اصلی                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -73,13 +111,8 @@ export default async function OffersPage() {
   const carService = getCarService();
   const httpClient = getHttpClient();
 
-  // فیلتر اولیه صفحه لندینگ تخفیف‌ها (صفحه اول)
-  const initialFilters = {
-    hasDiscount: true,
-    pageNumber: 1,
-    pageSize: 30,
-    orderType: 'Selected' as const,
-  };
+  // ✅ فیلتر سرور دقیقاً همان چیزی است که کلاینت در اولین رندر می‌سازد
+  const initialFilters = buildOffersFilters(OFFERS_BASE_FILTERS);
 
   // ✅ استفاده از Promise.allSettled تا خطای یک سرویس فرعی، کل صفحه را مسدود نکند
   await Promise.allSettled([

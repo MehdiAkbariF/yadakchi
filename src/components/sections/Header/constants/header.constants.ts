@@ -3,9 +3,9 @@
 import { Grid3x3, Tag, Star, ShoppingCart, Shield } from 'lucide-react';
 
 export const NAV_ITEMS = [
-  { id: 'categories', label: 'دسته بندی قطعات', icon: Grid3x3, href: '/part-category', hasDropdown: true },
-  { id: 'offers', label: 'یدکچی آف', icon: Tag, href: '/offers', hasDropdown: false },
-  { id: 'special', label: 'فروش ویژه', icon: Star, href: '/special', hasDropdown: false },
+  { id: 'categories', label: 'دسته بندی قطعات', icon: Grid3x3, href: '', hasDropdown: true },
+  { id: 'offers', label: 'تیک آف', icon: Tag, href: '/offers', hasDropdown: false },
+  
   { id: 'bestsellers', label: 'پرفروش ترین ها', icon: ShoppingCart, href: '/bestsellers', hasDropdown: false },
   { id: 'guarantee', label: 'ضمانت و گارانتی', icon: Shield, href: '/guarantee', hasDropdown: false },
 ] as const;
@@ -35,4 +35,5 @@ export const PAGES_WITHOUT_MOBILE_CITY = [
   '/car-parts',
   '/car',
   '/shops',
+  '/offers'
 ] as const;

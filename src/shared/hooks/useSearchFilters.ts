@@ -33,12 +33,13 @@ export function useSearchFilters() {
     };
   }, [searchParams]);
 
-  const setFilter = useCallback((name: string, value: any) => {
+const setFilter = useCallback((name: string, value: any) => {
     const params = new URLSearchParams(searchParams.toString());
     
     if (value === undefined || value === null || value === '' || value === false) {
       params.delete(name);
     } else if (Array.isArray(value)) {
+      // پاک کردن مقادیر قبلی و ثبت تک‌تک آیتم‌های آرایه در URL
       params.delete(name);
       value.forEach(item => params.append(name, String(item)));
     } else {

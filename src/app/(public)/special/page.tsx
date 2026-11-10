@@ -10,6 +10,7 @@ import { queryKeys } from '@/lib/react-query/query-keys';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { SpecialContent } from '@/components/features/Special/SpecialContent';
 import { getHttpClient } from '@/core/http/client';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
 
 /* -------------------------------------------------------------------------- */
 /*                                  Metadata                                  */
@@ -49,6 +50,35 @@ function serializeJsonLd(data: unknown): string {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                    فیلتر پایه صفحه فروش ویژه (زمان‌دار)                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * ⚠️ مهم: این ثابت باید دقیقاً با SPECIAL_BASE_FILTERS در
+ * src/components/features/Special/SpecialContent.tsx یکسان باشد
+ * تا queryKey سرور و کلاینت برابر و Hydration بدون refetch کار کند.
+ *
+ * مطابق سواگر /api/Search/Products:
+ *   - onlyDiscounted:            تضمین تخفیف‌دار بودن
+ *   - hasDiscountWithExpiration: فقط تخفیف‌های دارای تاریخ انقضا (ثانیه‌شمار)
+ *   - onlyInStock:               فقط موجود در انبار
+ *   - excludeDuplicateProducts:  جلوگیری از تکرار کالا از فروشندگان مختلف
+ *   - sortBy: CreationDate + sortDesc: جدیدترین آفرها اول
+ *   - includeAggregations:       برای سایدبار فیلترها
+ */
+const SPECIAL_BASE_FILTERS: SearchProductsRequest = {
+  onlyDiscounted: true,
+  hasDiscountWithExpiration: true,
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  sortBy: 'CreationDate',
+  sortDesc: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
+
+/* -------------------------------------------------------------------------- */
 /*                                 صفحه اصلی                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -74,13 +104,8 @@ export default async function SpecialPage() {
   const staticService = getStaticService();
   const httpClient = getHttpClient();
 
-  // فیلتر اولیه کالاهای شگفت‌انگیز و زمان‌دار
-  const initialFilters = {
-    hasDiscountWithExpiration: true,
-    pageNumber: 1,
-    pageSize: 30,
-    orderType: 'Selected' as const,
-  };
+  // ✅ فیلتر سرور دقیقاً همان چیزی است که کلاینت در اولین رندر می‌سازد
+  const initialFilters: SearchProductsRequest = { ...SPECIAL_BASE_FILTERS };
 
   // ✅ استفاده از Promise.allSettled جهت مقاومت در برابر خطای شبکه
   await Promise.allSettled([

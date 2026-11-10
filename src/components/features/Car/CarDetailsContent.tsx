@@ -8,6 +8,7 @@ import { useSearchFilters } from '@/shared/hooks/useSearchFilters';
 import { useGetCarPage, useGetCarListFlat } from '@/domains/front/reference/car/hooks/car.hooks';
 import { useSearchProducts } from '@/domains/front/product/hooks/product.hooks';
 import { SearchSidebar } from '@/components/features/ProductGrid/SearchSidebar';
+import { MobileSearchHeader } from '@/components/features/ProductGrid/MobileSearchHeader';
 import { ProductSearchCard } from '@/components/features/ProductCard/ProductSearchCard';
 import { ProductCardSkeleton } from '@/components/features/ProductCard/ProductCardSkeleton';
 import { Pagination } from '@/components/composites/Pagination/Pagination';
@@ -15,7 +16,6 @@ import { PageDescription } from '@/components/composites/PageDescription/PageDes
 import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
 import { CarHeaderCard } from './components/CarHeaderCard';
 import { Typography } from '@/components/primitives/Typography';
-import { useAppStore } from '@/shared/store/useAppStore';
 import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
 import { ShopProductAdBanner } from '@/components/features/ProductCard/ShopProductAdBanner';
 import { Modal, ModalBody } from '@/components/composites/Modal/Modal';
@@ -39,9 +39,16 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
   const decodedCarModel = decodeURIComponent(slug).replace(/-/g, ' ');
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
-  const currentFilters = { ...filters, carModel: decodedCarModel };
-
   const { data: carData } = useGetCarPage(decodedCarModel);
+
+  // ارسال دقیق carIds به جای رشته متنی carModel
+  const currentFilters = React.useMemo(() => {
+    return {
+      ...filters,
+      carIds: carData?.id ? [carData.id] : filters.carIds,
+    };
+  }, [filters, carData?.id]);
+
   const { data: productsResponse, isLoading: isProductsLoading } = useSearchProducts(currentFilters);
   const { data: cars = [], isLoading: isCarsLoading } = useGetCarListFlat(1, 200);
 
@@ -49,7 +56,6 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
   const totalCount = productsResponse?.totalCount || 0;
   const totalPages = productsResponse?.totalPages || 1;
 
-  // استخراج دیتای تجمیعی برای فیلترها
   const aggregations = (productsResponse as any)?.aggregations || null;
 
   const rawBreadcrumbs = (carData as any)?.breadCrumbs || [];
@@ -64,28 +70,23 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
 
   return (
     <div className="flex w-full flex-col gap-4 sm:gap-6" dir="rtl">
-      {/* هدر چسبان موبایل با همان ابعاد و کلاس‌های دقیق مدنظر شما */}
-      <div
-        className="sticky top-14 z-30 -mx-4 -mt-2 flex w-[calc(100%+2rem)] shrink-0 select-none flex-col gap-1 border-b border-border/80 bg-card/95 px-3 py-2 shadow-xs backdrop-blur-md transition-all duration-normal md:hidden"
-      >
-        <div className="flex w-full items-center justify-between mt-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-muted/40 p-0.5">
-              <img
-                src={getFullUrl(carData?.cover)}
-                className="h-full w-full object-contain"
-                alt=""
-              />
-            </div>
-            <div className="flex min-w-0 flex-col">
-              <span className="text-[0.625rem] font-bold text-muted-foreground leading-none">خودرو انتخابی</span>
-              <span className="mt-0.5 truncate text-xs font-bold text-foreground">
-                {carData?.model || 'خودرو'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1.5">
+      {/* هدر ماژولار و مشترک موبایل با انیمیشن کشویی در اسکرول */}
+      <MobileSearchHeader
+        icon={
+          carData?.cover ? (
+            <img
+              src={getFullUrl(carData.cover)}
+              className="h-full w-full object-contain"
+              alt=""
+            />
+          ) : (
+            <CarIcon className="h-4 w-4 text-primary" />
+          )
+        }
+        subtitle="خودرو انتخابی"
+        title={carData?.model || 'خودرو'}
+        actionElement={
+          <>
             <button
               type="button"
               onClick={() => {
@@ -103,30 +104,13 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
             >
               انتخاب قطعه
             </button>
-          </div>
-        </div>
-
-        {/* ردیف دوم: فیلترها و مرتب‌سازی کامپکت */}
-        <div className="flex w-full items-center justify-between gap-2 border-t border-dashed border-border/60 pt-1.5">
-          <button
-            type="button"
-            onClick={() => setIsMobileFiltersOpen(true)}
-            className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg border border-input bg-card px-2.5 text-2xs font-bold shadow-2xs active:scale-95 transition-transform"
-          >
-            <span>فیلترها</span>
-          </button>
-
-          <SortSelector
-            value={filters.orderType || 'Selected'}
-            onChange={(val) => setFilter('sort', val)}
-            variant="trigger"
-          />
-
-          <span className="flex h-8 shrink-0 items-center justify-center rounded-lg bg-muted px-2 text-3xs font-bold text-muted-foreground">
-            {new Intl.NumberFormat('fa-IR').format(totalCount)} کالا
-          </span>
-        </div>
-      </div>
+          </>
+        }
+        totalCount={totalCount}
+        sortValue={filters.orderType || 'Selected'}
+        onSortChange={(val) => setFilter('sort', val)}
+        onOpenFilters={() => setIsMobileFiltersOpen(true)}
+      />
 
       <Breadcrumb items={breadcrumbItems} className="hidden px-4 md:flex md:px-0" />
 
@@ -142,7 +126,6 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
           carId={carData?.id}
         />
 
-        {/* کانتینر محصولات */}
         <div className="flex flex-1 min-w-0 flex-col items-stretch gap-5">
           <div className="hidden md:block">
             <CarHeaderCard
@@ -213,7 +196,7 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
         overlayClassName="bg-foreground/40 backdrop-blur-md"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-muted/30 px-4 py-4">
-          <span className="flex items-center gap-1.5 text-title-sm">
+          <span className="flex items-center gap-1.5 text-title-sm font-bold">
             <CarIcon aria-hidden="true" className="h-4 w-4 text-primary" />
             تغییر خودرو فعال
           </span>
@@ -269,12 +252,13 @@ export function CarDetailsContent({ slug }: CarDetailsContentProps) {
         </ModalBody>
       </Modal>
 
+
       <SelectPartModal
         isOpen={isSelectPartOpen}
         onClose={() => setIsSelectPartOpen(false)}
-        slug="Fuel-System"
-        categoryName={carData?.model || 'خودرو'}
+        carId={carData?.id}
         carSlug={slug}
+        categoryName={carData?.model || 'خودرو'}
       />
     </div>
   );

@@ -33,7 +33,6 @@ export const viewport: Viewport = {
   themeColor: '#CE3E04',
   width: 'device-width',
   initialScale: 1,
-  // اصلاح شد: userScalable و maximumScale حذف شدند تا خطای بحرانی دسترسی‌پذیری گوگل برطرف شود
   viewportFit: 'cover',
 };
 
@@ -41,6 +40,22 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || 'https://yadakchi.com'
   ),
+
+  // ✅ noindex سراسری: همه صفحات به‌صورت پیش‌فرض از ایندکس خارج می‌شوند
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-snippet': -1,
+      'max-image-preview': 'none',
+      'max-video-preview': -1,
+    },
+  },
+
   title: {
     default: 'یدکچی | بازارگاه تخصصی قطعات خودرو',
     template: '%s | یدکچی',

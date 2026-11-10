@@ -1,3 +1,4 @@
+// src/app/(auth)/login/page.tsx
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -37,9 +38,10 @@ function LoginContent() {
     }
   });
 
+  // استفاده از replace به جای href تا صفحه لاگین در تاریخچه ذخیره نشود
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = redirectUrl;
+      window.location.replace(redirectUrl);
     }
   }, [isAuthenticated, redirectUrl]);
 
@@ -93,7 +95,8 @@ function LoginContent() {
     try {
       await confirmLogin.mutateAsync({ phoneNumber, code });
       showToast.success('خوش آمدید! در حال انتقال...');
-      window.location.href = redirectUrl;
+      // استفاده از replace جهت جایگزینی صفحه لاگین با صفحه مقصد در تاریخچه
+      window.location.replace(redirectUrl);
     } catch (err: any) {
       const errMsg = err.userMessage || 'کد ورود معتبر نیست یا منقضی شده است';
       showToast.error(errMsg);
@@ -128,7 +131,6 @@ function LoginContent() {
               autoFocus
               {...register('phoneNumber')}
               size={'lg'}
-              
             />
             <Button
               type="submit"
@@ -202,7 +204,6 @@ function LoginContent() {
               ویرایش شماره &gt;
             </button>
           </div>
-
         </div>
       )}
     </AuthLayout>

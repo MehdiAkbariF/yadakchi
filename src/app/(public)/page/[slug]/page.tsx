@@ -26,7 +26,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 
   if (page.noIndex) {
+      if (page.noIndex) {
     meta.robots = { index: false, follow: false };
+  }
   }
 
   return meta;

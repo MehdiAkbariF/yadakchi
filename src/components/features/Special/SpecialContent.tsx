@@ -1,3 +1,4 @@
+// src/components/features/Special/SpecialContent.tsx
 'use client';
 
 import * as React from 'react';
@@ -13,6 +14,24 @@ import { Breadcrumb } from '@/components/composites/Breadcrumb/Breadcrumb';
 import { Typography } from '@/components/primitives/Typography';
 import { SortSelector } from '@/components/composites/SortSelector/SortSelector';
 import { useAppStore } from '@/shared/store/useAppStore';
+import type { SearchProductsRequest } from '@/domains/front/product/types/view.types';
+
+/**
+ * ⚠️ مهم: این ثابت باید دقیقاً با SPECIAL_BASE_FILTERS در
+ * src/app/(public)/special/page.tsx یکسان باشد
+ * تا Hydration به‌درستی کار کند و queryKey سرور و کلاینت برابر باشند.
+ */
+const SPECIAL_BASE_FILTERS: SearchProductsRequest = {
+  onlyDiscounted: true,
+  hasDiscountWithExpiration: true,
+  onlyInStock: true,
+  excludeDuplicateProducts: true,
+  sortBy: 'CreationDate',
+  sortDesc: true,
+  pageNumber: 1,
+  pageSize: 30,
+  includeAggregations: true,
+};
 
 export function SpecialContent() {
   const isHeaderMinimized = useAppStore((state) => state.isHeaderMinimized);
@@ -20,7 +39,43 @@ export function SpecialContent() {
 
   const { filters, setFilter, clearFilters } = useSearchFilters();
 
-  const currentFilters = { ...filters, hasDiscountWithExpiration: true };
+  /**
+   * ✅ منطق ساخت فیلترها:
+   *   - پایه: SPECIAL_BASE_FILTERS (تخفیف‌دار + تایمر + موجود + بدون تکرار)
+   *   - اگر کاربر از URL sort انتخاب کرده (مثلاً ?sort=Cheapest) → همان sortBy نگه داشته می‌شود
+   *   - اگر sort پیش‌فرض 'Selected' است → sortBy=CreationDate نگه داشته می‌شود تا
+   *     queryKey با سرور برابر بماند.
+   */
+  const currentFilters: SearchProductsRequest = React.useMemo(() => {
+    const userSort = filters.orderType;
+
+    const base: SearchProductsRequest = {
+      ...SPECIAL_BASE_FILTERS,
+      // پارامترهای اختیاری از URL
+      searchTitle: filters.searchTitle,
+      brandIds: filters.brandIds,
+      carIds: filters.carIds,
+      partCategoryIds: filters.partCategoryIds,
+      partIds: filters.partIds,
+      types: filters.types,
+      fromPrice: filters.fromPrice,
+      toPrice: filters.toPrice,
+      pageNumber: filters.pageNumber,
+      pageSize: filters.pageSize,
+      includeAggregations: true,
+    };
+
+    // اگر کاربر sort خاصی از URL انتخاب کرده، آن را اعمال کن
+    if (userSort && userSort !== 'Selected') {
+      base.orderType = userSort;
+      // orderType → sortBy/sortDesc در مپر ProductMapper.toOpenSearchRequest انجام می‌شود
+      delete base.sortBy;
+      delete base.sortDesc;
+    }
+
+    return base;
+  }, [filters]);
+
   const { data: productsResponse, isLoading } = useSearchProducts(currentFilters);
   const { data: serverTime } = useGetCurrentTime();
 
